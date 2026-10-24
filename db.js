@@ -25,6 +25,8 @@ const SCHEMA = [
     updated_at INTEGER NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS saves_level ON saves(level DESC)`,
   `CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS teams (user_id INTEGER PRIMARY KEY, team TEXT NOT NULL)`,
+  `CREATE INDEX IF NOT EXISTS teams_team ON teams(team)`,
   `CREATE TABLE IF NOT EXISTS audit (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER, at INTEGER, kind TEXT, detail TEXT)`,
@@ -42,6 +44,11 @@ const SQL = {
     WHERE u.banned = 0 AND s.name IS NOT NULL AND s.name <> '' ORDER BY s.level DESC, s.updated_at ASC LIMIT 50`,
   audit: 'INSERT INTO audit (user_id, at, kind, detail) VALUES (?, ?, ?, ?)',
   getMeta: 'SELECT v FROM meta WHERE k = ?',
+  getTeam: 'SELECT team FROM teams WHERE user_id = ?',
+  setTeam: 'INSERT INTO teams (user_id, team) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET team = excluded.team',
+  delTeam: 'DELETE FROM teams WHERE user_id = ?',
+  teamCount: 'SELECT COUNT(*) AS n FROM teams WHERE team = ?',
+  findByName: 'SELECT user_id, name FROM saves WHERE name = ? ORDER BY updated_at DESC LIMIT 1',
   setMeta: 'INSERT OR IGNORE INTO meta (k, v) VALUES (?, ?)',
 };
 
@@ -127,6 +134,11 @@ function createDb() {
     audit: (uid, kind, detail) => B.run(SQL.audit, [uid, Date.now(), kind, detail]),
     getMeta: async k => { const r = await B.get(SQL.getMeta, [k]); return r ? r.v : null; },
     setMeta: (k, v) => B.run(SQL.setMeta, [k, v]),
+    getTeam: async uid => { const r = await B.get(SQL.getTeam, [uid]); return r ? r.team : ''; },
+    setTeam: (uid, team) => B.run(SQL.setTeam, [uid, team]),
+    delTeam: uid => B.run(SQL.delTeam, [uid]),
+    teamCount: async team => { const r = await B.get(SQL.teamCount, [team]); return r ? Number(r.n) : 0; },
+    findByName: name => B.get(SQL.findByName, [name]),
   };
 }
 module.exports = { createDb };

@@ -73,6 +73,11 @@ setInterval(() => { // ล้างแคชผู้เล่นที่ไม
   for (const [uid, p] of live) if (p.touched < cut && !p.saving && !p.dirty) live.delete(uid);
 }, 5 * 60 * 1000).unref();
 
+// ---------- แชท/ทีม ----------
+const CHATLOG = []; let CHAT_ID = Date.now(); // id เริ่มจากเวลา เพื่อให้รีสตาร์ทแล้ว id ยังมากกว่าของเดิมในหน้าเว็บ
+const TEAM_MAX = 6, teamCache = new Map();
+async function teamOf(uid) { if (teamCache.has(uid)) return teamCache.get(uid); const t = await db.getTeam(uid); teamCache.set(uid, t); return t; }
+
 // ---------- รหัสผ่าน + โทเคน ----------
 function hashPw(pw, salt) {
   return new Promise((res, rej) => crypto.scrypt(pw, salt, 32, { N: 16384, r: 8, p: 1 }, (e, k) => e ? rej(e) : res(k.toString('hex'))));
@@ -205,6 +210,57 @@ const routes = {
     if (changed || out.fx.length) { p.v++; persist(u.id, p); }
     if (!changed && !out.fx.length && Number(b.v) === p.v) return send(res, 200, { same: true, v: p.v });
     reply(res, p, out);
+  },
+  // ---------- แชท: โลก · ฝ่าย · ทีม · กระซิบ (เก็บในหน่วยความจำ 600 ข้อความล่าสุด) ----------
+  'GET /api/chat': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    const p = await session(u.id);
+    const team = await teamOf(u.id);
+    const since = Number(new URL(req.url, 'http://x').searchParams.get('since')) || 0;
+    const fac = p.s.fac == null ? null : p.s.fac;
+    const out = [];
+    for (const m of CHATLOG) {
+      if (m.id <= since) continue;
+      const ok = m.ch === 'world' || (m.ch === 'fac' && fac != null && m.key === fac) || (m.ch === 'team' && team && m.key === team) || (m.ch === 'dm' && (m.from === u.id || m.toId === u.id));
+      if (ok) out.push({ id: m.id, ch: m.ch, n: m.n, t: m.t, to: m.to, mine: m.from === u.id });
+    }
+    send(res, 200, { msgs: out.slice(-120), team, fac, me: p.s.name || u.display });
+  },
+  'POST /api/chat': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    const b = await readBody(req);
+    const ch = String(b.ch || ''), t = String(b.t || '').replace(/\s+/g, ' ').trim().slice(0, 100);
+    if (!['world', 'fac', 'team', 'dm'].includes(ch) || !t) return send(res, 400, { error: 'ข้อความไม่ถูกต้อง' });
+    const p = await session(u.id), now = Date.now();
+    if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
+    if (now - (p.lastChat || 0) < 1200) return send(res, 429, { error: 'ส่งเร็วเกินไป รอสักครู่' });
+    const m = { id: ++CHAT_ID, ch, n: String(p.s.name || u.display).slice(0, 16), t, from: u.id, ts: now };
+    if (ch === 'fac') { if (p.s.fac == null) return send(res, 400, { error: 'ยังไม่ได้เข้าฝ่าย' }); m.key = p.s.fac; }
+    if (ch === 'team') { const team = await teamOf(u.id); if (!team) return send(res, 400, { error: 'ยังไม่มีทีม' }); m.key = team; }
+    if (ch === 'dm') {
+      const to = String(b.to || '').trim().slice(0, 12);
+      if (!to) return send(res, 400, { error: 'ใส่ชื่อผู้รับ' });
+      let target = null;
+      for (const [id, q] of live) if (q.s && q.s.name === to) { target = id; break; }
+      if (!target) { const row = await db.findByName(to); if (row) target = Number(row.user_id); }
+      if (!target) return send(res, 404, { error: 'ไม่พบผู้เล่นชื่อ ' + to });
+      if (target === u.id) return send(res, 400, { error: 'กระซิบหาตัวเองไม่ได้' });
+      m.toId = target; m.to = to;
+    }
+    p.lastChat = now;
+    CHATLOG.push(m); if (CHATLOG.length > 600) CHATLOG.splice(0, CHATLOG.length - 600);
+    send(res, 200, { ok: true, id: m.id });
+  },
+  'POST /api/team': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    const b = await readBody(req);
+    if (b.leave) { await db.delTeam(u.id); teamCache.delete(u.id); return send(res, 200, { team: '' }); }
+    const name = String(b.name || '').replace(/\s+/g, ' ').trim();
+    if (name.length < 2 || name.length > 16) return send(res, 400, { error: 'ชื่อทีมยาว 2–16 ตัวอักษร' });
+    if ((await teamOf(u.id)) === name) return send(res, 200, { team: name });
+    if ((await db.teamCount(name)) >= TEAM_MAX) return send(res, 409, { error: 'ทีมนี้เต็มแล้ว (' + TEAM_MAX + ' คน)' });
+    await db.setTeam(u.id, name); teamCache.set(u.id, name);
+    send(res, 200, { team: name });
   },
   'GET /api/top': async (req, res) => send(res, 200, { top: (await db.top()).map(r => ({ name: r.name, cls: r.cls, lvl: r.level })) }),
   'GET /api/health': async (req, res) => send(res, 200, { ok: true, players: live.size, db: db.kind.split(' ')[0] }),
