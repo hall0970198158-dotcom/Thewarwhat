@@ -97,6 +97,11 @@ p{margin:0}
 .chatlog{height:260px;overflow-y:auto;border:1px solid var(--line);border-radius:6px;padding:8px;background:var(--bg);font-size:14px;margin-bottom:8px}
 .cm{padding:2px 0;word-break:break-word}.cm b{color:var(--brass);font-weight:600}
 .chatrow{display:grid;grid-template-columns:1fr auto;gap:8px}
+.ctabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px}.ctabs .btn{min-height:36px;padding:4px 2px;font-size:14px;position:relative}
+.cdot{display:inline-block;min-width:18px;padding:0 4px;border-radius:9px;background:var(--blood);color:#fff;font-size:11px;line-height:18px}
+#chatExtra .chatrow,#chatExtra .row{margin-bottom:6px}#chatExtra .hint{margin:0 0 6px}
+.cname{cursor:pointer;text-decoration:underline dotted}.cm.dm{color:#e8b8ff}
+.fab{cursor:grab;touch-action:none}.fab.dragging{cursor:grabbing;opacity:.85}.fab svg,.fab .badge{pointer-events:none}
 .item .chips{grid-column:1/-1}
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .stat{background:var(--surface2);border-radius:4px;padding:10px 12px}
@@ -202,11 +207,13 @@ nav.lock{opacity:.45;pointer-events:none}
   </main>
 </div>
 <nav id="nav" hidden></nav>
-<button id="chatFab" class="fab" data-a="chatopen" aria-label="เปิดแชท" hidden><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span id="chatBadge" class="badge" hidden></span></button>
+<button id="chatFab" class="fab" aria-label="เปิดแชท (ลากย้ายได้)" hidden><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span id="chatBadge" class="badge" hidden></span></button>
 <button id="dqFab" class="dqfab" aria-label="ภารกิจประจำวัน" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span id="dqPts">0</span><span class="badge" id="dqBadge" hidden>!</span></button>
 <section id="dqPanel" class="dqpanel" role="dialog" aria-label="ภารกิจประจำวัน" hidden></section>
-<section id="chatPanel" class="cpanel" role="dialog" aria-label="แชทรวม" hidden>
- <div class="chead"><b>แชทรวม</b><span class="meta" id="chatCount"></span><button class="btn" data-a="chatclose" aria-label="ปิดแชท">ปิด</button></div>
+<section id="chatPanel" class="cpanel" role="dialog" aria-label="แชท" hidden>
+ <div class="chead"><b>แชท</b><span class="meta" id="chatCount"></span><button class="btn" data-a="chatclose" aria-label="ปิดแชท">ปิด</button></div>
+ <div class="ctabs" id="chatTabs"></div>
+ <div id="chatExtra"></div>
  <div class="cpeers" id="peers"></div>
  <div class="chatlog" id="chatlog"></div>
  <div class="chatrow" id="chatrow"><input class="txt" id="chatin" type="text" maxlength="100" placeholder="พิมพ์ข้อความ" aria-label="ข้อความแชท" autocomplete="off"><button class="btn primary" data-a="chatsend">ส่ง</button></div>
@@ -582,7 +589,7 @@ function nick(){return (s&&s.name)||String(curUser||'?')}
 function load(){
  try{var r=localStorage.getItem(SAVE);if(r){var o=JSON.parse(r);
   if(o&&o.inv&&typeof o.hp==='number')return normalize(o)}}catch(e){}
- return fresh();
+ return normalize(fresh());
 }
 function save(){if(!s)return;s.ts=Date.now();if(SV||CL)return;try{localStorage.setItem(SAVE,JSON.stringify(s))}catch(e){}try{onlineSync();cloudPush();if(ON.room&&ON.pk!==s.cls+s.lvl){ON.pk=s.cls+s.lvl;presenceSet()}}catch(e){}}
 var ON={fac:[],db:null,uid:null,ok:false,canWrite:false,board:[],unsub:null,last:'',timer:0,busy:false,chat:[],peers:[],room:null,open:false,seen:-1,guilds:[],gmem:[],wars:[],wres:[],gl:0,cloud:null,cTimer:0,cLast:'',cBusy:false,lastSay:0};
@@ -789,38 +796,103 @@ function cloudDown(auto){
  s=normalize(o);s.cloudOn=true;s.tab=auto?s.tab:'wild';
  say(auto?'โหลดเซฟที่ใหม่กว่าจากคลาวด์ (อีกเครื่องเล่นไปแล้ว)':'โหลดเซฟจากคลาวด์แล้ว');
  save();render();presenceSet();}
+// ===== แชท 4 ช่อง: โลก · ฝ่าย · ทีม · กระซิบ =====
+// เวอร์ชันออนไลน์ (client): ใช้เซิร์ฟเวอร์ (/api/chat) ทุกช่อง · เวอร์ชัน Artifact: ช่องโลกใช้แชทเดิม ช่องอื่นใช้ได้เมื่อเล่นผ่านเซิร์ฟเวอร์
+var CHAT={tab:'world',open:false,list:[],last:0,seen:{world:0,fac:0,team:0,dm:0},dmTo:'',team:'',fac:null,me:'',busy:false,lastSend:0,timer:0,msg:''};
+var CHAT_TABS=[['world','โลก'],['fac','ฝ่าย'],['team','ทีม'],['dm','กระซิบ']];
+function chatOnline(){return CL&&!!NET.token}
+function chatMsgs(tab){
+ if(!chatOnline()){return tab==='world'?ON.chat.map(function(m){return {id:m.ts||0,ch:'world',n:m.n,t:m.t,mine:m.n===nick()}}):[]}
+ return CHAT.list.filter(function(m){return m.ch===tab})}
+function chatUnread(tab){var sn=CHAT.seen[tab]||0;return chatMsgs(tab).filter(function(m){return (m.id||0)>sn&&!m.mine}).length}
+function chatMarkSeen(tab){var l=chatMsgs(tab);CHAT.seen[tab]=l.length?(l[l.length-1].id||0):CHAT.seen[tab]}
 function paintChat(){
- var lg=document.getElementById('chatlog'),pe=document.getElementById('peers'),cn=document.getElementById('chatCount');
+ var lg=document.getElementById('chatlog'),pe=document.getElementById('peers'),tb=document.getElementById('chatTabs'),ex=document.getElementById('chatExtra'),cn=document.getElementById('chatCount'),row=document.getElementById('chatrow'),inp=document.getElementById('chatin');
  if(!lg||!s)return;
- var seen={},ps=[];
- ON.peers.forEach(function(p){if(p.kind!=='viewer')return;var k=p.by||p.peer;if(seen[k])return;seen[k]=1;
-  var x=p.presence||{};if(typeof x.n!=='string')return;ps.push({n:x.n.slice(0,16),cls:CLASSES[x.cls]?x.cls:'warrior',lvl:x.lvl|0,me:!!p.isMe})});
- if(cn)cn.textContent=ps.length+' คน';
- if(pe)pe.innerHTML=ps.length?ps.map(function(p){return '<div'+(p.me?' class="me"':'')+'>'+esc(p.n)+(p.me?' (คุณ)':'')+' · Lv'+p.lvl+'</div>'}).join(''):'<div>ยังไม่มีข้อมูล</div>';
+ var tab=CHAT.tab;
+ if(tb)tb.innerHTML=CHAT_TABS.map(function(t){var u=t[0]===tab?0:chatUnread(t[0]);return '<button class="btn'+(t[0]===tab?' primary':'')+'" data-a="chattab" data-p="'+t[0]+'">'+t[1]+(u?' <span class="cdot">'+(u>9?'9+':u)+'</span>':'')+'</button>'}).join('');
+ // แถบข้อมูลเฉพาะช่อง
+ var extra='',canSend=true,ph='พิมพ์ข้อความ';
+ if(!chatOnline()&&tab!=='world'){extra='<p class="hint">แชทฝ่าย ทีม และกระซิบ ใช้ได้ในเวอร์ชันออนไลน์ (เล่นผ่านเซิร์ฟเวอร์เกม)</p>';canSend=false}
+ else if(tab==='world'){ph='คุยกับทุกคน';if(!chatOnline()&&!(ON.ok&&ON.canWrite)){canSend=false;extra='<p class="hint">ยังเชื่อมต่อแชทไม่ได้</p>'}}
+ else if(tab==='fac'){var f=chatOnline()?CHAT.fac:s.fac;if(f==null){canSend=false;extra='<p class="hint">ยังไม่ได้เข้าฝ่าย เลือกฝ่ายได้ที่แท็บ "ฝ่าย"</p>'}else{extra='<p class="hint">คุยกับฝ่าย <b style="color:'+FAC[f].c+'">'+FAC[f].n+'</b></p>';ph='คุยในฝ่าย'}}
+ else if(tab==='team'){
+  if(!CHAT.team){canSend=false;extra='<div class="chatrow"><input class="txt" id="teamin" type="text" maxlength="16" placeholder="ชื่อทีม 2–16 ตัว (สร้างใหม่หรือเข้าทีมเพื่อน)" autocomplete="off"><button class="btn primary" data-a="teamjoin">เข้าทีม</button></div><p class="hint">พิมพ์ชื่อทีมเดียวกับเพื่อนเพื่อเข้าทีมเดียวกัน (สูงสุด 6 คน)</p>'}
+  else{extra='<div class="row"><span>ทีม <b style="color:var(--brass)">'+esc(CHAT.team)+'</b></span><button class="btn" data-a="teamleave">ออกจากทีม</button></div>';ph='คุยในทีม'}}
+ else if(tab==='dm'){extra='<div class="chatrow"><input class="txt" id="dmto" type="text" maxlength="12" placeholder="ชื่อตัวละครที่จะกระซิบ" value="'+esc(CHAT.dmTo)+'" autocomplete="off"><span class="hint" style="align-self:center">แตะชื่อในแชทเพื่อเลือก</span></div>';ph=CHAT.dmTo?'กระซิบถึง '+CHAT.dmTo:'เลือกผู้รับก่อน'}
+ if(CHAT.msg)extra+='<p class="hint" style="color:#ff9a8a">'+esc(CHAT.msg)+'</p>';
+ if(ex)ex.innerHTML=extra;
+ if(row)row.hidden=!canSend;
+ if(inp)inp.placeholder=ph;
+ if(pe){pe.hidden=!(tab==='world'&&!chatOnline());if(!pe.hidden){var seen={},ps=[];
+  ON.peers.forEach(function(p){if(p.kind!=='viewer')return;var k=p.by||p.peer;if(seen[k])return;seen[k]=1;var x=p.presence||{};if(typeof x.n!=='string')return;ps.push({n:x.n.slice(0,16),lvl:x.lvl|0,me:!!p.isMe})});
+  pe.innerHTML=ps.length?ps.map(function(p){return '<div'+(p.me?' class="me"':'')+'>'+esc(p.n)+(p.me?' (คุณ)':'')+' · Lv'+p.lvl+'</div>'}).join(''):''}}
+ if(cn)cn.textContent=chatOnline()?'':(ON.peers.length?ON.peers.length+' คน':'');
+ var L=chatMsgs(tab);
  var atEnd=lg.scrollTop+lg.clientHeight>=lg.scrollHeight-30;
- lg.innerHTML=ON.chat.length?ON.chat.map(function(m){return '<div class="cm"><b>'+esc(m.n.slice(0,16))+'</b> '+esc(m.t.slice(0,100))+'</div>'}).join(''):'<p class="hint">ยังไม่มีข้อความ</p>';
+ lg.innerHTML=L.length?L.map(function(m){
+  var who=m.mine?'<b>'+esc(String(m.n).slice(0,16))+'</b>':'<b class="cname" data-a="chatdm" data-p="'+esc(String(m.n).slice(0,16))+'">'+esc(String(m.n).slice(0,16))+'</b>';
+  var pre=m.ch==='dm'?(m.mine?'<span class="hint">ถึง '+esc(m.to||'')+' · </span>':'<span class="hint">กระซิบ · </span>'):'';
+  return '<div class="cm'+(m.ch==='dm'?' dm':'')+'">'+pre+who+' '+esc(String(m.t).slice(0,100))+'</div>'}).join(''):'<p class="hint">ยังไม่มีข้อความ</p>';
  if(atEnd||!lg.dataset.init){lg.scrollTop=lg.scrollHeight;lg.dataset.init=1}
+ if(CHAT.open)chatMarkSeen(tab);
 }
 function chatSend(){
- var inp=document.getElementById('chatin');if(!inp||!ON.ok||!ON.canWrite)return;
+ var inp=document.getElementById('chatin');if(!inp)return;
  var tx=inp.value.replace(/\s+/g,' ').trim().slice(0,100),now=Date.now();
- if(!tx||now-ON.lastSay<2000)return;ON.lastSay=now;inp.value='';
- ON.db.doc('chat/m'+(Math.floor(now/1000)%120)).set({n:nick().slice(0,16),t:tx,ts:now,u:ON.uid}).catch(function(){});
- ON.chat.push({n:nick(),t:tx,ts:now});ON.chat=ON.chat.slice(-40);paintChat();
-}
+ if(!tx)return;
+ if(now-CHAT.lastSend<1500){CHAT.msg='ส่งเร็วเกินไป รอสักครู่';paintChat();return}
+ if(!chatOnline()){
+  if(CHAT.tab!=='world'||!ON.ok||!ON.canWrite)return;
+  CHAT.lastSend=now;ON.lastSay=now;inp.value='';
+  ON.db.doc('chat/m'+(Math.floor(now/1000)%120)).set({n:nick().slice(0,16),t:tx,ts:now,u:ON.uid}).catch(function(){});
+  ON.chat.push({n:nick(),t:tx,ts:now});ON.chat=ON.chat.slice(-40);paintChat();return}
+ var dt=document.getElementById('dmto');if(dt)CHAT.dmTo=dt.value.trim().slice(0,12);
+ if(CHAT.tab==='dm'&&!CHAT.dmTo){CHAT.msg='ใส่ชื่อผู้รับก่อน';paintChat();return}
+ CHAT.lastSend=now;inp.value='';CHAT.msg='';
+ apiCall('POST','/api/chat',{ch:CHAT.tab,t:tx,to:CHAT.tab==='dm'?CHAT.dmTo:undefined}).then(function(){chatPoll(true)}).catch(function(e){CHAT.msg=e.message||'ส่งไม่สำเร็จ';inp.value=tx;paintChat()})}
+function chatPoll(force){
+ if(!chatOnline()||CHAT.busy||!s||!s.created)return;
+ CHAT.busy=true;
+ apiCall('GET','/api/chat?since='+CHAT.last).then(function(j){
+  CHAT.team=j.team||'';CHAT.fac=j.fac==null?null:j.fac;CHAT.me=j.me||'';
+  (j.msgs||[]).forEach(function(m){if(m.id>CHAT.last){CHAT.list.push(m);CHAT.last=m.id}});
+  if(CHAT.list.length>300)CHAT.list=CHAT.list.slice(-300);
+  if(CHAT.seen.world===0&&!CHAT.init){CHAT.init=1;CHAT_TABS.forEach(function(t){chatMarkSeen(t[0])})}
+  paintChat();chatUI()}).catch(function(){}).then(function(){CHAT.busy=false})}
+function chatLoop(){clearTimeout(CHAT.timer);CHAT.timer=setTimeout(function(){if(!document.hidden)chatPoll();chatLoop()},CHAT.open?2500:8000)}
+function teamAct(join){
+ if(!chatOnline())return;
+ var ti=document.getElementById('teamin'),nm=ti?ti.value.trim():'';
+ if(join&&(nm.length<2||nm.length>16)){CHAT.msg='ชื่อทีมยาว 2–16 ตัวอักษร';paintChat();return}
+ apiCall('POST','/api/team',join?{name:nm}:{leave:true}).then(function(j){CHAT.team=j.team||'';CHAT.msg='';paintChat()}).catch(function(e){CHAT.msg=e.message||'ทำรายการไม่สำเร็จ';paintChat()})}
 function chatOpen(open){
  var p=document.getElementById('chatPanel');if(!p)return;
- p.hidden=!open;ON.open=open;
- if(open){ON.seen=ON.chat.length?(ON.chat[ON.chat.length-1].ts||0):0;chatUI();paintChat();var i=document.getElementById('chatin');if(i&&i.focus)i.focus()}
+ p.hidden=!open;CHAT.open=open;ON.open=open;
+ if(open){chatMarkSeen(CHAT.tab);paintChat();if(chatOnline()){chatPoll(true);chatLoop()}}
  chatUI()}
 function chatUI(){
- var fab=document.getElementById('chatFab'),bd=document.getElementById('chatBadge'),p=document.getElementById('chatPanel'),row=document.getElementById('chatrow');
- var show=!!(ON.ok&&s&&s.created&&!document.getElementById('gameWrap').hidden);
- if(fab)fab.hidden=!show||!!ON.open;
- if(p&&(!show))p.hidden=true;
- if(row)row.hidden=!ON.canWrite;
- var n=ON.chat.filter(function(m){return (m.ts||0)>(ON.seen||0)&&m.n!==nick()}).length;
- if(bd){bd.hidden=!(n>0&&!ON.open);bd.textContent=n>9?'9+':String(n)}
+ var fab=document.getElementById('chatFab'),bd=document.getElementById('chatBadge'),p=document.getElementById('chatPanel');
+ var gw=document.getElementById('gameWrap');
+ var show=!!(s&&s.created&&gw&&!gw.hidden);
+ if(fab){fab.hidden=!show||CHAT.open;if(show&&!fab._d){chatFabInit(fab)}}
+ if(p&&!show)p.hidden=true;
+ if(show&&chatOnline()&&!CHAT.timer){chatPoll(true);chatLoop()}
+ var n=0;CHAT_TABS.forEach(function(t){n+=chatUnread(t[0])});
+ if(bd){bd.hidden=!(n>0&&!CHAT.open);bd.textContent=n>9?'9+':String(n)}
+}
+// ปุ่มแชทลากย้ายได้ทั่วจอ (จำตำแหน่งไว้) · แตะเฉย ๆ = เปิดแชท
+function chatFabInit(fab){
+ fab._d=1;var sx=0,sy=0,ox=0,oy=0,mv=false,id=null;
+ function clamp(x,y){var w=window.innerWidth||360,h=window.innerHeight||640;return [Math.max(4,Math.min(w-56,x)),Math.max(4,Math.min(h-56,y))]}
+ function place(x,y){var c=clamp(x,y);fab.style.left=c[0]+'px';fab.style.top=c[1]+'px';fab.style.right='auto';fab.style.bottom='auto'}
+ try{var sv=JSON.parse(localStorage.getItem('shuk-chatfab')||'null');if(sv&&typeof sv.x==='number')place(sv.x,sv.y)}catch(e){}
+ fab.addEventListener('pointerdown',function(ev){id=ev.pointerId;var r=fab.getBoundingClientRect();sx=ev.clientX;sy=ev.clientY;ox=r.left;oy=r.top;mv=false;try{fab.setPointerCapture(id)}catch(e){}});
+ fab.addEventListener('pointermove',function(ev){if(id===null||ev.pointerId!==id)return;var dx=ev.clientX-sx,dy=ev.clientY-sy;if(!mv&&Math.abs(dx)+Math.abs(dy)>8){mv=true;fab.classList.add('dragging')}if(mv)place(ox+dx,oy+dy)});
+ function end(ev){if(id===null||ev.pointerId!==id)return;id=null;fab.classList.remove('dragging');
+  if(mv){var r=fab.getBoundingClientRect();try{localStorage.setItem('shuk-chatfab',JSON.stringify({x:r.left,y:r.top}))}catch(e){}}else chatOpen(true);mv=false}
+ fab.addEventListener('pointerup',end);fab.addEventListener('pointercancel',function(){id=null;mv=false;fab.classList.remove('dragging')});
+ window.addEventListener('resize',function(){if(fab.style.left){var r=fab.getBoundingClientRect();place(r.left,r.top)}});
 }
 function cloudCard(){
  if(!CLOUD_ENABLED||!ON.ok)return '';
@@ -1046,7 +1118,7 @@ function towerMob(f){
 function climb(){
  if(!s.created||s.energy<2||cdLeft()>0||s.battle||s.dup)return;
  s.energy-=2;var f=s.tower.f,m=towerMob(f);
- startBattle(m,'monster',{tower:f});s.battle.lines=['ก้าวขึ้นสู่ชั้น '+f+(m.boss?' — ผู้คุมชั้นปรากฏตัว!':'')]}
+ startBattle(m,'monster',{tower:f});dqAdd('tower');s.battle.lines=['ก้าวขึ้นสู่ชั้น '+f+(m.boss?' — ผู้คุมชั้นปรากฏตัว!':'')]}
 function viewTower(){
  var T=s.tower,nx=towerMob(T.f);
  var low=s.energy<2||cdLeft()>0||!!s.dup,cd=cdLeft();
@@ -1064,7 +1136,7 @@ var DQ=[
  {id:'gather',n:'เก็บวัตถุดิบ',pts:10,need:5},
  {id:'skill',n:'ใช้สกิลในการต่อสู้',pts:15,need:15},
  {id:'pvp',n:'สู้ PvP',pts:15,need:1},
- {id:'tower',n:'ชนะมอนสเตอร์ในหอคอย',pts:15,need:3},
+ {id:'tower',n:'เข้าหอคอย (ชนะหรือแพ้ก็นับ)',pts:15,need:3},
  {id:'craft',n:'คราฟหรือตีบวกอุปกรณ์',pts:10,need:1}];
 var DQ_STEPS=[20,40,60,80,100];
 function dqRew(n){return n===20?{g:50,t:'ทอง +50'}:n===40?{g:500,t:'ทอง +500'}:n===60?{en:1,t:'พลังงานเต็ม'}:n===80?{pot3:5,t:'ยาฟื้นฟู 150 HP ×5 ขวด'}:{box:1,t:'กล่องสุ่ม +1'}}
@@ -1357,7 +1429,7 @@ function autoAct(){
 function win(){
  var b=s.battle,e=b.e,p=[];
  if(noFlee(b))return duelEnd(true);
- if(b.tower)dqAdd('tower');else dqAdd('hunt');
+ if(!b.tower)dqAdd('hunt');
  var g=Math.round(rnd(e.gold[0],e.gold[1])*(phaseNow()%2===0?1.1:1)*gGoldMul(s)*(s.battle&&s.battle.tower?1:HUNT_GOLD));s.gold+=g;p.push('ทอง +'+g);
  var xp=Math.round(e.xp*(phaseNow()%2===1?1.1:1));p.push('XP +'+xp);s.kills++;
  if(!b.tower&&s.hp<s.maxhp){p.push('เลือดฟื้นเต็ม');s.hp=s.maxhp} // ล่าชนะ = เติมเลือดเต็ม (หอคอยไม่เติม)
@@ -1523,7 +1595,7 @@ function openBox(){
  s.boxMsg='ได้ '+ch.it.n+' ('+RAR_N[ch.it.r]+') สวมใส่ให้แล้ว';s.boxIt={sl:ch.sl,id:ch.it.id};
  say('เปิดกล่อง ได้ '+ch.it.n);
 }
-var CL_LOCAL={logout:1,chatopen:1,chatclose:1,chatsend:1,clouddn:1,cloudup:1,dqclose:1};
+var CL_LOCAL={logout:1,chatopen:1,chatclose:1,chatsend:1,chattab:1,chatdm:1,teamjoin:1,teamleave:1,clouddn:1,cloudup:1,dqclose:1};
 function act(a,p){
  if(!s)return;
  if(CL&&!CL_LOCAL[a]){netAct(a,p);return}
@@ -1680,6 +1752,10 @@ function act(a,p){
    say((s.guild.gid===ON.uid?'ยุบกิลด์ ':'ออกจากกิลด์ ')+s.guild.n);s.guild=null;s.war=null;confirmLeave=false;s.guildMsg='ออกจากกิลด์แล้ว';recalc()}
  }
  else if(a==='chatsend'){chatSend();return}
+ else if(a==='chattab'){CHAT.tab=p;CHAT.msg='';chatMarkSeen(p);paintChat();chatUI();return}
+ else if(a==='chatdm'){CHAT.dmTo=String(p||'').slice(0,12);CHAT.tab='dm';CHAT.msg='';paintChat();return}
+ else if(a==='teamjoin'){teamAct(true);return}
+ else if(a==='teamleave'){teamAct(false);return}
  else if(a==='chatopen'){chatOpen(true);return}
  else if(a==='chatclose'){chatOpen(false);return}
  else if(a==='cloudup'){cloudUp();return}
@@ -3088,7 +3164,7 @@ if(SV){
  var wrapFx=function(name,fn){return function(){FXLOG.push([name,Array.prototype.slice.call(arguments)]);return fn.apply(null,arguments)}};
  fl=wrapFx('fl',fl);fxPlayerHit=wrapFx('fxPlayerHit',fxPlayerHit);fxSkill=wrapFx('fxSkill',fxSkill);fxBuff=wrapFx('fxBuff',fxBuff);fxEnemyHit=wrapFx('fxEnemyHit',fxEnemyHit);
  window.ENGINE={
-  fresh:function(){return fresh()},
+  fresh:function(){return normalize(fresh())},
   normalize:function(o){return normalize(o)},
   run:function(state,ui,fn){
    s=state;uiSet(ui||{});FXLOG=[];var t0=nowMs();fx.pAtk=fx.eAtk=fx.eHit=fx.pHit=-9999;
