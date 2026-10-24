@@ -1,0 +1,13 @@
+{
+  "name": "shuk-sueng-meuang-server",
+  "version": "1.0.0",
+  "description": "เซิร์ฟเวอร์เกม ศึกชิงเมือง (Node 22 + SQLite ในตัว ไม่มี dependency ภายนอก) — เซิร์ฟเวอร์ตัดสินผลทุกอย่าง กันโกง",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --experimental-sqlite server.js"
+  },
+  "engines": {
+    "node": ">=22.5"
+  },
+  "dependencies": {}
+}

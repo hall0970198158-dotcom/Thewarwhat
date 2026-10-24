@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: shuk-sueng-meuang
+    runtime: node
+    plan: starter            # ต้องเป็นแพ็กเกจที่มี Disk (แพ็กเกจฟรีไม่มีดิสก์ถาวร ข้อมูลจะหาย)
+    buildCommand: echo "no build"
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 22.12.0
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DB_PATH
+        value: /var/data/game.db
+    disk:
+      name: game-data
+      mountPath: /var/data
+      sizeGB: 1
+    healthCheckPath: /api/health
