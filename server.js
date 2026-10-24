@@ -19,8 +19,19 @@ const db = createDb();
 
 // ---------- เครื่องยนต์เกม ----------
 const engine = loadEngine(path.join(PUBLIC, 'index.html'));
-const indexHtml = fs.readFileSync(path.join(PUBLIC, 'index.html'), 'utf8')
+// ไฟล์เกมจาก Artifact ไม่มีส่วนหัว HTML (Artifact เติมให้เอง) เซิร์ฟเวอร์จึงเติม doctype + viewport ให้มือถือแสดงเต็มจอ
+let gameHtml = fs.readFileSync(path.join(PUBLIC, 'index.html'), 'utf8')
   .replace('<script>\n(function(){', '<script>window.GAME_MODE="client";window.GAME_API="";</script>\n<script>\n(function(){');
+if (!/<!doctype/i.test(gameHtml)) {
+  gameHtml = '<!doctype html>\n<html lang="th">\n<head>\n<meta charset="utf-8">\n' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n' +
+    '<meta name="theme-color" content="#0e1326">\n' + gameHtml + '\n</html>';
+} else if (!/name=["']viewport["']/i.test(gameHtml)) {
+  gameHtml = gameHtml.replace(/<head[^>]*>/i, m => m + '\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">');
+}
+// ข้อความหน้าล็อกอินของโหมดออฟไลน์ เปลี่ยนให้ตรงกับโหมดออนไลน์
+gameHtml = gameHtml.replace(/บัญชีเก็บอยู่ในเบราว์เซอร์ของเครื่องนี้[^<]*/, 'บัญชีเก็บบนเซิร์ฟเวอร์ เล่นไอดีเดียวกันได้ทุกเครื่อง · ตั้งรหัสผ่านที่เดายากและอย่าบอกใคร');
+const indexHtml = gameHtml;
 
 // ---------- สถานะผู้เล่นในหน่วยความจำ + เขียนลงฐานข้อมูล (รวมการเขียนที่ถี่ ๆ ให้เหลือครั้งล่าสุด) ----------
 const live = new Map();     // uid -> { s, ui, v, lastTick, bucket, bucketAt, touched, saving, dirty }
