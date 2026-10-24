@@ -12,13 +12,9 @@ const { createDb } = require('./db');
 
 loadDotEnv();
 const PORT = Number(process.env.PORT) || 3000;
-const SECRET = process.env.JWT_SECRET || '';
+let SECRET = process.env.JWT_SECRET || '';
 const TOKEN_DAYS = Number(process.env.TOKEN_DAYS) || 30;
 const PUBLIC = path.join(__dirname, 'public');
-if (!SECRET || SECRET.length < 24) {
-  console.error('ต้องตั้ง JWT_SECRET (สุ่มยาวอย่างน้อย 24 ตัวอักษร) ใน Environment Variables หรือไฟล์ .env');
-  process.exit(1);
-}
 const db = createDb();
 
 // ---------- เครื่องยนต์เกม ----------
@@ -220,7 +216,16 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-db.init().then(() => {
+// รหัสลับเซ็นโทเคน: ใช้ JWT_SECRET ถ้าตั้งไว้ยาวพอ ไม่อย่างนั้นสร้างเองครั้งแรกแล้วเก็บในฐานข้อมูล (รีสตาร์ทแล้วยังเป็นค่าเดิม)
+async function ensureSecret() {
+  if (SECRET && SECRET.length >= 24) return 'env';
+  let v = await db.getMeta('jwt_secret');
+  if (!v) { await db.setMeta('jwt_secret', crypto.randomBytes(32).toString('hex')); v = await db.getMeta('jwt_secret'); }
+  SECRET = v;
+  return 'auto';
+}
+db.init().then(ensureSecret).then(src => {
+  if (src === 'auto') console.log('JWT_SECRET: ไม่ได้ตั้งหรือสั้นเกินไป ใช้รหัสลับที่สร้างอัตโนมัติและเก็บในฐานข้อมูลแทน');
   server.listen(PORT, () => console.log('ศึกชิงเมือง server · port ' + PORT + ' · DB ' + db.kind));
 }).catch(e => { console.error('เชื่อมต่อฐานข้อมูลไม่สำเร็จ:', e.message); process.exit(1); });
 

@@ -24,6 +24,7 @@ const SCHEMA = [
     gold INTEGER NOT NULL DEFAULT 0,
     updated_at INTEGER NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS saves_level ON saves(level DESC)`,
+  `CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS audit (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER, at INTEGER, kind TEXT, detail TEXT)`,
@@ -40,6 +41,8 @@ const SQL = {
   top: `SELECT s.name, s.cls, s.level FROM saves s JOIN users u ON u.id = s.user_id
     WHERE u.banned = 0 AND s.name IS NOT NULL AND s.name <> '' ORDER BY s.level DESC, s.updated_at ASC LIMIT 50`,
   audit: 'INSERT INTO audit (user_id, at, kind, detail) VALUES (?, ?, ?, ?)',
+  getMeta: 'SELECT v FROM meta WHERE k = ?',
+  setMeta: 'INSERT OR IGNORE INTO meta (k, v) VALUES (?, ?)',
 };
 
 // ---------- แบบ 1: Turso ผ่าน HTTP (ไม่ต้องติดตั้งแพ็กเกจ) ----------
@@ -122,6 +125,8 @@ function createDb() {
     putSave: (uid, data, ver, name, cls, level, gold) => B.run(SQL.putSave, [uid, data, ver, name, cls, level, gold, Date.now()]),
     top: () => B.all(SQL.top),
     audit: (uid, kind, detail) => B.run(SQL.audit, [uid, Date.now(), kind, detail]),
+    getMeta: async k => { const r = await B.get(SQL.getMeta, [k]); return r ? r.v : null; },
+    setMeta: (k, v) => B.run(SQL.setMeta, [k, v]),
   };
 }
 module.exports = { createDb };
