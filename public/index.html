@@ -900,9 +900,11 @@ function cloudCard(){
  return '<section class="card"><h3>เซฟข้ามเครื่อง</h3><p class="hint">'+info+(s.cloudOn?' · ซิงค์อัตโนมัติ':'')+'</p>'+
   '<div class="grid2"><button class="btn primary" data-a="cloudup"'+(ON.canWrite&&s.created?'':' disabled')+'>อัปโหลดเซฟนี้</button>'+
   '<button class="btn" data-a="clouddn"'+(c?'':' disabled')+'>โหลดจากคลาวด์</button></div></section>'}
+var SVB={board:null,uid:null,wb:null}; // เซิร์ฟเวอร์ใส่รายชื่อผู้เล่นจริงให้ก่อนรันคำสั่ง
 function realOpp(){
- if(!ON.ok)return null;var now=Date.now(),me=s.pvp.r;
- var pool=ON.board.filter(function(x){return x.id!==ON.uid&&Math.abs((x.rating|0)-me)<=300&&now-(x.upd||0)<30*86400000});
+ var board=SV?SVB.board:(ON.ok?ON.board:null),myId=SV?SVB.uid:ON.uid;
+ if(!board)return null;var now=Date.now(),me=s.pvp.r;
+ var pool=board.filter(function(x){return x.id!==myId&&Math.abs((x.rating|0)-me)<=300&&now-(x.upd||0)<30*86400000});
  if(!pool.length||Math.random()<0.25)return null;
  return oppFromSnap(pick(pool))}
 function oppFromSnap(x){
@@ -1119,6 +1121,90 @@ function climb(){
  if(!s.created||s.energy<2||cdLeft()>0||s.battle||s.dup)return;
  s.energy-=2;var f=s.tower.f,m=towerMob(f);
  startBattle(m,'monster',{tower:f});dqAdd('tower');s.battle.lines=['ก้าวขึ้นสู่ชั้น '+f+(m.boss?' — ผู้คุมชั้นปรากฏตัว!':'')]}
+// ===== บอสโลก: ไฮดราเก้าเศียร (เล่นได้ในเวอร์ชันออนไลน์) =====
+// ลงได้วันละ 3 ครั้ง · เข้ารอบได้ทอง 1,000 ทุกครั้ง · บอสตีแรงขึ้นทุกเทิร์น (×1 ×2 ×3 ...) จนเราสลบ · ดาเมจรวมทุกคนหักจากเลือดบอสร่วมกัน
+// อันดับดาเมจ 1–3 ของวัน ได้ทอง + ยาฟื้นเลือดเต็ม (แจกหลังเที่ยงคืนเวลาไทย)
+var WB_TRIES=3,WB_GOLD=1000,WB_HP=9000000,WB_DEF=0,WB_NAME='ไฮดราเก้าเศียร';
+var WB_PRIZE=[{g:20000,f:3},{g:10000,f:2},{g:5000,f:1}];
+var WBDONE=null;
+function wbDay(){return dqDay()}
+function wbState(){if(!s.wb||s.wb.d!==wbDay())s.wb={d:wbDay(),n:0};return s.wb}
+function wbInfo(){return SV?SVB.wb:CL?(NET.wb||null):null}
+function wbLeft(){var w=wbInfo();return w?Math.max(0,w.left|0):0}
+function wbEnter(){
+ var w=wbInfo();if(!w||!s.created||s.battle||s.dup||cdLeft()>0)return;
+ var st=wbState();if(st.n>=WB_TRIES)return;
+ var left=wbLeft();if(left<=0){say(WB_NAME+'ถูกโค่นแล้ววันนี้ รอวันใหม่');return}
+ st.n++;s.gold+=WB_GOLD;
+ // ฐานโจมตีของไฮดราเทียบกับเลือดและเกราะของผู้เล่น ทุกคนอยู่ได้ใกล้เคียงกัน (ราว 5–6 เทิร์น) ใครตีแรงกว่าได้ดาเมจมากกว่า
+ var e={n:WB_NAME,k:'hydra',boss:true,wboss:true,lvl:99,hp:WB_HP,atk:Math.round(s.maxhp*0.09+pDef()*0.6)+5,def:WB_DEF,gold:[0,0],xp:0,drops:{}};
+ var h0=s.hp;s.hp=s.maxhp;
+ startBattle(e,'monster',{wb:true,hp0:h0,wbStart:left});
+ s.battle.ehp=left;
+ s.battle.lines=['เข้าสู่สมรภูมิบอสโลก! (ครั้งที่ '+st.n+'/'+WB_TRIES+') ได้ทอง +'+WB_GOLD,'ไฮดราตีแรงขึ้นทุกเทิร์น ทำดาเมจให้มากที่สุดก่อนสลบ'];
+ say('เข้าสู้บอสโลก '+WB_NAME+' ครั้งที่ '+st.n+'/'+WB_TRIES+' ได้ทอง +'+WB_GOLD);
+ save()}
+function wbFinish(killed){
+ var b=s.battle;if(!b||!b.wb)return;
+ var dealt=Math.max(0,Math.round((b.wbStart|0)-Math.max(0,b.ehp)));
+ var turns=b.turn|0;
+ s.hp=Math.max(1,Math.min(s.maxhp,typeof b.hp0==='number'?b.hp0:s.maxhp));
+ s.battle=null;fightDone(FIGHT_CD);s.autoHunt=false;s.autoTower=false;
+ s.wbLast={dmg:dealt,turns:turns,killed:!!killed,at:Date.now()};
+ WBDONE={dmg:dealt,killed:!!killed};
+ say((killed?'โค่น'+WB_NAME+'สำเร็จ! ':'สลบจากไฮดรา ')+'ทำดาเมจ '+dealt.toLocaleString()+' ใน '+turns+' เทิร์น');
+ s.tab='tower';s.etab='wb';save()}
+function wbGrant(g,f,msg){s.gold+=g|0;s.potF=(s.potF|0)+(f|0);say(msg);save()}
+// วาดไฮดรา 9 หัว (พิกเซล) · หัวที่เหลือลดลงตามเลือดรวมของบอส
+function drawHydra(c,cx,gy,u,t,alpha,heads){
+ c.save();c.globalAlpha=alpha==null?1:alpha;
+ function R(x,y,w,h,col){c.fillStyle=col;c.fillRect(Math.round(cx+x*u),Math.round(gy+y*u),Math.round(w*u),Math.round(h*u))}
+ var B='#2e6b3a',D='#1d4a28',L='#5f9a4a',Y='#c8d878',O='#0c1a10';
+ // หาง + ลำตัว + ขา
+ R(14,-14,10,4,D);R(22,-18,6,4,D);R(26,-22,4,4,D);
+ R(-18,-22,36,16,O);R(-17,-21,34,14,B);R(-15,-20,12,3,L);R(-12,-10,24,4,Y);
+ R(-16,-6,6,6,O);R(-15,-6,4,5,D);R(10,-6,6,6,O);R(11,-6,4,5,D);R(-6,-6,5,6,O);R(-5,-6,3,5,D);R(3,-6,5,6,O);R(4,-6,3,5,D);
+ // คอ + หัว 9 หัว (กางเป็นพัด)
+ var n=Math.max(0,Math.min(9,heads==null?9:heads));
+ for(var i=0;i<9;i++){
+  var dead=i>=n,ang=-2.55+i*0.3,len=24+(i===4?6:0)-Math.abs(i-4)*1.2,sw=Math.sin(t/420+i*0.9)*1.6;
+  var bx=-2+(i-4)*2.2,by=-20,hx=bx+Math.cos(ang)*len+sw,hy=by+Math.sin(ang)*len*0.95;
+  for(var k=0;k<=8;k++){var tt=k/8,mx=bx+(hx-bx)*tt+Math.sin(tt*3.14)*(i-4)*1.2,my=by+(hy-by)*tt-Math.sin(tt*3.14)*3;
+   R(mx-1.6,my-1.6,3.2,3.2,O);R(mx-1.2,my-1.2,2.4,2.4,dead?'#3a3a3a':(k%2?B:D))}
+  if(dead){R(hx-2,hy-1,4,3,'#5a1a1a');continue}
+  var big=i===4?1.3:1,hw=7*big,hh=5*big,dir=hx<bx-1?-1:1,ox=dir<0?-hw+1:-1;
+  R(hx+ox-0.6,hy-hh/2-0.6,hw+1.2,hh+1.2,O);R(hx+ox,hy-hh/2,hw,hh,i===4?'#3f8a4a':B);
+  R(hx+ox+(dir<0?0:hw-3),hy+hh/2-1.5,3,1.5,Y);
+  R(hx+ox+(dir<0?1.5:hw-3.5),hy-hh/2+1,1.5,1.5,(Math.floor(t/300)+i)%7===0?'#ffd04a':'#ff3a2a');
+  R(hx+ox+(dir<0?0.5:hw-2.5),hy+hh/2-0.4,0.8,1.2,'#ffffff');R(hx+ox+(dir<0?2:hw-1),hy+hh/2-0.4,0.8,1.2,'#ffffff');
+  if(i===4){R(hx+ox+1,hy-hh/2-2,1.5,2,'#ffd04a');R(hx+ox+hw/2-0.75,hy-hh/2-2.6,1.5,2.6,'#ffd04a');R(hx+ox+hw-2.5,hy-hh/2-2,1.5,2,'#ffd04a')}
+ }
+ c.restore()}
+function wbHeads(){var w=wbInfo();if(!w)return 9;return Math.max(1,Math.ceil(9*Math.max(0,w.left)/WB_HP))}
+var HYD_IMG={};
+function hydraImg(heads){var k=heads;if(HYD_IMG[k])return HYD_IMG[k];var cv=document.createElement('canvas');cv.width=300;cv.height=170;var x=cv.getContext('2d');drawHydra(x,170,160,3,0,1,heads);HYD_IMG[k]=cv.toDataURL();return HYD_IMG[k]}
+function viewWB(){
+ var w=wbInfo(),st=s.created?wbState():{n:0},left=Math.max(0,WB_TRIES-st.n),last=s.wbLast;
+ if(!w)return '<section class="card"><p class="eyebrow">บอสโลก</p><h2>'+WB_NAME+'</h2><p class="hint">'+(CL?'กำลังโหลดข้อมูลบอส...':'บอสโลกเล่นได้ในเวอร์ชันออนไลน์ (เล่นผ่านเซิร์ฟเวอร์เกม) เพราะต้องรวมดาเมจของผู้เล่นทุกคน')+'</p></section>';
+ var alive=(w.left|0)>0,cd=cdLeft(),can=alive&&left>0&&!s.battle&&cd===0;
+ var top=(w.top||[]).map(function(x,i){var medal=['🥇','🥈','🥉'][i]||(i+1)+'.';
+  return '<div class="oddrow"><span>'+medal+' '+(x.me?'<b>':'')+esc(String(x.n).slice(0,16))+(x.me?' (คุณ)</b>':'')+' · '+(CLASSES[x.cls]?CLASSES[x.cls].n:'')+'</span><b>'+(x.dmg|0).toLocaleString()+'</b></div>'}).join('');
+ return '<section class="card"><p class="eyebrow">บอสโลก · รีเซ็ตทุกเที่ยงคืน</p><h2>'+WB_NAME+'</h2>'+
+  '<img src="'+hydraImg(wbHeads())+'" alt="ไฮดราเก้าเศียร" style="width:100%;image-rendering:pixelated;display:block;border-radius:6px;background:linear-gradient(#1a0e22,#3a1a2a)">'+
+  '<div class="m big"><span>เลือดบอส</span><div class="bar"><i style="width:'+pct(w.left,WB_HP)+'%;background:var(--blood)"></i></div><em>'+(w.left|0).toLocaleString()+'</em></div>'+
+  '<p class="hint">ผู้ร่วมรบวันนี้ '+(w.count|0)+' คน · ดาเมจรวม '+(w.total|0).toLocaleString()+(alive?'':' · <b style="color:var(--brass)">ไฮดราถูกโค่นแล้ว!</b>')+'</p>'+
+  '<button class="btn danger" data-a="wbenter"'+(can?'':' disabled')+'>'+(!alive?'ไฮดราถูกโค่นแล้ว รอวันใหม่':left<=0?'ลงครบ '+WB_TRIES+' ครั้งวันนี้แล้ว':cd>0?'พัก '+Math.ceil(cd/1000)+' วินาที':'ลงสู้บอส (เหลือ '+left+'/'+WB_TRIES+' ครั้ง · ได้ทอง +'+WB_GOLD+')')+'</button>'+
+  (last?'<div class="reveal"><b>รอบล่าสุด: ดาเมจ '+(last.dmg|0).toLocaleString()+' ใน '+(last.turns|0)+' เทิร์น</b></div>':'')+
+  '<p class="hint">กติกา: เริ่มเลือดเต็ม ไฮดราตีแรงขึ้นทุกเทิร์น ×1 ×2 ×3 ... จนเราสลบ (ไม่เสียทอง เลือดกลับเท่าเดิม ใช้ยาไม่ได้ หนีไม่ได้) · ทุกครั้งที่ลงได้ทอง '+WB_GOLD.toLocaleString()+'</p>'+
+  '<p class="hint">รางวัลอันดับดาเมจของวัน: 🥇 ทอง '+WB_PRIZE[0].g.toLocaleString()+' + ยาฟื้นเลือดเต็ม ×'+WB_PRIZE[0].f+' · 🥈 ทอง '+WB_PRIZE[1].g.toLocaleString()+' + ×'+WB_PRIZE[1].f+' · 🥉 ทอง '+WB_PRIZE[2].g.toLocaleString()+' + ×'+WB_PRIZE[2].f+' (ส่งให้อัตโนมัติหลังเที่ยงคืน)</p></section>'+
+  '<section class="card"><p class="eyebrow">ตารางดาเมจวันนี้</p>'+(top||'<p class="hint">ยังไม่มีใครลงสู้</p>')+
+  (w.me&&w.me.rank?'<p class="hint">อันดับของคุณ: '+w.me.rank+' · ดาเมจ '+(w.me.dmg|0).toLocaleString()+'</p>':'')+
+  (w.prev&&w.prev.length?'<p class="hint">ผู้ชนะเมื่อวาน: '+w.prev.map(function(x,i){return ['🥇','🥈','🥉'][i]+' '+esc(x.n)}).join(' · ')+'</p>':'')+'</section>'}
+function viewEvents(){
+ var et=s.etab||'tower';
+ var head='<section class="card"><h3>กิจกรรม</h3><div class="cat"><button class="btn'+(et==='tower'?' primary':'')+'" data-a="etab" data-p="tower">หอคอยไม่รู้จบ</button><button class="btn'+(et==='wb'?' primary':'')+'" data-a="etab" data-p="wb">บอสโลก ไฮดรา</button></div></section>';
+ if(CL&&et==='wb')netWB();
+ return head+(et==='wb'?viewWB():viewTower())}
 function viewTower(){
  var T=s.tower,nx=towerMob(T.f);
  var low=s.energy<2||cdLeft()>0||!!s.dup,cd=cdLeft();
@@ -1240,7 +1326,7 @@ var TIERS=[[0,'ทองแดง'],[900,'เงิน'],[1100,'ทอง'],[130
 function tierOf(r){var t=TIERS[0][1];TIERS.forEach(function(x){if(r>=x[0])t=x[1]});return t}
 var SPEC={warrior:'ทุบพสุธา',rogue:'ฆ่าเงียบ',mage:'สายฟ้าฟาด',paladin:'ค้อนแสง',archer:'ธนูทะลวง'};
 var ENEMY_GUILDS=['หมาป่าราตรี','ราชันย์เพลิงนิล','ปีกเหล็กแห่งขุนเขา','นักล่าเงา','จอมเวทสายหมอก','เขี้ยวมังกรดำ','พิทักษ์ตะวันแดง'];
-function noFlee(b){return b.kind==='pvp'||b.kind==='war'}
+function noFlee(b){return b.kind==='pvp'||b.kind==='war'||!!b.wb}
 function eloDelta(my,op,won){var ex=1/(1+Math.pow(10,(op-my)/400));return Math.max(1,Math.round(24*(won?1-ex:ex)))}
 function buildOpp(name,cls,lvl,pw,rating){
  var K=CLASSES[cls],st={str:0,vit:0,agi:0,int:0},keys=['str','vit','agi','int'],i;
@@ -1337,10 +1423,10 @@ function battleAct(a){
   if(Math.random()<0.6){say('หนีจาก '+e.n+' ได้');s.battle=null;fightDone(HUNT_CD);return}
   l.push('หนีไม่พ้น!');
  }else if(a==='potionf'){
-  if(isDuel(b)||(s.potF|0)<1||s.hp>=s.maxhp)return;
+  if(b.wb||isDuel(b)||(s.potF|0)<1||s.hp>=s.maxhp)return;
   var hf2=s.maxhp-s.hp;s.potF--;s.hp=s.maxhp;l.push('ดื่มยาฟื้นเลือดเต็ม ฟื้น '+hf2+' HP');fl('p','+'+hf2,'#7fc06a');
  }else if(a==='potion'){
-  if(potTotal()<1||s.hp>=s.maxhp)return;
+  if(b.wb||potTotal()<1||s.hp>=s.maxhp)return;
   var du=isDuel(b);if(du&&(b.pots|0)>=DUEL_POTS)return;
   var h=drinkPot(du?DUEL_HP:1);if(du)b.pots=(b.pots|0)+1;
   var hs=du?h*DUEL_HP:h;l.push('ดื่มยา ฟื้น '+hs+' HP'+(du?' ('+b.pots+'/'+DUEL_POTS+' ขวด)':''));fl('p','+'+hs,'#7fc06a');
@@ -1392,11 +1478,11 @@ function battleAct(a){
     if(Math.random()*100<e.pvp.crit){mul*=2;tag+=' คริติคอล!'}
    }
    var msk=null;
-   if(!e.pvp&&!e.cls&&b.kind==='monster'&&!b.tower&&!(s.zone<EASY_ZONES&&!e.boss)){
+   if(!e.pvp&&!e.cls&&b.kind==='monster'&&!b.tower&&!b.wb&&!(s.zone<EASY_ZONES&&!e.boss)){
     if(e.boss){if(Math.random()<BOSS_SK_P){msk=pick(BOSS_SKS);mul=msk.m;tag=' ใช้สกิล '+msk.n+'!'}}
     else if(Math.random()<MOB_SK_P){var nn=0,ci;for(ci=0;ci<e.n.length;ci++)nn+=e.n.charCodeAt(ci);msk={n:MOB_SKN[nn%MOB_SKN.length],m:1.8};mul=msk.m;tag=' ใช้สกิล '+msk.n+'!'}
    }
-   var dm=hit(e.atk*eam(b)*mul,pDef());s.hp-=isDuel(b)?Math.max(1,Math.ceil(dm/DUEL_HP)):dm;l.push(e.n+' ตอบโต้'+tag+' −'+dm);
+   var dm=hit(e.atk*eam(b)*mul*(b.wb?Math.max(1,b.turn|0):1),pDef());s.hp-=isDuel(b)?Math.max(1,Math.ceil(dm/DUEL_HP)):dm;l.push(e.n+' ตอบโต้'+tag+' −'+dm);
    if(msk&&msk.heal){var hh=Math.min(Math.round(dm*msk.heal),e.hp-b.ehp);if(hh>0){b.ehp+=hh;l.push(e.n+' ดูดเลือด +'+hh)}}fx.eAtk=now+380;fx.pHit=now+560;var ecr=tag.indexOf('คริติคอล')>=0;fxEnemyHit(!!msk||ecr,!!e.boss,560);if(msk)fl('e',msk.n+'!','#ff9a3c',200);fl('p','−'+dm,ecr?'#ff2424':'#ff7a6a',560,ecr)}
  }
  if(b.ehp>0&&s.hp>0){
@@ -1414,7 +1500,7 @@ function battleAct(a){
 function autoAct(){
  var b=s.battle;
  if(b&&b.e&&b.e.boss&&!b.tower&&s.autoBoss==='stop'&&s.autoHunt){s.autoHunt=false;s.autoMsg='ออโต้หยุด: เจอบอส (สู้เองได้เลย)';say('เจอบอส! ออโต้หยุดทำงาน');return}
- if(potOn()&&s.hp<s.maxhp*potThr()&&potTotal()>0&&s.hp<s.maxhp&&!(isDuel(b)&&(b.pots|0)>=DUEL_POTS))return battleAct('potion');
+ if(!b.wb&&potOn()&&s.hp<s.maxhp*potThr()&&potTotal()>0&&s.hp<s.maxhp&&!(isDuel(b)&&(b.pots|0)>=DUEL_POTS))return battleAct('potion');
  if(s.hp<s.maxhp*0.2&&!noFlee(b))return battleAct('flee');
  if(s.autoSkill){
   var ks=SK[s.cls].slice(1).filter(function(k){return skLv(k.id)>0&&s.skAuto[k.id]!==false&&s.mp>=k.mp&&!((b.cd||{})[k.id]>0)});
@@ -1428,6 +1514,7 @@ function autoAct(){
 }
 function win(){
  var b=s.battle,e=b.e,p=[];
+ if(b.wb)return wbFinish(true);
  if(noFlee(b))return duelEnd(true);
  if(!b.tower)dqAdd('hunt');
  var g=Math.round(rnd(e.gold[0],e.gold[1])*(phaseNow()%2===0?1.1:1)*gGoldMul(s)*(s.battle&&s.battle.tower?1:HUNT_GOLD));s.gold+=g;p.push('ทอง +'+g);
@@ -1448,6 +1535,7 @@ function win(){
  s.battle=null;fightDone(HUNT_CD);s.mp=Math.min(s.maxmp,s.mp+Math.round(s.maxmp*0.25));gainXp(xp);
 }
 function lose(){
+ if(s.battle&&s.battle.wb)return wbFinish(false);
  if(noFlee(s.battle))return duelEnd(false);
  var lost=s.battle.tower?0:Math.floor(s.gold*DEATH_LOSS);s.gold-=lost;s.autoHunt=false;s.autoTower=false;s.autoMsg='ออโต้หยุด: พ่ายแพ้';
  var n=s.battle.e.n,twf=s.battle.tower;s.battle=null;fightDone(HUNT_CD);
@@ -1760,6 +1848,8 @@ function act(a,p){
  else if(a==='chatclose'){chatOpen(false);return}
  else if(a==='cloudup'){cloudUp();return}
  else if(a==='clouddn'){cloudDown(false);return}
+ else if(a==='wbenter'){wbEnter()}
+ else if(a==='etab'){s.etab=p==='wb'?'wb':'tower'}
  else if(a==='autohunt'){s.autoHunt=!s.autoHunt;if(s.autoHunt)s.autoTower=false;s.autoMsg=''}
  else if(a==='cls'){
   if(!s.created&&CLASSES[p]){s.cls=p;recalc();if(!s.created){s.hp=s.maxhp;s.mp=s.maxmp}}
@@ -2428,7 +2518,8 @@ function drawScene(cv,tn){
   var a2=(tn-fx.eAtk)/380;
   if(a2>=0&&a2<1)ex=-Math.round(Math.sin(a2*Math.PI)*70);
   if(tn>fx.eHit&&tn-fx.eHit<260)ea=(Math.floor(tn/60)%2)?0.35:1;
-  if(e.k){
+  if(e.k==='hydra'){drawHydra(c,W-92+ex,gy,2.2,tn,ea,wbHeads())}
+  else if(e.k){
    var M=MONS[e.k],u=e.boss?5:4,x=W-14-M.w*u+ex,y=gy-M.h*u+Math.round(Math.sin(tn/380)*2);
    if(e.k==='bat'||e.k==='voidbat')y-=30+Math.round(Math.sin(tn/200)*4);
    c.save();c.globalAlpha=ea;
@@ -2604,6 +2695,14 @@ function viewPvp(){
    return '<div class="oddrow"><span>'+(i+1)+'. '+(me?'<b>':'')+(titleOf(x.tt)?'<span style="color:'+titleOf(x.tt).c+'">['+esc(titleOf(x.tt).n)+']</span> ':'')+esc(String(x.n).slice(0,16))+(me?' (คุณ)</b>':'')+' · '+CLASSES[x.cls].n+' Lv'+(x.lvl|0)+'</span><b>'+(x.rating|0)+'</b></div>'}).join('');
   lb='<section class="card"><p class="eyebrow">อันดับผู้เล่นออนไลน์</p>'+(top||'<p class="hint">ยังไม่มีผู้เล่นในอันดับ</p>')+
    '<p class="hint">'+(ON.canWrite?'ตัวละครของคุณถูกบันทึกให้ผู้เล่นคนอื่นท้าดวลได้ (คุณไม่เสียเรทติ้งเมื่อมีคนท้า)':'บัญชีนี้ดูอันดับได้อย่างเดียว ตัวละครไม่ถูกส่งขึ้นอันดับ')+'</p></section>'}
+ else if(CL){
+  netLadder();
+  var L2=NET.ladder;
+  var rows2=L2?L2.top.map(function(x,i){var me=x.me;
+   return '<div class="oddrow"><span>'+(i+1)+'. '+(me?'<b>':'')+(titleOf(x.tt)?'<span style="color:'+titleOf(x.tt).c+'">['+esc(titleOf(x.tt).n)+']</span> ':'')+esc(String(x.n).slice(0,16))+(me?' (คุณ)</b>':'')+' · '+(CLASSES[x.cls]?CLASSES[x.cls].n:'')+' Lv'+(x.lvl|0)+'</span><b>'+(x.rating|0)+'</b></div>'}).join(''):'';
+  lb='<section class="card"><p class="eyebrow">อันดับ PvP ผู้เล่นจริง</p>'+(L2?(rows2||'<p class="hint">ยังไม่มีผู้เล่นในอันดับ</p>')+(L2.rank?'<p class="hint">อันดับของคุณ: '+L2.rank+' จาก '+L2.total+' คน</p>':''):'<p class="hint">กำลังโหลดอันดับ...</p>')+
+   '<p class="hint">จับคู่จะเจอผู้เล่นจริงที่เรทติ้งใกล้กัน (±300) ถ้าไม่มีจะเจอคู่ต่อสู้จำลอง · คนที่ถูกท้าไม่เสียเรทติ้ง</p></section>';
+ }
  else lb='<section class="card"><p class="hint">โหมดออนไลน์ไม่พร้อม (ต้องเปิดเกมจากลิงก์ที่ล็อกอิน claude.ai) ตอนนี้สู้กับคู่ต่อสู้จำลอง</p></section>';
  return msg+pvp+lb;
 }
@@ -2808,13 +2907,16 @@ function facNext(now){now=now||Date.now();var c=facClock(now),k,day;
  return null}
 function facLastEnded(now){now=now||Date.now();var d=facClock(now).d,k;
  for(k=0;k<4;k++){var day=d-k;if(day%2===0&&day*FDAY+FW_END*FH-FTZ<=now)return 'f'+day}return ''}
+function facList(){return SV?(SVB.board||[]).filter(function(x){return x.fac!=null}):CL?(NET.fac||[]):ON.fac}
+function facUid(){return SV?SVB.uid:CL?NET.uid:ON.uid}
+function facReady(){return SV?!!SVB.board:CL?false:!!(ON.ok&&(ON.gl&16))}
 function facMine(wid){var tr=s.facTry;return (tr&&tr.wid===wid)?tr:null}
 function facScores(wid){var sc=[0,0,0,0];
- ON.fac.forEach(function(x){if(x.id!==ON.uid&&x.wid===wid)sc[x.fac]+=(x.pt|0)});
- var me=facMine(wid);if(s.fac!=null){if(me)sc[s.fac]+=me.pt|0;else{var d=ON.fac.filter(function(x){return x.id===ON.uid&&x.wid===wid})[0];if(d)sc[s.fac]+=d.pt|0}}
+ facList().forEach(function(x){if(x.id!==facUid()&&x.wid===wid)sc[x.fac]+=(x.pt|0)});
+ var me=facMine(wid);if(s.fac!=null){if(me)sc[s.fac]+=me.pt|0;else{var d=facList().filter(function(x){return x.id===facUid()&&x.wid===wid})[0];if(d)sc[s.fac]+=d.pt|0}}
  return sc}
 function facCount(){var c=[0,0,0,0],me=false;
- ON.fac.forEach(function(x){c[x.fac]++;if(x.id===ON.uid)me=true});
+ facList().forEach(function(x){c[x.fac]++;if(x.id===facUid())me=true});
  if(s&&s.fac!=null&&!me)c[s.fac]++;return c}
 function facDoc(){var sn=mySnap(),tr=s.facTry;sn.fac=s.fac;sn.wid=tr?tr.wid:'';sn.pt=tr?tr.pt|0:0;sn.tries=tr?tr.n|0:0;sn.upd=Date.now();return sn}
 function facWrite(){
@@ -2833,7 +2935,7 @@ function facFight(){
  var tr=facMine(c.wid)||{wid:c.wid,n:0,pt:0};
  if(tr.n>=FW_TRIES)return;
  var others=[0,1,2,3].filter(function(x){return x!==s.fac}),t=pick(others);
- var cand=ON.fac.filter(function(x){return x.fac===t&&x.id!==ON.uid&&CLASSES[x.cls]&&x.lvl>0&&x.hp>0});
+ var cand=facList().filter(function(x){return x.fac===t&&x.id!==facUid()&&CLASSES[x.cls]&&x.lvl>0&&x.hp>0});
  var e;
  if(cand.length){e=oppFromSnap(pick(cand))}
  else{var L=Math.max(1,Math.min(60,s.lvl+rnd(-1,1)));e=buildOpp(pick(NPC_NAMES)+rnd(10,99),pick(CLS_ORDER),L,1.1+Math.random()*0.2,1000)}
@@ -2843,10 +2945,10 @@ function facFight(){
  s.battle.lines=['สงครามสี่ฝ่าย: ฝ่าย'+FAC[s.fac].n+' พบ '+e.n+' ('+CLASSES[e.cls].n+' Lv'+e.lvl+')'];
  facWriteSafe();save()}
 function facSettle(){
- if(!s||!s.created||s.fac==null||!ON.ok||!(ON.gl&16))return;
+ if(!s||!s.created||s.fac==null||!facReady())return;
  var w=facLastEnded();if(!w||s.facClaim===w)return;
  s.facClaim=w;
- var lm=facMine(w),dm=ON.fac.filter(function(x){return x.id===ON.uid&&x.wid===w})[0],part=lm?(lm.n|0)>0:!!(dm&&(dm.tries|0)>0);
+ var lm=facMine(w),dm=facList().filter(function(x){return x.id===facUid()&&x.wid===w})[0],part=lm?(lm.n|0)>0:!!(dm&&(dm.tries|0)>0);
  var sc=facScores(w),order=[0,1,2,3].sort(function(a,b){return sc[b]-sc[a]||a-b}),rank=order.indexOf(s.fac)+1,gold=0,box=0;
  if(part){gold=[300+s.lvl*30,150+s.lvl*15,80+s.lvl*8,40+s.lvl*4][rank-1];s.gold+=gold;s.boxes+=box}
  s.facLast={wid:w,rank:rank,sc:sc,gold:gold,box:box,part:!!part};
@@ -2857,7 +2959,7 @@ function facBars(sc){var mx=Math.max(1,Math.max.apply(null,sc));
  return sc.map(function(v,i){return '<div class="item" style="display:block"><div class="st" style="display:flex;justify-content:space-between"><b style="color:'+FAC[i].c+'">'+FAC[i].n+(s.fac===i?' (ฝ่ายคุณ)':'')+'</b><span>'+v+' แต้ม</span></div>'+
   '<div style="height:8px;border-radius:4px;background:rgba(255,255,255,.08);margin-top:4px"><div style="height:8px;border-radius:4px;width:'+Math.round(v/mx*100)+'%;background:'+FAC[i].c+'"></div></div></div>'}).join('')}
 function viewGuild(){
- facSettle();
+ if(CL)netFac();else facSettle();
  var cnt=facCount(),nx=facNext(),now=Date.now(),sch='<p class="hint">ระบบจัดสงครามสี่ฝ่ายเองวันเว้นวัน ทุกวันที่ตรงรอบ เวลา '+FW_START+':00–'+FW_END+':00 น. (เวลาไทย) ผู้เล่นแต่ละคนสู้ได้ '+FW_TRIES+' ครั้งต่อสงคราม กดสู้แล้วระบบสุ่มฝ่ายตรงข้ามจากอีก 3 ฝ่าย ชนะ = +1 แต้มให้ฝ่ายตัวเอง</p>';
  if(s.fac==null){
   return '<section class="card"><p class="eyebrow">สงครามสี่ฝ่าย</p><h2>เลือกฝ่ายของคุณ</h2><p class="hint">เลือกได้ 1 ฝ่ายต่อตัวละคร และเปลี่ยนภายหลังไม่ได้</p>'+
@@ -2872,7 +2974,7 @@ function viewGuild(){
   out=head+'<div class="reveal"><b>กำลังสงคราม! เหลือ '+hh+' ชม. '+mm+' นาที</b></div>'+facBars(facScores(c.wid))+
    '<p class="hint">คุณสู้ไปแล้ว '+used+'/'+FW_TRIES+' ครั้ง · ชนะ '+(tr?tr.pt|0:0)+' ครั้ง</p>'+
    '<button class="btn danger" data-a="facfight"'+(can?'':' disabled')+'>'+(left<=0?'ใช้ครบ '+FW_TRIES+' ครั้งแล้ว':cdLeft()>0?'พัก '+Math.ceil(cdLeft()/1000)+' วินาที':'ออกรบ (สุ่มฝ่ายตรงข้าม)')+'</button>'+
-   (ON.ok?'':'<p class="hint">ออฟไลน์: แต้มรวมของฝ่ายอื่นจะไม่แสดง</p>')+sch+'</section>'
+   (ON.ok||CL?'':'<p class="hint">ออฟไลน์: แต้มรวมของฝ่ายอื่นจะไม่แสดง</p>')+sch+'</section>'
  }else{
   var lt=s.facLast;
   out=head+(nx?'<div class="reveal"><b>ศึกถัดไป: '+fmtT(nx.start)+' – '+fmtT(nx.end).split(' ').slice(-1)[0]+'</b></div>':'')+sch+'</section>'+
@@ -2915,7 +3017,7 @@ function viewGuildOld(){
 }
 function viewBattle(){
  var b=s.battle,e=b.e,cl=s.cls;
- var kind={monster:'มอนสเตอร์',rival:'นักผจญภัยคู่แข่ง',pvp:'PvP จับคู่ 1-1',war:'สงครามสี่ฝ่าย'}[b.kind];if(b.tower)kind='หอคอย ชั้น '+b.tower;
+ var kind={monster:'มอนสเตอร์',rival:'นักผจญภัยคู่แข่ง',pvp:'PvP จับคู่ 1-1',war:'สงครามสี่ฝ่าย'}[b.kind];if(b.tower)kind='หอคอย ชั้น '+b.tower;if(b.wb)kind='บอสโลก · ไฮดราตีแรงขึ้น ×'+Math.max(1,(b.turn|0)+1)+' เทิร์นถัดไป';
  return '<section class="card"><canvas id="scene" class="scene" data-mode="battle" width="320" height="170" aria-label="ฉากต่อสู้"></canvas>'+
   '<p class="eyebrow">'+kind+'</p><h2>'+e.n+'</h2>'+(e.pvp?'<p class="hint">'+CLASSES[e.cls].n+' Lv'+e.lvl+(b.kind==='pvp'?' · เรทติ้ง '+e.rating:'')+'</p>':'')+
   '<div class="m big"><span>ศัตรู</span><div class="bar"><i style="width:'+pct(b.ehp,e.hp)+'%;background:var(--blood)"></i></div><em>'+Math.max(0,b.ehp)+'/'+e.hp+'</em></div>'+
@@ -2938,12 +3040,12 @@ function render(){
  if(!s.created)v=viewCreate();
  else if(s.battle)v=viewBattle();
  else if(s.res)v=viewResult();
- else v=({wild:viewWild,char:viewChar,craft:viewCraft,mat:viewMat,pvp:viewPvp,tower:viewTower,guild:viewGuild,me:viewDress}[s.tab]||viewWild)();
+ else v=({wild:viewWild,char:viewChar,craft:viewCraft,mat:viewMat,pvp:viewPvp,tower:viewEvents,guild:viewGuild,me:viewDress}[s.tab]||viewWild)();
  document.getElementById('view').innerHTML=sockHtml()+noPotHtml()+dupHtml()+v;
  try{restoreDraft()}catch(e){}
  chatUI();try{dqFabInit();dqUI()}catch(e){}
  document.getElementById('logbox').innerHTML=(s.battle||!s.created)?'':'<section class="card log"><h3>บันทึก</h3><ol>'+s.log.slice(0,5).map(function(t){return '<li>'+t+'</li>'}).join('')+'</ol></section>';
- var tabs=[['wild','ล่า'],['char','ตัวละคร'],['craft','ตีของ'],['mat','วัตถุดิบ'],['pvp','PvP'],['tower','หอคอย'],['guild','ฝ่าย'],['me','แต่งตัว']];
+ var tabs=[['wild','ล่า'],['char','ตัวละคร'],['craft','ตีของ'],['mat','วัตถุดิบ'],['pvp','PvP'],['tower','กิจกรรม'],['guild','ฝ่าย'],['me','แต่งตัว']];
  var nav=document.getElementById('nav');
  nav.className=(s.battle||!s.created)?'lock':'';
  nav.innerHTML='<div class="in">'+tabs.map(function(t){return '<button class="tab" data-a="tab" data-p="'+t[0]+'"'+(s.tab===t[0]?' aria-current="page"':'')+'>'+t[1]+((t[0]==='char'&&(s.sp>0||s.skp>0))||(t[0]==='wild'&&dqClaimable())?' <span style="color:var(--brass)">•</span>':'')+'</button>'}).join('')+'</div>';
@@ -3111,7 +3213,7 @@ function frame(tn){
  requestAnimationFrame(frame);
 }
 // ===== ฝั่งหน้าเว็บ (client): ส่งทุกการกระทำไปให้เซิร์ฟเวอร์ตัดสิน แล้ววาดผลตามสถานะที่เซิร์ฟเวอร์ส่งกลับ =====
-var NET={token:null,busy:false,q:[],v:-1,tickBusy:false,base:(typeof window!=='undefined'&&window.GAME_API)||''};
+var NET={token:null,busy:false,q:[],v:-1,tickBusy:false,uid:null,fac:null,facAt:0,facBusy:false,wb:null,wbAt:0,wbBusy:false,ladder:null,ladAt:0,ladBusy:false,base:(typeof window!=='undefined'&&window.GAME_API)||''};
 function uiGet(){return {confirmReset:confirmReset,confirmLeave:confirmLeave,createMsg:createMsg,noPot:noPot,noPotSeen:noPotSeen,sockUI:sockUI,cardMsg:cardMsg,zoneOpen:zoneOpen}}
 function uiSet(o){if(!o)return;confirmReset=!!o.confirmReset;confirmLeave=!!o.confirmLeave;createMsg=o.createMsg||'';noPot=!!o.noPot;noPotSeen=!!o.noPotSeen;sockUI=o.sockUI||null;cardMsg=o.cardMsg||'';zoneOpen=!!o.zoneOpen}
 function apiCall(method,url,body){
@@ -3120,7 +3222,9 @@ function apiCall(method,url,body){
 function netApply(j){
  if(!j||!j.s)return;
  var keep=s?!!s.dqOpen:false;
- s=j.s;s.dqOpen=keep;NET.v=j.v;uiSet(j.ui);
+ var wl=s&&s.wbLast?s.wbLast.at:0;
+ s=j.s;s.dqOpen=keep;NET.v=j.v;uiSet(j.ui);if(j.uid)NET.uid=j.uid;
+ if(s.wbLast&&s.wbLast.at!==wl){NET.wbAt=0}
  var now=nowMs();
  if(j.fxt)Object.keys(j.fxt).forEach(function(k){fx[k]=now+j.fxt[k]});
  (j.fx||[]).forEach(function(e){try{var f={fl:fl,fxPlayerHit:fxPlayerHit,fxSkill:fxSkill,fxBuff:fxBuff,fxEnemyHit:fxEnemyHit}[e[0]];if(f)f.apply(null,e[1])}catch(er){}});
@@ -3136,6 +3240,15 @@ function netPump(){
 function netTick(){
  if(NET.tickBusy||NET.busy||!NET.token||!s)return;NET.tickBusy=true;
  apiCall('POST','/api/tick',{v:NET.v}).then(function(j){if(j&&j.s)netApply(j);else{renderStatus();var ck=s.battle?-1:Math.ceil(cdLeft()/1000);if(ck!==lastCd&&(s.tab==='wild'||s.tab==='pvp')){lastCd=ck;render()}}}).catch(netErr).then(function(){NET.tickBusy=false})}
+function netWB(){
+ if(!NET.token||NET.wbBusy||Date.now()-NET.wbAt<15000)return;NET.wbBusy=true;NET.wbAt=Date.now();
+ apiCall('GET','/api/wboss').then(function(j){NET.wb=j;HYD_IMG={};if(s&&s.tab==='tower'&&!s.battle)render()}).catch(function(){}).then(function(){NET.wbBusy=false})}
+function netFac(){
+ if(!NET.token||NET.facBusy||Date.now()-NET.facAt<20000)return;NET.facBusy=true;NET.facAt=Date.now();
+ apiCall('GET','/api/fac').then(function(j){NET.fac=j.list||[];if(s&&s.tab==='guild'&&!s.battle)render()}).catch(function(){}).then(function(){NET.facBusy=false})}
+function netLadder(){
+ if(!NET.token||NET.ladBusy||Date.now()-NET.ladAt<20000)return;NET.ladBusy=true;NET.ladAt=Date.now();
+ apiCall('GET','/api/ladder').then(function(j){NET.ladder=j;if(s&&s.tab==='pvp'&&!s.battle)render()}).catch(function(){}).then(function(){NET.ladBusy=false})}
 function netEnter(){
  return apiCall('GET','/api/state').then(function(j){
   curUser=j.user||'';setMsg('');
@@ -3167,12 +3280,16 @@ if(SV){
   fresh:function(){return normalize(fresh())},
   normalize:function(o){return normalize(o)},
   run:function(state,ui,fn){
-   s=state;uiSet(ui||{});FXLOG=[];var t0=nowMs();fx.pAtk=fx.eAtk=fx.eHit=fx.pHit=-9999;
+   s=state;uiSet(ui||{});FXLOG=[];WBDONE=null;var t0=nowMs();fx.pAtk=fx.eAtk=fx.eHit=fx.pHit=-9999;
    fn();
    var fxt={};['pAtk','eAtk','eHit','pHit'].forEach(function(k){if(fx[k]>=t0-1)fxt[k]=Math.round(fx[k]-t0)});
    fx.parts=[];fx.projs=[];fx.rings=[];fx.floats=[];
-   var out={s:s,ui:uiGet(),fx:FXLOG,fxt:fxt};s=null;return out},
-  act:function(a,p){act(a,p)},
+   var out={s:s,ui:uiGet(),fx:FXLOG,fxt:fxt,wb:WBDONE};s=null;return out},
+  act:function(a,p){try{facSettle()}catch(e){}act(a,p)},
+  setBoard:function(b,uid){SVB.board=b;SVB.uid=uid},
+  setWB:function(w){SVB.wb=w},
+  grant:function(g,f,msg){wbGrant(g,f,msg)},
+  snap:function(st){s=st;try{if(!s||!s.created)return null;var o=mySnap();if(s.fac!=null){var tr=s.facTry;o.fac=s.fac;o.wid=tr?tr.wid:'';o.pt=tr?tr.pt|0:0;o.tries=tr?tr.n|0:0}return o}finally{s=null}},
   tick:function(){return logicTick()},
   enter:function(){timeTick();save()}
  };
