@@ -73,6 +73,9 @@ function loadEngine(htmlPath) {
   return {
     fresh: () => clone(E.fresh()),
     normalize: o => clone(E.normalize(o)),
+    snap: st => { try { return E.snap(clone(st)); } catch (e) { return null; } },
+    setBoard: (b, uid) => E.setBoard(b, uid),
+    setWB: w => E.setWB(w),
     // รันคำสั่งหนึ่งครั้งบนสถานะของผู้เล่นคนเดียว แล้วคืนสถานะใหม่ (คัดลอกออกมา ไม่ให้ชี้ข้ามผู้เล่น)
     run(state, ui, inp, fn) {
       inputs.cur = inp || {};

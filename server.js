@@ -73,6 +73,53 @@ setInterval(() => { // ล้างแคชผู้เล่นที่ไม
   for (const [uid, p] of live) if (p.touched < cut && !p.saving && !p.dirty) live.delete(uid);
 }, 5 * 60 * 1000).unref();
 
+// ---------- อันดับ PvP + รายชื่อผู้เล่นจริงสำหรับจับคู่ ----------
+const LADDER = new Map(); let BOARD = [], boardDirty = true;
+function board() { if (boardDirty) { BOARD = [...LADDER.values()]; boardDirty = false; } return BOARD; }
+function updateSnap(uid, p) {
+  if (!p.s || !p.s.created || p.s.battle) return;
+  const sn = engine.snap(p.s); if (!sn) return;
+  const key = JSON.stringify(sn);
+  if (p.snapKey === key) return;
+  p.snapKey = key;
+  LADDER.set(uid, Object.assign(sn, { id: uid, upd: Date.now() })); boardDirty = true;
+  db.putLadder(uid, key, sn.rating | 0).catch(e => console.error('ladder save', e.message));
+}
+
+// ---------- บอสโลก ไฮดรา (รวมดาเมจทุกคน รีเซ็ตเที่ยงคืนเวลาไทย) ----------
+const WB_HP = 9000000, WB_PRIZE = [{ g: 20000, f: 3 }, { g: 10000, f: 2 }, { g: 5000, f: 1 }];
+const today = () => Math.floor((Date.now() + 7 * 3600e3) / 864e5);
+const WB = { day: 0, total: 0, dmg: new Map(), prev: [] }; // dmg: uid -> {n, cls, dmg}
+async function wbLoad(day) {
+  WB.day = day; WB.total = 0; WB.dmg = new Map();
+  for (const r of await db.wbDay(day)) { WB.dmg.set(Number(r.user_id), { n: r.name, cls: r.cls, dmg: Number(r.dmg) }); WB.total += Number(r.dmg); }
+  const prev = await db.wbDay(day - 1);
+  WB.prev = prev.slice(0, 3).map(r => ({ n: r.name, uid: Number(r.user_id) }));
+  // แจกรางวัลอันดับ 1–3 ของเมื่อวาน (บันทึกไว้ ผู้เล่นได้รับตอนเข้าเกมครั้งถัดไป)
+  for (let i = 0; i < Math.min(3, prev.length); i++) await db.wbPrizeAdd(Number(prev[i].user_id), day - 1, i + 1);
+}
+async function wbEnsure() { const d = today(); if (WB.day !== d) await wbLoad(d); }
+function wbCtx() { return { day: WB.day, left: Math.max(0, WB_HP - WB.total) }; }
+async function wbRecord(uid, p, res) {
+  if (!res || !(res.dmg > 0)) return;
+  await wbEnsure();
+  const dmg = Math.min(res.dmg, Math.max(0, WB_HP - WB.total));
+  const cur = WB.dmg.get(uid) || { n: '', cls: '', dmg: 0 };
+  cur.n = String(p.s.name || '').slice(0, 16); cur.cls = p.s.cls; cur.dmg += dmg;
+  WB.dmg.set(uid, cur); WB.total += dmg;
+  await db.wbAdd(WB.day, uid, cur.n, cur.cls, dmg);
+}
+async function wbPrizes(uid, p) { // ส่งรางวัลที่ค้างให้ผู้เล่น
+  const rows = await db.wbPrizeGet(uid);
+  for (const r of rows) {
+    const z = WB_PRIZE[(r.rank | 0) - 1]; if (!z) continue;
+    const out = engine.run(p.s, p.ui, {}, E => E.grant(z.g, z.f, 'รางวัลบอสโลก อันดับ ' + r.rank + ': ทอง +' + z.g.toLocaleString() + ' · ยาฟื้นเลือดเต็ม ×' + z.f));
+    p.s = out.s; p.ui = out.ui; p.v++;
+    await db.wbPrizeDone(uid, r.day);
+  }
+  if (rows.length) persist(uid, p);
+}
+
 // ---------- แชท/ทีม ----------
 const CHATLOG = []; let CHAT_ID = Date.now(); // id เริ่มจากเวลา เพื่อให้รีสตาร์ทแล้ว id ยังมากกว่าของเดิมในหน้าเว็บ
 const TEAM_MAX = 6, teamCache = new Map();
@@ -181,9 +228,11 @@ const routes = {
   'GET /api/state': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
     const p = await session(u.id);
+    await wbEnsure(); engine.setWB(wbCtx()); engine.setBoard(board(), u.id);
+    await wbPrizes(u.id, p).catch(e => console.error('prize', e.message));
     const out = engine.run(p.s, p.ui, {}, E => E.enter());
-    p.s = out.s; p.ui = out.ui; p.v++; persist(u.id, p);
-    reply(res, p, { s: out.s, ui: out.ui }, u.display);
+    p.s = out.s; p.ui = out.ui; p.v++; persist(u.id, p); updateSnap(u.id, p);
+    send(res, 200, { s: out.s, ui: out.ui, fx: [], fxt: {}, v: p.v, user: u.display, uid: u.id });
   },
   'POST /api/act': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -193,8 +242,10 @@ const routes = {
     const p = await session(u.id);
     if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
     const before = p.s.gold;
+    engine.setBoard(board(), u.id); await wbEnsure(); engine.setWB(wbCtx());
     const out = engine.run(p.s, p.ui, cleanInputs(b.inp), E => E.act(a, pr));
-    p.s = out.s; p.ui = out.ui; p.v++; persist(u.id, p);
+    if (out.wb) await wbRecord(u.id, p, out.wb);
+    p.s = out.s; p.ui = out.ui; p.v++; persist(u.id, p); updateSnap(u.id, p);
     if (out.s.gold - before > 200000) db.audit(u.id, 'gold_jump', a + ' +' + (out.s.gold - before)).catch(() => {});
     reply(res, p, out);
   },
@@ -205,9 +256,11 @@ const routes = {
     if (now - p.lastTick < 500) return send(res, 200, { same: true, v: p.v }); // tick ถี่กว่า 0.5 วินาทีไม่นับ
     p.lastTick = now;
     let changed = false;
+    engine.setBoard(board(), u.id); engine.setWB(wbCtx());
     const out = engine.run(p.s, p.ui, {}, E => { changed = E.tick(); });
+    if (out.wb) await wbRecord(u.id, p, out.wb);
     p.s = out.s; p.ui = out.ui;
-    if (changed || out.fx.length) { p.v++; persist(u.id, p); }
+    if (changed || out.fx.length) { p.v++; persist(u.id, p); updateSnap(u.id, p); }
     if (!changed && !out.fx.length && Number(b.v) === p.v) return send(res, 200, { same: true, v: p.v });
     reply(res, p, out);
   },
@@ -262,6 +315,25 @@ const routes = {
     await db.setTeam(u.id, name); teamCache.set(u.id, name);
     send(res, 200, { team: name });
   },
+  'GET /api/wboss': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    await wbEnsure();
+    const all = [...WB.dmg.entries()].sort((a, b) => b[1].dmg - a[1].dmg);
+    const idx = all.findIndex(([id]) => id === u.id);
+    send(res, 200, { day: WB.day, hp: WB_HP, left: Math.max(0, WB_HP - WB.total), total: WB.total, count: all.length,
+      top: all.slice(0, 20).map(([id, x]) => ({ n: x.n, cls: x.cls, dmg: x.dmg, me: id === u.id })),
+      me: idx >= 0 ? { rank: idx + 1, dmg: all[idx][1].dmg } : null, prev: WB.prev.map(x => ({ n: x.n })) });
+  },
+  'GET /api/fac': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    send(res, 200, { list: board().filter(x => x.fac != null).map(x => ({ id: x.id, fac: x.fac, wid: x.wid, pt: x.pt | 0, tries: x.tries | 0 })) });
+  },
+  'GET /api/ladder': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    const all = board().slice().sort((a, b) => (b.rating | 0) - (a.rating | 0));
+    const idx = all.findIndex(x => x.id === u.id);
+    send(res, 200, { top: all.slice(0, 10).map(x => ({ n: x.n, cls: x.cls, lvl: x.lvl, rating: x.rating, tt: x.tt, me: x.id === u.id })), rank: idx >= 0 ? idx + 1 : 0, total: all.length });
+  },
   'GET /api/top': async (req, res) => send(res, 200, { top: (await db.top()).map(r => ({ name: r.name, cls: r.cls, lvl: r.level })) }),
   'GET /api/health': async (req, res) => send(res, 200, { ok: true, players: live.size, db: db.kind.split(' ')[0] }),
 };
@@ -291,7 +363,11 @@ async function ensureSecret() {
   SECRET = v;
   return 'auto';
 }
-db.init().then(ensureSecret).then(src => {
+async function loadLadder() {
+  for (const r of await db.allLadder()) { try { LADDER.set(Number(r.user_id), Object.assign(JSON.parse(r.snap), { id: Number(r.user_id), upd: Number(r.upd) })); } catch (e) {} }
+  boardDirty = true;
+}
+db.init().then(ensureSecret).then(async src => { await loadLadder(); await wbEnsure();
   if (src === 'auto') console.log('JWT_SECRET: ไม่ได้ตั้งหรือสั้นเกินไป ใช้รหัสลับที่สร้างอัตโนมัติและเก็บในฐานข้อมูลแทน');
   server.listen(PORT, () => console.log('ศึกชิงเมือง server · port ' + PORT + ' · DB ' + db.kind));
 }).catch(e => { console.error('เชื่อมต่อฐานข้อมูลไม่สำเร็จ:', e.message); process.exit(1); });
