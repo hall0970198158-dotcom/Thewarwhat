@@ -1,10 +1,14 @@
+# Render แบบเสียเงิน (Starter + Disk) — ไม่หลับ ข้อมูลเก็บเป็นไฟล์ SQLite บนดิสก์ถาวรของ Render
+# (ถ้าอยากใช้ฟรี: เปลี่ยน plan เป็น free, ลบส่วน disk/DB_PATH แล้วใส่ TURSO_URL + TURSO_TOKEN แทน — ดู README)
 services:
   - type: web
     name: shuk-sueng-meuang
     runtime: node
-    plan: starter            # ต้องเป็นแพ็กเกจที่มี Disk (แพ็กเกจฟรีไม่มีดิสก์ถาวร ข้อมูลจะหาย)
-    buildCommand: echo "no build"
+    plan: starter
+    region: singapore
+    buildCommand: echo "no build needed"
     startCommand: npm start
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
         value: 22.12.0
@@ -16,4 +20,3 @@ services:
       name: game-data
       mountPath: /var/data
       sizeGB: 1
-    healthCheckPath: /api/health
