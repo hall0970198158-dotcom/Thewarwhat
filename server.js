@@ -87,16 +87,23 @@ function updateSnap(uid, p) {
 }
 
 // ---------- บอสโลก ไฮดรา (รวมดาเมจทุกคน รีเซ็ตเที่ยงคืนเวลาไทย) ----------
-const WB_HP = 9000000, WB_PRIZE = [{ g: 20000, f: 3 }, { g: 10000, f: 2 }, { g: 5000, f: 1 }];
+const WB_HP = 9000000, WB_PRIZE = [{ g: 14000, f: 3 }, { g: 7000, f: 2 }, { g: 3500, f: 1 }]; // ทองลด 30% จากเดิม
+const PRIZE_PENDING = new Set(); // ผู้เล่นที่มีรางวัลรอรับ (แจกตอนส่งคำสั่งครั้งถัดไป ไม่ต้องรีเฟรช)
 const today = () => Math.floor((Date.now() + 7 * 3600e3) / 864e5);
-const WB = { day: 0, total: 0, dmg: new Map(), prev: [] }; // dmg: uid -> {n, cls, dmg}
+const WB = { day: 0, total: 0, dmg: new Map(), prev: [], killed: false }; // dmg: uid -> {n, cls, dmg}
 async function wbLoad(day) {
-  WB.day = day; WB.total = 0; WB.dmg = new Map();
+  WB.day = day; WB.total = 0; WB.dmg = new Map(); WB.killed = false;
   for (const r of await db.wbDay(day)) { WB.dmg.set(Number(r.user_id), { n: r.name, cls: r.cls, dmg: Number(r.dmg) }); WB.total += Number(r.dmg); }
   const prev = await db.wbDay(day - 1);
   WB.prev = prev.slice(0, 3).map(r => ({ n: r.name, uid: Number(r.user_id) }));
   // แจกรางวัลอันดับ 1–3 ของเมื่อวาน (บันทึกไว้ ผู้เล่นได้รับตอนเข้าเกมครั้งถัดไป)
   for (let i = 0; i < Math.min(3, prev.length); i++) await db.wbPrizeAdd(Number(prev[i].user_id), day - 1, i + 1);
+  if (WB.total >= WB_HP) await wbKilled();
+}
+// ทั้งเซิร์ฟเวอร์โค่นบอสได้ → ทุกคนที่ร่วมรบวันนั้นได้อุปกรณ์สุ่ม 1 ชิ้น (บันทึกก่อน แล้วแจกตอนผู้เล่นส่งคำสั่ง)
+async function wbKilled() {
+  WB.killed = true;
+  for (const uid of WB.dmg.keys()) { await db.wbKillAdd(uid, WB.day); PRIZE_PENDING.add(uid); }
 }
 async function wbEnsure() { const d = today(); if (WB.day !== d) await wbLoad(d); }
 function wbCtx() { return { day: WB.day, left: Math.max(0, WB_HP - WB.total) }; }
@@ -108,6 +115,7 @@ async function wbRecord(uid, p, res) {
   cur.n = String(p.s.name || '').slice(0, 16); cur.cls = p.s.cls; cur.dmg += dmg;
   WB.dmg.set(uid, cur); WB.total += dmg;
   await db.wbAdd(WB.day, uid, cur.n, cur.cls, dmg);
+  if (!WB.killed && WB.total >= WB_HP) await wbKilled();
 }
 async function wbPrizes(uid, p) { // ส่งรางวัลที่ค้างให้ผู้เล่น
   const rows = await db.wbPrizeGet(uid);
@@ -117,8 +125,186 @@ async function wbPrizes(uid, p) { // ส่งรางวัลที่ค้�
     p.s = out.s; p.ui = out.ui; p.v++;
     await db.wbPrizeDone(uid, r.day);
   }
-  if (rows.length) persist(uid, p);
+  const kills = await db.wbKillGet(uid);
+  for (const r of kills) {
+    const out = engine.run(p.s, p.ui, {}, E => E.gear('wbkill'));
+    p.s = out.s; p.ui = out.ui; p.v++;
+    await db.wbKillDone(uid, r.day);
+  }
+  if (rows.length || kills.length) persist(uid, p);
 }
+async function prizeCheck(uid, p) { if (PRIZE_PENDING.has(uid)) { PRIZE_PENDING.delete(uid); await wbPrizes(uid, p).catch(e => console.error('prize', e.message)); } }
+
+// ---------- ดันเจี้ยน "กรุสมบัติต้องสาป" ปาร์ตี้ 1–3 คน (ห้องอยู่ในหน่วยความจำ เซิร์ฟเวอร์ตัดสินทุกรอบ) ----------
+// ทุกรอบทุกคนเลือกท่าพร้อมกัน (12 วินาที): atk โจมตี · sk สกิล (พัก 2 รอบ) · grd ป้องกัน+รับดาเมจแทนเพื่อน · heal ฟื้นฟูทีม+ชุบคนสลบ (พัก 2 รอบ)
+// ศัตรูประกาศท่าถัดไปล่วงหน้า · ความแรงศัตรูคิดจากพลังของทีมจริง ทีมเล็ก/ใหญ่เล่นได้สมดุล · รางวัลแจกผ่านเครื่องยนต์เกม (ฟ้า 90 ม่วง 9 ส้ม 1)
+const DG_MAX = 3, DG_TURN_MS = 12000;
+const DG_STAGES = [
+  { n: 'ผู้เฝ้ากรุศิลา', k: 'golem', R: 5, A: 0.15, pool: ['slam', 'sweep', 'slam', 'shell'] },
+  { n: 'นักรบกิ้งก่าต้องสาป', k: 'lizard', R: 6, A: 0.17, pool: ['slam', 'sweep', 'shell', 'charge', 'slam'] },
+  { n: 'มังกรเฝ้าสมบัติ', k: 'dragon', R: 8, A: 0.19, boss: true, pool: ['slam', 'sweep', 'charge', 'shell', 'slam', 'sweep', 'charge'] },
+];
+const DG_CLS = {
+  warrior: { grd: 0.25, sk: 2.2, heal: 0.16, skn: 'ฟันทลายเกราะ' },
+  rogue: { grd: 0.45, sk: 2.0, hits: 2, crit: 15, heal: 0.16, skn: 'แทงคู่เงา' },
+  mage: { grd: 0.45, sk: 2.8, heal: 0.16, skn: 'ลูกไฟระเบิด' },
+  paladin: { grd: 0.35, sk: 2.0, heal: 0.28, skn: 'ค้อนศักดิ์สิทธิ์' },
+  archer: { grd: 0.45, sk: 2.4, pierce: true, heal: 0.16, skn: 'ศรทะลวง' },
+};
+const DGR = new Map();   // id -> room
+const DGU = new Map();   // uid -> room id
+let DG_ID = 100;
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pickA = a => a[Math.floor(Math.random() * a.length)];
+function dgStats(p) {
+  const sn = engine.snap(p.s); if (!sn) return null;
+  return { n: sn.n, cls: sn.cls, lvl: sn.lvl | 0, look: sn.look, mhp: Math.max(1, sn.hp | 0), atk: Math.max(1, sn.atk | 0), def: Math.max(0, sn.def | 0), crit: Math.min(60, sn.crit || 0), dodge: Math.min(25, sn.dodge || 0) };
+}
+function dgMember(uid, p) { const st = dgStats(p); if (!st) return null; return Object.assign(st, { uid, ready: false, seen: Date.now(), hp: st.mhp, down: false, cd: { sk: 0, heal: 0 }, pick: null, guard: false }); }
+function dgAlive(r) { return r.mem.filter(m => !m.down); }
+function dgIntent(r) {
+  const en = r.en, S = DG_STAGES[r.stage];
+  en.shell = false; en.stun = false;
+  if (en.stunNext) { en.stunNext = false; en.stun = true; en.intent = { t: 'stun', txt: 'มึนงง! รอบนี้ไม่โจมตี และรับดาเมจ +30% — ทุ่มสุดตัวเลย' }; return; }
+  if (en.blastNext) { en.blastNext = false; en.intent = { t: 'blast', txt: 'ระเบิดพลังใส่ทั้งทีม (แรงมาก)! กดป้องกันเพื่อลดดาเมจ หรือเตรียมฟื้นฟู' }; return; }
+  let t = pickA(S.pool); if (t === en.lastT && t !== 'slam') t = 'slam'; en.lastT = t;
+  const al = dgAlive(r);
+  if (t === 'slam') { const tg = pickA(al); en.intent = { t, tg: tg.uid, txt: 'ฟาดหนักใส่ ' + tg.n + ' — เพื่อนกดป้องกันเพื่อรับแทนได้' }; }
+  else if (t === 'sweep') en.intent = { t, txt: 'กวาดโจมตีทั้งทีม' };
+  else if (t === 'charge') { en.brk = Math.max(1, Math.round(en.mhp / S.R * 0.9)); en.intent = { t, txt: 'กำลังชาร์จพลัง! ทีมต้องทำดาเมจรวม ' + en.brk.toLocaleString() + ' ในรอบนี้เพื่อขัดจังหวะ ไม่งั้นรอบหน้าระเบิดใส่ทั้งทีม' }; }
+  else { en.shell = true; en.intent = { t: 'shell', txt: 'ตั้งเกราะหิน: รับดาเมจครึ่งเดียวรอบนี้ (ศรทะลวงทะลุได้) และตีเบา ๆ — จังหวะดีที่จะฟื้นฟู' }; }
+}
+function dgStage(r) {
+  const S = DG_STAGES[r.stage], n = r.mem.length;
+  const dps = r.mem.reduce((a, m) => a + m.atk * (1 + m.crit / 100), 0);
+  const mhp = Math.max(30, Math.round(dps * S.R * (n === 1 ? 0.9 : n === 2 ? 1.1 : 1.2)));
+  const avg = r.mem.reduce((a, m) => a + m.mhp, 0) / n;
+  r.en = { n: S.n, k: S.k, boss: !!S.boss, hp: mhp, mhp, A: avg * S.A * (n === 1 ? 0.85 : n === 2 ? 1.52 : 1.89) };
+  dgIntent(r); r.en.fresh = true;
+}
+function dgStart(r) {
+  for (const m of r.mem) { const p = live.get(m.uid); const st = p && dgStats(p); if (st) Object.assign(m, st); m.hp = m.mhp; m.down = false; m.cd = { sk: 0, heal: 0 }; m.pick = null; }
+  r.st = 'fight'; r.stage = 0; r.round = 1; r.log = ['เข้าสู่กรุสมบัติต้องสาป (' + r.mem.length + ' คน)']; r.ev = []; r.loot = {};
+  dgStage(r); r.en.fresh = false; r.deadline = Date.now() + DG_TURN_MS; r.seq++; r.ver++;
+}
+function dgHitP(m, raw) { // ดาเมจที่ผู้เล่นได้รับ (ลดตามเกราะ ป้องกัน หลบ)
+  if (Math.random() * 100 < m.dodge) return 0;
+  const C = DG_CLS[m.cls] || DG_CLS.warrior;
+  const red = Math.min(0.4, m.def / (m.def + 60 + m.lvl * 8));
+  return Math.max(1, Math.round(raw * rnd(0.9, 1.1) * (1 - red) * (m.guard ? C.grd : 1)));
+}
+function dgResolve(r) {
+  const en = r.en, ev = [], log = [], idx = m => r.mem.indexOf(m);
+  const picks = dgAlive(r).map(m => { let a = m.pick || 'atk'; if ((a === 'sk' && m.cd.sk > 0) || (a === 'heal' && m.cd.heal > 0)) a = 'atk'; return [m, a]; });
+  const nAtk = picks.filter(([, a]) => a === 'atk' || a === 'sk').length, combo = nAtk >= 2 ? 1 + 0.15 * (nAtk - 1) : 1;
+  for (const [m, a] of picks) if (a === 'grd') { m.guard = true; ev.push({ t: 'g', i: idx(m) }); log.push(m.n + ' ตั้งท่าป้องกัน'); }
+  for (const [m, a] of picks) if (a === 'heal') {
+    const C = DG_CLS[m.cls] || DG_CLS.warrior; m.cd.heal = 3; let tot = 0, rv = [];
+    for (const t of r.mem) {
+      if (t.down) { t.down = false; t.hp = Math.round(t.mhp * 0.25); rv.push(t.n); ev.push({ t: 'h', i: idx(t), v: t.hp, rv: 1 }); }
+      else { const v = Math.min(t.mhp - t.hp, Math.round(t.mhp * C.heal)); if (v > 0) { t.hp += v; tot += v; ev.push({ t: 'h', i: idx(t), v }); } }
+    }
+    log.push(m.n + ' ฟื้นฟูทีม' + (tot ? ' +' + tot.toLocaleString() + ' HP' : '') + (rv.length ? ' · ชุบชีวิต ' + rv.join(', ') : ''));
+  }
+  let dealt = 0;
+  for (const [m, a] of picks) if (a === 'atk' || a === 'sk') {
+    const C = DG_CLS[m.cls] || DG_CLS.warrior, hits = a === 'sk' && C.hits ? C.hits : 1, mult = a === 'sk' ? C.sk / hits : 1;
+    let tot = 0, crit = false;
+    for (let h = 0; h < hits; h++) {
+      let d = m.atk * rnd(0.85, 1.15) * mult * combo;
+      if (Math.random() * 100 < m.crit + (C.crit || 0)) { d *= 2; crit = true; }
+      if (en.shell && !(a === 'sk' && C.pierce)) d *= 0.5;
+      if (en.stun) d *= 1.3;
+      tot += Math.max(1, Math.round(d));
+    }
+    if (a === 'sk') m.cd.sk = 3;
+    en.hp -= tot; dealt += tot;
+    ev.push({ t: 'p', i: idx(m), a, d: tot, c: crit });
+    log.push(m.n + (a === 'sk' ? ' ใช้' + C.skn : ' โจมตี') + ' −' + tot.toLocaleString() + (crit ? ' (คริติคอล!)' : ''));
+  }
+  if (combo > 1) log.push('โจมตีประสาน ' + nAtk + ' คน! ดาเมจ +' + Math.round((combo - 1) * 100) + '%');
+  if (en.hp <= 0) {
+    en.hp = 0;
+    log.push('โค่น ' + en.n + ' สำเร็จ!');
+    if (r.stage >= DG_STAGES.length - 1) { r.st = 'won'; r.ended = Date.now(); dgReward(r, log); }
+    else {
+      r.stage++;
+      for (const m of r.mem) { if (m.down) { m.down = false; m.hp = Math.round(m.mhp * 0.3); } else m.hp = Math.min(m.mhp, m.hp + Math.round(m.mhp * 0.35)); m.cd = { sk: 0, heal: 0 }; }
+      dgStage(r); log.push('เข้าสู่ด่าน ' + (r.stage + 1) + ': ' + r.en.n + ' (ทุกคนฟื้นเลือด 35%)');
+    }
+  } else {
+    const it = en.intent, al = dgAlive(r), A = en.A, hits = [];
+    const hitOne = (m, raw) => { const d = dgHitP(m, raw); m.hp -= d; hits.push([idx(m), d]); if (m.hp <= 0) { m.hp = 0; m.down = true; log.push(m.n + ' สลบ!'); } return d; };
+    if (it.t === 'slam' || it.t === 'shell') {
+      const guard = al.filter(m => m.guard).sort((a, b) => (DG_CLS[a.cls] || {}).grd - (DG_CLS[b.cls] || {}).grd)[0];
+      let tg = it.t === 'slam' ? al.find(m => m.uid === it.tg) || pickA(al) : pickA(al);
+      if (guard && it.t === 'slam') tg = guard;
+      const d = hitOne(tg, A * (it.t === 'slam' ? 2.0 : 0.8));
+      log.push(en.n + (it.t === 'slam' ? ' ฟาดหนักใส่ ' : ' ตีเบา ๆ ใส่ ') + tg.n + (d ? ' −' + d.toLocaleString() : ' แต่หลบได้') + (guard === tg && it.t === 'slam' && it.tg !== tg.uid ? ' (รับแทนเพื่อน!)' : ''));
+    } else if (it.t === 'sweep' || it.t === 'blast') {
+      for (const m of al) hitOne(m, A * (it.t === 'sweep' ? 1.1 : 2.6));
+      log.push(en.n + (it.t === 'sweep' ? ' กวาดโจมตีทั้งทีม' : ' ระเบิดพลังใส่ทั้งทีม!'));
+    } else if (it.t === 'charge') {
+      if (dealt >= en.brk) { en.stunNext = true; ev.push({ t: 'brk' }); log.push('ขัดจังหวะการชาร์จสำเร็จ! ' + en.n + ' มึนงง'); }
+      else { en.blastNext = true; log.push(en.n + ' ชาร์จพลังเต็ม... (ดาเมจรวม ' + dealt.toLocaleString() + '/' + en.brk.toLocaleString() + ')'); }
+    } else if (it.t === 'stun') log.push(en.n + ' มึนงง ไม่ได้โจมตี');
+    if (hits.length) ev.push({ t: 'e', k: it.t, hits });
+    if (!dgAlive(r).length) { r.st = 'lost'; r.ended = Date.now(); log.push('ทั้งทีมสลบ... ภารกิจล้มเหลว'); }
+  }
+  for (const m of r.mem) { m.guard = false; m.pick = null; if (m.cd.sk > 0) m.cd.sk--; if (m.cd.heal > 0) m.cd.heal--; }
+  if (r.st === 'fight') { if (r.en.fresh) r.en.fresh = false; else dgIntent(r); r.round++; r.deadline = Date.now() + DG_TURN_MS; }
+  r.ev = ev; r.log = log.reverse().concat(r.log || []).slice(0, 10); r.seq++; r.ver++;
+}
+function dgReward(r, log) {
+  for (const m of r.mem) {
+    const p = live.get(m.uid); if (!p) { r.loot[m.uid] = null; continue; }
+    let res = null;
+    const out = engine.run(p.s, p.ui, {}, E => { res = E.dgLoot(); });
+    p.s = out.s; p.ui = out.ui; p.v++; persist(m.uid, p);
+    r.loot[m.uid] = res;
+    log.push(m.n + (res ? ' ได้ ' + res.n + ' (' + ['', '', 'ฟ้า', 'ม่วง', 'ส้ม'][res.q] + ')' : ' รับรางวัลครบวันนี้แล้ว'));
+  }
+}
+function dgLeave(uid) {
+  const id = DGU.get(uid); DGU.delete(uid); const r = DGR.get(id); if (!r) return;
+  const m = r.mem.find(x => x.uid === uid);
+  r.mem = r.mem.filter(x => x.uid !== uid);
+  if (!r.mem.length) { DGR.delete(id); return; }
+  if (r.host === uid) r.host = r.mem[0].uid;
+  if (m) r.log = [m.n + ' ออกจากห้อง'].concat(r.log || []).slice(0, 10);
+  if (r.st === 'fight' && r.en && r.en.intent && r.en.intent.tg === uid) dgIntent(r);
+  r.ver++;
+}
+function dgView(r, uid) {
+  if (!r) return null;
+  const now = Date.now(), ti = r.en && r.en.intent && r.en.intent.tg != null ? r.mem.findIndex(m => m.uid === r.en.intent.tg) : -1;
+  return {
+    id: r.id, st: r.st, stage: r.stage | 0, round: r.round | 0, seq: r.seq, ver: r.ver, left: r.st === 'fight' ? Math.max(0, r.deadline - now) : 0,
+    me: r.mem.findIndex(m => m.uid === uid),
+    mem: r.mem.map(m => ({ n: m.n, cls: m.cls, lvl: m.lvl, look: m.look, hp: m.hp, mhp: m.mhp, down: m.down, ready: m.ready, host: m.uid === r.host, me: m.uid === uid,
+      picked: !!m.pick, grd: false, pick: m.uid === uid ? m.pick : null, cd: m.uid === uid ? m.cd : null })),
+    en: r.en && r.st === 'fight' ? { n: r.en.n, k: r.en.k, boss: r.en.boss, hp: r.en.hp, mhp: r.en.mhp, shell: r.en.shell, stun: r.en.stun, intent: Object.assign({}, r.en.intent, { tg: undefined, ti }) } : r.en ? { n: r.en.n, k: r.en.k, boss: r.en.boss, hp: r.en.hp, mhp: r.en.mhp } : null,
+    ev: r.ev || [], log: (r.log || []).slice(0, 8), loot: r.loot ? r.loot[uid] || null : null,
+  };
+}
+async function dgPayload(uid, p) {
+  let left = 0;
+  const out = engine.run(p.s, p.ui, {}, E => { left = E.dgLeft(); });
+  p.s = out.s; p.ui = out.ui;
+  const r = DGR.get(DGU.get(uid));
+  if (r) { const m = r.mem.find(x => x.uid === uid); if (m) m.seen = Date.now(); }
+  const rooms = [...DGR.values()].filter(x => x.st === 'lobby' && x.mem.length < DG_MAX).slice(0, 20)
+    .map(x => ({ id: x.id, n: (x.mem.find(m => m.uid === x.host) || x.mem[0]).n, c: x.mem.length, lvl: Math.round(x.mem.reduce((a, m) => a + m.lvl, 0) / x.mem.length) }));
+  return { runs: { left, max: 3 }, rooms, room: dgView(r, uid) };
+}
+setInterval(() => { // ตัดสินรอบที่หมดเวลา · ล้างห้องร้าง
+  const now = Date.now();
+  for (const r of DGR.values()) {
+    if (r.st === 'fight' && now >= r.deadline) { try { dgResolve(r); } catch (e) { console.error('dg', e); } }
+    if (r.st === 'lobby') for (const m of r.mem.slice()) if (now - m.seen > 60000) dgLeave(m.uid);
+    if (DGR.has(r.id) && r.mem.every(m => now - m.seen > 180000)) { for (const m of r.mem) DGU.delete(m.uid); DGR.delete(r.id); }
+  }
+}, 400).unref();
 
 // ---------- แชท/ทีม ----------
 const CHATLOG = []; let CHAT_ID = Date.now(); // id เริ่มจากเวลา เพื่อให้รีสตาร์ทแล้ว id ยังมากกว่าของเดิมในหน้าเว็บ
@@ -241,6 +427,7 @@ const routes = {
     if (!/^[a-z0-9]{1,20}$/.test(a) || (pr && pr.length > 80)) return send(res, 400, { error: 'คำสั่งไม่ถูกต้อง' });
     const p = await session(u.id);
     if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
+    await prizeCheck(u.id, p);
     const before = p.s.gold;
     engine.setBoard(board(), u.id); await wbEnsure(); engine.setWB(wbCtx());
     const out = engine.run(p.s, p.ui, cleanInputs(b.inp), E => E.act(a, pr));
@@ -255,7 +442,8 @@ const routes = {
     const p = await session(u.id), now = Date.now();
     if (now - p.lastTick < 500) return send(res, 200, { same: true, v: p.v }); // tick ถี่กว่า 0.5 วินาทีไม่นับ
     p.lastTick = now;
-    let changed = false;
+    let changed = PRIZE_PENDING.has(u.id);
+    await prizeCheck(u.id, p);
     engine.setBoard(board(), u.id); engine.setWB(wbCtx());
     const out = engine.run(p.s, p.ui, {}, E => { changed = E.tick(); });
     if (out.wb) await wbRecord(u.id, p, out.wb);
@@ -320,9 +508,61 @@ const routes = {
     await wbEnsure();
     const all = [...WB.dmg.entries()].sort((a, b) => b[1].dmg - a[1].dmg);
     const idx = all.findIndex(([id]) => id === u.id);
-    send(res, 200, { day: WB.day, hp: WB_HP, left: Math.max(0, WB_HP - WB.total), total: WB.total, count: all.length,
+    send(res, 200, { day: WB.day, hp: WB_HP, killed: WB.killed, left: Math.max(0, WB_HP - WB.total), total: WB.total, count: all.length,
       top: all.slice(0, 20).map(([id, x]) => ({ n: x.n, cls: x.cls, dmg: x.dmg, me: id === u.id })),
       me: idx >= 0 ? { rank: idx + 1, dmg: all[idx][1].dmg } : null, prev: WB.prev.map(x => ({ n: x.n })) });
+  },
+  // ---------- ดันเจี้ยน ----------
+  'GET /api/dg': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    const p = await session(u.id);
+    send(res, 200, await dgPayload(u.id, p));
+  },
+  'POST /api/dg': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    const b = await readBody(req);
+    const p = await session(u.id);
+    if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
+    if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
+    const op = String(b.op || ''), cur = DGR.get(DGU.get(u.id));
+    const bad = msg => send(res, 400, { error: msg });
+    if (op === 'create') {
+      if (cur) return bad('คุณอยู่ในห้องอื่นแล้ว');
+      if (p.s.battle) return bad('จบการต่อสู้ที่ค้างอยู่ก่อน');
+      const m = dgMember(u.id, p); if (!m) return bad('สร้างตัวละครก่อน');
+      const r = { id: ++DG_ID, host: u.id, st: 'lobby', mem: [m], seq: 0, ver: 0, log: [m.n + ' สร้างห้อง'], created: Date.now() };
+      DGR.set(r.id, r); DGU.set(u.id, r.id);
+    } else if (op === 'join') {
+      if (cur) return bad('คุณอยู่ในห้องอื่นแล้ว');
+      const r = DGR.get(Number(b.id));
+      if (!r) return bad('ไม่พบห้องนี้ (อาจปิดไปแล้ว)');
+      if (r.st !== 'lobby') return bad('ห้องนี้เริ่มลงดันไปแล้ว');
+      if (r.mem.length >= DG_MAX) return bad('ห้องเต็มแล้ว (3 คน)');
+      const m = dgMember(u.id, p); if (!m) return bad('สร้างตัวละครก่อน');
+      r.mem.push(m); DGU.set(u.id, r.id); r.log = [m.n + ' เข้าห้อง'].concat(r.log).slice(0, 10); r.ver++;
+    } else if (op === 'leave') {
+      dgLeave(u.id);
+    } else if (!cur) {
+      return bad('คุณไม่ได้อยู่ในห้องดันเจี้ยน');
+    } else if (op === 'ready') {
+      const m = cur.mem.find(x => x.uid === u.id);
+      if (cur.st === 'lobby' && m) { m.ready = !m.ready; const st = dgStats(p); if (st) Object.assign(m, st); cur.ver++; }
+    } else if (op === 'start') {
+      if (cur.host !== u.id) return bad('เฉพาะหัวห้องที่กดเริ่มได้');
+      if (cur.st !== 'lobby') return bad('เริ่มไปแล้ว');
+      if (!cur.mem.every(m => m.uid === cur.host || m.ready)) return bad('รอทุกคนกดพร้อมก่อน');
+      dgStart(cur);
+    } else if (op === 'pick') {
+      const a = String(b.act || ''), m = cur.mem.find(x => x.uid === u.id);
+      if (cur.st !== 'fight' || !m || m.down || !['atk', 'sk', 'grd', 'heal'].includes(a)) return bad('เลือกท่านี้ไม่ได้ตอนนี้');
+      if ((a === 'sk' && m.cd.sk > 0) || (a === 'heal' && m.cd.heal > 0)) return bad('ท่านี้ยังติดคูลดาวน์');
+      m.pick = a; cur.ver++;
+      if (dgAlive(cur).every(x => x.pick)) dgResolve(cur);
+    } else if (op === 'again') {
+      if (cur.host !== u.id) return bad('เฉพาะหัวห้อง');
+      if (cur.st === 'won' || cur.st === 'lost') { cur.st = 'lobby'; cur.en = null; cur.loot = {}; for (const m of cur.mem) { m.ready = false; m.down = false; } cur.ver++; }
+    } else return bad('คำสั่งไม่ถูกต้อง');
+    send(res, 200, await dgPayload(u.id, p));
   },
   'GET /api/fac': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
