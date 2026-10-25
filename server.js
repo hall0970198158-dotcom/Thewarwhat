@@ -400,7 +400,7 @@ function botsActive(now) {
 // อยู่ในเมือง (~35%) หรือออกล่าตามโซนที่เหมาะกับเลเวล · สลับทุก ~8 นาที
 function botWhere(b, now) { const k = Math.floor((now + b.off * 3) / 480000); if (bHash(b.i + 303, k) < 0.35) return 'town'; return Math.min(5, Math.floor((botLvl(b, now) - 1) / 10)); }
 // เส้นทางเดินในเมือง (ถนนที่ไม่มีสิ่งกีดขวาง)
-const BOT_SEG = [[540, 700, 900, 700], [720, 690, 720, 1000], [600, 820, 840, 820], [200, 545, 600, 545], [840, 545, 1240, 545], [560, 700, 880, 700], [720, 330, 720, 480], [620, 900, 820, 900]];
+const BOT_SEG = [[540, 728, 900, 728], [720, 690, 720, 1000], [600, 820, 840, 820], [200, 545, 600, 545], [840, 545, 1240, 545], [560, 728, 880, 728], [720, 330, 720, 480], [620, 900, 820, 900]];
 function botTownPos(b, now) {
   const seg = BOT_SEG[b.i % BOT_SEG.length], step = 5000 + Math.floor(bHash(b.i + 7, 1) * 4000), k = Math.floor((now + b.off) / step);
   const t = bHash(b.i + 505, k), stay = bHash(b.i + 606, k) < 0.35, tt = stay ? bHash(b.i + 505, k - 1) : t;
@@ -593,7 +593,8 @@ const routes = {
     engine.setBoard(board(), u.id); engine.setWB(wbCtx());
     ptPrep(u.id, p);
     await cityLoad(); cityTick();
-    const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); changed = E.tick(); });
+    const twn = TOWN.get(u.id), inTown = !!(twn && now - twn.at < 6000);
+    const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); const tg = E.townEn ? E.townEn(inTown) : false; changed = E.tick() || tg || changed; });
     if (out.wb) await wbRecord(u.id, p, out.wb);
     p.s = out.s; p.ui = out.ui; ptAfter(u.id, p); if (p.s.cityRes) { cityAfter(p); changed = true; }
     if (changed || out.fx.length) { p.v++; persist(u.id, p); updateSnap(u.id, p); }
