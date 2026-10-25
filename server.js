@@ -345,14 +345,29 @@ function ptLead(uid, p) {
   const b = p.s && p.s.battle; if (!b || b.ptChk) return; b.ptChk = 1;
   if (b.kind !== 'monster' || b.tower || b.joint || b.pk == null) return;
   const r = ptOf(uid); if (!r || r.host !== uid) return;
-  let n = 0;
+  let n = 0; const jid = uid + ':' + Date.now();
+  const J = { jid, nm: p.s.name, pk: b.pk, e: b.e, grp: b.grp || null, fboss: b.fboss ? 1 : 0 };
   for (const m of ptNear(uid, p.s)) {
     const rm = r.mem.find(x => x.uid === m.uid); if (!rm || !rm.fol) continue;
     const q = live.get(m.uid); if (!q || !q.s || q.s.battle) continue;
-    try { let ok = false; const o = engine.run(q.s, q.ui, {}, E => { ok = E.ptJoin ? E.ptJoin(String(b.pk), p.s.name) : false; }); q.s = o.s; q.ui = o.ui; if (ok) { n++; q.v++; persist(m.uid, q); } }
+    try { let ok = false; const o = engine.run(q.s, q.ui, {}, E => { ok = E.ptJoin ? E.ptJoin(J) : false; }); q.s = o.s; q.ui = o.ui; if (ok) { n++; q.v++; persist(m.uid, q); } }
     catch (e) { console.error('party join', e.message); }
   }
-  if (n) { b.joint = 1; b.lines = (b.lines || []).concat(['🤝 ลูกทีม ' + n + ' คนเข้าสู้ด้วยกัน (XP ÷2)']); }
+  if (n) { b.joint = 1; b.jid = jid; b.lines = (b.lines || []).concat(['🤝 ลูกทีม ' + n + ' คนเข้าสู้ด้วยกัน (XP ÷2)']); }
+}
+// สู้ด้วยกัน: ดาเมจที่ใครคนหนึ่งทำกับมอน → ลดเลือดมอนตัวเดียวกันของเพื่อนในฉากเดียวกัน (jid เดียวกัน)
+function jSnap(s) { const b = s && s.battle; if (!b || !b.jid) return null; return { jid: b.jid, kills: s.kills | 0, hp: b.grp ? b.grp.map((g, i) => i === b.gi ? b.ehp : g.ehp) : [b.ehp] }; }
+function jSync(uid, p, js) {
+  if (!js) return; const b = p.s.battle; let post;
+  if (b && b.jid === js.jid) post = b.grp ? b.grp.map((g, i) => i === b.gi ? b.ehp : g.ehp) : [b.ehp];
+  else if ((p.s.kills | 0) > js.kills) post = js.hp.map(() => 0); else return;
+  const dmg = js.hp.map((h, i) => Math.max(0, (h | 0) - (post[i] | 0))); if (!dmg.some(x => x > 0)) return;
+  const r = ptOf(uid); if (!r) return;
+  for (const m of r.mem) {
+    if (m.uid === uid) continue; const q = live.get(m.uid); if (!q || !q.s || !q.s.battle || q.s.battle.jid !== js.jid) continue;
+    try { const o = engine.run(q.s, q.ui, {}, E => { if (E.jDmg) E.jDmg(dmg); }); q.s = o.s; q.ui = o.ui; q.v++; persist(m.uid, q); }
+    catch (e) { console.error('joint sync', e.message); }
+  }
 }
 function ptSweep() { const now = Date.now(); for (const r of [...PTR.values()]) for (const m of r.mem.slice()) if (now - m.seen > PT_STALE_MS) ptLeave(m.uid); }
 function ptPayload(uid) {
@@ -617,9 +632,10 @@ const routes = {
     engine.setBoard(board(), u.id); await wbEnsure(); engine.setWB(wbCtx());
     ptPrep(u.id, p);
     await cityLoad(); cityTick();
+    const js0 = jSnap(p.s);
     const out = engine.run(p.s, p.ui, cleanInputs(b.inp), E => { E.setCity(cityCtx()); E.act(a, pr); });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; ptLead(u.id, p); ptAfter(u.id, p); cityAfter(p); p.v++; persist(u.id, p); updateSnap(u.id, p);
+    p.s = out.s; p.ui = out.ui; jSync(u.id, p, js0); ptLead(u.id, p); ptAfter(u.id, p); cityAfter(p); p.v++; persist(u.id, p); updateSnap(u.id, p);
     if (out.s.gold - before > 200000) db.audit(u.id, 'gold_jump', a + ' +' + (out.s.gold - before)).catch(() => {});
     reply(res, p, out);
   },
@@ -634,10 +650,10 @@ const routes = {
     engine.setBoard(board(), u.id); engine.setWB(wbCtx());
     ptPrep(u.id, p);
     await cityLoad(); cityTick();
-    const twn = TOWN.get(u.id), inTown = !!(twn && now - twn.at < 6000);
+    const twn = TOWN.get(u.id), inTown = !!(twn && now - twn.at < 6000), js0 = jSnap(p.s);
     const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); const tg = E.townEn ? E.townEn(inTown) : false; changed = E.tick() || tg || changed; });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; if (p.s.battle && !p.s.battle.ptChk) { ptLead(u.id, p); changed = true; } ptAfter(u.id, p); if (p.s.cityRes) { cityAfter(p); changed = true; }
+    p.s = out.s; p.ui = out.ui; jSync(u.id, p, js0); if (p.s.battle && !p.s.battle.ptChk) { ptLead(u.id, p); changed = true; } ptAfter(u.id, p); if (p.s.cityRes) { cityAfter(p); changed = true; }
     if (changed || out.fx.length) { p.v++; persist(u.id, p); updateSnap(u.id, p); }
     if (!changed && !out.fx.length && Number(b.v) === p.v) return send(res, 200, { same: true, v: p.v });
     reply(res, p, out);
@@ -815,7 +831,7 @@ const routes = {
   },
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
-    send(res, 200, { server: 'V157', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    send(res, 200, { server: 'V158', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
