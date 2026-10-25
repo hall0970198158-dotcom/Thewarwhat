@@ -702,8 +702,9 @@ var POTION_PRICE=25;
 var POTS=[{h:75,price:25,lv:1,key:'potions'},{h:100,price:50,lv:1,key:'pot2'},{h:150,price:75,lv:15,key:'pot3'},{h:300,price:125,lv:1,key:'pot4'},{h:500,price:250,lv:1,key:'pot5'},{h:1000,price:500,lv:1,key:'pot6'},{h:0,full:1,price:1500,lv:1,key:'potF'}];
 function potTotal(){return (s.potions|0)+(s.pot2|0)+(s.pot3|0)+(s.pot4|0)+(s.pot5|0)+(s.pot6|0)}
 // เลือกขวดที่ใช้: ใช้ยาที่ฟื้น HP น้อยสุดที่มีก่อนเสมอ (75 → 100 → 150 → 300 → 500 → 1000) · ยาฟื้นเต็มไม่ใช้อัตโนมัติ
-function pickPot(){for(var i=0;i<POTS.length;i++){if(POTS[i].full)continue;if((s[POTS[i].key]|0)>0)return POTS[i]}return null}
-function drinkPot(div){var q=pickPot();if(!q||s.hp>=s.maxhp)return 0;s[q.key]--;var h=Math.min(Math.round(q.h/(div||1)),s.maxhp-s.hp);s.hp+=h;return h}
+function pickPot(need){var big=null;for(var i=0;i<POTS.length;i++){if(POTS[i].full||(s[POTS[i].key]|0)<1)continue;if(!(need>0))return POTS[i];big=POTS[i];if(POTS[i].h>=need)return POTS[i]}return big}
+// need>0 = ฉุกเฉิน: ใช้ขวดเล็กสุดที่ฟื้นพอให้รอดตาถัดไป (ไม่มีก็ใช้ขวดใหญ่สุดที่มี)
+function drinkPot(div,need){var q=pickPot(need);if(!q||s.hp>=s.maxhp)return 0;s[q.key]--;var h=Math.min(Math.round(q.h/(div||1)),s.maxhp-s.hp);s.hp+=h;return h}
 
 /* ---------- สถานะ ---------- */
 function passiveOf(o,key){var p=CLASSES[o.cls].sk[0];return (p.p[key]||0)*((o.sk&&o.sk[p.id])||0)}
@@ -1383,7 +1384,7 @@ function wbFinish(killed){
  var dealt=Math.max(0,Math.round((b.wbStart|0)-Math.max(0,b.ehp)));
  var turns=b.turn|0;
  s.hp=Math.max(1,Math.min(s.maxhp,typeof b.hp0==='number'?b.hp0:s.maxhp));
- s.battle=null;fightDone(FIGHT_CD);s.autoHunt=false;s.autoTower=false;
+ s.battle=null;fightDone(FIGHT_CD);
  s.wbLast={dmg:dealt,turns:turns,killed:!!killed,at:Date.now()};
  WBDONE={dmg:dealt,killed:!!killed};
  say((killed?'โค่น'+WB_NAME+'สำเร็จ! ':'สลบจากไฮดรา ')+'ทำดาเมจ '+dealt.toLocaleString()+' ใน '+turns+' เทิร์น');
@@ -1655,7 +1656,7 @@ function battleAct(a){
  b.cd=b.cd||{};b.buffs=b.buffs||{};
  if(a==='flee'){
   if(noFlee(b))return;
-  if(Math.random()<0.6){say('หนีจาก '+e.n+' ได้');s.battle=null;fightDone(HUNT_CD);return}
+  if(Math.random()<0.6){say('หนีจาก '+e.n+' ได้');s.battle=null;if(b.tower)fightDone(HUNT_CD);return}
   l.push('หนีไม่พ้น!');
  }else if(a==='potionf'){
   if(b.wb||isDuel(b)||(s.potF|0)<1||s.hp>=s.maxhp)return;
@@ -1663,7 +1664,7 @@ function battleAct(a){
  }else if(a==='potion'){
   if(b.wb||potTotal()<1||s.hp>=s.maxhp)return;
   var du=isDuel(b);if(du&&(b.pots|0)>=DUEL_POTS)return;
-  var h=drinkPot(du?DUEL_HP:1);if(du)b.pots=(b.pots|0)+1;
+  var h=drinkPot(du?DUEL_HP:1,b.potNeed|0);if(du)b.pots=(b.pots|0)+1;
   var hs=du?h*DUEL_HP:h;l.push('ดื่มยา ฟื้น '+hs+' HP'+(du?' ('+b.pots+'/'+DUEL_POTS+' ขวด)':''));fl('p','+'+hs,'#7fc06a');
  }else if(a.indexOf('sk:')===0){
   var k=SKMAP[a.slice(3)],lv=k?skLv(k.id):0;
@@ -1703,7 +1704,7 @@ function battleAct(a){
   }
  }
  var eAct=false;
- if(b.ehp>0){b.eg=(b.eg||0)+eRatio(b);if(b.eg>=0.999){b.eg=Math.max(0,b.eg-1);eAct=true}}
+ if(b.ehp>0){b.eg=(b.eg||0)+eRatio(b)*(a==='potion'||a==='potionf'?0.5:1);if(b.eg>=0.999){b.eg=Math.max(0,b.eg-1);eAct=true}}
  if(b.ehp>0&&eAct){
   b.turn=(b.turn||0)+1;
   if(stun){l.push(e.n+' มึนงง ข้ามการโจมตี')}
@@ -1738,10 +1739,16 @@ function battleAct(a){
  if(b.ehp<=0){if(!b.grp)return win();if(s.hp>0){if(grpNext(b))return;return win()}}
  if(s.hp<=0){return lose()}
 }
+function eDanger(b){if(!b||!b.e)return 0;var d=pDef()*0.6,sum=0,boss=b.e.boss,sk=!b.e.pvp&&!b.e.cls&&b.kind==='monster'&&!b.tower&&!b.wb&&!(s.zone<EASY_ZONES&&!boss);
+ sum+=Math.max(1,b.e.atk*eam(b)*1.2*(b.wb?Math.max(1,(b.turn|0)+1):1)*(sk?(boss?2.2:1.8):(b.e.pvp?(b.e.pvp.mult||1.9):1))-d);
+ if(b.grp)b.grp.forEach(function(g,i){if(i!==b.gi&&g.ehp>0)sum+=Math.max(1,g.e.atk*eam(b)*1.2-d)});
+ return Math.round(isDuel(b)?sum/DUEL_HP:sum)}
 function autoAct(){
  var b=s.battle;
- if(b&&b.e&&b.e.boss&&!b.tower&&s.autoBoss==='stop'&&s.autoHunt){s.autoHunt=false;s.autoMsg='ออโต้หยุด: เจอบอส (สู้เองได้เลย)';say('เจอบอส! ออโต้หยุดทำงาน');return}
- if(!b.wb&&potOn()&&s.hp<s.maxhp*potThr()&&potTotal()>0&&s.hp<s.maxhp&&!(isDuel(b)&&(b.pots|0)>=DUEL_POTS))return battleAct('potion');
+ if(b&&b.e&&b.e.boss&&!b.tower&&!noFlee(b)&&s.autoBoss==='stop'&&s.autoHunt){s.autoHunt=false;s.autoMsg='ออโต้หยุด: เจอบอส (สู้เองได้เลย)';say('เจอบอส! ออโต้หยุดทำงาน');return}
+ if(!b.wb&&potOn()&&potTotal()>0&&s.hp<s.maxhp&&!(isDuel(b)&&(b.pots|0)>=DUEL_POTS)){
+  var dg=((b.eg||0)+eRatio(b)>=0.999)?eDanger(b):0; // ศัตรูจะตีตาถัดไป: ถ้าเลือดไม่พอรับ → ดื่มยาก่อน (ถึงยังไม่ถึง % ที่ตั้ง)
+  if(s.hp<s.maxhp*potThr()||s.hp<=dg){b.potNeed=s.hp<=dg?dg-s.hp+1:0;var rr=battleAct('potion');b.potNeed=0;return rr}}
  if(s.hp<s.maxhp*0.2&&!noFlee(b))return battleAct('flee');
  if(s.autoSkill){
   var ks=SK[s.cls].slice(1).filter(function(k){return skLv(k.id)>0&&s.skAuto[k.id]!==false&&s.mp>=k.mp&&!((b.cd||{})[k.id]>0)});
@@ -1773,13 +1780,13 @@ function win(){
   if(b.tower%10===0){var bg=Math.round(b.tower*50*0.2),pu=b.tower/10;s.gold+=bg;addItem('purple',pu);p.push('โบนัสผ่านชั้น ทอง +'+bg+', แร่หินสีม่วง +'+pu)}}
  say('ชนะ '+e.n+' ('+p.join(', ')+')');
  if(b.tower)s.res={won:true,n:e.n,kind:'tower',f:b.tower,text:s.log[0].replace(/^.*? · /,''),until:Date.now()+TW_WAIT};
- s.battle=null;fightDone(HUNT_CD);s.mp=Math.min(s.maxmp,s.mp+Math.round(s.maxmp*0.25));gainXp(xp);
+ s.battle=null;if(b.tower)fightDone(HUNT_CD);s.mp=Math.min(s.maxmp,s.mp+Math.round(s.maxmp*0.25));gainXp(xp);
 }
 function lose(){
  if(s.battle&&s.battle.wb)return wbFinish(false);
  if(noFlee(s.battle))return duelEnd(false);
  var lost=s.battle.tower?0:Math.floor(s.gold*DEATH_LOSS);s.gold-=lost;s.autoHunt=false;s.autoTower=false;s.autoMsg='ออโต้หยุด: พ่ายแพ้';
- var n=s.battle.e.n,twf=s.battle.tower;s.battle=null;fightDone(HUNT_CD);
+ var n=s.battle.e.n,twf=s.battle.tower;s.battle=null;if(twf)fightDone(HUNT_CD);
  say('ถูก '+n+' ฟาดจนสลบ เสียทอง '+lost+' แล้วฟื้นขึ้นมาด้วย HP ครึ่งหนึ่ง');
  if(twf)s.res={won:false,n:n,kind:'tower',f:twf,text:s.log[0].replace(/^.*? · /,''),until:Date.now()+TW_WAIT};
  s.hp=Math.max(1,Math.floor(s.maxhp/2));save();
@@ -1879,7 +1886,7 @@ function setFold(noSkill){return '<button class="btn fold" data-a="bset" aria-ex
 function miniBattle(){
  var b=s.battle;
  if(!b){if(s.autoHunt||s.autoTower)return '<button class="minib idle" data-a="bback"><span class="mbn">🔁 ออโต้กำลัง'+(s.autoTower?'ปีนหอคอย':'ล่ามอน')+'</span><span class="mbr">กลับไปดู ▶</span><span class="mbp"><i style="width:'+pct(s.hp,s.maxhp)+'%"></i></span></button>';return ''}
- var e=b.e,auto=b.tower?s.autoTower:s.autoHunt;
+ var e=b.e,auto=noFlee(b)?!!b.auto:b.tower?s.autoTower:s.autoHunt;
  return '<button class="minib" data-a="bback"><span class="mbn">⚔️ '+esc(String(e.n))+'</span><span class="mbr">'+(auto?'ออโต้สู้อยู่':'รอคุณกดสู้')+' · กลับ ▶</span><span class="mbb"><i style="width:'+pct(b.ehp,e.hp)+'%"></i></span><span class="mbp"><i style="width:'+pct(s.hp,s.maxhp)+'%"></i></span></button>'}
 var noPot=false,noPotSeen=false,POT_AT=0.6; // หลังจบการต่อสู้ ออโต้ดื่มยาจนเลือด ≥60% · ไม่มียา = เด้งเตือนซื้อยา
 var sockUI=null,cardMsg='';
@@ -1989,7 +1996,7 @@ function act(a,p){
  else if(a==='warstart')warStart();
  else if(a==='warfight')warFight();
  else if(a==='b'){battleAct(p)}
- else if(a==='auto'){if(s.battle&&s.battle.tower){s.autoTower=!s.autoTower;s.autoHunt=false}else{s.autoHunt=!s.autoHunt;s.autoTower=false}s.autoMsg=''}
+ else if(a==='auto'){if(s.battle&&noFlee(s.battle)){s.battle.auto=!s.battle.auto}else if(s.battle&&s.battle.tower){s.autoTower=!s.autoTower;s.autoHunt=false}else{s.autoHunt=!s.autoHunt;s.autoTower=false}s.autoMsg=''}
  else if(a==='climb'){climb()}
  else if(a==='dqclose'){s.dqOpen=false}
  else if(a==='lgclaim'){lgClaim()}
@@ -3544,7 +3551,7 @@ function grpHtml(b){if(!b.grp)return '';
 function eGauge(b){if(b.wb&&false)return '';var rt=eRatio(b),left=Math.max(1,Math.ceil((1-(b.eg||0))/rt-0.001));
  return '<div class="m"><span>ศัตรูตี</span><div class="bar"><i style="width:'+Math.round(Math.min(1,b.eg||0)*100)+'%;background:linear-gradient(90deg,#ffb04a,#ff5a3c)"></i></div><em>'+(rt>=0.999?'ทุกครั้ง':'อีก '+left+' ครั้ง')+'</em></div>'}
 function viewBattle(){
- var b=s.battle,e=b.e,auto=b.tower?s.autoTower:s.autoHunt,duel=isDuel(b);
+ var b=s.battle,e=b.e,auto=noFlee(b)?!!b.auto:b.tower?s.autoTower:s.autoHunt,duel=isDuel(b);
  var kind={monster:'มอนสเตอร์',rival:'นักผจญภัยคู่แข่ง',pvp:'PvP จับคู่ 1-1',war:'สงครามสี่ฝ่าย'}[b.kind];if(b.tower)kind='หอคอย ชั้น '+b.tower;if(b.wb)kind='บอสโลก · ไฮดราตีแรงขึ้น ×'+Math.max(1,(b.turn|0)+1)+' เทิร์นถัดไป';
  var potDis=potTotal()<1||s.hp>=s.maxhp||(duel&&(b.pots|0)>=DUEL_POTS),hvDis=s.energy<HEAVY_COST||(b.hv|0)>=HEAVY_MAX,pf=(s.potF|0)>0&&!duel;
  return '<section class="card"><canvas id="scene" class="scene" data-mode="battle" width="320" height="170" aria-label="ฉากต่อสู้"></canvas>'+
@@ -3604,7 +3611,7 @@ function autoLogic(){
  }
  if(s.dup){if(Date.now()>=s.dup.until)resolveDup();return {acted:true,dup:true}}
  if(s.battle){
-  for(var ai=0;ai<4&&s.battle&&(s.autoHunt||s.autoTower)&&(!s.battle.nextAt||Date.now()>=s.battle.nextAt-60);ai++){autoAct();acted=true}
+  for(var ai=0;ai<4&&s.battle&&(noFlee(s.battle)?!!s.battle.auto:(s.autoHunt||s.autoTower))&&(!s.battle.nextAt||Date.now()>=s.battle.nextAt-60);ai++){autoAct();acted=true}
  }else if((s.autoHunt||s.autoTower)&&s.created){
   if(s.res){}
   else if(s.energy<2){s.autoHunt=false;s.autoTower=false;s.autoMsg='ออโต้หยุด: พลังงานไม่พอ';acted=true}
