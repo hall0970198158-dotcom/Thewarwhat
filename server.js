@@ -382,7 +382,7 @@ let OFFC = { at: 0, list: [] };
 function offActive(now) {
   if (now - OFFC.at < 10000) return OFFC.list;
   const out = [], seen = new Set();
-  for (const [uid, p] of live) { if (now - (p.touched || 0) < 120000) { seen.add(uid); continue; } const pr = offProf(p.s, p.touched); if (pr && now - pr.at < OFF_MS) { out.push(Object.assign({ uid }, pr)); seen.add(uid); } }
+  for (const [uid, p] of live) { if (now - (p.touched || 0) < 60000) { seen.add(uid); continue; } const pr = offProf(p.s, p.touched); if (pr && now - pr.at < OFF_MS) { out.push(Object.assign({ uid }, pr)); seen.add(uid); } }
   for (const [uid, pr] of OFFL) { if (seen.has(uid)) continue; if (now - pr.at >= OFF_MS) { OFFL.delete(uid); continue; } out.push(Object.assign({ uid }, pr)); }
   out.sort((a, b) => b.at - a.at);
   OFFC = { at: now, list: out };
@@ -768,6 +768,10 @@ const routes = {
     }
     for (const bt of botsActive(now)) { if (list.length >= TOWN_MAX) break; if (botWhere(bt, now) !== 'town') continue; list.push(Object.assign(botPub(bt, now), botTownPos(bt, now), { say: '', sayAge: 0 })); }
     send(res, 200, { list });
+  },
+  'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
+    const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
+    send(res, 200, { server: 'V154', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
