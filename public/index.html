@@ -2768,6 +2768,7 @@ function drawWBoss(c,W,gy,tn,ex,ea,b){
 function wbOverlay(c,W,H,tn,b){
  var m=Math.max(1,((b&&b.turn)|0)+1),v=Math.min(0.5,0.06*m);
  var g=c.createRadialGradient(W/2,H/2,H*0.35,W/2,H/2,W*0.65);g.addColorStop(0,'rgba(120,0,0,0)');g.addColorStop(1,'rgba(150,0,0,'+(v*(0.85+0.15*Math.sin(tn/200)))+')');c.fillStyle=g;c.fillRect(0,0,W,H);
+ var dl=Math.max(0,Math.round((b.wbStart|0)-Math.max(0,b.ehp|0)));c.save();c.font='800 11px Kanit,sans-serif';c.textAlign='right';c.lineWidth=4;c.strokeStyle='rgba(0,0,0,.85)';var dt0=T('ดาเมจรวม')+' '+dl.toLocaleString();c.strokeText(dt0,W-8,62);c.fillStyle='#ffe07a';c.fillText(dt0,W-8,62);c.restore();
  var p=1+0.12*Math.max(0,Math.sin(tn/180));c.save();c.translate(W-22,34);c.scale(p,p);c.font='900 18px sans-serif';c.textAlign='center';c.lineWidth=5;c.strokeStyle='#2a0000';c.strokeText('×'+m,0,6);c.fillStyle=m>=6?'#ff4a3a':m>=3?'#ffb03a':'#ffe07a';c.fillText('×'+m,0,6);c.restore()}
 
 // ===== อุปกรณ์รางวัล (บอสโลก/ดันเจี้ยน): ตามเลเวลผู้เล่น · เข้าคิวแล้วเด้งให้เลือกสวม/ขายทีละชิ้น =====
@@ -3253,15 +3254,16 @@ function drawScene(cv,tn){
  }
  fxDraw(c,tn);vignette(c,W,H,b?0.5:0.35);if(b&&b.wb)wbOverlay(c,W,H,tn,b);
  var fa=(tn-fx.flash.t)/220;if(fa>=0&&fa<1){c.globalAlpha=1-fa;c.fillStyle=fx.flash.col;c.fillRect(0,0,W,H);c.globalAlpha=1}
- fx.floats=fx.floats.filter(function(f){return tn-f.t<(f.big?1100:900)});
+ var WBF=!!(b&&b.wb);fx.floats=fx.floats.filter(function(f){return tn-f.t<(f.big?1100:(WBF?1500:900))});
  var stackE=0,stackP=0;
  fx.floats.forEach(function(f){
-  var age=tn-f.t;if(age<0)return;var lifeF=f.big?1100:900;
+  var age=tn-f.t;if(age<0)return;var lifeF=f.big?1100:(WBF?1500:900);
   var lab=!f.big&&/[ก-๙A-Za-z]/.test(f.txt)&&f.txt.charAt(0)!=='−'&&f.txt.charAt(0)!=='+';
   var fxx=f.tgt==='e'?W-80:60,fy=gy-(f.big?62:72)-age/lifeF*24-(lab?(f.tgt==='e'?(stackE++)*20+30:(stackP++)*20+24):0);fy=Math.max(lab?16:30,fy);
-  var sz=f.big?Math.round(34*(1+0.5*Math.max(0,1-age/140))):(lab?15:20);
+  if(WBF&&f.tgt==='e'){fxx=W-110;fy=Math.max(lab?40:56,fy-18)}
+  var sz=f.big?Math.round(34*(1+0.5*Math.max(0,1-age/140))):(lab?15:(WBF&&f.tgt==='e'?28:20));
   c.globalAlpha=Math.min(1,1.6*(1-age/lifeF));c.font=(f.big?'900 ':'700 ')+sz+'px sans-serif';c.textAlign='center';
-  c.lineWidth=f.big?6:4;c.strokeStyle=f.big?'#2a0000':'#10142a';c.strokeText(f.txt,fxx,fy);c.fillStyle=f.col;c.fillText(f.txt,fxx,fy);c.globalAlpha=1;
+  c.lineWidth=f.big||(WBF&&f.tgt==='e')?6:4;c.strokeStyle=f.big?'#2a0000':'#10142a';c.strokeText(f.txt,fxx,fy);c.fillStyle=f.col;c.fillText(f.txt,fxx,fy);c.globalAlpha=1;
  });
  c.restore();
  if(b){battleHud(c,W,H,tn,b);introBanner(c,W,H,tn,b)}
@@ -3312,16 +3314,16 @@ function ptRecv(j){NET.pt=j;var A=FLD.allies||(FLD.allies={}),seen={};
  if(j&&j.pt)j.pt.mem.forEach(function(m){if(m.me||!m.on||m.z!==(s.zone|0))return;var a=A[m.uid];if(!a)a=A[m.uid]={x:m.x,y:m.y};a.tx=m.x;a.ty=m.y;a.n=m.n;a.cls=m.cls;a.look=m.look;a.b=m.b;seen[m.uid]=1});
  for(var k in A)if(!seen[k])delete A[k]}
 function ptMe(){var d=NET.pt&&NET.pt.pt;if(!d)return null;return d.mem.filter(function(m){return m.me})[0]||null}
-function ptFollowOn(){if(!CL||FLD.town)return null;var me=ptMe();if(!me||me.host||!me.fol)return null;var d=NET.pt.pt,h=d.mem.filter(function(m){return m.host&&!m.me&&m.on&&m.z===(s.zone|0)})[0];return h&&FLD.allies?FLD.allies[h.uid]||null:null}
+function ptFollowOn(){return null;if(!CL||FLD.town)return null;var me=ptMe();if(!me||me.host||!me.fol)return null;var d=NET.pt.pt,h=d.mem.filter(function(m){return m.host&&!m.me&&m.on&&m.z===(s.zone|0)})[0];return h&&FLD.allies?FLD.allies[h.uid]||null:null}
 function ptFollowTick(h){var d=Math.hypot(h.x-FLD.px,h.y-FLD.py);if(d>240){FLD.tx=h.x;FLD.ty=h.y}else if(d>34){FLD.tx=h.x-(h.x>FLD.px?22:-22);FLD.ty=h.y+6}else if(!FLD.hold){FLD.tx=FLD.ty=null}FLD.follow=null}
-function ptFollowZone(){if(!CL||FLD.town||!s||s.battle)return;var me=ptMe();if(!me||me.host||!me.fol)return;var h=NET.pt.pt.mem.filter(function(m){return m.host&&!m.me&&m.on})[0];if(!h||h.z===(s.zone|0)||Date.now()-(NET.ptZAt||0)<4000)return;NET.ptZAt=Date.now();fieldSay('ย้ายไปแผนที่เดียวกับหัวปาร์ตี้');act('zone',String(h.z))}
+function ptFollowZone(){return;if(!CL||FLD.town||!s||s.battle)return;var me=ptMe();if(!me||me.host||!me.fol)return;var h=NET.pt.pt.mem.filter(function(m){return m.host&&!m.me&&m.on})[0];if(!h||h.z===(s.zone|0)||Date.now()-(NET.ptZAt||0)<4000)return;NET.ptZAt=Date.now();fieldSay('ย้ายไปแผนที่เดียวกับหัวปาร์ตี้');act('zone',String(h.z))}
 function ptOp(op,p){
  if(!CL){say('ปาร์ตี้เล่นได้ในเวอร์ชันออนไลน์');render();return}
  var b={op:op};if(op==='join')b.id=parseInt(p,10)||0;if(op==='kick')b.uid=parseInt(p,10)||0;if(op==='follow'){var me0=ptMe();b.on=!(me0&&me0.fol)}
  NET.ptMsg='';apiCall('POST','/api/party',b).then(function(j){ptRecv(j);render()}).catch(function(e){NET.ptMsg=e.message||'ผิดพลาด';render()})}
 function ptSection(){
  var title='<p class="eyebrow">ปาร์ตี้ล่า · 1–3 คน</p><h3>ล่าเป็นทีม</h3>';
- var rule='<p class="hint" style="font-size:11px">แผนที่เดียวกัน: XP +10%/เพื่อน · เพื่อนได้ส่วนแบ่ง XP 30% ทอง 20% · เปิด "เดินตาม" = เดินตามหัวปาร์ตี้และเข้าสู้พร้อมกัน (XP ÷2 · โบนัสปาร์ตี้เท่าเดิม · มี 5 วินาทีให้กดโจมตี ถ้าเปิดออโต้จะตีเลย) · เลเวลห่างไม่เกิน '+PT_LV+' · สูงสุด 3 คน</p>';
+ var rule='<p class="hint" style="font-size:11px">แผนที่เดียวกัน: XP +10%/เพื่อน · เพื่อนได้ส่วนแบ่ง XP 30% ทอง 20% · เลเวลห่างไม่เกิน '+PT_LV+' · สูงสุด 3 คน</p>';
  if(!CL)return '<section class="card">'+title+rule+'<p class="hint">ปาร์ตี้เล่นได้ในเวอร์ชันออนไลน์ (เล่นผ่านเซิร์ฟเวอร์เกม)</p></section>';
  netPT();var d=ptInfo();
  if(!d)return '<section class="card">'+title+'<p class="hint">กำลังโหลดข้อมูลปาร์ตี้...</p></section>';
@@ -3330,8 +3332,7 @@ function ptSection(){
   var rows=r.mem.map(function(m){var cn=CLASSES[m.cls]?CLASSES[m.cls].n:'',zn=ZONES[m.z]?ZONES[m.z].n:'';
    var st=cn+' Lv'+(m.lvl|0)+' · '+(!m.on?'<span style="opacity:.6">ออฟไลน์</span>':m.z===(s.zone|0)?'<span style="color:#8fe07a">แผนที่เดียวกัน</span>':'อยู่ '+zn)+(m.on&&m.b?' · ⚔️ กำลังสู้':'');
    return '<div class="item"><div><div class="nm">'+(m.host?'👑 ':'')+esc(String(m.n).slice(0,16))+(m.me?' (คุณ)':'')+'</div><div class="st">'+st+'</div></div>'+(me.host&&!m.me?'<button class="btn" data-a="ptkick" data-p="'+m.uid+'">เตะออก</button>':'')+'</div>'}).join('');
-  var folB=me.host?'<p class="hint">👑 คุณเป็นหัวปาร์ตี้ · ลูกทีมที่เปิดเดินตามจะเข้าสู้กับคุณ</p>'+r.mem.filter(function(m){return !m.host&&m.fol}).map(function(m){return '<p class="hint" style="margin:2px 0">'+esc(String(m.n).slice(0,16))+': '+(m.why?'<span style="color:#ff9a8a">⚠️ '+esc(m.why)+'</span>':'<span style="color:#8fe07a">✅ พร้อมเข้าสู้ด้วยกัน</span>')+'</p>'}).join(''):
-   '<button class="btn'+(me.fol?' primary':'')+'" data-a="ptfollow" style="width:100%;margin-top:6px">🚶 เดินตามหัวปาร์ตี้: '+(me.fol?'เปิด':'ปิด')+'</button>'+(me.fol?'<p class="hint" style="margin:4px 0 0">'+(me.why?'<span style="color:#ff9a8a">⚠️ ยังเข้าสู้ด้วยกันไม่ได้: '+esc(me.why)+'</span>':'<span style="color:#8fe07a">✅ พร้อม · หัวปาร์ตี้เข้าสู้เมื่อไหร่ คุณเข้าด้วยทันที</span>')+'</p>':'');
+  var folB='';
   return '<section class="card">'+title+folB+'<p class="hint">เลขห้อง <b style="font-size:1.25em;color:#ffd04a">#'+r.id+'</b> (บอกเพื่อนให้ค้นหาเลขนี้) · '+r.mem.length+'/3 คน · โบนัสตอนนี้ <b style="color:#8fe07a">XP +'+(near*10)+'%</b>'+(near?'':' (ชวนเพื่อนมาแผนที่เดียวกัน)')+'</p>'+rows+msg+rule+
    '<button class="btn" data-a="ptleave" style="width:100%;margin-top:6px">ออกจากปาร์ตี้</button></section>'}
  var list=(d.list||[]).map(function(x){var zn=ZONES[x.z]?ZONES[x.z].n:'';return '<div class="item"><div><div class="nm">#'+x.id+' · '+esc(String(x.n).slice(0,16))+'</div><div class="st">'+x.c+'/3 คน · เลเวลเฉลี่ย '+(x.lvl|0)+' · '+zn+'</div></div><button class="btn primary" data-a="ptjoin" data-p="'+x.id+'">เข้าร่วม</button></div>'}).join('');
@@ -3870,14 +3871,18 @@ function facFight(){
  startBattle(e,'war',{onFac:c.wid});
  s.battle.lines=['สงครามสี่ฝ่าย: ฝ่าย'+FAC[s.fac].n+' พบ '+e.n+' ('+CLASSES[e.cls].n+' Lv'+e.lvl+')'];
  facWriteSafe();save()}
+function facRank(sc,f){return 1+sc.filter(function(v){return v>sc[f]}).length} // คะแนนเท่ากัน = อันดับเท่ากัน
 function facSettle(){
  if(!s||!s.created||s.fac==null||!facReady())return;
+ // แก้ผลเก่าที่เคยคำนวณผิด ให้ตรงกับผลกลางของเซิร์ฟเวอร์ (ไม่ให้รางวัลซ้ำ)
+ if(SV&&s.facLast&&!s.facLast.fx&&SVB.facRes&&SVB.facRes[s.facLast.wid]){s.facLast.sc=SVB.facRes[s.facLast.wid].sc.slice();s.facLast.rank=facRank(s.facLast.sc,s.fac);s.facLast.fx=1}
  var w=facLastEnded();if(!w||s.facClaim===w)return;
+ if(SV&&!(SVB.facRes&&SVB.facRes[w]))return; // รอเซิร์ฟเวอร์สรุปผลก่อน
  s.facClaim=w;
  var lm=facMine(w),dm=facList().filter(function(x){return x.id===facUid()&&x.wid===w})[0],part=lm?(lm.n|0)>0:!!(dm&&(dm.tries|0)>0);
- var sc=facScores(w),order=[0,1,2,3].sort(function(a,b){return sc[b]-sc[a]||a-b}),rank=order.indexOf(s.fac)+1,gold=0,box=0;
+ var sc=SV?SVB.facRes[w].sc.slice():facScores(w),rank=facRank(sc,s.fac),gold=0,box=0;
  if(part){gold=[300+s.lvl*30,150+s.lvl*15,80+s.lvl*8,40+s.lvl*4][rank-1];s.gold+=gold;s.boxes+=box}
- s.facLast={wid:w,rank:rank,sc:sc,gold:gold,box:box,part:!!part};
+ s.facLast={wid:w,rank:rank,sc:sc,gold:gold,box:box,part:!!part,fx:SV?1:0};
  say('สงครามสี่ฝ่ายจบแล้ว ฝ่าย'+FAC[s.fac].n+' ได้อันดับ '+rank+(part?' (ทอง +'+gold+(box?', กล่อง +1':'')+')':' (ไม่ได้ร่วมรบ ไม่ได้รางวัล)'));
  save()}
 function fmtT(ms){return new Date(ms).toLocaleString('th-TH',{timeZone:'Asia/Bangkok',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
@@ -3979,7 +3984,7 @@ function viewGuild0(){
  }else{
   var lt=s.facLast;
   out=head+(nx?'<div class="reveal"><b>ศึกถัดไป: '+fmtT(nx.start)+' – '+fmtT(nx.end).split(' ').slice(-1)[0]+'</b></div>':'')+sch+'</section>'+
-   (lt?'<section class="card"><p class="eyebrow">ผลสงครามล่าสุด</p><h3>ฝ่ายคุณได้อันดับ '+lt.rank+' จาก 4</h3>'+facBars(lt.sc)+'<p class="hint">'+(lt.part?'รางวัล: ทอง +'+lt.gold+(lt.box?' · กล่อง +1':''):'คุณไม่ได้ร่วมรบรอบนั้น จึงไม่ได้รางวัล')+'</p></section>':'')+
+   (lt?'<section class="card"><p class="eyebrow">ผลสงครามล่าสุด</p><h3>ฝ่ายคุณได้อันดับ '+lt.rank+' จาก 4'+(lt.sc&&lt.sc.filter(function(v){return v===lt.sc[s.fac]}).length>1?' (คะแนนเท่ากัน)':'')+'</h3><p class="hint">ศึกวันที่ '+fmtT((parseInt(String(lt.wid).slice(1),10)||0)*864e5+19*36e5-7*36e5).split(' ').slice(0,3).join(' ')+'</p>'+facBars(lt.sc)+'<p class="hint">'+(lt.part?'รางวัล: ทอง +'+lt.gold+(lt.box?' · กล่อง +1':''):'คุณไม่ได้ร่วมรบรอบนั้น จึงไม่ได้รางวัล')+'</p></section>':'')+
    '<section class="card"><p class="eyebrow">สมาชิกแต่ละฝ่าย</p>'+FAC.map(function(f,i){return '<div class="item"><div class="nm" style="color:'+f.c+'">ฝ่าย'+f.n+'</div><div class="st">'+cnt[i]+' คน</div></div>'}).join('')+'</section>'}
  return out}
 function viewGuildOld(){
@@ -4027,7 +4032,7 @@ function viewBattle(){
  var potDis=potTotal()<1||s.hp>=s.maxhp||(duel&&(b.pots|0)>=DUEL_POTS),hvDis=s.energy<HEAVY_COST||(b.hv|0)>=HEAVY_MAX,pf=(s.potF|0)>0&&!duel;
  return '<section class="card"><canvas id="scene" class="scene" data-mode="battle" width="320" height="170" aria-label="ฉากต่อสู้"></canvas>'+
   '<div class="foe"><h2>'+e.n+(e.boss?' 👑':'')+'</h2><p class="eyebrow">'+kind+(b.grp?' · ฝูง '+grpAlive(b)+'/'+b.grp.length+' ตัว':'')+'</p></div>'+grpHtml(b)+(e.pvp?'<p class="hint">'+CLASSES[e.cls].n+' Lv'+e.lvl+(b.kind==='pvp'?' · เรทติ้ง '+e.rating:'')+'</p>':'')+
-  '<div class="m big"><span>ศัตรู</span><div class="bar"><i style="width:'+pct(b.ehp,e.hp)+'%;background:var(--blood)"></i></div>'+(b.wb?'':'<em>'+Math.max(0,b.ehp)+'/'+e.hp+'</em>')+'</div>'+
+  '<div class="m big"><span>ศัตรู</span><div class="bar"><i style="width:'+pct(b.ehp,e.hp)+'%;background:var(--blood)"></i></div>'+(b.wb?'<em>ดาเมจรวม '+Math.max(0,Math.round((b.wbStart|0)-Math.max(0,b.ehp))).toLocaleString()+'</em>':'<em>'+Math.max(0,b.ehp)+'/'+e.hp+'</em>')+'</div>'+
   eGauge(b)+miniBars(false)+
   buffHtml(b)+'<div class="sk-btns">'+skillBtns(b)+'</div>'+
   '<div class="atkrow"><button class="btn primary big" data-a="b" data-p="atk" style="position:relative;overflow:hidden">⚔️ โจมตี<small>'+(1000/aspdMs()).toFixed(2)+' ครั้ง/วิ'+(eRatio(b)<0.999?' · เร็ว ×'+(1/eRatio(b)).toFixed(1):'')+'</small><i class="aspd" style="animation-duration:'+aspdMs()+'ms"></i></button>'+
@@ -4950,6 +4955,7 @@ if(SV){
    var out={s:s,ui:uiGet(),fx:FXLOG,fxt:fxt,wb:WBDONE};s=null;return out},
   act:function(a,p){try{facSettle()}catch(e){}act(a,p)},
   setBoard:function(b,uid){SVB.board=b;SVB.uid=uid},
+  setFacRes:function(m){SVB.facRes=m||{}},
   setCity:function(c){if(c&&c.own)CITYC=c},
   setWB:function(w){SVB.wb=w},
   grant:function(g,f,msg){wbGrant(g,f,msg)},
