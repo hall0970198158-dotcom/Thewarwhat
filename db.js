@@ -46,6 +46,8 @@ const SQL = {
     level = excluded.level, gold = excluded.gold, updated_at = excluded.updated_at`,
   top: `SELECT s.name, s.cls, s.level FROM saves s JOIN users u ON u.id = s.user_id
     WHERE u.banned = 0 AND s.name IS NOT NULL AND s.name <> '' ORDER BY s.level DESC, s.updated_at ASC LIMIT 50`,
+  recentSaves: `SELECT s.user_id, s.data, s.updated_at FROM saves s JOIN users u ON u.id = s.user_id
+    WHERE u.banned = 0 AND s.updated_at > ? ORDER BY s.updated_at DESC LIMIT 60`,
   audit: 'INSERT INTO audit (user_id, at, kind, detail) VALUES (?, ?, ?, ?)',
   getMeta: 'SELECT v FROM meta WHERE k = ?',
   getTeam: 'SELECT team FROM teams WHERE user_id = ?',
@@ -65,6 +67,7 @@ const SQL = {
   teamCount: 'SELECT COUNT(*) AS n FROM teams WHERE team = ?',
   findByName: 'SELECT user_id, name FROM saves WHERE name = ? ORDER BY updated_at DESC LIMIT 1',
   setMeta: 'INSERT OR IGNORE INTO meta (k, v) VALUES (?, ?)',
+  putMeta: 'INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v',
 };
 
 // ---------- แบบ 1: Turso ผ่าน HTTP (ไม่ต้องติดตั้งแพ็กเกจ) ----------
@@ -146,9 +149,11 @@ function createDb() {
     getSave: uid => B.get(SQL.getSave, [uid]),
     putSave: (uid, data, ver, name, cls, level, gold) => B.run(SQL.putSave, [uid, data, ver, name, cls, level, gold, Date.now()]),
     top: () => B.all(SQL.top),
+    recentSaves: since => B.all(SQL.recentSaves, [since]),
     audit: (uid, kind, detail) => B.run(SQL.audit, [uid, Date.now(), kind, detail]),
     getMeta: async k => { const r = await B.get(SQL.getMeta, [k]); return r ? r.v : null; },
     setMeta: (k, v) => B.run(SQL.setMeta, [k, v]),
+    putMeta: (k, v) => B.run(SQL.putMeta, [k, v]),
     putLadder: (uid, snap, rating) => B.run(SQL.putLadder, [uid, snap, rating, Date.now()]),
     allLadder: () => B.all(SQL.allLadder),
     wbAdd: (day, uid, name, cls, dmg) => B.run(SQL.wbAdd, [day, uid, name, cls, dmg]),

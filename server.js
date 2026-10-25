@@ -76,7 +76,7 @@ function persist(uid, p) {
 async function flushAll() { await Promise.all([...live.entries()].map(([uid, p]) => (p.dirty || p.saving) ? persist(uid, p) : null)); }
 setInterval(() => { // ล้างแคชผู้เล่นที่ไม่ได้เล่นเกิน 30 นาที (บันทึกก่อนล้าง)
   const cut = Date.now() - 30 * 60 * 1000;
-  for (const [uid, p] of live) if (p.touched < cut && !p.saving && !p.dirty) live.delete(uid);
+  for (const [uid, p] of live) if (p.touched < cut && !p.saving && !p.dirty) { offRemember(uid, p.s, p.touched); live.delete(uid); }
 }, 5 * 60 * 1000).unref();
 
 // ---------- อันดับ PvP + รายชื่อผู้เล่นจริงสำหรับจับคู่ ----------
@@ -371,10 +371,27 @@ const BOTS = BOT_NAMES.map((n, i) => {
 });
 function botLvl(b, now) { return Math.max(1, Math.min(60, Math.floor(b.base + (now - BOT_START) / 86400000 * b.gr))); }
 function realOnline(now) { let n = 0; for (const p of live.values()) if (p.s && p.s.created && now - (p.touched || 0) < 90000) n++; return n; }
+
+// ===== ตัวละครออฟไลน์ (ออโต้ 💤) · ผู้เล่นจริงที่ออกเกมไม่เกิน 8 ชม. ยังเดินล่าในแผนที่สุดท้าย =====
+// เซิร์ฟเวอร์ไม่จำลองการต่อสู้ แค่ส่งรายชื่อให้เครื่องผู้เล่นวาด · อ่านฐานข้อมูลครั้งเดียวตอนเปิดเซิร์ฟเวอร์
+const OFFL = new Map(), OFF_MS = 8 * 3600000, OFF_MAX_MEM = 400;
+function offProf(s, at) { if (!s || !s.created || !s.name) return null; return { n: String(s.name).slice(0, 16), cls: s.cls, lvl: s.lvl | 0, look: s.look, z: Math.max(0, Math.min(5, s.zone | 0)), at }; }
+function offRemember(uid, s, at) { const pr = offProf(s, at); if (!pr) return; OFFL.set(uid, pr); if (OFFL.size > OFF_MAX_MEM) { const old = [...OFFL.entries()].sort((a, b) => a[1].at - b[1].at).slice(0, OFFL.size - OFF_MAX_MEM); for (const [k] of old) OFFL.delete(k); } }
+async function offBoot() { try { const rows = await db.recentSaves(Date.now() - OFF_MS); for (const r of rows || []) { if (OFFL.has(r.user_id)) continue; try { offRemember(r.user_id, JSON.parse(r.data), Number(r.updated_at) || 0); } catch (e) {} } console.log('ตัวละครออฟไลน์ที่โหลด:', OFFL.size); } catch (e) { console.error('offBoot', e.message); } }
+let OFFC = { at: 0, list: [] };
+function offActive(now) {
+  if (now - OFFC.at < 10000) return OFFC.list;
+  const out = [], seen = new Set();
+  for (const [uid, p] of live) { if (now - (p.touched || 0) < 120000) { seen.add(uid); continue; } const pr = offProf(p.s, p.touched); if (pr && now - pr.at < OFF_MS) { out.push(Object.assign({ uid }, pr)); seen.add(uid); } }
+  for (const [uid, pr] of OFFL) { if (seen.has(uid)) continue; if (now - pr.at >= OFF_MS) { OFFL.delete(uid); continue; } out.push(Object.assign({ uid }, pr)); }
+  out.sort((a, b) => b.at - a.at);
+  OFFC = { at: now, list: out };
+  return out;
+}
 let BOTC = { at: 0, list: [] };
 function botsActive(now) {
   if (now - BOTC.at < 5000) return BOTC.list;
-  const want = Math.round(BOT_TARGET * Math.max(0, 1 - realOnline(now) / BOT_FADE));
+  const want = Math.max(0, Math.round(BOT_TARGET * Math.max(0, 1 - realOnline(now) / BOT_FADE)) - offActive(now).length);
   const sc = BOTS.map(b => ({ b, v: bHash(b.i + 101, Math.floor((now + b.off) / BOT_WIN)) * b.act }));
   sc.sort((a, b) => b.v - a.v);
   BOTC = { at: now, list: sc.slice(0, want).map(x => x.b) };
@@ -400,7 +417,7 @@ async function cityLoad() {
   if (CITY.loaded) return; CITY.loaded = true;
   try { const v = await db.getMeta('city'); if (v) { const o = JSON.parse(v); if (Array.isArray(o.own) && o.own.length === CITY_N) CITY.own = o.own; CITY.pts = o.pts || {}; CITY.hist = o.hist || []; CITY.resolved = o.resolved || ''; CITY.announced = o.announced || ''; } } catch (e) { console.error('city load', e.message); }
 }
-function citySave() { db.setMeta('city', JSON.stringify({ own: CITY.own, pts: CITY.pts, hist: CITY.hist.slice(0, 20), resolved: CITY.resolved, announced: CITY.announced })).catch(e => console.error('city save', e.message)); }
+function citySave() { (db.putMeta || db.setMeta)('city', JSON.stringify({ own: CITY.own, pts: CITY.pts, hist: CITY.hist.slice(0, 20), resolved: CITY.resolved, announced: CITY.announced })).catch(e => console.error('city save', e.message)); }
 function cityClock(now) {
   now = now || Date.now(); const d0 = Math.floor((now + TZMS) / DAYMS);
   let cur = null, last = '';
@@ -754,7 +771,8 @@ const routes = {
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
     const now = Date.now(), z = Math.max(0, Math.min(5, parseInt(new URL(req.url, 'http://x').searchParams.get('z'), 10) || 0));
-    send(res, 200, { list: botsActive(now).filter(b => botWhere(b, now) === z).slice(0, 6).map(b => botPub(b, now)) });
+    const offs = offActive(now).filter(o => o.z === z && o.uid !== u.id).slice(0, 6).map(o => ({ uid: 'off' + o.uid, n: o.n, cls: o.cls, lvl: o.lvl, look: o.look, off: 1 }));
+    send(res, 200, { list: offs.concat(botsActive(now).filter(b => botWhere(b, now) === z).slice(0, Math.max(0, 6 - offs.length)).map(b => botPub(b, now))) });
   },
   'GET /api/fac': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -806,7 +824,7 @@ async function loadLadder() {
   for (const r of await db.allLadder()) { try { LADDER.set(Number(r.user_id), Object.assign(JSON.parse(r.snap), { id: Number(r.user_id), upd: Number(r.upd) })); } catch (e) {} }
   boardDirty = true;
 }
-db.init().then(ensureSecret).then(async src => { await loadLadder(); await wbEnsure();
+db.init().then(ensureSecret).then(async src => { await loadLadder(); await offBoot(); await wbEnsure();
   if (src === 'auto') console.log('JWT_SECRET: ไม่ได้ตั้งหรือสั้นเกินไป ใช้รหัสลับที่สร้างอัตโนมัติและเก็บในฐานข้อมูลแทน');
   server.listen(PORT, () => console.log('ศึกชิงเมือง server · port ' + PORT + ' · DB ' + db.kind));
 }).catch(e => { console.error('เชื่อมต่อฐานข้อมูลไม่สำเร็จ:', e.message); process.exit(1); });
