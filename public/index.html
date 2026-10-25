@@ -4037,17 +4037,17 @@ var pressing=false,lastCd=0;
 document.addEventListener('pointerdown',function(){pressing=true});
 document.addEventListener('pointerup',function(){pressing=false});
 document.addEventListener('pointercancel',function(){pressing=false});
-// ===== รางวัลตอนออฟไลน์: ไม่อยู่ ≥10 นาที ตัวละครล่าต่อให้ (สูงสุด 8 ชม.) ได้ราว 1/4 ของการล่าเอง =====
-var OFF_MIN=10,OFF_MAX=480,OFF_KPM=0.5;
-function offRate(){var z=ZONES[s.zone|0]||ZONES[0],g=0,x=0;z.mobs.forEach(function(d){var m=mobAt(d,z);g+=(m.gold[0]+m.gold[1])/2;x+=m.xp});g/=z.mobs.length;x/=z.mobs.length;return {g:g*OFF_KPM*HUNT_GOLD,x:x*OFF_KPM}}
+// ===== รางวัลตอนออฟไลน์: ไม่อยู่ ≥10 นาที ตัวละครล่าต่อให้ (สูงสุด 8 ชม.) · OFF_MUL ลดทอง/XP/วัตถุดิบเหลือ 20% ของค่าเดิม =====
+var OFF_MIN=10,OFF_MAX=480,OFF_KPM=0.5,OFF_MUL=0.2;
+function offRate(){var z=ZONES[s.zone|0]||ZONES[0],g=0,x=0;z.mobs.forEach(function(d){var m=mobAt(d,z);g+=(m.gold[0]+m.gold[1])/2;x+=m.xp});g/=z.mobs.length;x/=z.mobs.length;return {g:g*OFF_KPM*HUNT_GOLD*OFF_MUL,x:x*OFF_KPM*OFF_MUL}}
 function offCheck(){
  if(!s||!s.created){if(s)s.seenAt=Date.now();return false}
  var now=Date.now(),last=s.seenAt||now,gap=now-last;s.seenAt=now;
  if(gap<OFF_MIN*60000||s.offRw)return false;
  var mins=Math.min(OFF_MAX,Math.floor(gap/60000)),rt=offRate(),z=s.zone|0,mat={},k;
- for(var i=0;i<Math.floor(mins/30);i++){k=pick(MAT_POOL);mat[k]=(mat[k]|0)+rnd(1,2+Math.floor(z/2))}
+ for(var i=0;i<Math.floor(mins*OFF_MUL/30);i++){k=pick(MAT_POOL);mat[k]=(mat[k]|0)+rnd(1,2+Math.floor(z/2))}
  s.offRw={m:mins,away:Math.floor(gap/60000),z:z,g:Math.round(rt.g*mins),x:Math.round(rt.x*mins),mat:mat};return true}
-function offClaim(){var o=s.offRw;if(!o)return;s.offRw=null;s.gold+=o.g;s.inv=s.inv||{};var ms=[];for(var k in o.mat){s.inv[k]=(s.inv[k]|0)+o.mat[k];ms.push(MAT_N[k]+' ×'+o.mat[k])}
+function offClaim(){var o=s.offRw;if(!o)return;s.offRw=null;s.gold+=o.g;s.inv=s.inv||{};var ms=[];for(var k in o.mat){addItem(k,o.mat[k]);ms.push(MAT_N[k]+' ×'+o.mat[k])}
  say('รางวัลตอนออฟไลน์ ('+offDur(o.m)+'): ทอง +'+o.g+', XP +'+o.x+(ms.length?', '+ms.join(', '):''));gainXp(o.x);save()}
 function offDur(m){var hh=Math.floor(m/60),mm=m%60;return (hh?hh+' ชม. ':'')+(mm||!hh?mm+' นาที':'')}
 function offHtml(){var o=s&&s.offRw;if(!o||s.battle)return '';var zn=ZONES[o.z]?ZONES[o.z].n:'';
@@ -4554,7 +4554,7 @@ function netBots(){
  if(!CL||!NET.token||FLD.town||!FLD.map||FBOT.busy||!s)return;var z=FLD.z;if(typeof z!=='number')return;
  if(z===FBOT.z&&Date.now()-FBOT.at<20000)return;FBOT.busy=true;FBOT.at=Date.now();
  apiCall('GET','/api/bots?z='+z,null,6000).then(function(j){if(FLD.z!==z)return;var B=FLD.bots&&FBOT.z===z?FLD.bots:{},seen={};FBOT.z=z;
-  (j.list||[]).forEach(function(m){var q=B[m.uid];if(!q){q=B[m.uid]={x:0,y:0,dir:1,next:0,tx:null,ty:null};var sp=fbSpot(FLD.W/2,FLD.H/2,FLD.W);if(sp){q.x=sp[0];q.y=sp[1]}}q.n=m.n;q.cls=m.cls;q.lvl=m.lvl;q.look=m.look;seen[m.uid]=1});
+  (j.list||[]).forEach(function(m){var q=B[m.uid];if(!q){q=B[m.uid]={x:0,y:0,dir:1,next:0,tx:null,ty:null};var sp=fbSpot(FLD.W/2,FLD.H/2,FLD.W);if(sp){q.x=sp[0];q.y=sp[1]}}q.n=(m.off?'💤 ':'')+m.n;q.cls=m.cls;q.lvl=m.lvl;q.look=m.look;seen[m.uid]=1});
   for(var k in B)if(!seen[k])delete B[k];FLD.bots=B}).catch(function(){}).then(function(){FBOT.busy=false})}
 function fbSpot(x0,y0,rad){for(var i=0;i<14;i++){var a=Math.random()*6.283,d=40+Math.random()*rad,x=x0+Math.cos(a)*d,y=y0+Math.sin(a)*d;if(!fBlocked(x,y,6))return [x,y]}return null}
 function botsUpdate(dt,tn){var B=FLD.bots;if(!B||FBOT.z!==FLD.z)return;
