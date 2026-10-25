@@ -233,6 +233,19 @@ nav{background:linear-gradient(180deg,rgba(20,27,52,.94),rgba(12,17,34,.98));-we
 .tab[aria-current="page"]{background:radial-gradient(60px 40px at 50% 30%,rgba(240,185,60,.22),rgba(240,185,60,0) 70%);color:var(--brass);text-shadow:0 0 8px rgba(240,185,60,.4)}
 .tab[aria-current="page"]::after{content:"";position:absolute;top:-6px;left:28%;right:28%;height:3px;border-radius:0 0 3px 3px;background:var(--brass);box-shadow:0 0 10px var(--brass)}
 nav.lock{opacity:1}nav.lock .in{opacity:.38}
+.grp{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin:2px 0 6px}.grp .gm{flex:0 1 auto;min-width:64px;max-width:120px;padding:3px 6px;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.12);font-size:11px;line-height:1.2}.grp .gm b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}.grp .gm i{display:block;height:4px;border-radius:2px;background:rgba(0,0,0,.5);margin-top:2px;overflow:hidden}.grp .gm u{display:block;height:100%;background:var(--blood)}.grp .gm.on{border-color:#ffd04a;box-shadow:0 0 0 1px #ffd04a inset}.grp .gm.dead{opacity:.35;filter:grayscale(1)}
+canvas.scene.field{touch-action:none;}
+.ftg{display:grid;gap:6px;margin:4px 0}.ftg>span{font-size:13px;color:var(--muted);font-weight:600}.ftg .chips{gap:6px}.btn.sm2{min-height:34px;padding:4px 10px;font-size:13px;border-radius:999px}
+canvas.scene.field{cursor:pointer;-webkit-user-select:none;user-select:none}
+/* บทสอนผู้เล่นใหม่ */
+#tut{position:fixed;inset:0;z-index:95}#tut[hidden]{display:none}
+.tut-spot{position:fixed;border-radius:12px;outline:2px solid #f0b93c;pointer-events:none;transition:left .25s,top .25s,width .25s,height .25s;box-shadow:0 0 0 9999px rgba(3,5,14,.76);animation:tutGlow 1.1s ease-in-out infinite alternate}
+@keyframes tutGlow{from{box-shadow:0 0 0 9999px rgba(3,5,14,.76),0 0 0 rgba(240,185,60,0)}to{box-shadow:0 0 0 9999px rgba(3,5,14,.76),0 0 24px rgba(240,185,60,.8)}}
+.tut-box{position:fixed;width:min(360px,calc(100vw - 24px));box-sizing:border-box;padding:14px 14px 12px;border-radius:12px;background:linear-gradient(180deg,#1f2a54,#121a36);border:2px solid #e8b84a;box-shadow:0 14px 34px rgba(0,0,0,.65),0 0 22px rgba(240,185,60,.25);transition:top .25s,left .25s;color:var(--fg)}
+.tut-box h3{margin:2px 0 6px;color:#ffe08a}.tut-box h3::before{display:none}.tut-box p{margin:0 0 12px;font-size:15px;line-height:1.55}
+.tut-n{font-size:12px;color:var(--muted);letter-spacing:.06em}.tut-btns{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}.tut-btns .btn{min-height:42px;padding:6px 14px}
+@media (prefers-reduced-motion:reduce){.tut-spot{animation:none;transition:none}.tut-box{transition:none}}
+
 .hc.hh{border-color:#ff9a3c;color:#ffd08a;box-shadow:0 0 10px rgba(255,140,40,.45)}.hc.hh b{color:#ffe08a}
 .clock{line-height:1.6}.clock.happy{color:#ffd08a}.clock #encd,.clock #hpcd{font-variant-numeric:tabular-nums}
 /* ===== กรอบหินสลักรูน + ปุ่มทอง/เหล็ก + เปลวไฟ (ตามแบบหน้าล็อกอิน) ===== */
@@ -518,7 +531,7 @@ var AURA={white:['#ffffff','#cfe4ff'],fire:['#ff7a2a','#ffd24a'],ice:['#6fd8ff',
 var MOB_X=3,BOSS_X=4,MOB_X_EARLY=2.5,BOSS_X_EARLY=2,EARLY_ZONES=3; // 3 แผนที่แรก: มอน ×2.5 บอส ×2
 var EASY_ZONES=2,MOB_X_EASY=0.55,BOSS_X_EASY=1; // Lv1-20 (ป่าเขียว ถ้ำหินมืด) ง่าย: มอน ×0.7 ไม่มีสกิลมอน ไม่มีคู่แข่งซุ่มโจมตี บอส ×1
 // มอนธรรมดาแผนที่ Lv31–80 (ทะเลทราย → หนองพิษ): เลือด −30% · โจมตี −25% (บอสไม่เปลี่ยน)
-var MID_Z0=3,MID_Z1=6,MID_HP=0.7,MID_ATK=0.75;
+var MID_Z0=3,MID_Z1=6,MID_HP=0.49,MID_ATK=0.75; // แผนที่ Lv31–80: เลือด −30% สองรอบ (เหลือ 49%)
 function midHp(zi){return zi>=MID_Z0&&zi<=MID_Z1?MID_HP:1}
 function midAtk(zi){return zi>=MID_Z0&&zi<=MID_Z1?MID_ATK:1}
 function mobX(zi){return zi<EASY_ZONES?MOB_X_EASY:zi<EARLY_ZONES?MOB_X_EARLY:MOB_X}
@@ -1260,10 +1273,48 @@ function startBattle(e,kind,extra){
 function randLook(){
  return {hair:rnd(0,2),hc:rnd(0,5),hat:pick(['none','wiz','cap','ears']),face:pick(['none','gls','gog']),wing:'none',pet:'none',aura:'none',dye:pick(['red','blue','green','gold','purple'])};
 }
+var FIELD_PICK=-1,FIELD_BOSS=false,FIELD_NOCD=false;
+// เดินชนมอนในแผนที่: ไม่ต้องรอเวลาพัก (กันยิงรัวด้วยระยะห่างขั้นต่ำ 0.8 วินาที) · บอสสนาม: นับเวลาเกิดใหม่ 10 นาทีเมื่อชนะเท่านั้น
+function mkMob(z,d){var m=mobAt(d,z);m.hp=Math.round(m.hp*(0.9+Math.random()*0.2)*mobX(s.zone)*midHp(s.zone));m.atk=Math.round(m.atk*mobX(s.zone)*midAtk(s.zone));m.def=Math.round(m.def*mobX(s.zone));return m}
+// ฝูงมอน: ชน 1 ครั้งเจอ 1-5 ตัว (ยิ่งหลายตัว แต่ละตัวเลือด/ตีเบาลง รางวัลรวมมากขึ้น) · บอสมีลูกน้อง 2 ตัวคุ้มกัน
+var GRP_W=[30,25,20,15,10],GRP_K=[1,0.65,0.5,0.4,0.35],GRP_R=[1,1.3,1.5,1.65,1.8],MINION_K=0.4;
+function grpScale(m,k,rw){m.hp=Math.max(1,Math.round(m.hp*k));m.atk=Math.max(1,Math.round(m.atk*k));m.gold=[Math.round(m.gold[0]*rw),Math.round(m.gold[1]*rw)];m.xp=Math.max(1,Math.round(m.xp*rw));return m}
+function mkGroup(b){
+ if(!b||b.kind!=='monster'||b.tower||b.wb)return;var z=ZONES[s.zone],e=b.e,L=[],i;
+ if(e.boss){for(i=0;i<2;i++){var mn=grpScale(mkMob(z,pick(z.mobs)),MINION_K,MINION_K);mn.minion=1;L.push(mn)}L.push(e)}
+ else{var w=Math.random()*100,n=1;for(i=0;i<5;i++){w-=GRP_W[i];if(w<0){n=i+1;break}}
+  if(n<2)return;var k=GRP_K[n-1],rw=GRP_R[n-1]/n,d0=null;
+  for(i=0;i<z.mobs.length;i++)if(z.mobs[i].n===e.n)d0=z.mobs[i];
+  L.push(grpScale(e,k,rw));for(i=1;i<n;i++)L.push(grpScale(mkMob(z,d0&&Math.random()<0.6?d0:pick(z.mobs)),k,rw))}
+ b.grp=L.map(function(m){return {e:m,ehp:m.hp}});b.gi=0;b.e=L[0];b.ehp=L[0].hp;
+ b.lines=[e.boss?'บอส '+e.n+' ปรากฏตัว พร้อมลูกน้อง 2 ตัว!':'เจอฝูงมอน '+L.length+' ตัว!']}
+function grpAlive(b){var n=0;if(b.grp)b.grp.forEach(function(g,i){if(i===b.gi?b.ehp>0:g.ehp>0)n++});return n}
+function grpNext(b){
+ if(!b.grp)return false;b.grp[b.gi].ehp=0;var nx=-1;for(var i=0;i<b.grp.length;i++)if(i!==b.gi&&b.grp[i].ehp>0){nx=i;break}
+ if(nx<0)return false;
+ var e=b.e,g=Math.round(rnd(e.gold[0],e.gold[1])*happyMul()*gGoldMul(s)*HUNT_GOLD),xp=Math.round(e.xp*happyMul()*ptBonus()),p=['ทอง +'+g,'XP +'+xp];
+ ptShare(xp,g);s.gold+=g;s.kills++;dqAdd('hunt');
+ if(!e.cls&&Math.random()<CARD_P){var cd0=rollCard(e.n);p.push('ได้การ์ด '+cardName(cd0)+' ('+CARDC[cd0.c].n+')')}
+ b.gi=nx;b.e=b.grp[nx].e;b.ehp=b.grp[nx].ehp;b.cd=b.cd||{};
+ b.lines=['ล้ม '+e.n+' ('+p.join(', ')+') · เหลือ '+grpAlive(b)+' ตัว → สู้ '+b.e.n].concat(b.lines).slice(0,6);
+ gainXp(xp);return true}
+// ===== ปาร์ตี้ล่า 1–3 คน: อยู่แผนที่เดียวกัน = XP +10%/คน · เพื่อนได้ส่วนแบ่ง XP 30% ทอง 20% (เลเวลห่างไม่เกิน 20) =====
+var PT_XPB=0.1,PT_SXP=0.3,PT_SG=0.2,PT_LV=20;
+function ptBonus(){return 1+PT_XPB*Math.min(2,s.ptyN|0)}
+function ptShare(xp,g){if(!((s.ptyN|0)>0))return;var q=s.pShare||(s.pShare={xp:0,g:0,n:0});q.xp+=Math.round(xp*PT_SXP);q.g+=Math.round(g*PT_SG);q.n++}
+function ptGrant(xp,g,from){xp=Math.max(0,xp|0);g=Math.max(0,g|0);if(!xp&&!g)return;s.gold+=g;var a=s.pAcc||(s.pAcc={xp:0,g:0});a.xp+=xp;a.g+=g;var nw=Date.now();
+ if(nw-(s.pSay||0)>15000){say('ปาร์ตี้: ส่วนแบ่งจาก '+String(from||'เพื่อน').slice(0,16)+' (XP +'+a.xp+', ทอง +'+a.g+')');s.pSay=nw;s.pAcc={xp:0,g:0}}gainXp(xp)}
+function huntField(p){
+ if(s.energy<2||s.battle||s.dup)return;var nw=Date.now();if(nw-(s.fLast||0)<800)return;s.fLast=nw;
+ FIELD_NOCD=true;
+ try{
+  if(p==='boss'){if(nw<(s.fbAt||0)){say('บอสสนามยังไม่เกิด');return}FIELD_BOSS=true;hunt();if(s.battle&&s.battle.e&&s.battle.e.boss){s.battle.fboss=1;mkGroup(s.battle)}return}
+  var i=parseInt(p,10),z=ZONES[s.zone];FIELD_PICK=(i>=0&&i<z.mobs.length)?i:-1;hunt();if(s.battle&&s.battle.kind==='monster')mkGroup(s.battle)
+ }finally{FIELD_NOCD=false;FIELD_BOSS=false;FIELD_PICK=-1}}
 function hunt(){
- if(s.energy<2||cdLeft()>0||s.battle||s.dup)return;s.energy-=2;
+ if(s.energy<2||(!FIELD_NOCD&&cdLeft()>0)||s.battle||s.dup)return;s.energy-=2;
  var z=ZONES[s.zone];
- if(Math.random()<BOSS_P){
+ if(FIELD_BOSS||Math.random()<BOSS_P){
   // บอสประจำแผนที่: เก่งกว่ามอนปกติ 200% (×3) ได้ทอง/XP ×3 และมีโอกาสดรอปอุปกรณ์สีม่วง
   var bm=mobAt(z.mobs[z.mobs.length-1],z);
   bm.n=BOSSES[s.zone]||('บอส'+bm.n);bm.hp=Math.round(bm.hp*BOSS_HP*bossX(s.zone));bm.atk=Math.round(bm.atk*BOSS_ATK*bossX(s.zone));bm.def=Math.round(bm.def*BOSS_DEF*bossX(s.zone));
@@ -1275,8 +1326,7 @@ function hunt(){
    cls:pick(CLS_ORDER),look:randLook()},'rival');
   s.battle.lines=['นักผจญภัยคู่แข่งดักซุ่มโจมตี!'];
  }else{
-  var m=mobAt(pick(z.mobs),z);m.hp=Math.round(m.hp*(0.9+Math.random()*0.2)*mobX(s.zone)*midHp(s.zone));m.atk=Math.round(m.atk*mobX(s.zone)*midAtk(s.zone));m.def=Math.round(m.def*mobX(s.zone));
-  startBattle(m,'monster');
+  startBattle(mkMob(z,FIELD_PICK>=0?z.mobs[FIELD_PICK]:pick(z.mobs)),'monster');
  }
 }
 // ===== หอคอยไม่รู้จบ: ชั้นละ 1 ตัว ชนะแล้วขึ้นชั้นถัดไป ทุก 10 ชั้นเป็นบอส =====
@@ -1663,8 +1713,12 @@ function battleAct(a){
   for(id in b.cd){if(b.cd[id]>0)b.cd[id]--}
   for(id in b.buffs){if(b.buffs[id]>0)b.buffs[id]--}
  }
+ if(b.grp&&s.hp>0){var gd=0;b.grp.forEach(function(g,i){if(i===b.gi||g.ehp<=0||s.hp<=0)return;
+   if(Math.random()*100<dodgePct()){l.push('หลบ '+g.e.n+' ได้');return}
+   var dd=hit(g.e.atk*eam(b),pDef());s.hp-=dd;gd+=dd;l.push(g.e.n+' รุมโจมตี −'+dd)});
+  if(gd>0){fx.pHit=now+700;fl('p','−'+gd,'#ff9a6a',720)}}
  b.lines=l.slice().reverse().concat(b.lines).slice(0,6);
- if(b.ehp<=0){return win()}
+ if(b.ehp<=0){if(!b.grp)return win();if(s.hp>0){if(grpNext(b))return;return win()}}
  if(s.hp<=0){return lose()}
 }
 function autoAct(){
@@ -1683,12 +1737,12 @@ function autoAct(){
  battleAct('atk');
 }
 function win(){
- var b=s.battle,e=b.e,p=[];
+ var b=s.battle,e=b.e,p=[];if(b.fboss)s.fbAt=Date.now()+FBOSS_MS;
  if(b.wb)return wbFinish(true);
  if(noFlee(b))return duelEnd(true);
  if(!b.tower)dqAdd('hunt');
  var g=Math.round(rnd(e.gold[0],e.gold[1])*happyMul()*gGoldMul(s)*(s.battle&&s.battle.tower?1:HUNT_GOLD));s.gold+=g;p.push('ทอง +'+g);
- var xp=Math.round(e.xp*happyMul());p.push('XP +'+xp);s.kills++;
+ var xp=Math.round(e.xp*happyMul()*(b.tower?1:ptBonus()));p.push('XP +'+xp);s.kills++;if(!b.tower&&b.kind==='monster')ptShare(xp,g);
  if(!b.tower&&s.hp<s.maxhp){p.push('เลือดฟื้นเต็ม');s.hp=s.maxhp} // ล่าชนะ = เติมเลือดเต็ม (หอคอยไม่เติม)
  if(!b.tower&&!e.cls&&Math.random()<CARD_P){var cd0=rollCard(e.n);p.push('ได้การ์ด '+cardName(cd0)+' ('+CARDC[cd0.c].n+')')}
  if(e.boss&&Math.random()<BOSS_DROP){
@@ -1860,11 +1914,14 @@ function openBox(){
  s.boxMsg='ได้ '+ch.it.n+' ('+RAR_N[ch.it.r]+') สวมใส่ให้แล้ว';s.boxIt={sl:ch.sl,id:ch.it.id};
  say('เปิดกล่อง ได้ '+ch.it.n);
 }
-var CL_LOCAL={setsfx:1,setmus:1,setlang:1,sndtest:1,bset:1,bback:1,dgcreate:1,dgjoin:1,dgleave:1,dgready:1,dgstart:1,dgpick:1,dgagain:1,logout:1,chatopen:1,chatclose:1,chatsend:1,chattab:1,chatdm:1,teamjoin:1,teamleave:1,clouddn:1,cloudup:1,dqclose:1};
+var CL_LOCAL={ptcreate:1,ptjoin:1,ptleave:1,ptkick:1,ftarget:1,fieldtog:1,tutreplay:1,setsfx:1,setmus:1,setlang:1,sndtest:1,bset:1,bback:1,dgcreate:1,dgjoin:1,dgleave:1,dgready:1,dgstart:1,dgpick:1,dgagain:1,logout:1,chatopen:1,chatclose:1,chatsend:1,chattab:1,chatdm:1,teamjoin:1,teamleave:1,clouddn:1,cloudup:1,dqclose:1};
 function act(a,p){
  if(!s)return;
  if(/^dg(create|join|leave|ready|start|pick|again)$/.test(a)){dgOp(a.slice(2),p);return}
- if(/^(setsfx|setmus|setlang|sndtest)$/.test(a)&&!SV){setAct(a,p);return}
+ if(/^pt(create|join|leave|kick)$/.test(a)){ptOp(a.slice(2),p);return}
+ if(/^(setsfx|setmus|setlang|sndtest|tutreplay)$/.test(a)&&!SV){setAct(a,p);return}
+ if(a==='fieldtog'&&!SV){SET.field=SET.field===false;setSave();FLD.fmSent=-1e9;render();return}
+ if(a==='ftarget'&&!SV){SET.ft=SET.ft||{};SET.ft[s.zone]=p;setSave();FLD.follow=null;render();return}
  if(a==='bset'&&!SV){BSET=!BSET;try{localStorage.setItem('shuk-bset',BSET?'1':'0')}catch(e){}render();return}
  if(a==='bback'&&!SV){BAWAY=null;render();if(window.scrollTo)window.scrollTo(0,0);return}
  if(a==='tab'&&!SV){
@@ -1892,7 +1949,9 @@ function act(a,p){
  else if(a==='tab'){s.res=null;s.tab=p;confirmReset=false;confirmLeave=false;s.guildMsg=''}
  else if(a==='zonemenu'){zoneOpen=!zoneOpen}
  else if(a==='zone'){if(i>=0&&i<ZONES.length)s.zone=i;zoneOpen=false}
- else if(a==='hunt')hunt();
+
+ else if(a==='fhunt')huntField(p);
+ else if(a==='fmode'){s.fmode=p==='1'?1:0}
  else if(a==='gather')gather(p);
  else if(a==='drink'){if(potTotal()>0&&s.hp<s.maxhp){var h=drinkPot();say('ดื่มยา ฟื้น '+h+' HP')}}
  else if(a==='cw')craft('w',i);
@@ -2773,6 +2832,7 @@ function critZoom(c,W,gy,tn){var z=fx.zoom;if(!z)return;var age=tn-z.t;if(age<0|
 
 function drawScene(cv,tn){
  var mode=cv.getAttribute('data-mode'),c=cv.getContext('2d');if(!c)return;
+ if(mode==='field'){drawField(c,cv.width,cv.height,tn);return}
  if(mode==='dg'){drawDg(c,cv.width,cv.height,tn);return}
  var W=cv.width,H=cv.height,gy=H-34,i;
  c.clearRect(0,0,W,H);
@@ -2799,6 +2859,10 @@ function drawScene(cv,tn){
  shadowAt(c,px+dx+36,gy+1,22);
  drawChar(c,s.look,s.cls,px+dx,gy,3,tn,false,alpha);
  drawPet(c,s.look.pet,px+19*3,gy,3,tn);
+ if(b&&b.grp){var SL=[[W-122,gy-14],[W-152,gy+2],[W-96,gy-30],[W-182,gy-16]],si=0;
+  b.grp.forEach(function(g,i){if(i===b.gi||g.ehp<=0||!g.e.k||si>=SL.length)return;var q=SL[si++],bob=Math.round(Math.sin(tn/300+i)*2);
+   shadowAt(c,q[0],q[1]+1,g.e.boss?30:18);c.save();c.globalAlpha=0.92;fMob(c,g.e.k,q[0],q[1]+bob,g.e.boss?2.2:1.6,tn,false,i);c.restore();
+   c.fillStyle='rgba(0,0,0,.6)';c.fillRect(q[0]-14,q[1]+4,28,4);c.fillStyle='#e04848';c.fillRect(q[0]-13,q[1]+5,Math.round(26*Math.max(0,g.ehp)/Math.max(1,g.e.hp)),2)})}
  if(b){
   var e=b.e,ex=0,ea=1;
   var a2=(tn-fx.eAtk)/380;
@@ -2870,6 +2934,35 @@ var DGF={seq:-1,pAtk:[],pHit:[],eAtk:-9999,eHit:-9999,fl:[]};
 function dgInfo(){return CL?NET.dg:null}
 function dgRoom(){var d=dgInfo();return d&&d.room||null}
 function dgKey(j){if(!j)return '';var r=j.room;return JSON.stringify([j.rooms,j.runs,r?[r.st,r.seq,r.ver,Math.ceil((r.left|0)/1000)]:0])}
+function ptInfo(){return CL?NET.pt:null}
+function ptKey(j){if(!j)return '';return JSON.stringify([j.list,j.pt?j.pt.mem.map(function(m){return [m.uid,m.z,m.on,m.lvl,m.host,m.b]}):0])}
+function netPT(force){
+ if(!CL||!NET.token||NET.ptBusy||!s||!s.created)return;var iv=(NET.pt&&NET.pt.pt)?1500:5000;
+ if(!force&&Date.now()-(NET.ptAt||0)<iv)return;NET.ptBusy=true;NET.ptAt=Date.now();
+ apiCall('POST','/api/party',{op:'sync',x:Math.round(FLD.px||0),y:Math.round(FLD.py||0)}).then(function(j){var k0=ptKey(NET.pt);ptRecv(j);if(s&&s.tab==='wild'&&!s.battle&&!pressing&&ptKey(j)!==k0)render()}).catch(function(){}).then(function(){NET.ptBusy=false})}
+function ptRecv(j){NET.pt=j;var A=FLD.allies||(FLD.allies={}),seen={};
+ if(j&&j.pt)j.pt.mem.forEach(function(m){if(m.me||!m.on||m.z!==(s.zone|0))return;var a=A[m.uid];if(!a)a=A[m.uid]={x:m.x,y:m.y};a.tx=m.x;a.ty=m.y;a.n=m.n;a.cls=m.cls;a.look=m.look;a.b=m.b;seen[m.uid]=1});
+ for(var k in A)if(!seen[k])delete A[k]}
+function ptOp(op,p){
+ if(!CL){say('ปาร์ตี้เล่นได้ในเวอร์ชันออนไลน์');render();return}
+ var b={op:op};if(op==='join')b.id=parseInt(p,10)||0;if(op==='kick')b.uid=parseInt(p,10)||0;
+ NET.ptMsg='';apiCall('POST','/api/party',b).then(function(j){ptRecv(j);render()}).catch(function(e){NET.ptMsg=e.message||'ผิดพลาด';render()})}
+function ptSection(){
+ var title='<p class="eyebrow">ปาร์ตี้ล่า · 1–3 คน</p><h3>ล่าเป็นทีม</h3>';
+ var rule='<p class="hint">อยู่แผนที่เดียวกับเพื่อนในปาร์ตี้: <b>XP +10% ต่อเพื่อน 1 คน</b> (สูงสุด +20%) · ทุกตัวที่คุณล่าได้ เพื่อนได้ส่วนแบ่ง <b>XP 30% ทอง 20%</b> (เลเวลห่างกันไม่เกิน '+PT_LV+') · เห็นเพื่อนเดินอยู่บนแผนที่</p>';
+ if(!CL)return '<section class="card">'+title+rule+'<p class="hint">ปาร์ตี้เล่นได้ในเวอร์ชันออนไลน์ (เล่นผ่านเซิร์ฟเวอร์เกม)</p></section>';
+ netPT();var d=ptInfo();
+ if(!d)return '<section class="card">'+title+'<p class="hint">กำลังโหลดข้อมูลปาร์ตี้...</p></section>';
+ var msg=NET.ptMsg?'<p class="hint" style="color:var(--blood)">'+esc(NET.ptMsg)+'</p>':'',r=d.pt;
+ if(r){var me=r.mem.filter(function(m){return m.me})[0]||{},near=r.mem.filter(function(m){return !m.me&&m.on&&m.z===(s.zone|0)&&Math.abs((m.lvl|0)-s.lvl)<=PT_LV}).length;
+  var rows=r.mem.map(function(m){var cn=CLASSES[m.cls]?CLASSES[m.cls].n:'',zn=ZONES[m.z]?ZONES[m.z].n:'';
+   var st=cn+' Lv'+(m.lvl|0)+' · '+(!m.on?'<span style="opacity:.6">ออฟไลน์</span>':m.z===(s.zone|0)?'<span style="color:#8fe07a">แผนที่เดียวกัน</span>':'อยู่ '+zn)+(m.on&&m.b?' · ⚔️ กำลังสู้':'');
+   return '<div class="item"><div><div class="nm">'+(m.host?'👑 ':'')+esc(String(m.n).slice(0,16))+(m.me?' (คุณ)':'')+'</div><div class="st">'+st+'</div></div>'+(me.host&&!m.me?'<button class="btn" data-a="ptkick" data-p="'+m.uid+'">เตะออก</button>':'')+'</div>'}).join('');
+  return '<section class="card">'+title+'<p class="hint">ปาร์ตี้ #'+r.id+' · '+r.mem.length+'/3 คน · โบนัสตอนนี้ <b style="color:#8fe07a">XP +'+(near*10)+'%</b>'+(near?'':' (ชวนเพื่อนมาแผนที่เดียวกัน)')+'</p>'+rows+msg+rule+
+   '<button class="btn" data-a="ptleave" style="width:100%;margin-top:6px">ออกจากปาร์ตี้</button></section>'}
+ var list=(d.list||[]).map(function(x){var zn=ZONES[x.z]?ZONES[x.z].n:'';return '<div class="item"><div><div class="nm">#'+x.id+' · '+esc(String(x.n).slice(0,16))+'</div><div class="st">'+x.c+'/3 คน · เลเวลเฉลี่ย '+(x.lvl|0)+' · '+zn+'</div></div><button class="btn primary" data-a="ptjoin" data-p="'+x.id+'">เข้าร่วม</button></div>'}).join('');
+ return '<section class="card">'+title+rule+msg+'<button class="btn primary" data-a="ptcreate" style="width:100%">สร้างปาร์ตี้</button>'+
+  '<h4 class="st" style="margin-top:10px">ปาร์ตี้ที่รับคนอยู่</h4>'+(list||'<p class="hint">ยังไม่มีปาร์ตี้ สร้างแล้วชวนเพื่อนในแชทได้เลย</p>')+'</section>'}
 function netDG(force){
  if(!CL||!NET.token||NET.dgBusy)return;var r=dgRoom(),iv=r?(r.st==='fight'?800:1500):4000;
  if(!force&&Date.now()-(NET.dgAt||0)<iv)return;NET.dgBusy=true;NET.dgAt=Date.now();
@@ -2983,13 +3076,15 @@ function viewWild(){
  var _dr=dgRoom();if(_dr&&_dr.st!=='lobby')return pendHtml()+viewDgFight();
  var z=ZONES[s.zone],cd=cdLeft(),low=s.energy<2||cd>0;
  var seg=ZONES.map(function(q,i){return '<button class="btn" data-a="zone" data-p="'+i+'" aria-pressed="'+(i===s.zone)+'">'+q.n+'<br><span class="hint">Lv'+q.rec+'-'+q.max+'</span></button>'}).join('');
- return pendHtml()+'<section class="card"><canvas id="scene" class="scene" data-mode="wild" width="320" height="170" aria-label="ฉากการผจญภัย"></canvas>'+statusBars(true)+
+ var fm=true;
+ if(s.created&&(s.fmode|0)!==(fm?1:0)&&nowMs()-(FLD.fmSent||0)>3000){FLD.fmSent=nowMs();setTimeout(function(){act('fmode',fm?'1':'0')},0)}
+ var zm=ZONES[s.zone].mobs,ft=fTarget(),tgt=fm?'<div class="ftg"><span>🎯 เป้าหมายออโต้</span><div class="chips">'+[['all','ทุกตัว (ใกล้สุด)']].concat(zm.map(function(m,i){return [String(i),m.n]})).concat([['boss','👑 บอสสนามก่อน']]).map(function(o){return '<button class="btn sm2" data-a="ftarget" data-p="'+o[0]+'" aria-pressed="'+(ft===o[0])+'">'+o[1]+'</button>'}).join('')+'</div></div>':'';
+ return pendHtml()+'<section class="card">'+(fm?'<canvas id="scene" class="scene field" data-mode="field" width="320" height="300" aria-label="แผนที่ แตะหรือลากเพื่อเดิน"></canvas><p class="hint" style="text-align:center;margin-top:-4px">แตะหรือลากบนแผนที่เพื่อเดิน · เดินชนมอนเพื่อสู้ทันที (−2 พลัง ไม่ต้องรอพัก) · แพ้แล้วมีเวลาหนี 3 วินาที · บอสสนามเกิดทุก 10 นาที</p>':'<canvas id="scene" class="scene" data-mode="wild" width="320" height="170" aria-label="ฉากการผจญภัย"></canvas>')+statusBars(true)+
   '<button class="btn" data-a="zonemenu" aria-expanded="'+zoneOpen+'" style="width:100%;margin:8px 0">📍 แผนที่: '+z.n+' (Lv'+z.rec+'-'+z.max+') '+(zoneOpen?'▲':'▼ เปลี่ยน')+'</button>'+(zoneOpen?'<div class="seg">'+seg+'</div>':'')+
-  '<button class="btn primary big" data-a="hunt"'+(low?' disabled':'')+'>'+(cd>0?'พัก '+Math.ceil(cd/1000)+' วินาที':'⚔️ ล่ามอนสเตอร์<small>−2 พลัง</small>')+'</button>'+
-  '<div class="'+((s.potF|0)>0?'grid3':'grid2')+'">'+tgl('autohunt',s.autoHunt,'ล่าออโต้',s.autoHunt?'กำลังทำงาน':'')+
+  tgt+'<div class="'+((s.potF|0)>0?'grid3':'grid2')+'">'+tgl('autohunt',s.autoHunt,'ล่าออโต้',s.autoHunt?'กำลังทำงาน':'')+
   '<button class="btn" data-a="drink"'+(potTotal()<1||s.hp>=s.maxhp?' disabled':'')+'>🧪 ดื่มยา<small>เหลือ '+potTotal()+'</small></button>'+((s.potF|0)>0?'<button class="btn" data-a="drinkf"'+(s.hp>=s.maxhp?' disabled':'')+'>💖 ยาเต็ม<small>เหลือ '+s.potF+'</small></button>':'')+'</div>'+
   (s.autoMsg&&!s.autoHunt?'<p class="hint">'+esc(s.autoMsg)+'</p>':'')+setFold(false)+
-  dgSection();
+  ptSection()+dgSection();
 }
 function viewCraft(){
  var lock=!!s.pend||craftLeft()<=0;
@@ -3422,12 +3517,15 @@ function viewGuildOld(){
   '<section class="card"><h3>ร้านกิลด์</h3><div>'+shop+'</div></section>'+
   '<section class="card"><button class="btn'+(confirmLeave?' danger':'')+'" data-a="gleave">'+(confirmLeave?'กดอีกครั้งเพื่อยืนยัน'+(g.gid===ON.uid?'ยุบกิลด์':'ออกจากกิลด์'):(g.gid&&g.gid===ON.uid?'ยุบกิลด์':'ออกจากกิลด์'))+'</button></section>';
 }
+function grpHtml(b){if(!b.grp)return '';
+ return '<div class="grp">'+b.grp.map(function(g,i){var hp=i===b.gi?b.ehp:g.ehp,dead=hp<=0;
+  return '<span class="gm'+(i===b.gi?' on':'')+(dead?' dead':'')+'"><b>'+(g.e.boss?'👑 ':'')+esc(String(g.e.n))+'</b><i><u style="width:'+pct(Math.max(0,hp),g.e.hp)+'%"></u></i></span>'}).join('')+'</div>'}
 function viewBattle(){
  var b=s.battle,e=b.e,auto=b.tower?s.autoTower:s.autoHunt,duel=isDuel(b);
  var kind={monster:'มอนสเตอร์',rival:'นักผจญภัยคู่แข่ง',pvp:'PvP จับคู่ 1-1',war:'สงครามสี่ฝ่าย'}[b.kind];if(b.tower)kind='หอคอย ชั้น '+b.tower;if(b.wb)kind='บอสโลก · ไฮดราตีแรงขึ้น ×'+Math.max(1,(b.turn|0)+1)+' เทิร์นถัดไป';
  var potDis=potTotal()<1||s.hp>=s.maxhp||(duel&&(b.pots|0)>=DUEL_POTS),hvDis=s.energy<HEAVY_COST||(b.hv|0)>=HEAVY_MAX,pf=(s.potF|0)>0&&!duel;
  return '<section class="card"><canvas id="scene" class="scene" data-mode="battle" width="320" height="170" aria-label="ฉากต่อสู้"></canvas>'+
-  '<div class="foe"><h2>'+e.n+(e.boss?' 👑':'')+'</h2><p class="eyebrow">'+kind+'</p></div>'+(e.pvp?'<p class="hint">'+CLASSES[e.cls].n+' Lv'+e.lvl+(b.kind==='pvp'?' · เรทติ้ง '+e.rating:'')+'</p>':'')+
+  '<div class="foe"><h2>'+e.n+(e.boss?' 👑':'')+'</h2><p class="eyebrow">'+kind+(b.grp?' · ฝูง '+grpAlive(b)+'/'+b.grp.length+' ตัว':'')+'</p></div>'+grpHtml(b)+(e.pvp?'<p class="hint">'+CLASSES[e.cls].n+' Lv'+e.lvl+(b.kind==='pvp'?' · เรทติ้ง '+e.rating:'')+'</p>':'')+
   '<div class="m big"><span>ศัตรู</span><div class="bar"><i style="width:'+pct(b.ehp,e.hp)+'%;background:var(--blood)"></i></div>'+(b.wb?'':'<em>'+Math.max(0,b.ehp)+'/'+e.hp+'</em>')+'</div>'+
   statusBars(false)+
   buffHtml(b)+'<div class="sk-btns">'+skillBtns(b)+'</div>'+
@@ -3445,6 +3543,7 @@ var TABI=(function(){var P={wild:'<path d="M5 19l9-9M14 4h6v6l-9 9M4 20l2-2M7 13
 function render(){
  if(SV)return;
  try{sndWatch()}catch(e){}
+ try{fieldWatch()}catch(e){}
  renderStatus();
  var v;
  if(!s.created)v=viewCreate();
@@ -3459,6 +3558,7 @@ function render(){
  var nav=document.getElementById('nav');
  nav.className=!s.created?'lock':'';var curTab=BAWAY||s.tab;
  nav.innerHTML='<div class="in">'+tabs.map(function(t){return '<button class="tab" data-a="tab" data-p="'+t[0]+'"'+(curTab===t[0]?' aria-current="page"':'')+'>'+(TABI[t[0]]||'')+'<span>'+t[1]+'</span>'+((t[0]==='char'&&(s.sp>0||s.skp>0))||(t[0]==='wild'&&dqClaimable())?'<i class="dot"></i>':'')+'</button>'}).join('')+'</div>';
+ try{tutCheck()}catch(e){}
 }
 var DRAFT={};
 document.addEventListener('input',function(ev){var x=ev.target;if(x&&(x.id==='gname'||x.id==='gamt'))DRAFT[x.id]=x.value});
@@ -3488,14 +3588,15 @@ function autoLogic(){
   else if(potOn()&&s.hp<s.maxhp*potThr()&&potTotal()>0){
    var h=drinkPot();say('ดื่มยา ฟื้น '+h+' HP หลังจบการต่อสู้');acted=true;
   }else if(s.hp<s.maxhp*Math.min(0.4,potOn()?potThr():0.4)){s.autoHunt=false;s.autoTower=false;s.autoMsg='ออโต้หยุด: เลือดต่ำและไม่มียา';noPot=true;acted=true}
-  else if(cdLeft()===0){if(s.autoTower)climb();else hunt();acted=true}
+  else if(s.autoTower){if(cdLeft()===0){climb();acted=true}}
+  // ล่า: ผู้เล่นเดินเอง หรือออโต้เดินชนมอนในแผนที่ (ไม่มีล่าด่วนแล้ว)
  }
  return {acted:acted}}
 // เซิร์ฟเวอร์เรียกทุกครั้งที่หน้าเว็บส่ง tick (แทน setInterval)
 function logicTick(){if(!s)return false;var ch=preTick();var r=autoLogic();if(r.acted)save();return ch||r.acted}
 if(!SV)setInterval(function(){
  if(!s)return;
- if(CL){if(!document.hidden&&!pressing){netTick();if((s.tab==='wild'&&!s.battle)||dgRoom())netDG()}else if(!document.hidden)renderStatus();return}
+ if(CL){if(!document.hidden&&!pressing){netTick();if((s.tab==='wild'&&!s.battle)||dgRoom())netDG();if(s.tab==='wild'||(NET.pt&&NET.pt.pt))netPT()}else if(!document.hidden)renderStatus();return}
  var ch=preTick();
  if(document.hidden)return;
  renderStatus();
@@ -3686,7 +3787,7 @@ function drawEnh(cv,tn){
 }
 
 // ===== ตั้งค่า (เก็บในเครื่อง) + เสียงเอฟเฟกต์ + เพลงพื้นหลัง (สังเคราะห์ด้วย Web Audio ไม่ใช้ไฟล์เสียง) =====
-var SET=(function(){var d={sfx:true,mus:true,vs:85,vm:60,lang:'th'};try{var o=JSON.parse(localStorage.getItem('shuk-settings')||'{}');for(var k in o)if(k in d)d[k]=o[k]}catch(e){}return d})();
+var SET=(function(){var d={sfx:true,mus:true,vs:85,vm:60,lang:'th',field:true,ft:{}};try{var o=JSON.parse(localStorage.getItem('shuk-settings')||'{}');for(var k in o)if(k in d)d[k]=o[k]}catch(e){}return d})();
 function setSave(){try{localStorage.setItem('shuk-settings',JSON.stringify(SET))}catch(e){}}
 var SND={ctx:null,sfxG:null,musG:null,track:null,want:null,next:0,step:0,timer:null,nb:null};
 function sndInit(){
@@ -3755,16 +3856,273 @@ function settingsHtml(){
   '<div class="grid2"><button class="btn" data-a="sndtest" data-p="sfx">🔊 ลองเสียงเอฟเฟกต์</button><button class="btn" data-a="sndtest" data-p="mus">🎵 ฟังเพลงต่อสู้</button></div>'+
   '<p class="hint">เพลงเปลี่ยนเองตามสถานการณ์: สำรวจ / ต่อสู้ · ถ้าไม่มีเสียง ให้แตะหน้าจอหนึ่งครั้ง (เบราว์เซอร์มือถือต้องแตะก่อนจึงเล่นเสียงได้) และเช็กปุ่มปิดเสียงของเครื่อง</p>'+
   '<h4 class="st">ภาษา / Language</h4><div class="grid2"><button class="btn" data-a="setlang" data-p="th" aria-pressed="'+(SET.lang==='th')+'">🇹🇭 ภาษาไทย</button><button class="btn" data-a="setlang" data-p="en" aria-pressed="'+(SET.lang==='en')+'">🇬🇧 English</button></div>'+
+  '<h4 class="st">บทสอน</h4><button class="btn" data-a="tutreplay" style="width:100%">📖 ดูบทสอนผู้เล่นใหม่อีกครั้ง</button>'+
   '<p class="hint">การตั้งค่าเก็บในเครื่องนี้ (แต่ละเครื่องตั้งแยกกันได้)</p></section>'}
 var MUS_DEMO=0;
 function setAct(a,p){
  if(a==='setsfx'){SET.sfx=!SET.sfx;setSave();sndVol();if(SET.sfx){sndWake();sfx('coin')}}
  else if(a==='setmus'){SET.mus=!SET.mus;setSave();sndWake();sndVol();musTick()}
  else if(a==='setlang'){var nl=p==='en'?'en':'th';if(nl!==SET.lang){SET.lang=nl;setSave();try{location.reload()}catch(e){}return}}
+ else if(a==='tutreplay'){if(!s.battle){act('tab','wild');setTimeout(tutStart,350)}return}
  else if(a==='sndtest'){sndWake();if(p==='mus'){if(!SET.mus){SET.mus=true;setSave();sndVol()}MUS_DEMO=Date.now()+12000;SND.track=null;musTick()}else{sfx('hit');sfx('crit',350);sfx('skill',800);sfx('win',1400)}}
  render()}
 if(!SV)document.addEventListener('input',function(ev){var x=ev.target;if(!x||(x.id!=='volSfx'&&x.id!=='volMus'))return;var v=Math.max(0,Math.min(100,parseInt(x.value,10)||0));
  if(x.id==='volSfx')SET.vs=v;else SET.vm=v;setSave();sndWake();sndVol();var o=document.getElementById(x.id+'v');if(o)o.textContent=v;if(x.id==='volSfx')sfx('click')});
+
+// ===== บทสอนผู้เล่นใหม่: ไฮไลต์ปุ่มทีละจุด พร้อมคำอธิบาย · ข้ามได้ทุกเมื่อ · ดูซ้ำได้จากหน้าแต่งตัว > ตั้งค่า =====
+var TUT_STEPS=[
+ {t:null,th:['ยินดีต้อนรับสู่ศึกชิงเมือง!','มาดูพื้นฐานกันสั้น ๆ ประมาณ 1 นาที จะได้เล่นเป็นทันที (กด "ข้าม" ได้ทุกเมื่อ)'],en:['Welcome to TheWarWhat!','A quick 1-minute tour of the basics (tap "Skip" any time)']},
+ {t:'.hud',th:['แถบสถานะ','เลเวล · ทอง · คะแนน PvP ของคุณ ช่วงชั่วโมงทองจะมีป้าย 🔥 +50% ขึ้นตรงนี้'],en:['Status bar','Your level · gold · PvP rating. A 🔥 +50% badge appears here during golden hours']},
+ {t:'.bars',th:['เลือด พลัง และ XP','HP หมด = แพ้ · การล่าใช้ "พลัง" ครั้งละ 2 (ฟื้นเอง 1 หน่วยทุก 3 นาที) · XP เต็มแล้วเลเวลอัป'],en:['HP, energy and XP','HP 0 = defeat · each hunt costs 2 energy (regains 1 every 3 min) · fill XP to level up']},
+ {t:'.clock',th:['นาฬิกาและชั่วโมงทอง','ทุกวัน 12:00–13:00 และ 18:00–19:00 ได้ XP และทองจากการต่อสู้ +50% อย่าพลาด!'],en:['Clock & golden hours','Daily 12:00–13:00 and 18:00–19:00: +50% XP and gold from battles']},
+ {t:'[data-a=zonemenu]',th:['เลือกแผนที่','แต่ละแผนที่มีเลเวลแนะนำ เริ่มที่ป่าเขียว แล้วย้ายเมื่อเลเวลถึง มอนเก่งขึ้น แต่ได้ของดีขึ้น'],en:['Choose a map','Each map has a recommended level. Start in Green Forest and move on as you level up']},
+ {t:'#scene[data-mode=field]',th:['เดินล่ามอนในแผนที่','แตะหรือลากบนแผนที่เพื่อเดิน เดินชนมอนเพื่อเข้าสู้ (ใช้ 2 พลัง) ชนะได้ทอง XP วัตถุดิบ การ์ด · บอสสนามมงกุฎทองเกิดทุก 10 นาที'],en:['Walk & hunt on the map','Tap or drag on the map to walk; bump into a monster to fight (2 energy). Win gold, XP, materials, cards · a crowned field boss spawns every 10 min']},
+ {t:'[data-a=autohunt]',th:['ล่าออโต้','เปิดแล้วตัวละครจะเดินหามอนในแผนที่ สู้ ใช้สกิล และดื่มยาให้เอง จนพลังหมดหรือยาหมด'],en:['Auto hunt','Turn on to hunt, fight, use skills and drink potions automatically until energy or potions run out']},
+ {t:'[data-a=bset]',th:['ตั้งค่าออโต้และยา','ตั้งว่าจะกินยาเมื่อเลือดต่ำกว่ากี่ % และจะสู้บอสต่อหรือหยุด ยาที่ HP น้อยสุดจะถูกใช้ก่อนเสมอ'],en:['Auto & potion settings','Set the HP % to drink at and whether auto fights bosses. The smallest potion is always used first']},
+ {t:'[data-a=tab][data-p=char]',th:['ตัวละคร','ทุกเลเวลได้แต้มสเตตัสและแต้มสกิล มาลงที่นี่ (มีจุดเรืองแสงเมื่อมีแต้มเหลือ) และเลื่อนขั้นอาชีพที่ Lv50 / Lv80'],en:['Character','Spend stat and skill points here each level (a glowing dot shows unspent points). Job advancement at Lv50 / Lv80']},
+ {t:'[data-a=tab][data-p=craft]',th:['ตีของ','คราฟอาวุธ อุปกรณ์ เครื่องประดับ · ตีบวกให้แรงขึ้น · ซื้อยาฟื้นฟู · ใส่การ์ดในช่อง'],en:['Forge','Craft weapons, gear and accessories · enhance them · buy potions · socket cards']},
+ {t:'[data-a=tab][data-p=mat]',th:['วัตถุดิบ','ใช้พลังเก็บไม้ หิน แร่ หนัง สมุนไพร ไว้คราฟของ'],en:['Materials','Spend energy to gather wood, stone, ore, hide and herbs for crafting']},
+ {t:'[data-a=tab][data-p=pvp]',th:['PvP','ดวลกับผู้เล่นคนอื่นแบบ 1-1 เพื่อเพิ่มเรทติ้งและรับทอง'],en:['PvP','Duel other players 1-on-1 to raise your rating and earn gold']},
+ {t:'[data-a=tab][data-p=tower]',th:['กิจกรรม','หอคอยไม่รู้จบ และบอสโลกไฮดราที่ทุกคนช่วยกันตี (มีรางวัลอันดับดาเมจ)'],en:['Events','The Endless Tower and the World Boss Hydra everyone fights together (damage ranking rewards)']},
+ {t:'[data-a=tab][data-p=guild]',th:['ฝ่าย','เข้าร่วม 1 ใน 4 ฝ่าย แล้วร่วมสงครามสี่ฝ่ายวันเว้นวัน'],en:['Faction','Join one of four factions and fight in the Four-Faction War every other day']},
+ {t:'[data-a=tab][data-p=me]',th:['แต่งตัว','เปลี่ยนชุด ฉายา สมุดการ์ด กล่องสุ่ม กระเป๋า และ ⚙️ ตั้งค่า (เสียง เพลง ภาษา และดูบทสอนนี้ซ้ำ)'],en:['Wardrobe','Outfits, titles, card book, mystery boxes, bag and ⚙️ settings (sound, music, language, replay this tour)']},
+ {t:'#dqFab',th:['ภารกิจประจำวัน','ทำภารกิจง่าย ๆ ทุกวันเพื่อรับทอง ยา และกล่องสุ่ม ปุ่มนี้ลากย้ายตำแหน่งได้'],en:['Daily quests','Complete easy daily quests for gold, potions and mystery boxes. You can drag this button']},
+ {t:'#chatFab',th:['แชท','คุยกับผู้เล่นทั้งโลก ฝ่าย ทีม หรือกระซิบส่วนตัว'],en:['Chat','Talk to everyone, your faction, your team, or whisper privately']},
+ {t:null,th:['พร้อมผจญภัยแล้ว!','เริ่มจากกด "ล่ามอนสเตอร์" ในป่าเขียว เก็บทองไปคราฟอาวุธ แล้วอย่าลืมลงแต้มทุกครั้งที่เลเวลอัป โชคดี!'],en:['Ready for adventure!','Start by hunting in Green Forest, save gold to craft a weapon, and spend your points every level. Good luck!']}];
+var TUT={on:false,i:0,el:null,raf:0,scrolled:-1};
+function tutKey(){return 'shuk-tut-v1:'+(String(curUser||'')||nick())}
+function tutDone(){try{return localStorage.getItem(tutKey())==='1'}catch(e){return true}}
+function tutMark(){try{localStorage.setItem(tutKey(),'1')}catch(e){}}
+function tutVis(sel){if(!sel)return null;var e=document.querySelector(sel);if(!e||e.hidden)return null;var r=e.getBoundingClientRect();return (r.width>0&&r.height>0)?e:null}
+function tutStart(){
+ if(SV||TUT.on)return;if(s.tab!=='wild'&&!s.battle){act('tab','wild')}
+ TUT.on=true;TUT.i=0;TUT.scrolled=-1;
+ if(!TUT.el){TUT.el=document.createElement('div');TUT.el.id='tut';TUT.el.setAttribute('role','dialog');TUT.el.setAttribute('aria-modal','true');TUT.el.innerHTML='<div class="tut-spot"></div><div class="tut-box"></div>';document.body.appendChild(TUT.el);
+  TUT.el.addEventListener('click',function(ev){var b=ev.target.closest('[data-tut]');if(!b){ev.stopPropagation();return}ev.stopPropagation();var k=b.getAttribute('data-tut');
+   if(k==='skip'||k==='end')tutEnd();else if(k==='next')tutGo(1);else if(k==='back')tutGo(-1)},true)}
+ TUT.el.hidden=false;tutDraw();if(!TUT.raf)tutLoop()}
+function tutGo(d){var n=TUT.i+d;while(n>0&&n<TUT_STEPS.length-1&&TUT_STEPS[n].t&&!tutVis(TUT_STEPS[n].t))n+=d>0?1:-1;TUT.i=Math.max(0,Math.min(TUT_STEPS.length-1,n));TUT.scrolled=-1;try{sfx('click')}catch(e){}tutDraw()}
+function tutEnd(){TUT.on=false;tutMark();if(TUT.el)TUT.el.hidden=true;if(TUT.raf){cancelAnimationFrame(TUT.raf);TUT.raf=0}if(window.scrollTo)window.scrollTo(0,0)}
+function tutDraw(){
+ var st=TUT_STEPS[TUT.i],L=SET.lang==='en'?st.en:st.th,en=SET.lang==='en',last=TUT.i===TUT_STEPS.length-1,first=TUT.i===0;
+ TUT.el.querySelector('.tut-box').innerHTML='<div class="tut-n">'+(TUT.i+1)+' / '+TUT_STEPS.length+'</div><h3>'+L[0]+'</h3><p>'+L[1]+'</p><div class="tut-btns">'+
+  (last?'':'<button class="btn" data-tut="skip">'+(en?'Skip':'ข้ามบทสอน')+'</button>')+(first||last?'':'<button class="btn" data-tut="back">'+(en?'Back':'ย้อน')+'</button>')+
+  '<button class="btn primary" data-tut="'+(last?'end':'next')+'">'+(last?(en?'Start playing':'เริ่มเล่นเลย'):first?(en?'Start tour':'เริ่มเลย'):(en?'Next':'ถัดไป'))+'</button></div>';
+ tutPlace()}
+function tutPlace(){
+ if(!TUT.on||!TUT.el)return;var st=TUT_STEPS[TUT.i],e=st.t?tutVis(st.t):null,sp=TUT.el.querySelector('.tut-spot'),bx=TUT.el.querySelector('.tut-box');
+ var vw=window.innerWidth,vh=window.innerHeight;
+ if(e&&TUT.scrolled!==TUT.i){TUT.scrolled=TUT.i;var cs=getComputedStyle(e).position,fixed=false,p=e;while(p&&p!==document.body){var ps=getComputedStyle(p).position;if(ps==='fixed'||ps==='sticky'){fixed=true;break}p=p.parentElement}if(!fixed&&e.scrollIntoView)e.scrollIntoView({block:'center'})}
+ if(!e){sp.style.cssText='left:50%;top:40%;width:0;height:0';bx.style.left=Math.max(12,(vw-Math.min(360,vw-24))/2)+'px';bx.style.top=Math.max(80,vh*0.3)+'px';return}
+ var r=e.getBoundingClientRect(),pad=6;
+ sp.style.cssText='left:'+(r.left-pad)+'px;top:'+(r.top-pad)+'px;width:'+(r.width+pad*2)+'px;height:'+(r.height+pad*2)+'px';
+ var bw=Math.min(360,vw-24),bh=bx.offsetHeight||160,left=Math.max(12,Math.min(vw-bw-12,r.left+r.width/2-bw/2)),top=(r.top+r.height/2>vh*0.5)?r.top-bh-16:r.bottom+16;
+ top=Math.max(12,Math.min(vh-bh-12,top));bx.style.left=left+'px';bx.style.top=top+'px'}
+function tutLoop(){TUT.raf=requestAnimationFrame(function(){TUT.raf=0;if(!TUT.on)return;tutPlace();tutLoop()})}
+function tutCheck(){if(SV||TUT.on||!s||!s.created||s.battle||s.res)return;if((s.lvl|0)>3||(s.kills|0)>5)return;if(tutDone())return;setTimeout(function(){if(!TUT.on&&s&&s.created&&!s.battle&&!tutDone())tutStart()},700)}
+
+// ===== แผนที่เดินได้ (โหมดสำรวจแบบ MMORPG) =====
+// แตะ/ลากบนแผนที่เพื่อเดิน · เดินชนมอนเพื่อเข้าสู้ (ใช้ระบบต่อสู้เดิม −2 พลัง) · บอสสนามเกิดทุก 10 นาที · ออโต้ = เดินหามอนเอง
+var FBOSS_MS=600000;
+var FLD={engM:null,engK:0,grace:0,fmSent:-1e9,z:-1,map:null,W:1440,H:1080,obs:[],pools:[],px:480,py:360,tx:null,ty:null,follow:null,dir:-1,mobs:[],cam:[0,0],last:0,hold:false,msg:'',msgT:-9999,moving:false,wasB:false,engT:0,boss:{x:820,y:150,dead:0},clear:[]};
+var FPAL=[
+ {g:['#4f8f3c','#468434','#5a9c45','#3f7a30'],path:'#9c7b4f',pathD:'#86683f',deco:['tree','tree','bush','flower','rock','tree'],water:'#3a7ac8',edge:'tree'},
+ {g:['#3b3650','#342f48','#443e5c','#2d2940'],path:'#57506e',pathD:'#4a4460',deco:['rock','crystal','stalag','rock'],water:'#1e2a48',edge:'rock'},
+ {g:['#4a2c22','#3e241c','#563428','#331c16'],path:'#6e4c3a',pathD:'#5a3c2e',deco:['rock','deadtree','rock','ember'],water:'#ff6a1a',lava:1,edge:'rock'},
+ {g:['#dcb86c','#d0ab5e','#e6c57e','#c69f54'],path:'#bc9658',pathD:'#a8854c',deco:['cactus','rock','bones','cactus'],water:'#3aa8c8',edge:'rock'},
+ {g:['#e4edf6','#d6e2ee','#f0f6fb','#c9d7e6'],path:'#b9c9da',pathD:'#a6b8cc',deco:['pine','pine','icerock','pine'],water:'#9ad4f0',edge:'pine'},
+ {g:['#2c2440','#261e38','#352c4c','#211a30'],path:'#463c5c',pathD:'#3a3150',deco:['pillar','brazier','skull','rock'],water:'#4a1a5a',edge:'pillar',tiles:1},
+ {g:['#3c4c2c','#334224','#475a32','#2c3a20'],path:'#5a5a3a',pathD:'#4a4a30',deco:['deadtree','mush','bush','mush'],water:'#6ad04a',edge:'deadtree'},
+ {g:['#e9f0fd','#dbe6f8','#f4f8ff','#cfdcf4'],path:'#c8d4ec',pathD:'#b6c4e0',deco:['cloud','pillarw','crystal','cloud'],water:'#a8d0ff',edge:'cloud'},
+ {g:['#16112e','#110d26','#1c1638','#0c0a1e'],path:'#2a2250',pathD:'#221c44',deco:['frock','crystal','frock','star'],water:'#3a2a8a',edge:'frock'}];
+var FOBS={tree:9,pine:8,rock:6,bush:5,crystal:5,stalag:5,deadtree:6,cactus:5,icerock:6,pillar:8,brazier:5,cloud:10,pillarw:8,frock:9};
+function frng(seed){var x=(seed*7919+13)%233280;return function(){x=(x*9301+49297)%233280;return x/233280}}
+function fPathY(x){return FLD.H/2+Math.sin(x/150)*160+Math.sin(x/47)*18}
+function fPathX(y){return FLD.W/2+Math.sin(y/120)*130}
+function onPath(x,y){return Math.abs(y-fPathY(x))<22||Math.abs(x-fPathX(y))<20}
+function fDeco(c,t,x,y,P,r){
+ function R(a,b,w,h,col){c.fillStyle=col;c.fillRect(Math.round(x+a),Math.round(y+b),w,h)}
+ c.fillStyle='rgba(0,0,0,.28)';c.beginPath();c.ellipse(x,y+1,(FOBS[t]||5)+1,3,0,0,7);c.fill();
+ if(t==='tree'){R(-2,-8,4,9,'#5a3a1e');R(-10,-24,20,14,'#1f5a26');R(-8,-28,16,6,'#2c7a32');R(-6,-30,10,4,'#3e9a44');R(-9,-12,18,4,'#184a1e');R(-5,-26,3,3,'#5ab85a')}
+ else if(t==='pine'){R(-2,-6,4,7,'#5a3a1e');R(-9,-12,18,6,'#2a5a4a');R(-7,-18,14,6,'#2f6a56');R(-5,-24,10,6,'#357a62');R(-2,-28,4,4,'#3e8a6e');R(-8,-13,16,2,'#f4f8ff');R(-6,-19,12,2,'#f4f8ff');R(-4,-25,8,2,'#f4f8ff')}
+ else if(t==='bush'){R(-6,-7,12,7,'#2c6a2a');R(-4,-9,8,3,'#3a8a36');R(-3,-6,2,2,'#e04a4a')}
+ else if(t==='flower'){var cs=['#ff6a8a','#ffd04a','#ffffff','#b48cff'];for(var k=0;k<4;k++){R(-6+k*4,-3-(k%2)*3,2,2,cs[(k+Math.floor(r*4))%4]);R(-6+k*4,-1-(k%2)*3,1,2,'#2a6a2a')}}
+ else if(t==='rock'||t==='icerock'){var a=t==='rock'?['#6a6a78','#8a8a98','#4a4a58']:['#9ec8e8','#d8f0ff','#6a9ac0'];R(-7,-8,14,8,a[0]);R(-5,-10,9,3,a[1]);R(-7,-2,14,2,a[2])}
+ else if(t==='crystal'){var cc=P.g[0]==='#e9f0fd'?['#ffd04a','#fff3a0']:['#6fd8ff','#c8f4ff'];R(-2,-14,4,14,cc[0]);R(-6,-9,3,9,cc[0]);R(4,-10,3,10,cc[0]);R(-1,-14,1,12,cc[1])}
+ else if(t==='stalag'){R(-4,-14,8,14,'#4a4460');R(-2,-18,4,4,'#5a5476');R(-3,-14,2,10,'#6a6488')}
+ else if(t==='deadtree'){R(-2,-18,3,18,'#4a3424');R(-8,-14,6,2,'#4a3424');R(1,-12,7,2,'#4a3424');R(-8,-17,2,4,'#4a3424');R(6,-15,2,4,'#4a3424')}
+ else if(t==='ember'){R(-1,-2,2,2,'#ff8a2a');R(2,-4,1,1,'#ffd04a')}
+ else if(t==='cactus'){R(-2,-18,5,18,'#3a8a3a');R(-7,-12,3,7,'#3a8a3a');R(-7,-12,5,2,'#3a8a3a');R(4,-14,3,6,'#3a8a3a');R(2,-10,4,2,'#3a8a3a');R(-1,-17,1,14,'#5aaa4a')}
+ else if(t==='bones'){R(-5,-2,10,2,'#f0ead8');R(-6,-3,2,4,'#f0ead8');R(4,-3,2,4,'#f0ead8')}
+ else if(t==='pillar'||t==='pillarw'){var pc=t==='pillar'?['#5a5070','#7a7090','#3a3250']:['#f4f6ff','#ffffff','#c8cde0'];R(-6,-26,12,26,pc[0]);R(-4,-26,3,26,pc[1]);R(-8,-28,16,3,pc[2]);R(-8,-2,16,3,pc[2]);if(t==='pillarw')R(-8,-29,16,1,'#ffd04a')}
+ else if(t==='brazier'){R(-4,-8,8,8,'#3a3250');R(-6,-10,12,3,'#5a5070');R(-3,-15,6,5,'#ff8a2a');R(-1,-18,2,4,'#ffd04a')}
+ else if(t==='skull'){R(-3,-5,6,5,'#e8e2d0');R(-2,-3,1,1,'#1a1420');R(1,-3,1,1,'#1a1420')}
+ else if(t==='mush'){R(-1,-5,2,5,'#e8e2d0');R(-5,-9,10,4,'#b84ad8');R(-3,-10,2,1,'#ffffff');R(1,-8,2,1,'#ffffff')}
+ else if(t==='cloud'){R(-12,-10,24,8,'#ffffff');R(-8,-14,12,5,'#ffffff');R(-12,-3,24,2,'#c8d4ec')}
+ else if(t==='frock'){R(-10,-16,20,10,'#4a3a7a');R(-7,-19,12,4,'#6a5aa8');R(-6,-6,12,4,'#2a2050');R(-2,-3,4,3,'#2a2050');R(4,-15,2,2,'#c8a8ff')}
+ else if(t==='star'){R(-1,-1,2,2,'#ffffff')}}
+function fieldBuild(z){
+ var P=FPAL[z]||FPAL[0],W=FLD.W,H=FLD.H,cv=document.createElement('canvas');cv.width=W;cv.height=H;var c=cv.getContext('2d'),rnd=frng(z+3),i,x,y;
+ c.fillStyle=P.g[0];c.fillRect(0,0,W,H);for(i=0;i<11800;i++){var v=rnd();c.fillStyle=P.g[v<0.45?1:v<0.85?2:3];var sz=rnd()<0.6?4:8;c.globalAlpha=0.55;c.fillRect(Math.floor(rnd()*W/4)*4,Math.floor(rnd()*H/4)*4,sz,4)}c.globalAlpha=1;
+ if(z===0||z===6){for(i=0;i<2000;i++){x=Math.floor(rnd()*W);y=Math.floor(rnd()*H);c.fillStyle=z===0?(rnd()<0.5?'#6ab04e':'#3a7a2c'):'#5a6a3a';c.fillRect(x,y,1,3);c.fillRect(x+2,y+1,1,2)}}
+ if(P.tiles){c.fillStyle='rgba(0,0,0,.18)';for(y=0;y<H;y+=16)c.fillRect(0,y,W,1);for(y=0;y<H;y+=16)for(x=((y/16)%2)*8;x<W;x+=16)c.fillRect(x,y,1,16)}
+ for(i=0;i<3200;i++){c.fillStyle=rnd()<0.5?'rgba(255,255,255,.08)':'rgba(0,0,0,.1)';c.fillRect(Math.floor(rnd()*W),Math.floor(rnd()*H),1,1)}
+ for(x=0;x<W;x+=3){var py=fPathY(x);c.fillStyle=P.pathD;c.fillRect(x,py-16,3,32);c.fillStyle=P.path;c.fillRect(x,py-13,3,26)}
+ for(y=0;y<H;y+=3){var px=fPathX(y);c.fillStyle=P.pathD;c.fillRect(px-15,y,30,3);c.fillStyle=P.path;c.fillRect(px-12,y,24,3)}
+ for(i=0;i<600;i++){x=rnd()*W;y=rnd()*H;if(onPath(x,y)){c.fillStyle='rgba(0,0,0,.12)';c.fillRect(Math.floor(x),Math.floor(y),2,1)}}
+ FLD.boss.x=W-150;FLD.boss.y=150;var obs=[],pools=[],clear=[{x:W/2,y:fPathY(W/2),r:44},{x:FLD.boss.x,y:FLD.boss.y,r:50}],PL=[[W*0.22,H*0.8],[W*0.74,H*0.74],[W*0.2,H*0.24]];
+ for(i=0;i<3;i++){var wx=PL[i][0],wy=PL[i][1],rx=50+rnd()*24,ry=28+rnd()*12;pools.push({x:wx,y:wy,rx:rx,ry:ry});
+  c.fillStyle=P.lava?'#7a2a10':'rgba(0,0,0,.25)';c.beginPath();c.ellipse(wx,wy+2,rx+3,ry+3,0,0,7);c.fill();c.fillStyle=P.water;c.beginPath();c.ellipse(wx,wy,rx,ry,0,0,7);c.fill();
+  c.fillStyle='rgba(255,255,255,.25)';c.fillRect(wx-rx*0.5,wy-ry*0.4,rx*0.4,2);c.fillRect(wx-rx*0.1,wy-ry*0.1,rx*0.3,2);
+  for(var a=0;a<7;a++){var ox=(a-3)/3.5*rx*0.9;obs.push({x:wx+ox,y:wy,r:ry*0.95})}}
+ function free(x,y,r){if(onPath(x,y))return false;for(var k=0;k<pools.length;k++){var p=pools[k];if(Math.pow((x-p.x)/(p.rx+r+6),2)+Math.pow((y-p.y)/(p.ry+r+6),2)<1)return false}
+  for(k=0;k<clear.length;k++)if(Math.hypot(x-clear[k].x,y-clear[k].y)<clear[k].r)return false;for(k=0;k<obs.length;k++)if(Math.hypot(x-obs[k].x,y-obs[k].y)<obs[k].r+r+4)return false;return true}
+ var items=[];
+ for(x=12;x<W;x+=22){items.push([P.edge,x,14]);items.push([P.edge,x+8,H-4])}
+ for(y=36;y<H-10;y+=22){items.push([P.edge,8,y]);items.push([P.edge,W-8,y])}
+ items.forEach(function(d){var r=FOBS[d[0]];if(r)obs.push({x:d[1],y:d[2]-2,r:r})});
+ for(i=0;i<6000&&items.length<1000;i++){x=30+rnd()*(W-60);y=40+rnd()*(H-70);var t=P.deco[Math.floor(rnd()*P.deco.length)],r=FOBS[t]||0;if(!free(x,y,r||3))continue;items.push([t,x,y]);if(r)obs.push({x:x,y:y-2,r:r})}
+ items.sort(function(a,b){return a[2]-b[2]}).forEach(function(d){fDeco(c,d[0],d[1],d[2],P,rnd())});
+ FLD.map=cv;FLD.obs=obs;FLD.pools=pools;FLD.clear=clear;FLD.z=z;fGridBuild();FLD.path=null;FLD.px=W/2;FLD.py=fPathY(W/2);FLD.engM=null;FLD.grace=0;FLD.tx=FLD.ty=null;FLD.follow=null;FLD.mobs=[];
+ var zz=ZONES[z],n=Math.max(24,Math.min(30,20+zz.mobs.length*3));for(i=0;i<n;i++)FLD.mobs.push(fieldSpawn({i:i%zz.mobs.length}))}
+function fBlocked(x,y,r){if(x<16||y<26||x>FLD.W-16||y>FLD.H-10)return true;for(var k=0;k<FLD.obs.length;k++){var o=FLD.obs[k];if(Math.hypot(x-o.x,y-o.y)<o.r+(r||5))return true}return false}
+var FG=12,FDX=[1,-1,0,0,1,1,-1,-1],FDY=[0,0,1,-1,1,-1,1,-1];
+function fGridBuild(){var C=Math.ceil(FLD.W/FG),R=Math.ceil(FLD.H/FG),g=new Uint8Array(C*R),x,y,k,cx,cy;
+ for(y=0;y<R;y++)for(x=0;x<C;x++){cx=x*FG+FG/2;cy=y*FG+FG/2;if(cx<18||cy<28||cx>FLD.W-18||cy>FLD.H-12)g[y*C+x]=1}
+ for(k=0;k<FLD.obs.length;k++){var o=FLD.obs[k],rr=o.r+7,x0=Math.max(0,Math.floor((o.x-rr)/FG)),x1=Math.min(C-1,Math.floor((o.x+rr)/FG)),y0=Math.max(0,Math.floor((o.y-rr)/FG)),y1=Math.min(R-1,Math.floor((o.y+rr)/FG));
+  for(y=y0;y<=y1;y++)for(x=x0;x<=x1;x++){cx=x*FG+FG/2;cy=y*FG+FG/2;if(Math.hypot(cx-o.x,cy-o.y)<rr)g[y*C+x]=1}}
+ FLD.gC=C;FLD.gR=R;FLD.grid=g}
+function fCell(x,y){var cx=Math.max(0,Math.min(FLD.gC-1,Math.floor(x/FG))),cy=Math.max(0,Math.min(FLD.gR-1,Math.floor(y/FG)));return cy*FLD.gC+cx}
+function fNearFree(x,y){var C=FLD.gC,R=FLD.gR,c0=fCell(x,y),bx=c0%C,by=(c0/C)|0,best=-1,bd=1e9;if(!FLD.grid[c0])return c0;
+ for(var rad=1;rad<6&&best<0;rad++)for(var dy=-rad;dy<=rad;dy++)for(var dx=-rad;dx<=rad;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==rad)continue;var nx=bx+dx,ny=by+dy;if(nx<0||ny<0||nx>=C||ny>=R)continue;var i=ny*C+nx;if(FLD.grid[i])continue;var d=Math.hypot((nx+0.5)*FG-x,(ny+0.5)*FG-y);if(d<bd){bd=d;best=i}}
+ return best}
+function fLineG(ax,ay,bx,by){var d=Math.hypot(bx-ax,by-ay),n=Math.ceil(d/4);for(var i=1;i<=n;i++){var t=i/n;if(t*d<7)continue;if(FLD.grid[fCell(ax+(bx-ax)*t,ay+(by-ay)*t)])return false}return true}
+function fPath(sx,sy,tx,ty){
+ if(!FLD.grid)return null;var C=FLD.gC,R=FLD.gR,g=FLD.grid,N=g.length,s0=fNearFree(sx,sy),t0=fNearFree(tx,ty);if(s0<0||t0<0)return null;if(s0===t0)return [[tx,ty]];
+ var G=new Float32Array(N),P=new Int32Array(N),cl=new Uint8Array(N),hp=[],tX=t0%C,tY=(t0/C)|0,i;for(i=0;i<N;i++){G[i]=1e9;P[i]=-1}
+ function H(q){var dx=Math.abs(q%C-tX),dy=Math.abs(((q/C)|0)-tY);return dx+dy-0.586*Math.min(dx,dy)}
+ function push(q,f){hp.push([f,q]);var j=hp.length-1;while(j>0){var pj=(j-1)>>1;if(hp[pj][0]<=hp[j][0])break;var t=hp[pj];hp[pj]=hp[j];hp[j]=t;j=pj}}
+ function pop(){var top=hp[0],last=hp.pop();if(hp.length){hp[0]=last;var j=0;for(;;){var a=2*j+1,b2=a+1,m=j;if(a<hp.length&&hp[a][0]<hp[m][0])m=a;if(b2<hp.length&&hp[b2][0]<hp[m][0])m=b2;if(m===j)break;var t=hp[m];hp[m]=hp[j];hp[j]=t;j=m}}return top[1]}
+ G[s0]=0;push(s0,H(s0));var it=0;
+ while(hp.length&&it++<12000){var cur=pop();if(cl[cur])continue;cl[cur]=1;if(cur===t0)break;var x=cur%C,y=(cur/C)|0;
+  for(var d=0;d<8;d++){var dx=FDX[d],dy=FDY[d],nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=C||ny>=R)continue;var ni=ny*C+nx;if(g[ni]||cl[ni])continue;if(dx&&dy&&(g[y*C+nx]||g[ny*C+x]))continue;
+   var ng=G[cur]+(dx&&dy?1.414:1);if(ng<G[ni]){G[ni]=ng;P[ni]=cur;push(ni,ng+H(ni))}}}
+ if(!cl[t0])return null;
+ var pts=[];i=t0;while(i!==s0&&i>=0){pts.push([(i%C)*FG+FG/2,((i/C)|0)*FG+FG/2]);i=P[i]}pts.reverse();pts.push([tx,ty]);
+ var out=[],ax=sx,ay=sy,k=0;while(k<pts.length){var j=Math.min(pts.length-1,k+24);while(j>k&&!fLineG(ax,ay,pts[j][0],pts[j][1]))j--;out.push(pts[j]);ax=pts[j][0];ay=pts[j][1];k=j+1}
+ return out}
+function fieldSpawn(m){var t=0;do{m.x=40+Math.random()*(FLD.W-80);m.y=50+Math.random()*(FLD.H-90);t++}while(t<60&&(fBlocked(m.x,m.y,7)||Math.hypot(m.x-FLD.px,m.y-FLD.py)<90));
+ m.vx=0;m.vy=0;m.next=0;m.alive=true;m.res=0;m.ph=Math.random()*6;return m}
+function fieldSay(t){FLD.msg=T(t);FLD.msgT=nowMs()}
+function fBossUp(){return s&&Date.now()>=(s.fbAt||0)}
+function fieldTarget(x,y){
+ FLD.follow=null;var best=null,bd=20;
+ FLD.mobs.forEach(function(m){if(!m.alive)return;var d=Math.hypot(m.x-x,m.y-6-y);if(d<bd){bd=d;best=m}});
+ if(fBossUp()&&Math.hypot(FLD.boss.x-x,FLD.boss.y-10-y)<28)best={boss:1};
+ FLD.follow=best;FLD.tx=x;FLD.ty=y}
+function fieldEngage(m){
+ var nt=nowMs();if(s.battle||s.dup||s.res||nt-FLD.engT<(FLD.engM?1600:900))return;
+ if(nt<FLD.grace)return;
+ if(s.energy<2){if(nt-FLD.msgT>1200)fieldSay('พลังไม่พอ');return}
+ if(s.autoHunt&&potOn()&&s.hp<s.maxhp*potThr()&&potTotal()>0)return; // ออโต้: รอดื่มยาก่อน
+ FLD.engT=nt;FLD.engM=m;FLD.engK=s.kills|0;FLD.follow=null;FLD.tx=FLD.ty=null;
+ act('fhunt',m.boss?'boss':String(m.i))}
+function fTarget(){var t=SET.ft&&SET.ft[s.zone];return t==null?'all':String(t)}
+function fAutoPick(){
+ var want=fTarget();if(want==='boss'&&fBossUp())return {boss:1};
+ var bm=null,bd=1e9,nt0=nowMs();FLD.mobs.forEach(function(m){if(!m.alive||(m.skip||0)>nt0)return;if(want!=='all'&&want!=='boss'&&String(m.i)!==want)return;var d=Math.hypot(m.x-FLD.px,m.y-FLD.py);if(d<bd){bd=d;bm=m}});
+ if(!bm&&want!=='all'){FLD.mobs.forEach(function(m){if(!m.alive)return;var d=Math.hypot(m.x-FLD.px,m.y-FLD.py);if(d<bd){bd=d;bm=m}})}return bm}
+function fieldUpdate(dt,tn){
+ fieldWatch();var AL=FLD.allies;if(AL)for(var ak in AL){var al=AL[ak],adx=al.tx-al.x,ady=al.ty-al.y,ad=Math.hypot(adx,ady);if(ad>240){al.x=al.tx;al.y=al.ty;al.mv=false}else if(ad>2){var as=Math.min(ad,90*dt);al.x+=adx/ad*as;al.y+=ady/ad*as;al.mv=true;if(Math.abs(adx)>1)al.dir=adx>0?1:-1}else al.mv=false}var b=!!(s&&s.battle),nt=nowMs();
+ if(b)return;
+ // ออโต้: เดินไปหามอนเป้าหมาย (ตัวที่ใกล้ที่สุด) ทันที ไม่ต้องรอพัก
+ if(s.autoHunt&&!FLD.hold&&nt>=FLD.grace&&(!FLD.follow||(FLD.follow.boss?!fBossUp():!FLD.follow.alive))){var pk=fAutoPick();if(pk)FLD.follow=pk}
+ fieldMove(dt,tn)}
+function fieldWatch(){
+ if(!s)return;var b=!!s.battle,nt=nowMs(),tn=nt;
+ if(!b&&FLD.wasB&&FLD.engM){var won=(s.kills|0)>FLD.engK,m0=FLD.engM;
+  if(won){if(!m0.boss){m0.alive=false;m0.res=nt+7000}}
+  else{FLD.grace=nt+3000;fieldSay('หนีเร็ว! 3 วินาที');if(!m0.boss){var a=Math.atan2(m0.y-FLD.py,m0.x-FLD.px);m0.vx=Math.cos(a)*16;m0.vy=Math.sin(a)*16;m0.next=tn+3000}}
+  FLD.engM=null}
+ if(!b&&!FLD.wasB&&FLD.engM&&nt-FLD.engT>3500)FLD.engM=null;
+ FLD.wasB=b}
+function fieldMove(dt,tn){
+ if(FLD.follow){if(FLD.follow.boss){FLD.tx=FLD.boss.x;FLD.ty=FLD.boss.y+4}else if(FLD.follow.alive){FLD.tx=FLD.follow.x;FLD.ty=FLD.follow.y}else FLD.follow=null}
+ FLD.moving=false;
+ if(FLD.tx!=null&&FLD.grid){var dd0=Math.hypot(FLD.tx-FLD.px,FLD.ty-FLD.py);
+  if(dd0>3&&!fLineG(FLD.px,FLD.py,FLD.tx,FLD.ty)){
+   if((!FLD.path||Math.hypot((FLD.pgx||0)-FLD.tx,(FLD.pgy||0)-FLD.ty)>18||!FLD.path.length)&&tn-(FLD.pT||0)>250){FLD.pT=tn;FLD.pgx=FLD.tx;FLD.pgy=FLD.ty;FLD.path=fPath(FLD.px,FLD.py,FLD.tx,FLD.ty);
+    if(!FLD.path&&FLD.follow){if(!FLD.follow.boss)FLD.follow.skip=nowMs()+8000;if(s.autoHunt){FLD.follow=null;FLD.tx=FLD.ty=null}}}
+  }else FLD.path=null}
+ if(FLD.tx!=null){var gx=FLD.tx,gy=FLD.ty;
+  if(FLD.path&&FLD.path.length){while(FLD.path.length>1&&Math.hypot(FLD.path[0][0]-FLD.px,FLD.path[0][1]-FLD.py)<6)FLD.path.shift();gx=FLD.path[0][0];gy=FLD.path[0][1];if(FLD.path.length===1){gx=FLD.tx;gy=FLD.ty}}
+  var dx=gx-FLD.px,dy=gy-FLD.py,d=Math.hypot(dx,dy),sp=78*dt;if(gx!==FLD.tx){var dT=Math.hypot(FLD.tx-FLD.px,FLD.ty-FLD.py);if(dT<=3)d=dT}
+  if(d>3){var st=Math.min(sp,d),base=Math.atan2(dy,dx),moved=false,TR=[0,0.45,-0.45,0.9,-0.9,1.35,-1.35,1.8,-1.8];
+   if(FLD.side)TR=TR.map(function(v){return -v});
+   for(var q=0;q<TR.length;q++){var an=base+TR[q],nx=FLD.px+Math.cos(an)*st,ny=FLD.py+Math.sin(an)*st;if(!fBlocked(nx,ny,5)){FLD.px=nx;FLD.py=ny;moved=true;break}}
+   if(moved){FLD.stuckT=tn}else if(tn-(FLD.stuckT||tn)>500){FLD.side=!FLD.side;FLD.stuckT=tn}
+   if(!moved&&tn-(FLD.pT||0)>400)FLD.path=null;
+   if(FLD.follow&&tn-(FLD.stuckT||tn)>1500&&s.autoHunt){if(!FLD.follow.boss)FLD.follow.skip=nowMs()+8000;FLD.follow=null;FLD.tx=FLD.ty=null;FLD.path=null}
+   FLD.moving=moved;if(Math.abs(dx)>2)FLD.dir=dx>0?1:-1}
+  else if(!FLD.hold&&!FLD.follow){FLD.tx=FLD.ty=null}}
+ FLD.mobs.forEach(function(m){
+  if(!m.alive){if(nowMs()>m.res)fieldSpawn(m);return}
+  if(tn>m.next){var a=Math.random()*6.283,go=Math.random()<0.7;m.vx=go?Math.cos(a)*16:0;m.vy=go?Math.sin(a)*16:0;m.next=tn+1200+Math.random()*2600}
+  var mx=m.x+m.vx*dt,my=m.y+m.vy*dt;if(!fBlocked(mx,my,7)){m.x=mx;m.y=my}else{m.vx=-m.vx;m.vy=-m.vy}
+  if(Math.hypot(m.x-FLD.px,m.y-FLD.py)<15)fieldEngage(m)});
+ if(fBossUp()&&Math.hypot(FLD.boss.x-FLD.px,FLD.boss.y-FLD.py)<22)fieldEngage({boss:1})}
+function fMob(c,k,x,y,sc,tn,flip,ph){
+ var MI=MIMG[k],fi=MI&&MI.f[Math.floor((tn+ph*300)/200)%MI.f.length];
+ c.save();c.translate(Math.round(x),Math.round(y));if(flip)c.scale(-1,1);c.imageSmoothingEnabled=false;
+ if(fi&&fi.complete&&fi.naturalWidth){var dw=Math.round(MI.w*0.62*sc),dh=Math.round(MI.h*0.62*sc);c.drawImage(fi,-dw/2,-dh,dw,dh)}
+ else{var SP=monSprite(k,Math.floor(tn/(MBASE[k]==='bat'?160:420))),u=1.4*sc;
+  if(SP){var w=SP.width*u,h=SP.height*u;c.drawImage(SP,-w/2,-h-(MBASE[k]==='bat'?10:0),w,h)}
+  else{var M=MONS[k];if(M){var uu=1.5*sc;M.r.forEach(function(q){c.fillStyle=M.pal[q[4]];c.fillRect(-M.w*uu/2+q[0]*uu,-M.h*uu+q[1]*uu,q[2]*uu,q[3]*uu)})}}}
+ c.restore()}
+function fLabel(c,t,x,y,col){c.font='700 8px Kanit,sans-serif';c.textAlign='center';var hw=c.measureText(t).width/2+3;x=Math.max(hw,Math.min(c.canvas.width-hw,x));c.lineWidth=3;c.strokeStyle='rgba(0,0,0,.8)';c.strokeText(t,x,y);c.fillStyle=col||'#fff';c.fillText(t,x,y)}
+function drawField(c,W,H,tn){
+ if(!s)return;var z=s.zone|0;if(FLD.z!==z||!FLD.map)fieldBuild(z);
+ var dt=Math.min(0.05,Math.max(0,(tn-(FLD.last||tn))/1000));FLD.last=tn;fieldUpdate(dt,tn);
+ var cx=Math.max(0,Math.min(FLD.W-W,FLD.px-W/2)),cy=Math.max(0,Math.min(FLD.H-H,FLD.py-H/2-10));FLD.cam=[cx,cy];
+ c.imageSmoothingEnabled=false;c.drawImage(FLD.map,Math.round(cx),Math.round(cy),W,H,0,0,W,H);
+ var P=FPAL[z]||FPAL[0];
+ FLD.pools.forEach(function(p){var sx=p.x-cx,sy=p.y-cy;if(sx<-80||sx>W+80||sy<-60||sy>H+60)return;c.save();c.globalAlpha=P.lava?0.25+0.2*Math.sin(tn/300):0.18;c.fillStyle=P.lava?'#ffd04a':'#ffffff';
+  for(var k=0;k<5;k++){var a=tn/900+k*1.3;c.fillRect(Math.round(sx+Math.cos(a)*p.rx*0.6),Math.round(sy+Math.sin(a*1.3)*p.ry*0.5),P.lava?3:5,1)}c.restore()});
+ if(FLD.tx!=null&&!FLD.follow){var mk=(tn%600)/600;c.strokeStyle='rgba(255,224,138,'+(1-mk)+')';c.lineWidth=1;c.beginPath();c.ellipse(FLD.tx-cx,FLD.ty-cy,4+mk*6,2+mk*3,0,0,7);c.stroke()}
+ var ents=[],zz=ZONES[z];
+ FLD.mobs.forEach(function(m){if(m.alive)ents.push({y:m.y,m:m})});
+ if(fBossUp())ents.push({y:FLD.boss.y,boss:1});
+ if(FLD.allies)for(var ak in FLD.allies)ents.push({y:FLD.allies[ak].y,al:FLD.allies[ak]});
+ ents.push({y:FLD.py,me:1});ents.sort(function(a,b){return a.y-b.y});
+ ents.forEach(function(e){
+  if(e.me){var x=FLD.px-cx,y=FLD.py-cy,bob=FLD.moving?Math.abs(Math.sin(tn/90))*1.5:0;shadowAt(c,x,y+1,8);drawChar(c,s.look,s.cls,Math.round(x-12),Math.round(y-bob),1,FLD.moving?tn*2:tn,FLD.dir>0,1);
+   fLabel(c,nick().slice(0,12),x,y-40,'#ffe08a');return}
+  if(e.al){var A=e.al,ax=A.x-cx,ay=A.y-cy;if(ax<-30||ax>W+30||ay<-50||ay>H+30)return;var ab=A.mv?Math.abs(Math.sin(tn/90))*1.5:0;shadowAt(c,ax,ay+1,8);
+   if(CLASSES[A.cls])drawChar(c,A.look||s.look,A.cls,Math.round(ax-12),Math.round(ay-ab),1,A.mv?tn*2:tn+300,A.dir>0,0.95);
+   fLabel(c,(A.b?'⚔️ ':'')+String(A.n||'').slice(0,12),ax,ay-40,'#8fe07a');return}
+  if(e.boss){var bx=FLD.boss.x-cx,by=FLD.boss.y-cy;if(bx<-60||bx>W+60||by<-60||by>H+60)return;var mobB=zz.mobs[zz.mobs.length-1];
+   c.save();c.globalCompositeOperation='lighter';var g=c.createRadialGradient(bx,by-14,2,bx,by-14,34);g.addColorStop(0,'rgba(255,60,40,'+(0.35+0.15*Math.sin(tn/200))+')');g.addColorStop(1,'rgba(255,40,20,0)');c.fillStyle=g;c.fillRect(bx-36,by-50,72,72);c.restore();
+   shadowAt(c,bx,by+1,16);fMob(c,mobB.k,bx,by,1.7,tn,FLD.px>FLD.boss.x,0);
+   c.fillStyle='#ffd04a';c.fillRect(Math.round(bx-6),Math.round(by-52),12,3);c.fillRect(Math.round(bx-6),Math.round(by-55),2,3);c.fillRect(Math.round(bx-1),Math.round(by-56),2,4);c.fillRect(Math.round(bx+4),Math.round(by-55),2,3);
+   fLabel(c,T('บอส')+' '+T(BOSSES[z]||mobB.n),bx,by-60,'#ff9a8a');return}
+  var m=e.m,mx=m.x-cx,my=m.y-cy;if(mx<-30||mx>W+30||my<-40||my>H+30)return;
+  var mob=zz.mobs[m.i];shadowAt(c,mx,my+1,8);fMob(c,mob.k,mx,my+Math.round(Math.sin(tn/250+m.ph)),1,tn,m.vx>0,m.ph);
+  if(Math.hypot(m.x-FLD.px,m.y-FLD.py)<90||FLD.follow===m)fLabel(c,T(mob.n),mx,my-26,FLD.follow===m?'#ffd04a':'#ffffff')});
+ zoneAmb(c,W,H,z,tn);vignette(c,W,H,0.38);
+ // แถบสถานะเล็ก
+ c.fillStyle='rgba(6,9,22,.6)';c.fillRect(4,4,108,22);
+ hudBar(c,8,8,100,5,s.hp/Math.max(1,s.maxhp),s.hp/Math.max(1,s.maxhp),'#6fd36a',false);hudBar(c,8,17,100,4,s.energy/Math.max(1,s.maxEnergy),s.energy/Math.max(1,s.maxEnergy),'#f0b93c',false);
+ c.font='700 8px Kanit,sans-serif';c.textAlign='right';c.lineWidth=3;c.strokeStyle='rgba(0,0,0,.8)';var zn=T(zz.n);c.strokeText(zn,W-6,12);c.fillStyle='#fff';c.fillText(zn,W-6,12);
+ var bl=(s.fbAt||0)-Date.now();var bt=bl>0?T('บอสเกิดใน')+' '+mmss(bl):T('บอสสนามปรากฏแล้ว!');c.strokeText(bt,W-6,23);c.fillStyle=bl>0?'#c8cde0':'#ff9a8a';c.fillText(bt,W-6,23);
+ var gr=FLD.grace-nowMs();if(gr>0){var ct=T('หนีเร็ว!')+' '+Math.ceil(gr/1000)+'s';c.textAlign='center';c.strokeText(ct,W/2,H-8);c.fillStyle='#ff9a8a';c.fillText(ct,W/2,H-8)}
+ else if(s.autoHunt){c.textAlign='center';var at=T('ออโต้กำลังล่ามอน');c.strokeText(at,W/2,H-8);c.fillStyle='#8fe07a';c.fillText(at,W/2,H-8)}
+ var age=nowMs()-FLD.msgT;if(age<1400){c.globalAlpha=1-age/1400;fLabel(c,FLD.msg,FLD.px-cx,FLD.py-cy-50-age/60,'#ffe08a');c.globalAlpha=1}}
+function fieldPt(ev){var cv=document.getElementById('scene');if(!cv||cv.getAttribute('data-mode')!=='field')return null;var r=cv.getBoundingClientRect(),x=(ev.clientX-r.left-cv.clientLeft)/cv.clientWidth*cv.width,y=(ev.clientY-r.top-cv.clientTop)/cv.clientHeight*cv.height;
+ return {x:x+FLD.cam[0],y:y+FLD.cam[1]}}
+if(!SV){
+ document.addEventListener('pointerdown',function(ev){var t=ev.target;if(!t||t.id!=='scene'||t.getAttribute('data-mode')!=='field')return;var p=fieldPt(ev);if(!p)return;FLD.hold=true;fieldTarget(p.x,p.y);ev.preventDefault()},{passive:false});
+ document.addEventListener('pointermove',function(ev){if(!FLD.hold)return;var p=fieldPt(ev);if(p){FLD.tx=p.x;FLD.ty=p.y;if(FLD.follow&&!FLD.follow.boss&&Math.hypot(FLD.follow.x-p.x,FLD.follow.y-p.y)>30)FLD.follow=null}});
+ ['pointerup','pointercancel'].forEach(function(n){document.addEventListener(n,function(){FLD.hold=false})})}
 
 function frame(tn){
  if(!s){
@@ -3854,6 +4212,7 @@ if(SV){
   setBoard:function(b,uid){SVB.board=b;SVB.uid=uid},
   setWB:function(w){SVB.wb=w},
   grant:function(g,f,msg){wbGrant(g,f,msg)},
+  pgrant:function(xp,g,from){ptGrant(xp,g,from)},
   gear:function(kind){if(kind==='wbkill')wbKillGear()},
   dgLoot:function(){return dgLoot()},
   dgLeft:function(){return s&&s.created?dgLeftN():0},
@@ -3863,7 +4222,7 @@ if(SV){
  };
 }
 // ===== สลับภาษา ไทย / English: แปลข้อความบนหน้าจอหลังวาด (คำ/วลี + ประโยคเต็ม) · ข้อความที่แปลไม่ครบจะคงเป็นภาษาไทย =====
-var I18N={"ph":{"ล่า":"Hunt","ตัวละคร":"Character","ตีของ":"Forge","วัตถุดิบ":"Materials","กิจกรรม":"Events","ฝ่าย":"Faction","แต่งตัว":"Wardrobe","บันทึก":"Log","แชท":"Chat","ปิดแชท":"Close chat","ปิด":"Close","ส่ง":"Send","ซื้อ":"Buy","เปิด":"Open","พับ":"Collapse","เปลี่ยน":"Change","ไอดี":"ID","รหัสผ่าน":"Password","แสดงรหัสผ่าน":"Show password","เข้าเกมส์":"Enter Game","สมัครไอดี":"Register","ออกจากระบบ":"Log out","อย่างน้อย":"At least","ตัวอักษร":"characters","เช่น":"e.g.","ตั้งค่า":"Settings","เสียง":"Sound","เสียงเอฟเฟกต์":"Sound effects","เพลงพื้นหลัง":"Background music","ระดับเสียง":"Volume","ลองเสียงเอฟเฟกต์":"Test sound effects","ฟังเพลงต่อสู้":"Play battle music","ภาษาไทย":"Thai","ภาษา / Language":"Language","เลือกหมวด":"Choose category","รายละเอียด":"Details","เลือกหมวดที่จะคราฟ":"Choose what to craft","ยังไม่มี":"none yet","ว่าง":"empty","ไม่มี":"None","ใส่อยู่":"equipped","ใช้อยู่":"in use","สวม":"Equip","ขาย":"Sell","ทิ้ง":"Discard","ตกลง":"OK","ยกเลิก":"Cancel","กลับ":"Back","ยืนยัน":"Confirm","คะแนน PvP":"PvP rating","เลเวล":"Level","ทอง":"Gold","พลังงาน":"Energy","พลัง":"Energy","ค่าพลัง":"Attributes","สเตตัส":"Stats","สกิล":"Skills","เลื่อนขั้นอาชีพ":"Job advancement","แต้มคงเหลือ":"Points left","รีเซ็ตแต้มสเตตัส":"Reset stat points","ต่อแต้ม":"per point","แต้ม":"pts","พลังโจมตี":"Attack","โจมตี":"Attack","ป้องกัน":"Defense","คริติคอล":"Critical","คริดาเมจ":"Crit damage","คริ":"Crit","หลบ":"Dodge","แม่นยำ":"Accuracy","HP สูงสุด":"Max HP","MP สูงสุด":"Max MP","พลังสกิล":"Skill power","เกราะ":"Armor","ศัตรู":"Enemy","มอนสเตอร์":"Monster","มอน":"Monster","บอส":"Boss","STR พลังโจมตี":"STR Strength","VIT ความอึด":"VIT Vitality","AGI ความคล่อง":"AGI Agility","DEX ความแม่นยำ":"DEX Dexterity","INT สติปัญญา":"INT Intelligence","LUK โชค":"LUK Luck","ทุกเลเวล":"Every level","เพิ่ม":"Add","ลด":"Reduce","ใบ":"cards","ชิ้น":"pcs","ครั้ง":"times","ตัว":"","คน":"players","ขวด":"bottles","กล่อง":"boxes","วินาที":"s","เหลือ":"left","มีอยู่":"have","ราคา":"price","ฟื้น":"Restore","ฟรี":"Free","สำเร็จ":"success","ลดขั้น":"downgrade","แตก":"break","พลาด":"Miss","ชนะ":"Defeated","แพ้":"Lose","ชนะ / แพ้":"Win / Loss","อัตราชนะ":"Win rate","ชนะติดต่อกัน":"Win streak","เรทติ้ง":"Rating","เรทติ้งสูงสุด":"Best rating","สะสมแล้ว":"Collected","ยังไม่เรียน":"Not learned","ยังไม่ได้":"Not obtained","สมาชิก":"Members","ภารกิจประจำวัน":"Daily quests","ล่ามอนสเตอร์":"Hunt monsters","ล่าออโต้":"Auto hunt","ออโต้สู้":"Auto fight","สกิลออโต้":"Auto skill","กินยาออโต้":"Auto potion","ปีนออโต้":"Auto climb","ดื่มยา":"Drink potion","ยาเต็ม":"Full potion","หนี":"Flee","หนีไม่ได้":"Cannot flee","ฟันหนัก":"Heavy strike","ตั้งค่าออโต้และยา":"Auto & potion settings","กินยาเมื่อเลือดต่ำกว่า":"Drink when HP below","เจอบอสแล้วสู้ต่อ":"Keep fighting bosses","เจอบอส: สู้ต่อ":"Boss: keep fighting","เปิดอยู่: ออโต้สู้บอสด้วย":"On: auto also fights bosses","ปิดอยู่: ออโต้จะหยุดเมื่อเจอบอส":"Off: auto stops at bosses","แผนที่":"Map","พัก":"Rest","ฉากต่อสู้":"Battle scene","ฉากการผจญภัย":"Adventure scene","กดแท็บด้านล่างเพื่อไปหน้าอื่นได้ระหว่างสู้ (ออโต้ยังสู้ต่อ)":"Tap a tab below to browse other pages while fighting (auto keeps fighting)","นักผจญภัยคู่แข่ง":"Rival adventurer","ออโต้สู้อยู่":"Auto fighting","รอคุณกดสู้":"Waiting for you","ออโต้กำลังล่ามอน":"Auto hunting","ออโต้กำลังปีนหอคอย":"Auto climbing","กลับไปดู":"View","กำลังทำงาน":"running","ชั่วโมงทอง":"Golden hour","และ":"and","อีก":"in","ใน":"in","บัพ":"Buff","ติดตัว":"Passive","บัพตัวเอง":"Self buff","เลือดฟื้นเต็ม":"HP fully restored","ได้การ์ด":"got card","ตอบโต้":"counters","ใช้":"used","ใช้สกิล":"uses skill","คริติคอล!":"Critical!","พลาดเป้า":"missed","ดรอป":"Drop","ขายอัตโนมัติ":"auto-sold","เลเวลอัป":"Level up","เลเวลอัปเป็น":"Level up to","ถูก":"was hit by","ฟาดจนสลบ":"knocked out","เสียทอง":"lost gold","แล้วฟื้นขึ้นมาด้วย HP ครึ่งหนึ่ง":"and revived with half HP","เริ่มผจญภัยในฐานะ":"Started adventure as","เริ่มต้นการผจญภัย เก็บของ ล่ามอน แล้วคราฟอาวุธ":"Begin your adventure: gather, hunt, then craft weapons","เริ่มต้นการผจญภัย":"Begin the adventure","นักดาบ":"Swordsman","นักฆ่า":"Assassin","นักเวท":"Mage","ผู้พิทักษ์ศักดิ์สิทธิ์":"Holy Guardian","นักธนู":"Archer","เส้นทางอาชีพ":"Class path","อาชีพขั้น":"Job tier","ขั้น":"Tier","อัศวินพิทักษ์":"Guardian Knight","ราชันย์คลั่งศึก":"Berserk King","เงามรณะ":"Death Shadow","จอมพิษร้าย":"Venom Master","จอมเวทผนึก":"Seal Mage","จอมเวทคำสาป":"Curse Mage","เทมพลาร์แสงสวรรค์":"Heavenly Templar","ผู้พิพากษาบาป":"Sin Judge","พรานป่าไร้เงา":"Shadowless Ranger","พลซุ่มยิงอสูร":"Demon Sniper","จอมทัพพิทักษ์":"Guardian Marshal","เทพสงครามคลั่ง":"Berserk War God","ราชันย์เงา":"Shadow Monarch","เจ้าแห่งพิษ":"Lord of Venom","อัครมหาเวท":"Archmage","จอมเวทวิญญาณ":"Spirit Mage","อัครเทมพลาร์":"Grand Templar","ผู้ตัดสินสวรรค์":"Heavenly Arbiter","นายพรานจันทรา":"Moon Hunter","ราชาธนูอสูร":"Demon Bow King","สกิลติดตัว":"Passive skill","สร้างตัวละคร":"Create character","ชื่อตัวละคร":"Character name","เลือกอาชีพและหน้าตา":"Choose class and look","ตัวอย่างตัวละคร":"Character preview","ลูกไฟ":"Fireball","โล่เวท":"Mana Shield","จิตเวท":"Arcane Mind","ห่าธนู":"Arrow Rain","เล็งแม่น":"Steady Aim","ตาเหยี่ยว":"Hawk Eye","แทงสองจังหวะ":"Double Stab","หายตัว":"Vanish","สัมผัสเงา":"Shadow Touch","ฟันเกลียวคลื่น":"Wave Slash","คำรามสงคราม":"War Cry","ผิวเหล็ก":"Iron Skin","ตัดสินศักดิ์สิทธิ์":"Holy Judgment","ปาฏิหาริย์":"Miracle","ลมปราณ":"Inner Breath","ออร่าข่มขวัญ":"Intimidating Aura","ทลายเกราะ":"Armor Break","จุดตายเงา":"Shadow Weak Spot","พิษกัดกร่อน":"Corrosive Poison","ผนึกเวท":"Spell Seal","คำสาปผุกร่อน":"Decay Curse","แสงข่มวิญญาณ":"Soul-Suppress Light","ตัดสินบาป":"Judge Sins","ลูกศรตรึงเท้า":"Pinning Arrow","เล็งจุดอ่อน":"Aim Weakness","ทลายขวัญศึก":"Morale Breaker","กายาเหล็ก":"Iron Body","ข่มขวัญศัตรู":"Daunt Foes","โลหิตเดือด":"Boiling Blood","พิษเงา":"Shadow Poison","มรณะฉับพลัน":"Sudden Death","พิษอัมพาต":"Paralytic Poison","ร่างอาบพิษ":"Venom Body","คำสาปเปราะ":"Brittle Curse","มหาเวทพลัง":"Grand Arcana","ไฟวิญญาณ":"Spirit Fire","ปราการเวท":"Arcane Bulwark","แสงแผดเผา":"Searing Light","พรศักดิ์สิทธิ์":"Holy Blessing","โซ่ตรวนสวรรค์":"Heavenly Chains","เกราะศรัทธา":"Armor of Faith","ศรอาบพิษ":"Venom Arrow","สายตาเหยี่ยว":"Falcon Sight","ศรตรึงเงา":"Shadow Pin Arrow","ศรทะลวง":"Piercing Arrow","กรงเล็บฉีก":"Rending Claw","กัดกระชาก":"Savage Bite","พุ่งชนกระแทก":"Charging Ram","พลังทำลายล้าง":"Annihilation","ดูดพลังชีวิต":"Life Drain","คำรามคลั่ง":"Frenzied Roar","ลดป้องกันศัตรู":"Lower enemy DEF","ลดพลังโจมตีศัตรู":"Lower enemy ATK","ศัตรูเสียเลือดทุกเทิร์น":"Enemy loses HP each turn","ของเลือดสูงสุด":"of max HP","มอน/บอส/หอคอย":"Monster/Boss/Tower","PvP/สงครามฝ่าย":"PvP/Faction war","มีผลเต็มทุกโหมด (รวม PvP และสงครามฝ่าย)":"full effect in every mode (incl. PvP and faction war)","ป่าเขียว":"Green Forest","ถ้ำหินมืด":"Dark Stone Cave","ภูเขาเพลิง":"Fire Mountain","ทะเลทรายร้อน":"Scorching Desert","ทุ่งน้ำแข็ง":"Ice Field","ปราสาทอเวจี":"Abyss Castle","หนองพิษมรณะ":"Deadly Poison Swamp","นครเมฆอัสนี":"Thunder Cloud City","ขอบจักรวาล":"Edge of the Cosmos","หมาป่าเทา":"Gray Wolf","หมูป่าเขี้ยวยาว":"Tusked Boar","ราชาหมาป่าเงา":"Shadow Wolf King","ค้างคาวยักษ์":"Giant Bat","โกเลมหินโบราณ":"Ancient Stone Golem","โกเลมหิน":"Stone Golem","จิ้งจกไฟ":"Fire Lizard","มังกรหนุ่ม":"Young Dragon","มังกรเพลิงอสูร":"Infernal Fire Dragon","ยักษ์ทราย":"Sand Giant","แมงป่องทราย":"Sand Scorpion","จักรพรรดิแมงป่อง":"Scorpion Emperor","หมาป่าน้ำแข็ง":"Frost Wolf","มังกรน้ำแข็ง":"Ice Dragon","ราชามังกรน้ำแข็ง":"Ice Dragon King","ค้างคาวอเวจี":"Abyss Bat","มังกรอเวจี":"Abyss Dragon","จอมมารแห่งอเวจี":"Demon Lord of the Abyss","งูพิษหนอง":"Swamp Viper","ยักษ์โคลนพิษ":"Toxic Mud Giant","พญานาคพิษมรณะ":"Deadly Venom Naga","หมาป่าอัสนี":"Thunder Wolf","มังกรอัสนี":"Thunder Dragon","จักรพรรดิอัสนีเหนือเมฆ":"Thunder Emperor of the Clouds","ค้างคาวดารา":"Star Bat","มังกรจักรวาล":"Cosmic Dragon","เทพเจ้าแห่งจักรวาล":"God of the Cosmos","หมาป่า":"Wolf","ไฮดราเก้าเศียร":"Nine-Headed Hydra","ไฮดรา":"Hydra","ผู้เฝ้ากรุศิลา":"Stone Vault Warden","นักรบกิ้งก่าต้องสาป":"Cursed Lizard Warrior","มังกรเฝ้าสมบัติ":"Treasure Dragon","ขาว":"White","เขียว":"Green","ฟ้า":"Blue","ม่วง":"Purple","ส้ม":"Orange","แดง":"Red","ดำ":"Black","ชมพู":"Pink","ทั่วไป":"Common","ชั้นดี":"Uncommon","หายาก":"Rare","ประณีต":"Epic","ตำนาน":"Legendary","มายา เทพปกรณัม":"Mythic","ธรรมดา":"Common","ระดับธรรมดา":"Common grade","ระดับทอง":"Gold grade","สีการ์ด:":"Card colors:","สีขาว":"White","อาวุธ":"Weapon","หมวก":"Helm","ถุงมือ":"Gloves","รองเท้า":"Boots","แหวน":"Ring","สร้อย":"Necklace","เข็มกัด":"Brooch","อุปกรณ์สวมใส่":"Wearables","เครื่องประดับ":"Accessories","ตีบวก":"Enhance","คราฟ":"Craft","การ์ด":"Card","ยาและของใช้":"Potions & items","ดาบ":"Swords","ที่สวมใส่อยู่":"Equipped","ไม้":"Wood","หิน":"Stone","แร่":"Ore","หนัง":"Hide","สมุนไพร":"Herbs","แร่หินสีม่วง":"Purple ore","ยาฟื้นฟู":"Potion","ยาฟื้นเลือดเต็ม":"Full heal potion","ต้มยาฟื้นฟู":"Brew potion","ต้มยา":"Brew","กระเป๋า":"Bag","กระเป๋าและบัญชี":"Bag & account","เก็บไม้":"Gather wood","เก็บหิน":"Gather stone","เก็บแร่":"Gather ore","เก็บหนัง":"Gather hide","เก็บสมุนไพร":"Gather herbs","เก็บวัตถุดิบ":"Gather materials","ดาบสนิม":"Rusty Sword","ดาบไม้เนื้อแข็ง":"Hardwood Sword","ดาบเหล็กกล้า":"Steel Sword","ดาบเงินบริสุทธิ์":"Pure Silver Sword","ดาบอัญมณี":"Jewel Sword","ดาบเกล็ดมังกร":"Dragonscale Sword","ดาบเทพปกรณัม":"Mythic Sword","มีดสนิม":"Rusty Dagger","มีดคู่ไม้เนื้อแข็ง":"Hardwood Twin Daggers","มีดคู่เหล็กกล้า":"Steel Twin Daggers","มีดคู่เงินบริสุทธิ์":"Silver Twin Daggers","มีดคู่อัญมณี":"Jewel Twin Daggers","มีดคู่เกล็ดมังกร":"Dragonscale Twin Daggers","มีดคู่เทพปกรณัม":"Mythic Twin Daggers","ไม้เท้าเก่า":"Old Staff","คฑาไม้เนื้อแข็ง":"Hardwood Scepter","คฑาเหล็กกล้า":"Steel Scepter","คฑาเงินบริสุทธิ์":"Silver Scepter","คฑาอัญมณี":"Jewel Scepter","คฑาเกล็ดมังกร":"Dragonscale Scepter","คฑาเทพปกรณัม":"Mythic Scepter","หอกสนิม":"Rusty Spear","หอกไม้เนื้อแข็ง":"Hardwood Spear","หอกเหล็กกล้า":"Steel Spear","หอกเงินบริสุทธิ์":"Silver Spear","หอกอัญมณี":"Jewel Spear","หอกเกล็ดมังกร":"Dragonscale Spear","หอกเทพปกรณัม":"Mythic Spear","ธนูเก่า":"Old Bow","ธนูไม้เนื้อแข็ง":"Hardwood Bow","ธนูเหล็กกล้า":"Steel Bow","ธนูเงินบริสุทธิ์":"Silver Bow","ธนูอัญมณี":"Jewel Bow","ธนูเกล็ดมังกร":"Dragonscale Bow","ธนูเทพปกรณัม":"Mythic Bow","เสื้อผ้าเก่า":"Old Clothes","เสื้อหนังสัตว์":"Hide Vest","เกราะเหล็ก":"Iron Armor","เกราะเกล็ดมังกร":"Dragonscale Armor","อาวุธของนักดาบ":"Swordsman weapons","ทรงผม":"Hairstyle","ผมสั้น":"Short hair","ผมยาว":"Long hair","ผมแฝด":"Twin tails","สีผม":"Hair color","สีผมดำ":"Black hair","สีผมขาว":"White hair","สีผมฟ้า":"Blue hair","สีผมทอง":"Blond hair","สีผมชมพู":"Pink hair","สีผมเขียว":"Green hair","ปีก":"Wings","ไม่มีปีก":"No wings","ปีกฟ้า":"Blue Wings","ปีกชมพู":"Pink Wings","ปีกดำ":"Black Wings","ปีกทอง":"Golden Wings","สัตว์เลี้ยง":"Pet","ไม่มีสัตว์เลี้ยง":"No pet","ออร่า":"Aura","ไม่มีออร่า":"No aura","สีชุด":"Outfit color","สีประจำอาชีพ":"Class color","แว่น / หน้ากาก":"Glasses / mask","ไม่สวม":"None","ไม่ใส่":"None","หมวกพ่อมด":"Wizard Hat","หมวกแก๊ป":"Cap","หัวฟักทอง":"Pumpkin Head","ฮู้ดหูแมว":"Cat-ear Hood","แว่นกอกเกิล":"Goggles","แว่นตา":"Glasses","หน้ากากแมว":"Cat Mask","แมวขาว":"White Cat","แมวชมพู":"Pink Cat","สไลม์ฟ้า":"Blue Slime","เพนกวิน":"Penguin","จิ้งจอกแดง":"Red Fox","กระต่ายขาว":"White Bunny","นกฮูก":"Owl","ลูกมังกร":"Baby Dragon","ออร่าขาว":"White Aura","ออร่าเพลิง":"Flame Aura","ออร่าน้ำแข็ง":"Ice Aura","ออร่าศักดิ์สิทธิ์":"Holy Aura","ออร่ามายา":"Illusion Aura","ย้อมแดง":"Red Dye","ย้อมน้ำเงิน":"Navy Dye","ย้อมเขียว":"Green Dye","ย้อมทอง":"Gold Dye","ย้อมม่วง":"Purple Dye","ฉายา":"Title","ฉายาที่สวมอยู่:":"Current title:","สมุดการ์ด":"Card book","สมุดสะสมการ์ด":"Card collection","กล่องสุ่ม":"Mystery box","เปิดกล่อง":"Open box","กล่องสุ่มของแต่งตัว":"Cosmetic mystery box","การ์ดที่สะสม":"Cards collected","พบบ่อยมาก":"Very common","พบบ่อย":"Common","พบได้":"Found","ผู้มาเยือนใหม่":"Newcomer","นักล่าฝึกหัด":"Apprentice Hunter","นักล่าผู้เก๋า":"Veteran Hunter","ยอดผู้กล้า":"Great Hero","ราชาหอคอย":"Tower King","นักไต่หอคอย":"Tower Climber","ช่างตีบวก":"Master Smith","นักสู้ลานประลอง":"Arena Fighter","ราชันย์ลานประลอง":"Arena Monarch","ผู้ภักดีแห่งสี่ฝ่าย":"Loyal of Four Factions","ผู้กล้าเลเวล":"Hero level","หอคอยไม่รู้จบ":"Endless Tower","บอสโลก":"World Boss","บอสโลก ไฮดรา":"World Boss Hydra","ชั้น":"Floor","ชั้นสูงสุดที่ผ่าน":"Highest floor","ผู้คุมชั้นถัดไป":"Next floor guardian","ปีนชั้น":"Climb floor","สงครามสี่ฝ่าย":"Four-Faction War","เลือกฝ่ายของคุณ":"Choose your faction","สมัครเข้าฝ่าย":"Join faction","ฝ่ายเต่าทมิฬ":"Black Tortoise","ฝ่ายมังกรเพลิง":"Flame Dragon","ฝ่ายพยัคฆ์พงไพร":"Forest Tiger","ฝ่ายหงส์เหมันต์":"Winter Phoenix","ศึกถัดไป":"Next war","จับคู่หาคู่ต่อสู้":"Find opponent","PvP จับคู่":"PvP match","ดันเจี้ยน":"Dungeon","ปาร์ตี้":"Party","กรุสมบัติต้องสาป":"Cursed Treasure Vault","สร้างห้อง":"Create room","เข้าร่วม":"Join","ห้องที่เปิดรออยู่":"Open rooms","รับรางวัลวันนี้เหลือ":"Rewards left today","รับรางวัลได้วันละ":"Rewards per day","ด่าน":"stages","ลง":"Run","ล็อกอินประจำวัน (รับรางวัลด้านบน)":"Daily login (claim above)","ล่ามอนสเตอร์ให้ชนะ":"Win monster hunts","ใช้สกิลในการต่อสู้":"Use skills in battle","คราฟหรือตีบวกอุปกรณ์":"Craft or enhance gear","เข้าหอคอย (ชนะหรือแพ้ก็นับ)":"Enter the tower (win or lose)","สู้ PvP":"Fight PvP","พลังงานเต็ม":"Energy full","ถึงเลเวล":"Reach level","ฆ่ามอนสเตอร์":"Kill monsters","ตีบวกอาวุธถึง":"Enhance weapon to","ผ่านหอคอยชั้น":"Clear tower floor","ชนะ PvP":"Win PvP","สมัครเข้าร่วมฝ่าย":"Join a faction","เรทติ้ง PvP สูงสุดถึง":"Reach PvP rating","ผ่านอาชีพขั้น 2 แล้ว":"Completed job tier 2","ยาฟื้นพลัง":"Energy potion","ทองจากมอน":"Monster gold","XP การต่อสู้":"Battle XP","วายุ":"Wayu","ชาดา":"Chada","ธารา":"Thara","นาคี":"Naki","ศิลา":"Sila","มะลิ":"Mali","ภูผา":"Phupha","ไกรสร":"Kraisorn","อัคคี":"Akkhi","ปรีชา":"Preecha","ขุนเขา":"Khunkhao","ดาวหาง":"Comet","สายหมอก":"Mist","พิมพ์ใจ":"Pimjai","ราชสีห์":"Lion","เจ้าป่า":"Jungle Lord","เสือขาว":"White Tiger","กล้าหาญ":"Brave","ไพรวัลย์":"Praiwan","แสงเทียน":"Candlelight","เพลิงนิล":"Black Flame","อินทรีย์":"Eagle","ฟ้าคะนอง":"Thunderstorm","มังกรฟ้า":"Sky Dragon","รัตติกาล":"Nightfall","นางพรานดำ":"Dark Huntress","นักล่าเงา":"Shadow Hunter","ลุงดาบหัก":"Broken-Sword Uncle","เกล็ดหิมะ":"Snowflake","อัศวินตกยุค":"Outdated Knight","เพชฌฆาตเงียบ":"Silent Executioner","จอมเวทสายหมอก":"Mist Sorcerer","คนเก็บแร่ใจดี":"Kind Miner","เขี้ยวมังกรดำ":"Black Dragon Fang","จันทร์เพ็ญ":"Full Moon","หมาป่าราตรี":"Night Wolf","ราชันย์เพลิงนิล":"Black Flame Monarch","พิทักษ์ตะวันแดง":"Red Sun Guardian","เจ้าหมาป่าเดี่ยว":"Lone Wolf","ชมรมล่าเกล็ดมังกร":"Dragonscale Hunters","อัศวินแห่งรุ่งอรุณ":"Knight of Dawn","ปีกเหล็กแห่งขุนเขา":"Iron Wing of the Mountains","พลพรรคหมาป่าเดี่ยว":"Lone Wolf Pack","เงาแดง":"Red Shadow","น้ำใส":"Clearwater","ฟ้าใส":"Clear Sky","ดึก":"Night","เช้า":"Morning","บ่าย":"Afternoon","เย็น":"Evening","ทีม":"Team","โลก":"World","กระซิบ":"Whisper","คุณ":"you","ข้อความแชท":"Chat message","อัพดาว":"Star up","พิมพ์ข้อความ":"Type a message","โอกาสสุ่มระดับ":"Grade roll chances","ยังไม่ได้ (สุ่มจากกล่อง)":"Not owned (from mystery box)","ฆ่าไปแล้ว":"kills","อา.":"Sun","จ.":"Mon","อ.":"Tue","พ.":"Wed","พฤ.":"Thu","ศ.":"Fri","ส.":"Sat","ม.ค.":"Jan","ก.พ.":"Feb","มี.ค.":"Mar","เม.ย.":"Apr","พ.ค.":"May","มิ.ย.":"Jun","ก.ค.":"Jul","ส.ค.":"Aug","ก.ย.":"Sep","ต.ค.":"Oct","พ.ย.":"Nov","ธ.ค.":"Dec","โค่น":"Defeated","สลบ":"Knocked out","ได้":"got","ทำดาเมจ":"dealt","เทิร์น":"turns","รอบล่าสุด":"Last run","ดาเมจ":"damage","ผู้ร่วมรบวันนี้":"Fighters today","ลงสู้บอส":"Fight boss","ได้ทอง":"gold","ตารางดาเมจวันนี้":"Today's damage ranking","ยังไม่มีใครลงสู้":"No one has fought yet","อันดับของคุณ":"Your rank","ผู้ชนะเมื่อวาน":"Yesterday's winners","รีเซ็ตทุกเที่ยงคืน":"resets at midnight","เลือดบอส":"Boss HP","ถูกโค่นแล้ว!":"Defeated!","กำลังตีบวก...":"Enhancing...","รอผล...":"Waiting...","ตีบวกสำเร็จ!":"Enhance success!","ตีบวกพลาด ลดขั้น":"Enhance failed, downgraded","ไอเท็มแตก!":"Item broke!","ตีบวกไม่ติด":"Enhance failed","ถูกทำลาย":"destroyed","สำเร็จ!":"success!","ลดขั้นเหลือ":"downgraded to","ไม่ติด · ยังเป็น":"failed · still","แตก!":"Broke!","กำลังตีบวก":"Enhancing","ท่าถัดไปของศัตรู:":"Enemy's next move:","เลือกท่าภายใน":"Choose within","วินาที (ไม่เลือก = โจมตีอัตโนมัติ)":"s (no choice = auto attack)","ฟื้นฟูทีม":"Heal team","กดพร้อม":"Ready","ยกเลิกพร้อม":"Unready","เริ่มลงดัน":"Start dungeon","รอทุกคนกดพร้อม":"Waiting for everyone","ออกจากห้อง":"Leave room","หัวห้อง":"Host","พร้อม":"Ready","ยังไม่พร้อม":"Not ready","เลือกแล้ว":"Chosen","กำลังคิด...":"Thinking...","เคลียร์ดันเจี้ยน!":"Dungeon cleared!","ทีมพ่ายแพ้":"Party defeated","ได้รับ:":"Received:","ห้อง":"Room","วิธีเล่น":"How to play"},"se":{"เช่น hero_{n}":"e.g. hero_{n}","อย่างน้อย {n} ตัวอักษร":"At least {n} characters","บัญชีเก็บอยู่ในเบราว์เซอร์ของเครื่องนี้ ไม่มีเซิร์ฟเวอร์กลาง จึงใช้ไอดีเดียวกันข้ามเครื่องไม่ได้ และกู้รหัสผ่านที่ลืมไม่ได้":"Accounts are stored in this browser only (no central server), so an ID can’t be used across devices and forgotten passwords can’t be recovered.","ศึกชิงเมือง TheWarWhat":"TheWarWhat","พลัง +{n} ใน {n}:{n}":"Energy +{n} in {n}:{n}","พลังเต็ม":"Energy full","ชั่วโมงทอง XP/ทอง +{n}% ({n}–{n} น. · {n}–{n} น.) อีก":"Golden hour XP/Gold +{n}% ({n}–{n}h · {n}–{n}h) in","🔥 ชั่วโมงทอง! XP และทอง +{n}% เหลือ":"🔥 Golden hour! XP & Gold +{n}% · ends in","−{n} พลัง · เหลือ {n}/{n}":"−{n} energy · {n}/{n} left","−{n} พลัง":"−{n} energy","เหลือ {n}":"{n} left","พัก {n} วินาที":"Rest {n}s","มี {n} (−{n} พลัง)":"Have {n} (−{n} energy)","กดแท็บด้านล่างเพื่อไปหน้าอื่นได้ระหว่างสู้ (ออโต้ยังสู้ต่อ)":"Tap a tab below to browse other pages while fighting (auto keeps fighting)","กดหมวดเพื่อเปิด กดอีกครั้งเพื่อเก็บ · จุดแดง = มีแต้มให้ลงหรือพร้อมเปลี่ยนอาชีพ":"Tap a category to open, tap again to close · dot = points to spend or job change ready","กดปุ่มด้านบนเพื่อดูรายละเอียดของแต่ละหมวด":"Tap a button above to see each category","ได้แต้มสเตตัส {n} แต้มทุกเลเวล สูงสุด {n} ต่อค่า · ตัวเลขสีทอง (+) คือโบนัสอาชีพที่ได้ทุกเลเวล นับแยกจากแต้มที่อัป ไม่รวมในเพดาน {n}":"Gain {n} stat points per level, max {n} per stat · gold (+) numbers are class bonuses gained each level, counted separately and not part of the {n} cap","คริติคอล +{n}% · คริดาเมจ +{n}% ต่อแต้ม":"Crit +{n}% · crit damage +{n}% per point","โจมตี +{n} ต่อแต้ม (ไม่ใช่นักธนู/นักเวท)":"Attack +{n} per point (not Archer/Mage)","HP +{n} ต่อแต้ม · เกราะ +{n} ทุก {n} แต้ม":"HP +{n} per point · Armor +{n} every {n} points","หลบ +{n}% ต่อแต้ม":"Dodge +{n}% per point","MP +{n} · พลังสกิล +{n}% ต่อแต้ม · นักเวท: โจมตี +{n} ต่อแต้ม":"MP +{n} · skill power +{n}% per point · Mage: Attack +{n} per point","แม่นยำ +{n}% ต่อแต้ม · นักธนู: โจมตี +{n} และพลังสกิล +{n}% ต่อแต้ม":"Accuracy +{n}% per point · Archer: Attack +{n} and skill power +{n}% per point","ขั้น {n} · เลเวล {n} (เลือก {n} สาย) · ชุดใหม่ + สกิลติดตัว {n}":"Tier {n} · Level {n} (choose {n} paths) · new outfit + {n} passive","ขั้น {n} · เลเวล {n} (ต่อจากสายขั้น {n}) · ชุดใหม่ + สกิลติดตัว {n}":"Tier {n} · Level {n} (continues tier {n} path) · new outfit + {n} passives","ขั้น {n} เริ่มต้น":"Tier {n} starter","{n} ไอดีสร้างตัวละครได้ {n} ตัว ชื่อและอาชีพแก้ไม่ได้ภายหลัง":"{n} ID can create {n} character; name and class can’t be changed later","ตั้งชื่อตัวละคร {n}–{n} ตัวอักษร":"Character name {n}–{n} characters","พลังโจมตี +{n} (คูณตามระดับที่สุ่มได้) · ต้องเลเวล {n}":"Attack +{n} (multiplied by rolled grade) · requires level {n}","ใช้อยู่ · พลังโจมตี +{n} (คูณตามระดับที่สุ่มได้) · ต้องเลเวล {n}":"In use · Attack +{n} (multiplied by rolled grade) · requires level {n}","โบนัสชุด: ยังสวมไม่ครบ {n} ชิ้น (อาวุธ หมวก เกราะ ถุงมือ รองเท้า)":"Set bonus: not all {n} pieces equipped (weapon, helm, armor, gloves, boots)","+{n}–{n} สำเร็จ {n}% · +{n}–{n} สำเร็จ {n}% พลาดลดขั้น · +{n}–{n} สำเร็จ {n}% ลดขั้น {n}% แตก {n}% · +{n}–{n} สำเร็จ {n}% แตก {n}% · ทุกขั้นเพิ่มพลัง {n}% · แตก = ชิ้นนั้นหายไป":"+{n}–{n} {n}% success · +{n}–{n} {n}% success, fail downgrades · +{n}–{n} {n}% success, {n}% downgrade, {n}% break · +{n}–{n} {n}% success, {n}% break · each level +{n}% power · break = item lost","โบนัสทั้งชุด (อาวุธ หมวก เกราะ ถุงมือ รองเท้า ตีบวกทุกชิ้นถึง +{n} / +{n} / +{n} / +{n}): โจมตี ป้องกัน HP +{n}% / +{n}% / +{n}% / +{n}%":"Full set bonus (weapon, helm, armor, gloves, boots all enhanced to +{n} / +{n} / +{n} / +{n}): ATK DEF HP +{n}% / +{n}% / +{n}% / +{n}%","ตีบวก (สูงสุด +{n})":"Enhance (max +{n})","→ +{n} · สำเร็จ {n}% · {n} ทอง":"→ +{n} · {n}% success · {n} gold","→ +{n} · สำเร็จ {n}% · ลดขั้น {n}% · {n} ทอง":"→ +{n} · {n}% success · {n}% downgrade · {n} gold","คราฟทุกชิ้นมีโอกาสแตก {n}% (เสียวัตถุดิบ) · อาวุธ/อุปกรณ์/เครื่องประดับที่คราฟเองมีโอกาส {n}% ได้ช่องใส่การ์ด (สุ่มจำนวนรู: {n} รู {n}% · {n} รู {n}% · {n} รู {n}%) · ของดรอปจากบอสไม่มีรู":"Every craft has a {n}% break chance (materials lost) · crafted weapons/wearables/accessories have {n}% chance of card sockets ({n} socket {n}% · {n} sockets {n}% · {n} sockets {n}%) · boss drops have no sockets","คราฟอาวุธ/อุปกรณ์/เครื่องประดับวันนี้":"Weapons/gear/accessories crafted today","ชิ้น · ของที่คราฟจะล็อกชื่อผู้คราฟ 🔒":"pcs · crafted items are bound to the crafter 🔒","ยังไม่มีชิ้นที่คราฟไว้":"No crafted pieces yet","อุปกรณ์สวมใส่ (หมวก เกราะ ถุงมือ รองเท้า)":"Wearables (helm, armor, gloves, boots)","เครื่องประดับ (แหวน สร้อย เข็มกัด)":"Accessories (ring, necklace, brooch)","ระดับธรรมดา: โจมตี +{n} · คริ +{n}%":"Common grade: Attack +{n} · Crit +{n}%","ระดับธรรมดา: ป้องกัน +{n} · HP +{n}":"Common grade: Defense +{n} · HP +{n}","ระดับธรรมดา: MP +{n} · หลบ +{n}%":"Common grade: MP +{n} · Dodge +{n}%","ระดับธรรมดา: ป้องกัน +{n} · หลบ +{n}%":"Common grade: Defense +{n} · Dodge +{n}%","ฟื้น {n} HP · ราคา {n} ทอง · มีอยู่ {n} ขวด":"Restores {n} HP · {n} gold · have {n}","ฟื้น {n} HP · ราคา {n} ทอง · มีอยู่ {n} ขวด · ซื้อได้เลเวล {n} ขึ้นไป":"Restores {n} HP · {n} gold · have {n} · level {n}+","ฟื้น {n} HP · มีอยู่ {n} ขวด":"Restores {n} HP · have {n}","ฟื้น HP เต็มหลอด (ใช้ปุ่ม \"ดื่มยาเต็ม\" เอง ออโต้ไม่ใช้ · PvP ใช้ไม่ได้) · ราคา {n} ทอง · มีอยู่ {n} ขวด":"Restores full HP (manual \"full potion\" only, auto won’t use · not in PvP) · {n} gold · have {n}","กดเก็บชนิดที่ต้องการ ใช้พลัง {n} ได้ {n} ชิ้น":"Tap a type to gather: {n} energy for {n} pcs","ชิ้น · กดชื่อของเพื่อขายหรือทิ้ง":"pcs · tap an item to sell or discard","กดช่องเพื่อไปที่หมวดคราฟของชิ้นนั้น (ช่องที่มีรู ◇ = กดเพื่อใส่การ์ด) · สีกรอบ = ระดับ · มุมขวาบน = ค่าตีบวก":"Tap a slot to open its craft category (◇ socket = tap to insert card) · border color = grade · top right = enhance level","HP {n} · โจมตี {n} · เกราะ {n} · ทอง ~{n} · XP {n}":"HP {n} · ATK {n} · Armor {n} · Gold ~{n} · XP {n}","มีอยู่ {n} กล่อง · ได้ของจริง {n}% อีก {n}% เป็นขยะ":"Have {n} boxes · {n}% real item, {n}% junk","หมวก ปีก สัตว์เลี้ยง และสีชุด หาได้จากกล่องสุ่ม ซึ่งซื้อด้วยทอง หรือรับจากภารกิจประจำวัน {n} คะแนน":"Hats, wings, pets and outfit colors come from mystery boxes, bought with gold or earned at {n} daily quest points","การ์ดที่มีภาพคือเคยได้แล้ว (ดาวด้านล่าง = ดาวที่อัพไว้) · เงาดำมี ? คือยังไม่เคยได้ · มงกุฎ = การ์ดบอส · สีเรียงจาก ขาว เขียว ฟ้า ม่วง ส้ม ทอง แดง":"Pictured cards are owned (stars = upgrades) · ? silhouettes not yet found · crown = boss card · colors: white, green, blue, purple, orange, gold, red","โบนัสตามสี (ขาว→แดง): {n}/{n}/{n}/{n}/{n}/{n}/{n}% · ดาวละ +{n}% · มอนตัวแรก=โจมตี มอนตัวที่สอง=ป้องกัน บอส=HP ×{n} · อัพดาวต้องมีการ์ดใบเดียวกันซ้ำ สำเร็จ {n}% พลาดแล้วการ์ดซ้ำหาย (สูงสุด {n} ดาว)":"Bonus by color (white→red): {n}/{n}/{n}/{n}/{n}/{n}/{n}% · +{n}% per star · 1st monster=ATK, 2nd=DEF, boss=HP ×{n} · star-up needs a duplicate, {n}% success, duplicate lost on fail (max {n} stars)","· ได้จากการล่าตามแผนที่เท่านั้น (ไม่ตกจากหอคอย/PvP)":"· only from map hunting (not tower/PvP)","· ยังไม่ได้ {n} ชิ้น":"· {n} not obtained","ฟรี {n} ครั้งต่อวัน หลังจากนั้นครั้งละ {n} ทอง · รางวัลเป็นทองอย่างเดียว · เลือดทั้งสองฝ่าย ×{n} · ใช้ยาได้ไม่เกิน {n} ขวดต่อแมตช์ · สู้จบ HP เต็ม":"{n} free per day, then {n} gold each · gold rewards only · both sides HP ×{n} · max {n} potions per match · HP full afterwards","จับคู่หาคู่ต่อสู้ (ฟรี เหลือ {n}/{n})":"Find opponent ({n}/{n} free left)","โหมดออนไลน์ไม่พร้อม (ต้องเปิดเกมจากลิงก์ที่ล็อกอิน claude.ai) ตอนนี้สู้กับคู่ต่อสู้จำลอง":"Online mode unavailable (open from a logged-in claude.ai link) · fighting simulated opponents","เลือกได้ {n} ฝ่ายต่อตัวละคร และเปลี่ยนภายหลังไม่ได้":"Choose {n} faction per character; can’t change later","ระบบจัดสงครามสี่ฝ่ายเองวันเว้นวัน ทุกวันที่ตรงรอบ เวลา {n}:{n}–{n}:{n} น. (เวลาไทย) ผู้เล่นแต่ละคนสู้ได้ {n} ครั้งต่อสงคราม กดสู้แล้วระบบสุ่มฝ่ายตรงข้ามจากอีก {n} ฝ่าย ชนะ = +{n} แต้มให้ฝ่ายตัวเอง":"The Four-Faction War runs every other day, {n}:{n}–{n}:{n} (Thai time). Each player fights {n} times per war against a random faction from the other {n}. Win = +{n} points for your faction","บอสโลกเล่นได้ในเวอร์ชันออนไลน์ (เล่นผ่านเซิร์ฟเวอร์เกม) เพราะต้องรวมดาเมจของผู้เล่นทุกคน":"World Boss is available in the online version (game server) because damage is shared by all players","ดันเจี้ยนเล่นได้ในเวอร์ชันออนไลน์ (เล่นผ่านเซิร์ฟเวอร์เกม) เพราะต้องลงพร้อมผู้เล่นคนอื่น":"Dungeons are available in the online version (game server) because you play with others","ลง {n} ด่าน (ผู้เฝ้ากรุ → นักรบต้องสาป → มังกรเฝ้าสมบัติ) เคลียร์แล้วได้อุปกรณ์ {n} ชิ้นตามเลเวลตัวเอง:":"Clear {n} stages (Warden → Cursed Warrior → Treasure Dragon) for {n} gear piece at your level:","ดันเจี้ยน · ปาร์ตี้ {n}–{n} คน":"Dungeon · party of {n}–{n}","· รับรางวัลได้วันละ {n} ครั้ง":"· {n} rewards per day","เพลงเปลี่ยนเองตามสถานการณ์: สำรวจ / ต่อสู้ · ถ้าไม่มีเสียง ให้แตะหน้าจอหนึ่งครั้ง (เบราว์เซอร์มือถือต้องแตะก่อนจึงเล่นเสียงได้) และเช็กปุ่มปิดเสียงของเครื่อง":"Music switches automatically: explore / battle · no sound? tap the screen once (mobile browsers need a tap first) and check your device’s mute switch","การตั้งค่าเก็บในเครื่องนี้ (แต่ละเครื่องตั้งแยกกันได้)":"Settings are saved on this device","เปิดแชท (ลากย้ายได้)":"Open chat (draggable)","ระดับเสียง เสียงเอฟเฟกต์":"Sound effects volume","ระดับเสียง เพลงพื้นหลัง":"Music volume","ทุกเลเวล STR +{n} VIT +{n}":"Every level STR +{n} VIT +{n}","ทุกเลเวล DEX +{n} AGI +{n}":"Every level DEX +{n} AGI +{n}","ทุกเลเวล INT +{n} VIT +{n}":"Every level INT +{n} VIT +{n}","ทุกเลเวล AGI +{n} LUK +{n}":"Every level AGI +{n} LUK +{n}","ทุกเลเวล VIT +{n}":"Every level VIT +{n}"}};
+var I18N={"ph":{"ล่า":"Hunt","ตัวละคร":"Character","ตีของ":"Forge","วัตถุดิบ":"Materials","กิจกรรม":"Events","ฝ่าย":"Faction","แต่งตัว":"Wardrobe","บันทึก":"Log","แชท":"Chat","ปิดแชท":"Close chat","ปิด":"Close","ส่ง":"Send","ซื้อ":"Buy","เปิด":"Open","พับ":"Collapse","เปลี่ยน":"Change","ไอดี":"ID","รหัสผ่าน":"Password","แสดงรหัสผ่าน":"Show password","เข้าเกมส์":"Enter Game","สมัครไอดี":"Register","ออกจากระบบ":"Log out","อย่างน้อย":"At least","ตัวอักษร":"characters","เช่น":"e.g.","ตั้งค่า":"Settings","เสียง":"Sound","เสียงเอฟเฟกต์":"Sound effects","เพลงพื้นหลัง":"Background music","ระดับเสียง":"Volume","ลองเสียงเอฟเฟกต์":"Test sound effects","ฟังเพลงต่อสู้":"Play battle music","ภาษาไทย":"Thai","ภาษา / Language":"Language","เลือกหมวด":"Choose category","รายละเอียด":"Details","เลือกหมวดที่จะคราฟ":"Choose what to craft","ยังไม่มี":"none yet","ว่าง":"empty","ไม่มี":"None","ใส่อยู่":"equipped","ใช้อยู่":"in use","สวม":"Equip","ขาย":"Sell","ทิ้ง":"Discard","ตกลง":"OK","ยกเลิก":"Cancel","กลับ":"Back","ยืนยัน":"Confirm","คะแนน PvP":"PvP rating","เลเวล":"Level","ทอง":"Gold","พลังงาน":"Energy","พลัง":"Energy","ค่าพลัง":"Attributes","สเตตัส":"Stats","สกิล":"Skills","เลื่อนขั้นอาชีพ":"Job advancement","แต้มคงเหลือ":"Points left","รีเซ็ตแต้มสเตตัส":"Reset stat points","ต่อแต้ม":"per point","แต้ม":"pts","พลังโจมตี":"Attack","โจมตี":"Attack","ป้องกัน":"Defense","คริติคอล":"Critical","คริดาเมจ":"Crit damage","คริ":"Crit","หลบ":"Dodge","แม่นยำ":"Accuracy","HP สูงสุด":"Max HP","MP สูงสุด":"Max MP","พลังสกิล":"Skill power","เกราะ":"Armor","ศัตรู":"Enemy","มอนสเตอร์":"Monster","มอน":"Monster","บอส":"Boss","STR พลังโจมตี":"STR Strength","VIT ความอึด":"VIT Vitality","AGI ความคล่อง":"AGI Agility","DEX ความแม่นยำ":"DEX Dexterity","INT สติปัญญา":"INT Intelligence","LUK โชค":"LUK Luck","ทุกเลเวล":"Every level","เพิ่ม":"Add","ลด":"Reduce","ใบ":"cards","ชิ้น":"pcs","ครั้ง":"times","ตัว":"","คน":"players","ขวด":"bottles","กล่อง":"boxes","วินาที":"s","เหลือ":"left","มีอยู่":"have","ราคา":"price","ฟื้น":"Restore","ฟรี":"Free","สำเร็จ":"success","ลดขั้น":"downgrade","แตก":"break","พลาด":"Miss","ชนะ":"Defeated","แพ้":"Lose","ชนะ / แพ้":"Win / Loss","อัตราชนะ":"Win rate","ชนะติดต่อกัน":"Win streak","เรทติ้ง":"Rating","เรทติ้งสูงสุด":"Best rating","สะสมแล้ว":"Collected","ยังไม่เรียน":"Not learned","ยังไม่ได้":"Not obtained","สมาชิก":"Members","ภารกิจประจำวัน":"Daily quests","ล่ามอนสเตอร์":"Hunt monsters","ล่าออโต้":"Auto hunt","ออโต้สู้":"Auto fight","สกิลออโต้":"Auto skill","กินยาออโต้":"Auto potion","ปีนออโต้":"Auto climb","ดื่มยา":"Drink potion","ยาเต็ม":"Full potion","หนี":"Flee","หนีไม่ได้":"Cannot flee","ฟันหนัก":"Heavy strike","ตั้งค่าออโต้และยา":"Auto & potion settings","กินยาเมื่อเลือดต่ำกว่า":"Drink when HP below","เจอบอสแล้วสู้ต่อ":"Keep fighting bosses","เจอบอส: สู้ต่อ":"Boss: keep fighting","เปิดอยู่: ออโต้สู้บอสด้วย":"On: auto also fights bosses","ปิดอยู่: ออโต้จะหยุดเมื่อเจอบอส":"Off: auto stops at bosses","แผนที่":"Map","พัก":"Rest","ฉากต่อสู้":"Battle scene","ฉากการผจญภัย":"Adventure scene","กดแท็บด้านล่างเพื่อไปหน้าอื่นได้ระหว่างสู้ (ออโต้ยังสู้ต่อ)":"Tap a tab below to browse other pages while fighting (auto keeps fighting)","นักผจญภัยคู่แข่ง":"Rival adventurer","ออโต้สู้อยู่":"Auto fighting","รอคุณกดสู้":"Waiting for you","ออโต้กำลังล่ามอน":"Auto hunting","ออโต้กำลังปีนหอคอย":"Auto climbing","กลับไปดู":"View","กำลังทำงาน":"running","ชั่วโมงทอง":"Golden hour","และ":"and","อีก":"in","ใน":"in","บัพ":"Buff","ติดตัว":"Passive","บัพตัวเอง":"Self buff","เลือดฟื้นเต็ม":"HP fully restored","ได้การ์ด":"got card","ตอบโต้":"counters","ใช้":"used","ใช้สกิล":"uses skill","คริติคอล!":"Critical!","พลาดเป้า":"missed","ดรอป":"Drop","ขายอัตโนมัติ":"auto-sold","เลเวลอัป":"Level up","เลเวลอัปเป็น":"Level up to","ถูก":"was hit by","ฟาดจนสลบ":"knocked out","เสียทอง":"lost gold","แล้วฟื้นขึ้นมาด้วย HP ครึ่งหนึ่ง":"and revived with half HP","เริ่มผจญภัยในฐานะ":"Started adventure as","เริ่มต้นการผจญภัย เก็บของ ล่ามอน แล้วคราฟอาวุธ":"Begin your adventure: gather, hunt, then craft weapons","เริ่มต้นการผจญภัย":"Begin the adventure","นักดาบ":"Swordsman","นักฆ่า":"Assassin","นักเวท":"Mage","ผู้พิทักษ์ศักดิ์สิทธิ์":"Holy Guardian","นักธนู":"Archer","เส้นทางอาชีพ":"Class path","อาชีพขั้น":"Job tier","ขั้น":"Tier","อัศวินพิทักษ์":"Guardian Knight","ราชันย์คลั่งศึก":"Berserk King","เงามรณะ":"Death Shadow","จอมพิษร้าย":"Venom Master","จอมเวทผนึก":"Seal Mage","จอมเวทคำสาป":"Curse Mage","เทมพลาร์แสงสวรรค์":"Heavenly Templar","ผู้พิพากษาบาป":"Sin Judge","พรานป่าไร้เงา":"Shadowless Ranger","พลซุ่มยิงอสูร":"Demon Sniper","จอมทัพพิทักษ์":"Guardian Marshal","เทพสงครามคลั่ง":"Berserk War God","ราชันย์เงา":"Shadow Monarch","เจ้าแห่งพิษ":"Lord of Venom","อัครมหาเวท":"Archmage","จอมเวทวิญญาณ":"Spirit Mage","อัครเทมพลาร์":"Grand Templar","ผู้ตัดสินสวรรค์":"Heavenly Arbiter","นายพรานจันทรา":"Moon Hunter","ราชาธนูอสูร":"Demon Bow King","สกิลติดตัว":"Passive skill","สร้างตัวละคร":"Create character","ชื่อตัวละคร":"Character name","เลือกอาชีพและหน้าตา":"Choose class and look","ตัวอย่างตัวละคร":"Character preview","ลูกไฟ":"Fireball","โล่เวท":"Mana Shield","จิตเวท":"Arcane Mind","ห่าธนู":"Arrow Rain","เล็งแม่น":"Steady Aim","ตาเหยี่ยว":"Hawk Eye","แทงสองจังหวะ":"Double Stab","หายตัว":"Vanish","สัมผัสเงา":"Shadow Touch","ฟันเกลียวคลื่น":"Wave Slash","คำรามสงคราม":"War Cry","ผิวเหล็ก":"Iron Skin","ตัดสินศักดิ์สิทธิ์":"Holy Judgment","ปาฏิหาริย์":"Miracle","ลมปราณ":"Inner Breath","ออร่าข่มขวัญ":"Intimidating Aura","ทลายเกราะ":"Armor Break","จุดตายเงา":"Shadow Weak Spot","พิษกัดกร่อน":"Corrosive Poison","ผนึกเวท":"Spell Seal","คำสาปผุกร่อน":"Decay Curse","แสงข่มวิญญาณ":"Soul-Suppress Light","ตัดสินบาป":"Judge Sins","ลูกศรตรึงเท้า":"Pinning Arrow","เล็งจุดอ่อน":"Aim Weakness","ทลายขวัญศึก":"Morale Breaker","กายาเหล็ก":"Iron Body","ข่มขวัญศัตรู":"Daunt Foes","โลหิตเดือด":"Boiling Blood","พิษเงา":"Shadow Poison","มรณะฉับพลัน":"Sudden Death","พิษอัมพาต":"Paralytic Poison","ร่างอาบพิษ":"Venom Body","คำสาปเปราะ":"Brittle Curse","มหาเวทพลัง":"Grand Arcana","ไฟวิญญาณ":"Spirit Fire","ปราการเวท":"Arcane Bulwark","แสงแผดเผา":"Searing Light","พรศักดิ์สิทธิ์":"Holy Blessing","โซ่ตรวนสวรรค์":"Heavenly Chains","เกราะศรัทธา":"Armor of Faith","ศรอาบพิษ":"Venom Arrow","สายตาเหยี่ยว":"Falcon Sight","ศรตรึงเงา":"Shadow Pin Arrow","ศรทะลวง":"Piercing Arrow","กรงเล็บฉีก":"Rending Claw","กัดกระชาก":"Savage Bite","พุ่งชนกระแทก":"Charging Ram","พลังทำลายล้าง":"Annihilation","ดูดพลังชีวิต":"Life Drain","คำรามคลั่ง":"Frenzied Roar","ลดป้องกันศัตรู":"Lower enemy DEF","ลดพลังโจมตีศัตรู":"Lower enemy ATK","ศัตรูเสียเลือดทุกเทิร์น":"Enemy loses HP each turn","ของเลือดสูงสุด":"of max HP","มอน/บอส/หอคอย":"Monster/Boss/Tower","PvP/สงครามฝ่าย":"PvP/Faction war","มีผลเต็มทุกโหมด (รวม PvP และสงครามฝ่าย)":"full effect in every mode (incl. PvP and faction war)","ป่าเขียว":"Green Forest","ถ้ำหินมืด":"Dark Stone Cave","ภูเขาเพลิง":"Fire Mountain","ทะเลทรายร้อน":"Scorching Desert","ทุ่งน้ำแข็ง":"Ice Field","ปราสาทอเวจี":"Abyss Castle","หนองพิษมรณะ":"Deadly Poison Swamp","นครเมฆอัสนี":"Thunder Cloud City","ขอบจักรวาล":"Edge of the Cosmos","หมาป่าเทา":"Gray Wolf","หมูป่าเขี้ยวยาว":"Tusked Boar","ราชาหมาป่าเงา":"Shadow Wolf King","ค้างคาวยักษ์":"Giant Bat","โกเลมหินโบราณ":"Ancient Stone Golem","โกเลมหิน":"Stone Golem","จิ้งจกไฟ":"Fire Lizard","มังกรหนุ่ม":"Young Dragon","มังกรเพลิงอสูร":"Infernal Fire Dragon","ยักษ์ทราย":"Sand Giant","แมงป่องทราย":"Sand Scorpion","จักรพรรดิแมงป่อง":"Scorpion Emperor","หมาป่าน้ำแข็ง":"Frost Wolf","มังกรน้ำแข็ง":"Ice Dragon","ราชามังกรน้ำแข็ง":"Ice Dragon King","ค้างคาวอเวจี":"Abyss Bat","มังกรอเวจี":"Abyss Dragon","จอมมารแห่งอเวจี":"Demon Lord of the Abyss","งูพิษหนอง":"Swamp Viper","ยักษ์โคลนพิษ":"Toxic Mud Giant","พญานาคพิษมรณะ":"Deadly Venom Naga","หมาป่าอัสนี":"Thunder Wolf","มังกรอัสนี":"Thunder Dragon","จักรพรรดิอัสนีเหนือเมฆ":"Thunder Emperor of the Clouds","ค้างคาวดารา":"Star Bat","มังกรจักรวาล":"Cosmic Dragon","เทพเจ้าแห่งจักรวาล":"God of the Cosmos","หมาป่า":"Wolf","ไฮดราเก้าเศียร":"Nine-Headed Hydra","ไฮดรา":"Hydra","ผู้เฝ้ากรุศิลา":"Stone Vault Warden","นักรบกิ้งก่าต้องสาป":"Cursed Lizard Warrior","มังกรเฝ้าสมบัติ":"Treasure Dragon","ขาว":"White","เขียว":"Green","ฟ้า":"Blue","ม่วง":"Purple","ส้ม":"Orange","แดง":"Red","ดำ":"Black","ชมพู":"Pink","ทั่วไป":"Common","ชั้นดี":"Uncommon","หายาก":"Rare","ประณีต":"Epic","ตำนาน":"Legendary","มายา เทพปกรณัม":"Mythic","ธรรมดา":"Common","ระดับธรรมดา":"Common grade","ระดับทอง":"Gold grade","สีการ์ด:":"Card colors:","สีขาว":"White","อาวุธ":"Weapon","หมวก":"Helm","ถุงมือ":"Gloves","รองเท้า":"Boots","แหวน":"Ring","สร้อย":"Necklace","เข็มกัด":"Brooch","อุปกรณ์สวมใส่":"Wearables","เครื่องประดับ":"Accessories","ตีบวก":"Enhance","คราฟ":"Craft","การ์ด":"Card","ยาและของใช้":"Potions & items","ดาบ":"Swords","ที่สวมใส่อยู่":"Equipped","ไม้":"Wood","หิน":"Stone","แร่":"Ore","หนัง":"Hide","สมุนไพร":"Herbs","แร่หินสีม่วง":"Purple ore","ยาฟื้นฟู":"Potion","ยาฟื้นเลือดเต็ม":"Full heal potion","ต้มยาฟื้นฟู":"Brew potion","ต้มยา":"Brew","กระเป๋า":"Bag","กระเป๋าและบัญชี":"Bag & account","เก็บไม้":"Gather wood","เก็บหิน":"Gather stone","เก็บแร่":"Gather ore","เก็บหนัง":"Gather hide","เก็บสมุนไพร":"Gather herbs","เก็บวัตถุดิบ":"Gather materials","ดาบสนิม":"Rusty Sword","ดาบไม้เนื้อแข็ง":"Hardwood Sword","ดาบเหล็กกล้า":"Steel Sword","ดาบเงินบริสุทธิ์":"Pure Silver Sword","ดาบอัญมณี":"Jewel Sword","ดาบเกล็ดมังกร":"Dragonscale Sword","ดาบเทพปกรณัม":"Mythic Sword","มีดสนิม":"Rusty Dagger","มีดคู่ไม้เนื้อแข็ง":"Hardwood Twin Daggers","มีดคู่เหล็กกล้า":"Steel Twin Daggers","มีดคู่เงินบริสุทธิ์":"Silver Twin Daggers","มีดคู่อัญมณี":"Jewel Twin Daggers","มีดคู่เกล็ดมังกร":"Dragonscale Twin Daggers","มีดคู่เทพปกรณัม":"Mythic Twin Daggers","ไม้เท้าเก่า":"Old Staff","คฑาไม้เนื้อแข็ง":"Hardwood Scepter","คฑาเหล็กกล้า":"Steel Scepter","คฑาเงินบริสุทธิ์":"Silver Scepter","คฑาอัญมณี":"Jewel Scepter","คฑาเกล็ดมังกร":"Dragonscale Scepter","คฑาเทพปกรณัม":"Mythic Scepter","หอกสนิม":"Rusty Spear","หอกไม้เนื้อแข็ง":"Hardwood Spear","หอกเหล็กกล้า":"Steel Spear","หอกเงินบริสุทธิ์":"Silver Spear","หอกอัญมณี":"Jewel Spear","หอกเกล็ดมังกร":"Dragonscale Spear","หอกเทพปกรณัม":"Mythic Spear","ธนูเก่า":"Old Bow","ธนูไม้เนื้อแข็ง":"Hardwood Bow","ธนูเหล็กกล้า":"Steel Bow","ธนูเงินบริสุทธิ์":"Silver Bow","ธนูอัญมณี":"Jewel Bow","ธนูเกล็ดมังกร":"Dragonscale Bow","ธนูเทพปกรณัม":"Mythic Bow","เสื้อผ้าเก่า":"Old Clothes","เสื้อหนังสัตว์":"Hide Vest","เกราะเหล็ก":"Iron Armor","เกราะเกล็ดมังกร":"Dragonscale Armor","อาวุธของนักดาบ":"Swordsman weapons","ทรงผม":"Hairstyle","ผมสั้น":"Short hair","ผมยาว":"Long hair","ผมแฝด":"Twin tails","สีผม":"Hair color","สีผมดำ":"Black hair","สีผมขาว":"White hair","สีผมฟ้า":"Blue hair","สีผมทอง":"Blond hair","สีผมชมพู":"Pink hair","สีผมเขียว":"Green hair","ปีก":"Wings","ไม่มีปีก":"No wings","ปีกฟ้า":"Blue Wings","ปีกชมพู":"Pink Wings","ปีกดำ":"Black Wings","ปีกทอง":"Golden Wings","สัตว์เลี้ยง":"Pet","ไม่มีสัตว์เลี้ยง":"No pet","ออร่า":"Aura","ไม่มีออร่า":"No aura","สีชุด":"Outfit color","สีประจำอาชีพ":"Class color","แว่น / หน้ากาก":"Glasses / mask","ไม่สวม":"None","ไม่ใส่":"None","หมวกพ่อมด":"Wizard Hat","หมวกแก๊ป":"Cap","หัวฟักทอง":"Pumpkin Head","ฮู้ดหูแมว":"Cat-ear Hood","แว่นกอกเกิล":"Goggles","แว่นตา":"Glasses","หน้ากากแมว":"Cat Mask","แมวขาว":"White Cat","แมวชมพู":"Pink Cat","สไลม์ฟ้า":"Blue Slime","เพนกวิน":"Penguin","จิ้งจอกแดง":"Red Fox","กระต่ายขาว":"White Bunny","นกฮูก":"Owl","ลูกมังกร":"Baby Dragon","ออร่าขาว":"White Aura","ออร่าเพลิง":"Flame Aura","ออร่าน้ำแข็ง":"Ice Aura","ออร่าศักดิ์สิทธิ์":"Holy Aura","ออร่ามายา":"Illusion Aura","ย้อมแดง":"Red Dye","ย้อมน้ำเงิน":"Navy Dye","ย้อมเขียว":"Green Dye","ย้อมทอง":"Gold Dye","ย้อมม่วง":"Purple Dye","ฉายา":"Title","ฉายาที่สวมอยู่:":"Current title:","สมุดการ์ด":"Card book","สมุดสะสมการ์ด":"Card collection","กล่องสุ่ม":"Mystery box","เปิดกล่อง":"Open box","กล่องสุ่มของแต่งตัว":"Cosmetic mystery box","การ์ดที่สะสม":"Cards collected","พบบ่อยมาก":"Very common","พบบ่อย":"Common","พบได้":"Found","ผู้มาเยือนใหม่":"Newcomer","นักล่าฝึกหัด":"Apprentice Hunter","นักล่าผู้เก๋า":"Veteran Hunter","ยอดผู้กล้า":"Great Hero","ราชาหอคอย":"Tower King","นักไต่หอคอย":"Tower Climber","ช่างตีบวก":"Master Smith","นักสู้ลานประลอง":"Arena Fighter","ราชันย์ลานประลอง":"Arena Monarch","ผู้ภักดีแห่งสี่ฝ่าย":"Loyal of Four Factions","ผู้กล้าเลเวล":"Hero level","หอคอยไม่รู้จบ":"Endless Tower","บอสโลก":"World Boss","บอสโลก ไฮดรา":"World Boss Hydra","ชั้น":"Floor","ชั้นสูงสุดที่ผ่าน":"Highest floor","ผู้คุมชั้นถัดไป":"Next floor guardian","ปีนชั้น":"Climb floor","สงครามสี่ฝ่าย":"Four-Faction War","เลือกฝ่ายของคุณ":"Choose your faction","สมัครเข้าฝ่าย":"Join faction","ฝ่ายเต่าทมิฬ":"Black Tortoise","ฝ่ายมังกรเพลิง":"Flame Dragon","ฝ่ายพยัคฆ์พงไพร":"Forest Tiger","ฝ่ายหงส์เหมันต์":"Winter Phoenix","ศึกถัดไป":"Next war","จับคู่หาคู่ต่อสู้":"Find opponent","PvP จับคู่":"PvP match","ดันเจี้ยน":"Dungeon","ปาร์ตี้":"Party","กรุสมบัติต้องสาป":"Cursed Treasure Vault","สร้างห้อง":"Create room","เข้าร่วม":"Join","ห้องที่เปิดรออยู่":"Open rooms","รับรางวัลวันนี้เหลือ":"Rewards left today","รับรางวัลได้วันละ":"Rewards per day","ด่าน":"stages","ลง":"Run","ล็อกอินประจำวัน (รับรางวัลด้านบน)":"Daily login (claim above)","ล่ามอนสเตอร์ให้ชนะ":"Win monster hunts","ใช้สกิลในการต่อสู้":"Use skills in battle","คราฟหรือตีบวกอุปกรณ์":"Craft or enhance gear","เข้าหอคอย (ชนะหรือแพ้ก็นับ)":"Enter the tower (win or lose)","สู้ PvP":"Fight PvP","พลังงานเต็ม":"Energy full","ถึงเลเวล":"Reach level","ฆ่ามอนสเตอร์":"Kill monsters","ตีบวกอาวุธถึง":"Enhance weapon to","ผ่านหอคอยชั้น":"Clear tower floor","ชนะ PvP":"Win PvP","สมัครเข้าร่วมฝ่าย":"Join a faction","เรทติ้ง PvP สูงสุดถึง":"Reach PvP rating","ผ่านอาชีพขั้น 2 แล้ว":"Completed job tier 2","ยาฟื้นพลัง":"Energy potion","ทองจากมอน":"Monster gold","XP การต่อสู้":"Battle XP","วายุ":"Wayu","ชาดา":"Chada","ธารา":"Thara","นาคี":"Naki","ศิลา":"Sila","มะลิ":"Mali","ภูผา":"Phupha","ไกรสร":"Kraisorn","อัคคี":"Akkhi","ปรีชา":"Preecha","ขุนเขา":"Khunkhao","ดาวหาง":"Comet","สายหมอก":"Mist","พิมพ์ใจ":"Pimjai","ราชสีห์":"Lion","เจ้าป่า":"Jungle Lord","เสือขาว":"White Tiger","กล้าหาญ":"Brave","ไพรวัลย์":"Praiwan","แสงเทียน":"Candlelight","เพลิงนิล":"Black Flame","อินทรีย์":"Eagle","ฟ้าคะนอง":"Thunderstorm","มังกรฟ้า":"Sky Dragon","รัตติกาล":"Nightfall","นางพรานดำ":"Dark Huntress","นักล่าเงา":"Shadow Hunter","ลุงดาบหัก":"Broken-Sword Uncle","เกล็ดหิมะ":"Snowflake","อัศวินตกยุค":"Outdated Knight","เพชฌฆาตเงียบ":"Silent Executioner","จอมเวทสายหมอก":"Mist Sorcerer","คนเก็บแร่ใจดี":"Kind Miner","เขี้ยวมังกรดำ":"Black Dragon Fang","จันทร์เพ็ญ":"Full Moon","หมาป่าราตรี":"Night Wolf","ราชันย์เพลิงนิล":"Black Flame Monarch","พิทักษ์ตะวันแดง":"Red Sun Guardian","เจ้าหมาป่าเดี่ยว":"Lone Wolf","ชมรมล่าเกล็ดมังกร":"Dragonscale Hunters","อัศวินแห่งรุ่งอรุณ":"Knight of Dawn","ปีกเหล็กแห่งขุนเขา":"Iron Wing of the Mountains","พลพรรคหมาป่าเดี่ยว":"Lone Wolf Pack","เงาแดง":"Red Shadow","น้ำใส":"Clearwater","ฟ้าใส":"Clear Sky","ดึก":"Night","เช้า":"Morning","บ่าย":"Afternoon","เย็น":"Evening","ทีม":"Team","โลก":"World","กระซิบ":"Whisper","คุณ":"you","หนีเร็ว! 3 วินาที":"Run! 3 seconds","หนีเร็ว!":"Run!","เป้าหมายออโต้":"Auto target","ทุกตัว (ใกล้สุด)":"Any (nearest)","บอสสนามก่อน":"Field boss first","แตะหรือลากบนแผนที่เพื่อเดิน · เดินชนมอนเพื่อสู้ทันที (−2 พลัง ไม่ต้องรอพัก) · แพ้แล้วมีเวลาหนี 3 วินาที · บอสสนามเกิดทุก 10 นาที":"Tap or drag to walk · bump a monster to fight right away (−2 energy, no rest wait) · after a loss you get 3 s to escape · field boss every 10 min","บอสเกิดใน":"Boss in","บอสสนามปรากฏแล้ว!":"Field boss is here!","บอสสนามยังไม่เกิด":"Field boss not spawned yet","พลังไม่พอ":"Not enough energy","ล่าด่วน (สุ่มมอน)":"Quick hunt (random)","แผนที่เดิน: เปิด (กดเพื่อปิด)":"Field map: on (tap to turn off)","แผนที่เดิน: ปิด (กดเพื่อเปิด)":"Field map: off (tap to turn on)","แผนที่ แตะหรือลากเพื่อเดิน":"Map – tap or drag to walk","แตะหรือลากบนแผนที่เพื่อเดิน · เดินชนมอนเพื่อสู้ (−2 พลัง) · บอสสนามเกิดทุก 10 นาที":"Tap or drag on the map to walk · bump into monsters to fight (−2 energy) · field boss every 10 min","บทสอน":"Tutorial","ดูบทสอนผู้เล่นใหม่อีกครั้ง":"Replay the beginner tutorial","ข้อความแชท":"Chat message","อัพดาว":"Star up","พิมพ์ข้อความ":"Type a message","โอกาสสุ่มระดับ":"Grade roll chances","ยังไม่ได้ (สุ่มจากกล่อง)":"Not owned (from mystery box)","ฆ่าไปแล้ว":"kills","อา.":"Sun","จ.":"Mon","อ.":"Tue","พ.":"Wed","พฤ.":"Thu","ศ.":"Fri","ส.":"Sat","ม.ค.":"Jan","ก.พ.":"Feb","มี.ค.":"Mar","เม.ย.":"Apr","พ.ค.":"May","มิ.ย.":"Jun","ก.ค.":"Jul","ส.ค.":"Aug","ก.ย.":"Sep","ต.ค.":"Oct","พ.ย.":"Nov","ธ.ค.":"Dec","โค่น":"Defeated","สลบ":"Knocked out","ได้":"got","ทำดาเมจ":"dealt","เทิร์น":"turns","รอบล่าสุด":"Last run","ดาเมจ":"damage","ผู้ร่วมรบวันนี้":"Fighters today","ลงสู้บอส":"Fight boss","ได้ทอง":"gold","ตารางดาเมจวันนี้":"Today's damage ranking","ยังไม่มีใครลงสู้":"No one has fought yet","อันดับของคุณ":"Your rank","ผู้ชนะเมื่อวาน":"Yesterday's winners","รีเซ็ตทุกเที่ยงคืน":"resets at midnight","เลือดบอส":"Boss HP","ถูกโค่นแล้ว!":"Defeated!","กำลังตีบวก...":"Enhancing...","รอผล...":"Waiting...","ตีบวกสำเร็จ!":"Enhance success!","ตีบวกพลาด ลดขั้น":"Enhance failed, downgraded","ไอเท็มแตก!":"Item broke!","ตีบวกไม่ติด":"Enhance failed","ถูกทำลาย":"destroyed","สำเร็จ!":"success!","ลดขั้นเหลือ":"downgraded to","ไม่ติด · ยังเป็น":"failed · still","แตก!":"Broke!","กำลังตีบวก":"Enhancing","ท่าถัดไปของศัตรู:":"Enemy's next move:","เลือกท่าภายใน":"Choose within","วินาที (ไม่เลือก = โจมตีอัตโนมัติ)":"s (no choice = auto attack)","ฟื้นฟูทีม":"Heal team","กดพร้อม":"Ready","ยกเลิกพร้อม":"Unready","เริ่มลงดัน":"Start dungeon","รอทุกคนกดพร้อม":"Waiting for everyone","ออกจากห้อง":"Leave room","หัวห้อง":"Host","พร้อม":"Ready","ยังไม่พร้อม":"Not ready","เลือกแล้ว":"Chosen","กำลังคิด...":"Thinking...","เคลียร์ดันเจี้ยน!":"Dungeon cleared!","ทีมพ่ายแพ้":"Party defeated","ได้รับ:":"Received:","ห้อง":"Room","วิธีเล่น":"How to play","ปาร์ตี้ล่า · 1–3 คน":"Hunting party · 1–3 players","ล่าเป็นทีม":"Hunt as a team","สร้างปาร์ตี้":"Create party","ปาร์ตี้ที่รับคนอยู่":"Open parties","ออกจากปาร์ตี้":"Leave party","เตะออก":"Kick","แผนที่เดียวกัน":"Same map","กำลังสู้":"fighting","ออฟไลน์":"Offline","(คุณ)":"(you)","โบนัสตอนนี้":"Current bonus","(ชวนเพื่อนมาแผนที่เดียวกัน)":"(invite friends to the same map)","กำลังโหลดข้อมูลปาร์ตี้...":"Loading party...","ยังไม่มีปาร์ตี้ สร้างแล้วชวนเพื่อนในแชทได้เลย":"No parties yet — create one and invite friends in chat","ปาร์ตี้เล่นได้ในเวอร์ชันออนไลน์ (เล่นผ่านเซิร์ฟเวอร์เกม)":"Parties are available in the online version (game server)","ปาร์ตี้เล่นได้ในเวอร์ชันออนไลน์":"Parties are available in the online version","เจอฝูงมอน":"Monster pack:","ฝูง":"Pack","รุมโจมตี":"gang attack","พร้อมลูกน้อง 2 ตัว!":"with 2 minions!","ปาร์ตี้: ส่วนแบ่งจาก":"Party share from"},"se":{"เช่น hero_{n}":"e.g. hero_{n}","อย่างน้อย {n} ตัวอักษร":"At least {n} characters","บัญชีเก็บอยู่ในเบราว์เซอร์ของเครื่องนี้ ไม่มีเซิร์ฟเวอร์กลาง จึงใช้ไอดีเดียวกันข้ามเครื่องไม่ได้ และกู้รหัสผ่านที่ลืมไม่ได้":"Accounts are stored in this browser only (no central server), so an ID can’t be used across devices and forgotten passwords can’t be recovered.","ศึกชิงเมือง TheWarWhat":"TheWarWhat","พลัง +{n} ใน {n}:{n}":"Energy +{n} in {n}:{n}","พลังเต็ม":"Energy full","ชั่วโมงทอง XP/ทอง +{n}% ({n}–{n} น. · {n}–{n} น.) อีก":"Golden hour XP/Gold +{n}% ({n}–{n}h · {n}–{n}h) in","🔥 ชั่วโมงทอง! XP และทอง +{n}% เหลือ":"🔥 Golden hour! XP & Gold +{n}% · ends in","−{n} พลัง · เหลือ {n}/{n}":"−{n} energy · {n}/{n} left","−{n} พลัง":"−{n} energy","เหลือ {n}":"{n} left","พัก {n} วินาที":"Rest {n}s","มี {n} (−{n} พลัง)":"Have {n} (−{n} energy)","กดแท็บด้านล่างเพื่อไปหน้าอื่นได้ระหว่างสู้ (ออโต้ยังสู้ต่อ)":"Tap a tab below to browse other pages while fighting (auto keeps fighting)","กดหมวดเพื่อเปิด กดอีกครั้งเพื่อเก็บ · จุดแดง = มีแต้มให้ลงหรือพร้อมเปลี่ยนอาชีพ":"Tap a category to open, tap again to close · dot = points to spend or job change ready","กดปุ่มด้านบนเพื่อดูรายละเอียดของแต่ละหมวด":"Tap a button above to see each category","ได้แต้มสเตตัส {n} แต้มทุกเลเวล สูงสุด {n} ต่อค่า · ตัวเลขสีทอง (+) คือโบนัสอาชีพที่ได้ทุกเลเวล นับแยกจากแต้มที่อัป ไม่รวมในเพดาน {n}":"Gain {n} stat points per level, max {n} per stat · gold (+) numbers are class bonuses gained each level, counted separately and not part of the {n} cap","คริติคอล +{n}% · คริดาเมจ +{n}% ต่อแต้ม":"Crit +{n}% · crit damage +{n}% per point","โจมตี +{n} ต่อแต้ม (ไม่ใช่นักธนู/นักเวท)":"Attack +{n} per point (not Archer/Mage)","HP +{n} ต่อแต้ม · เกราะ +{n} ทุก {n} แต้ม":"HP +{n} per point · Armor +{n} every {n} points","หลบ +{n}% ต่อแต้ม":"Dodge +{n}% per point","MP +{n} · พลังสกิล +{n}% ต่อแต้ม · นักเวท: โจมตี +{n} ต่อแต้ม":"MP +{n} · skill power +{n}% per point · Mage: Attack +{n} per point","แม่นยำ +{n}% ต่อแต้ม · นักธนู: โจมตี +{n} และพลังสกิล +{n}% ต่อแต้ม":"Accuracy +{n}% per point · Archer: Attack +{n} and skill power +{n}% per point","ขั้น {n} · เลเวล {n} (เลือก {n} สาย) · ชุดใหม่ + สกิลติดตัว {n}":"Tier {n} · Level {n} (choose {n} paths) · new outfit + {n} passive","ขั้น {n} · เลเวล {n} (ต่อจากสายขั้น {n}) · ชุดใหม่ + สกิลติดตัว {n}":"Tier {n} · Level {n} (continues tier {n} path) · new outfit + {n} passives","ขั้น {n} เริ่มต้น":"Tier {n} starter","{n} ไอดีสร้างตัวละครได้ {n} ตัว ชื่อและอาชีพแก้ไม่ได้ภายหลัง":"{n} ID can create {n} character; name and class can’t be changed later","ตั้งชื่อตัวละคร {n}–{n} ตัวอักษร":"Character name {n}–{n} characters","พลังโจมตี +{n} (คูณตามระดับที่สุ่มได้) · ต้องเลเวล {n}":"Attack +{n} (multiplied by rolled grade) · requires level {n}","ใช้อยู่ · พลังโจมตี +{n} (คูณตามระดับที่สุ่มได้) · ต้องเลเวล {n}":"In use · Attack +{n} (multiplied by rolled grade) · requires level {n}","โบนัสชุด: ยังสวมไม่ครบ {n} ชิ้น (อาวุธ หมวก เกราะ ถุงมือ รองเท้า)":"Set bonus: not all {n} pieces equipped (weapon, helm, armor, gloves, boots)","+{n}–{n} สำเร็จ {n}% · +{n}–{n} สำเร็จ {n}% พลาดลดขั้น · +{n}–{n} สำเร็จ {n}% ลดขั้น {n}% แตก {n}% · +{n}–{n} สำเร็จ {n}% แตก {n}% · ทุกขั้นเพิ่มพลัง {n}% · แตก = ชิ้นนั้นหายไป":"+{n}–{n} {n}% success · +{n}–{n} {n}% success, fail downgrades · +{n}–{n} {n}% success, {n}% downgrade, {n}% break · +{n}–{n} {n}% success, {n}% break · each level +{n}% power · break = item lost","โบนัสทั้งชุด (อาวุธ หมวก เกราะ ถุงมือ รองเท้า ตีบวกทุกชิ้นถึง +{n} / +{n} / +{n} / +{n}): โจมตี ป้องกัน HP +{n}% / +{n}% / +{n}% / +{n}%":"Full set bonus (weapon, helm, armor, gloves, boots all enhanced to +{n} / +{n} / +{n} / +{n}): ATK DEF HP +{n}% / +{n}% / +{n}% / +{n}%","ตีบวก (สูงสุด +{n})":"Enhance (max +{n})","→ +{n} · สำเร็จ {n}% · {n} ทอง":"→ +{n} · {n}% success · {n} gold","→ +{n} · สำเร็จ {n}% · ลดขั้น {n}% · {n} ทอง":"→ +{n} · {n}% success · {n}% downgrade · {n} gold","คราฟทุกชิ้นมีโอกาสแตก {n}% (เสียวัตถุดิบ) · อาวุธ/อุปกรณ์/เครื่องประดับที่คราฟเองมีโอกาส {n}% ได้ช่องใส่การ์ด (สุ่มจำนวนรู: {n} รู {n}% · {n} รู {n}% · {n} รู {n}%) · ของดรอปจากบอสไม่มีรู":"Every craft has a {n}% break chance (materials lost) · crafted weapons/wearables/accessories have {n}% chance of card sockets ({n} socket {n}% · {n} sockets {n}% · {n} sockets {n}%) · boss drops have no sockets","คราฟอาวุธ/อุปกรณ์/เครื่องประดับวันนี้":"Weapons/gear/accessories crafted today","ชิ้น · ของที่คราฟจะล็อกชื่อผู้คราฟ 🔒":"pcs · crafted items are bound to the crafter 🔒","ยังไม่มีชิ้นที่คราฟไว้":"No crafted pieces yet","อุปกรณ์สวมใส่ (หมวก เกราะ ถุงมือ รองเท้า)":"Wearables (helm, armor, gloves, boots)","เครื่องประดับ (แหวน สร้อย เข็มกัด)":"Accessories (ring, necklace, brooch)","ระดับธรรมดา: โจมตี +{n} · คริ +{n}%":"Common grade: Attack +{n} · Crit +{n}%","ระดับธรรมดา: ป้องกัน +{n} · HP +{n}":"Common grade: Defense +{n} · HP +{n}","ระดับธรรมดา: MP +{n} · หลบ +{n}%":"Common grade: MP +{n} · Dodge +{n}%","ระดับธรรมดา: ป้องกัน +{n} · หลบ +{n}%":"Common grade: Defense +{n} · Dodge +{n}%","ฟื้น {n} HP · ราคา {n} ทอง · มีอยู่ {n} ขวด":"Restores {n} HP · {n} gold · have {n}","ฟื้น {n} HP · ราคา {n} ทอง · มีอยู่ {n} ขวด · ซื้อได้เลเวล {n} ขึ้นไป":"Restores {n} HP · {n} gold · have {n} · level {n}+","ฟื้น {n} HP · มีอยู่ {n} ขวด":"Restores {n} HP · have {n}","ฟื้น HP เต็มหลอด (ใช้ปุ่ม \"ดื่มยาเต็ม\" เอง ออโต้ไม่ใช้ · PvP ใช้ไม่ได้) · ราคา {n} ทอง · มีอยู่ {n} ขวด":"Restores full HP (manual \"full potion\" only, auto won’t use · not in PvP) · {n} gold · have {n}","กดเก็บชนิดที่ต้องการ ใช้พลัง {n} ได้ {n} ชิ้น":"Tap a type to gather: {n} energy for {n} pcs","ชิ้น · กดชื่อของเพื่อขายหรือทิ้ง":"pcs · tap an item to sell or discard","กดช่องเพื่อไปที่หมวดคราฟของชิ้นนั้น (ช่องที่มีรู ◇ = กดเพื่อใส่การ์ด) · สีกรอบ = ระดับ · มุมขวาบน = ค่าตีบวก":"Tap a slot to open its craft category (◇ socket = tap to insert card) · border color = grade · top right = enhance level","HP {n} · โจมตี {n} · เกราะ {n} · ทอง ~{n} · XP {n}":"HP {n} · ATK {n} · Armor {n} · Gold ~{n} · XP {n}","มีอยู่ {n} กล่อง · ได้ของจริง {n}% อีก {n}% เป็นขยะ":"Have {n} boxes · {n}% real item, {n}% junk","หมวก ปีก สัตว์เลี้ยง และสีชุด หาได้จากกล่องสุ่ม ซึ่งซื้อด้วยทอง หรือรับจากภารกิจประจำวัน {n} คะแนน":"Hats, wings, pets and outfit colors come from mystery boxes, bought with gold or earned at {n} daily quest points","การ์ดที่มีภาพคือเคยได้แล้ว (ดาวด้านล่าง = ดาวที่อัพไว้) · เงาดำมี ? คือยังไม่เคยได้ · มงกุฎ = การ์ดบอส · สีเรียงจาก ขาว เขียว ฟ้า ม่วง ส้ม ทอง แดง":"Pictured cards are owned (stars = upgrades) · ? silhouettes not yet found · crown = boss card · colors: white, green, blue, purple, orange, gold, red","โบนัสตามสี (ขาว→แดง): {n}/{n}/{n}/{n}/{n}/{n}/{n}% · ดาวละ +{n}% · มอนตัวแรก=โจมตี มอนตัวที่สอง=ป้องกัน บอส=HP ×{n} · อัพดาวต้องมีการ์ดใบเดียวกันซ้ำ สำเร็จ {n}% พลาดแล้วการ์ดซ้ำหาย (สูงสุด {n} ดาว)":"Bonus by color (white→red): {n}/{n}/{n}/{n}/{n}/{n}/{n}% · +{n}% per star · 1st monster=ATK, 2nd=DEF, boss=HP ×{n} · star-up needs a duplicate, {n}% success, duplicate lost on fail (max {n} stars)","· ได้จากการล่าตามแผนที่เท่านั้น (ไม่ตกจากหอคอย/PvP)":"· only from map hunting (not tower/PvP)","· ยังไม่ได้ {n} ชิ้น":"· {n} not obtained","ฟรี {n} ครั้งต่อวัน หลังจากนั้นครั้งละ {n} ทอง · รางวัลเป็นทองอย่างเดียว · เลือดทั้งสองฝ่าย ×{n} · ใช้ยาได้ไม่เกิน {n} ขวดต่อแมตช์ · สู้จบ HP เต็ม":"{n} free per day, then {n} gold each · gold rewards only · both sides HP ×{n} · max {n} potions per match · HP full afterwards","จับคู่หาคู่ต่อสู้ (ฟรี เหลือ {n}/{n})":"Find opponent ({n}/{n} free left)","โหมดออนไลน์ไม่พร้อม (ต้องเปิดเกมจากลิงก์ที่ล็อกอิน claude.ai) ตอนนี้สู้กับคู่ต่อสู้จำลอง":"Online mode unavailable (open from a logged-in claude.ai link) · fighting simulated opponents","เลือกได้ {n} ฝ่ายต่อตัวละคร และเปลี่ยนภายหลังไม่ได้":"Choose {n} faction per character; can’t change later","ระบบจัดสงครามสี่ฝ่ายเองวันเว้นวัน ทุกวันที่ตรงรอบ เวลา {n}:{n}–{n}:{n} น. (เวลาไทย) ผู้เล่นแต่ละคนสู้ได้ {n} ครั้งต่อสงคราม กดสู้แล้วระบบสุ่มฝ่ายตรงข้ามจากอีก {n} ฝ่าย ชนะ = +{n} แต้มให้ฝ่ายตัวเอง":"The Four-Faction War runs every other day, {n}:{n}–{n}:{n} (Thai time). Each player fights {n} times per war against a random faction from the other {n}. Win = +{n} points for your faction","บอสโลกเล่นได้ในเวอร์ชันออนไลน์ (เล่นผ่านเซิร์ฟเวอร์เกม) เพราะต้องรวมดาเมจของผู้เล่นทุกคน":"World Boss is available in the online version (game server) because damage is shared by all players","ดันเจี้ยนเล่นได้ในเวอร์ชันออนไลน์ (เล่นผ่านเซิร์ฟเวอร์เกม) เพราะต้องลงพร้อมผู้เล่นคนอื่น":"Dungeons are available in the online version (game server) because you play with others","ลง {n} ด่าน (ผู้เฝ้ากรุ → นักรบต้องสาป → มังกรเฝ้าสมบัติ) เคลียร์แล้วได้อุปกรณ์ {n} ชิ้นตามเลเวลตัวเอง:":"Clear {n} stages (Warden → Cursed Warrior → Treasure Dragon) for {n} gear piece at your level:","ดันเจี้ยน · ปาร์ตี้ {n}–{n} คน":"Dungeon · party of {n}–{n}","· รับรางวัลได้วันละ {n} ครั้ง":"· {n} rewards per day","เพลงเปลี่ยนเองตามสถานการณ์: สำรวจ / ต่อสู้ · ถ้าไม่มีเสียง ให้แตะหน้าจอหนึ่งครั้ง (เบราว์เซอร์มือถือต้องแตะก่อนจึงเล่นเสียงได้) และเช็กปุ่มปิดเสียงของเครื่อง":"Music switches automatically: explore / battle · no sound? tap the screen once (mobile browsers need a tap first) and check your device’s mute switch","การตั้งค่าเก็บในเครื่องนี้ (แต่ละเครื่องตั้งแยกกันได้)":"Settings are saved on this device","เปิดแชท (ลากย้ายได้)":"Open chat (draggable)","ระดับเสียง เสียงเอฟเฟกต์":"Sound effects volume","ระดับเสียง เพลงพื้นหลัง":"Music volume","ทุกเลเวล STR +{n} VIT +{n}":"Every level STR +{n} VIT +{n}","ทุกเลเวล DEX +{n} AGI +{n}":"Every level DEX +{n} AGI +{n}","ทุกเลเวล INT +{n} VIT +{n}":"Every level INT +{n} VIT +{n}","ทุกเลเวล AGI +{n} LUK +{n}":"Every level AGI +{n} LUK +{n}","ทุกเลเวล VIT +{n}":"Every level VIT +{n}"}};
 var I18C={},I18N_N=0,I18RE=null;
 function i18Prep(){if(I18RE)return;var ks=Object.keys(I18N.ph).filter(function(k){return k}).sort(function(a,b){return b.length-a.length});
  I18RE=new RegExp(ks.map(function(k){return k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')}).join('|'),'g')}
