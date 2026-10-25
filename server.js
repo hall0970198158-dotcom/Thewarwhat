@@ -316,6 +316,17 @@ setInterval(() => { // ตัดสินรอบที่หมดเวลา
 // ---------- ปาร์ตี้ล่า 1–3 คน: แบ่ง XP/ทอง ให้เพื่อนที่อยู่แผนที่เดียวกัน + ส่งตำแหน่งให้เห็นกันบนแผนที่ ----------
 const PT_MAX = 3, PT_LV = 15, PT_ON_MS = 20000, PT_STALE_MS = 10 * 60e3;
 const PERF = { n: 0, sum: 0, max: 0, last: null };
+// ===== ผลสงครามสี่ฝ่าย: เซิร์ฟเวอร์รวมแต้มครั้งเดียวตอนศึกจบ แล้วทุกคนใช้ผลเดียวกัน =====
+const FACRES = { loaded: false, map: {} };
+async function facResLoad() { if (FACRES.loaded) return; FACRES.loaded = true; try { const v = await db.getMeta('facres'); if (v) FACRES.map = JSON.parse(v) || {}; } catch (e) {} }
+function facLastEndedSrv(now) { const FTZ = 7 * 3600000, FDAY = 864e5, FH = 36e5, d = Math.floor((now + FTZ) / FDAY); for (let k = 0; k < 4; k++) { const day = d - k; if (day % 2 === 0 && day * FDAY + 22 * FH - FTZ <= now) return 'f' + day; } return ''; }
+function facResTick() {
+  const w = facLastEndedSrv(Date.now()); if (!w || FACRES.map[w]) return;
+  const sc = [0, 0, 0, 0]; for (const x of board()) if (x.fac != null && x.fac >= 0 && x.fac < 4 && x.wid === w) sc[x.fac] += (x.pt | 0);
+  FACRES.map[w] = { sc, at: Date.now() };
+  const ks = Object.keys(FACRES.map).sort(); while (ks.length > 10) delete FACRES.map[ks.shift()];
+  (db.putMeta || db.setMeta)('facres', JSON.stringify(FACRES.map)).catch(e => console.error('facres', e.message));
+}
 const PTR = new Map(), PTU = new Map(); let PT_ID = 500, TOPC = { at: 0, top: [] };
 const ptOf = uid => PTR.get(PTU.get(uid)) || null;
 function ptLeave(uid) {
@@ -624,8 +635,8 @@ const routes = {
     const p = await session(u.id);
     await wbEnsure(); engine.setWB(wbCtx()); engine.setBoard(board(), u.id);
     await wbPrizes(u.id, p).catch(e => console.error('prize', e.message));
-    await cityLoad(); cityTick();
-    const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); E.enter(); });
+    await cityLoad(); cityTick(); await facResLoad(); facResTick();
+    const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); E.enter(); });
     p.s = out.s; p.ui = out.ui; p.v++; persist(u.id, p); updateSnap(u.id, p);
     send(res, 200, { s: out.s, ui: out.ui, fx: [], fxt: {}, v: p.v, user: u.display, uid: u.id });
   },
@@ -640,11 +651,11 @@ const routes = {
     const before = p.s.gold;
     engine.setBoard(board(), u.id); await wbEnsure(); engine.setWB(wbCtx());
     ptPrep(u.id, p);
-    await cityLoad(); cityTick();
+    await cityLoad(); cityTick(); await facResLoad(); facResTick();
     const js0 = jSnap(p.s);
-    const out = engine.run(p.s, p.ui, cleanInputs(b.inp), E => { E.setCity(cityCtx()); E.act(a, pr); });
+    const out = engine.run(p.s, p.ui, cleanInputs(b.inp), E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); E.act(a, pr); });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; jSync(u.id, p, js0); ptLead(u.id, p); ptAfter(u.id, p); cityAfter(p); p.v++; persist(u.id, p); updateSnap(u.id, p);
+    p.s = out.s; p.ui = out.ui; ptAfter(u.id, p); cityAfter(p); p.v++; persist(u.id, p); updateSnap(u.id, p);
     if (out.s.gold - before > 200000) db.audit(u.id, 'gold_jump', a + ' +' + (out.s.gold - before)).catch(() => {});
     reply(res, p, out);
   },
@@ -658,11 +669,11 @@ const routes = {
     await prizeCheck(u.id, p);
     engine.setBoard(board(), u.id); engine.setWB(wbCtx());
     ptPrep(u.id, p);
-    await cityLoad(); cityTick();
+    await cityLoad(); cityTick(); await facResLoad(); facResTick();
     const twn = TOWN.get(u.id), inTown = !!(twn && now - twn.at < 6000), js0 = jSnap(p.s);
-    const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); const tg = E.townEn ? E.townEn(inTown) : false; changed = E.tick() || tg || changed; });
+    const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); const tg = E.townEn ? E.townEn(inTown) : false; changed = E.tick() || tg || changed; });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; jSync(u.id, p, js0); if (p.s.battle && !p.s.battle.ptChk) { ptLead(u.id, p); changed = true; } ptAfter(u.id, p); if (p.s.cityRes) { cityAfter(p); changed = true; }
+    p.s = out.s; p.ui = out.ui; ptAfter(u.id, p); if (p.s.cityRes) { cityAfter(p); changed = true; }
     if (changed || out.fx.length) { p.v++; persist(u.id, p); updateSnap(u.id, p); }
     if (!changed && !out.fx.length && Number(b.v) === p.v) return send(res, 200, { same: true, v: p.v });
     reply(res, p, out);
@@ -802,9 +813,7 @@ const routes = {
       r.mem.push(ptMem(u.id, p)); PTU.set(u.id, r.id);
     } else if (op === 'leave') {
       ptLeave(u.id);
-    } else if (op === 'follow') {
-      if (!cur) return bad('ยังไม่ได้อยู่ในปาร์ตี้');
-      const m = cur.mem.find(x => x.uid === u.id); if (m) m.fol = !!b.on;
+    } else if (op === 'follow') { // ปิดระบบเดินตามแล้ว
     } else if (op === 'kick') {
       if (!cur || cur.host !== u.id) return bad('เฉพาะหัวปาร์ตี้ที่เตะได้');
       const t = Number(b.uid); if (t === u.id || !cur.mem.some(m => m.uid === t)) return bad('ไม่พบสมาชิกคนนี้');
@@ -814,7 +823,7 @@ const routes = {
   },
   'GET /api/city': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
-    await cityLoad(); cityTick();
+    await cityLoad(); cityTick(); await facResLoad(); facResTick();
     send(res, 200, cityCtx());
   },
   'POST /api/town': async (req, res) => {
@@ -841,7 +850,7 @@ const routes = {
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
     const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
-    send(res, 200, { server: 'V160', speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    send(res, 200, { server: 'V161', speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
