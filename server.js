@@ -352,7 +352,88 @@ function ptPayload(uid) {
 
 // ---------- เมืองหลวง: ผู้เล่นที่อยู่ในเมืองเห็นกัน + บับเบิลแชทโลกเหนือหัว ----------
 const TOWN = new Map(), LASTSAY = new Map(), TOWN_ON_MS = 12000, TOWN_MAX = 40;
+// ===== ผู้เล่นเสริม (บอท) · ทำให้โลกดูมีชีวิต · ลดจำนวนลงเรื่อยๆ เมื่อคนจริงออนไลน์มากขึ้น =====
+// ไม่นับในจำนวนผู้เล่น/อันดับ/รางวัล และไม่พิมพ์แชท
+const BOT_TARGET = 12, BOT_FADE = 25, BOT_WIN = 20 * 60000;
+function bHash(a, b) { let h = (a * 374761393 + b * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+const BOT_NAMES = ['KaiZer', 'น้องมิ้นท์', 'ShadowX', 'ปอนด์zaa', 'Mewww', 'ต้นกล้า', 'NightOwl', 'บอสใหญ่', 'Kittyy', 'เจ้าป่า', 'Luna', 'ดาบเดียว', 'TonyTH', 'ฟ้าใส', 'Zeroo', 'แมวส้ม', 'Ryu', 'จอมเวท', 'Benz99', 'มะลิ', 'Ghost', 'ไอซ์ซี่', 'Nobita', 'เสือดำ', 'Pimmy', 'โอ๊ตโอ๊ต', 'Draco', 'น้ำหวาน', 'Arty', 'เทพบุตร', 'Momo', 'กัปตัน', 'Jaja', 'ปลาทอง', 'Rex', 'ข้าวหอม', 'Saber', 'บีม', 'Yuki', 'หมีพู'];
+const BOT_CLS = ['warrior', 'rogue', 'mage', 'paladin', 'archer'];
+const BOT_START = Date.UTC(2026, 9, 1);
+const BOTS = BOT_NAMES.map((n, i) => {
+  const R = k => bHash(i + 1, k);
+  const pk = (a, k) => a[Math.floor(R(k) * a.length)];
+  const rare = R(20);
+  return { i, n, cls: pk(BOT_CLS, 1), base: [1, 9, 20, 34][i % 4] + Math.floor(R(2) * [8, 11, 14, 20][i % 4]), gr: i % 4 === 0 ? 0.02 + R(3) * 0.06 : 0.06 + R(3) * 0.3, off: Math.floor(R(4) * BOT_WIN), act: 0.55 + R(5) * 0.45,
+    look: { hair: Math.floor(R(6) * 3), hc: Math.floor(R(7) * 6), hat: pk(['none', 'none', 'wiz', 'cap', 'pump', 'ears'], 8), face: pk(['none', 'none', 'gog', 'gls', 'mask'], 9),
+      wing: rare < 0.45 ? 'none' : rare < 0.8 ? pk(['blue', 'pink', 'dark', 'gold'], 10) : pk(['phoenix', 'frost', 'seraph', 'arcane', 'azure', 'abyss'], 11),
+      pet: R(12) < 0.4 ? 'none' : pk(['cat', 'pcat', 'slime', 'peng', 'fox', 'bunny', 'owl', 'dragon'], 13), aura: R(14) < 0.6 ? 'none' : pk(['white', 'fire', 'ice', 'holy', 'void'], 15),
+      dye: pk(['def', 'red', 'blue', 'green', 'gold', 'purple'], 16) } };
+});
+function botLvl(b, now) { return Math.max(1, Math.min(60, Math.floor(b.base + (now - BOT_START) / 86400000 * b.gr))); }
+function realOnline(now) { let n = 0; for (const p of live.values()) if (p.s && p.s.created && now - (p.touched || 0) < 90000) n++; return n; }
+let BOTC = { at: 0, list: [] };
+function botsActive(now) {
+  if (now - BOTC.at < 5000) return BOTC.list;
+  const want = Math.round(BOT_TARGET * Math.max(0, 1 - realOnline(now) / BOT_FADE));
+  const sc = BOTS.map(b => ({ b, v: bHash(b.i + 101, Math.floor((now + b.off) / BOT_WIN)) * b.act }));
+  sc.sort((a, b) => b.v - a.v);
+  BOTC = { at: now, list: sc.slice(0, want).map(x => x.b) };
+  return BOTC.list;
+}
+// อยู่ในเมือง (~35%) หรือออกล่าตามโซนที่เหมาะกับเลเวล · สลับทุก ~8 นาที
+function botWhere(b, now) { const k = Math.floor((now + b.off * 3) / 480000); if (bHash(b.i + 303, k) < 0.35) return 'town'; return Math.min(5, Math.floor((botLvl(b, now) - 1) / 10)); }
+// เส้นทางเดินในเมือง (ถนนที่ไม่มีสิ่งกีดขวาง)
+const BOT_SEG = [[540, 700, 900, 700], [720, 690, 720, 1000], [600, 820, 840, 820], [200, 545, 600, 545], [840, 545, 1240, 545], [560, 700, 880, 700], [720, 330, 720, 480], [620, 900, 820, 900]];
+function botTownPos(b, now) {
+  const seg = BOT_SEG[b.i % BOT_SEG.length], step = 5000 + Math.floor(bHash(b.i + 7, 1) * 4000), k = Math.floor((now + b.off) / step);
+  const t = bHash(b.i + 505, k), stay = bHash(b.i + 606, k) < 0.35, tt = stay ? bHash(b.i + 505, k - 1) : t;
+  return { x: Math.round(seg[0] + (seg[2] - seg[0]) * tt), y: Math.round(seg[1] + (seg[3] - seg[1]) * tt) };
+}
+function botPub(b, now) { return { uid: 'bot' + b.i, n: b.n, cls: b.cls, lvl: botLvl(b, now), look: b.look }; }
+
 const CHATLOG = []; let CHAT_ID = Date.now(); // id เริ่มจากเวลา เพื่อให้รีสตาร์ทแล้ว id ยังมากกว่าของเดิมในหน้าเว็บ
+// ---------- ศึกชิงเมือง: เจ้าของเมืองเก็บในฐานข้อมูล (meta 'city') · ศึกทุกเสาร์-อาทิตย์ 20:00–21:00 น. ----------
+const CITY_N = 7, CITY_DEF = [-1, 0, 1, 2, 3, -1, -1], CITY_H0 = 20, CITY_H1 = 21, DAYMS = 864e5, HMS = 36e5, TZMS = 7 * HMS;
+const FACN = ['มังกรเพลิง', 'หงส์เหมันต์', 'พยัคฆ์พงไพร', 'เต่าทมิฬ'], CITYN = ['นครอัสดง', 'ผาเพลิง', 'หอคอยเหมันต์', 'หุบพงไพร', 'ป้อมทมิฬ', 'นครทราย', 'ท่าเรือมรกต'];
+const CITY = { own: CITY_DEF.slice(), pts: {}, hist: [], resolved: '', announced: '', loaded: false, dirtyAt: 0 };
+async function cityLoad() {
+  if (CITY.loaded) return; CITY.loaded = true;
+  try { const v = await db.getMeta('city'); if (v) { const o = JSON.parse(v); if (Array.isArray(o.own) && o.own.length === CITY_N) CITY.own = o.own; CITY.pts = o.pts || {}; CITY.hist = o.hist || []; CITY.resolved = o.resolved || ''; CITY.announced = o.announced || ''; } } catch (e) { console.error('city load', e.message); }
+}
+function citySave() { db.setMeta('city', JSON.stringify({ own: CITY.own, pts: CITY.pts, hist: CITY.hist.slice(0, 20), resolved: CITY.resolved, announced: CITY.announced })).catch(e => console.error('city save', e.message)); }
+function cityClock(now) {
+  now = now || Date.now(); const d0 = Math.floor((now + TZMS) / DAYMS);
+  let cur = null, last = '';
+  if (process.env.CITY_TEST === '1') { const W = Number(process.env.CITY_TEST_MS) || 600000, m = Math.floor(now / W); return { open: true, wid: 'ct' + m, start: m * W, end: (m + 1) * W, last: 'ct' + (m - 1) }; } // ใช้ทดสอบเท่านั้น
+  for (let k = -8; k <= 8; k++) { const d = d0 + k, dow = (d + 4) % 7; if (dow !== 6 && dow !== 0) continue; const st = d * DAYMS + CITY_H0 * HMS - TZMS, en = d * DAYMS + CITY_H1 * HMS - TZMS;
+    if (en <= now) last = 'c' + d; else if (!cur) cur = { start: st, end: en, open: st <= now, wid: 'c' + d }; }
+  return Object.assign({ open: false, wid: '', start: 0, end: 0 }, cur || {}, { last });
+}
+function sysChat(t) { CHATLOG.push({ id: ++CHAT_ID, ch: 'world', n: '📢 ประกาศ', t, from: 0, ts: Date.now() }); if (CHATLOG.length > 600) CHATLOG.splice(0, CHATLOG.length - 600); }
+function cityTick() {
+  const c = cityClock();
+  if (c.open && CITY.announced !== c.wid) { CITY.announced = c.wid; sysChat('⚔️ สงครามชิงเมืองเริ่มแล้ว! บุกยึดหรือป้องกันเมืองได้ที่แท็บ "ฝ่าย"'); citySave(); }
+  if (c.last && CITY.resolved !== c.last) {
+    CITY.resolved = c.last; const P = CITY.pts[c.last] || {}; let changed = 0;
+    for (let i = 0; i < CITY_N; i++) {
+      const sc = P[i] || {}, o = CITY.own[i]; let best = -1, bv = 0, tie = false;
+      for (let f = 0; f < 4; f++) { if (f === o) continue; const v = sc[f] | 0; if (v > bv) { bv = v; best = f; tie = false; } else if (v === bv && v > 0) tie = true; }
+      const dv = o >= 0 ? (sc[o] | 0) : 0;
+      if (best >= 0 && !tie && bv > dv) { CITY.hist.unshift({ wid: c.last, c: i, from: o, to: best, at: Date.now() }); CITY.own[i] = best; changed++; sysChat('🏰 ฝ่าย' + FACN[best] + ' ยึด' + CITYN[i] + ' ได้สำเร็จ!' + (o >= 0 ? ' (จากฝ่าย' + FACN[o] + ')' : '')); }
+      else if (o >= 0 && (sc[o] | 0) > 0 && bv > 0) sysChat('🛡️ ฝ่าย' + FACN[o] + ' ป้องกัน' + CITYN[i] + ' ไว้ได้!');
+    }
+    if (!changed && Object.keys(P).length) sysChat('สงครามชิงเมืองจบแล้ว ไม่มีเมืองเปลี่ยนเจ้าของ');
+    for (const k of Object.keys(CITY.pts)) if (k !== c.wid) delete CITY.pts[k];
+    citySave();
+  }
+}
+function cityCtx() { const c = cityClock(); return { own: CITY.own.slice(), open: c.open, wid: c.wid, start: c.start, end: c.end, pts: (c.open && CITY.pts[c.wid]) || {}, hist: CITY.hist.slice(0, 8) }; }
+function cityAfter(p) {
+  const r = p.s.cityRes; if (!r) return; delete p.s.cityRes;
+  const c = cityClock(); if (!c.open || r.wid !== c.wid || !(r.c >= 0 && r.c < CITY_N) || !(r.f >= 0 && r.f < 4)) return;
+  const P = CITY.pts[c.wid] || (CITY.pts[c.wid] = {}); const sc = P[r.c] || (P[r.c] = {}); sc[r.f] = (sc[r.f] | 0) + 1;
+  if (Date.now() - CITY.dirtyAt > 5000) { CITY.dirtyAt = Date.now(); citySave(); }
+}
 const TEAM_MAX = 6, teamCache = new Map();
 async function teamOf(uid) { if (teamCache.has(uid)) return teamCache.get(uid); const t = await db.getTeam(uid); teamCache.set(uid, t); return t; }
 
@@ -461,7 +542,8 @@ const routes = {
     const p = await session(u.id);
     await wbEnsure(); engine.setWB(wbCtx()); engine.setBoard(board(), u.id);
     await wbPrizes(u.id, p).catch(e => console.error('prize', e.message));
-    const out = engine.run(p.s, p.ui, {}, E => E.enter());
+    await cityLoad(); cityTick();
+    const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); E.enter(); });
     p.s = out.s; p.ui = out.ui; p.v++; persist(u.id, p); updateSnap(u.id, p);
     send(res, 200, { s: out.s, ui: out.ui, fx: [], fxt: {}, v: p.v, user: u.display, uid: u.id });
   },
@@ -476,9 +558,10 @@ const routes = {
     const before = p.s.gold;
     engine.setBoard(board(), u.id); await wbEnsure(); engine.setWB(wbCtx());
     ptPrep(u.id, p);
-    const out = engine.run(p.s, p.ui, cleanInputs(b.inp), E => E.act(a, pr));
+    await cityLoad(); cityTick();
+    const out = engine.run(p.s, p.ui, cleanInputs(b.inp), E => { E.setCity(cityCtx()); E.act(a, pr); });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; ptAfter(u.id, p); p.v++; persist(u.id, p); updateSnap(u.id, p);
+    p.s = out.s; p.ui = out.ui; ptAfter(u.id, p); cityAfter(p); p.v++; persist(u.id, p); updateSnap(u.id, p);
     if (out.s.gold - before > 200000) db.audit(u.id, 'gold_jump', a + ' +' + (out.s.gold - before)).catch(() => {});
     reply(res, p, out);
   },
@@ -492,9 +575,10 @@ const routes = {
     await prizeCheck(u.id, p);
     engine.setBoard(board(), u.id); engine.setWB(wbCtx());
     ptPrep(u.id, p);
-    const out = engine.run(p.s, p.ui, {}, E => { changed = E.tick(); });
+    await cityLoad(); cityTick();
+    const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); changed = E.tick(); });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; ptAfter(u.id, p);
+    p.s = out.s; p.ui = out.ui; ptAfter(u.id, p); if (p.s.cityRes) { cityAfter(p); changed = true; }
     if (changed || out.fx.length) { p.v++; persist(u.id, p); updateSnap(u.id, p); }
     if (!changed && !out.fx.length && Number(b.v) === p.v) return send(res, 200, { same: true, v: p.v });
     reply(res, p, out);
@@ -641,6 +725,11 @@ const routes = {
     } else return bad('คำสั่งไม่ถูกต้อง');
     send(res, 200, ptPayload(u.id));
   },
+  'GET /api/city': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    await cityLoad(); cityTick();
+    send(res, 200, cityCtx());
+  },
   'POST /api/town': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
     const b = await readBody(req);
@@ -659,7 +748,13 @@ const routes = {
       list.push({ uid: id, n: t.n, cls: t.cls, lvl: t.lvl, look: t.look, x: t.x, y: t.y, say: sy && now - sy.at < 7000 ? sy.t : '', sayAge: sy ? now - sy.at : 0 });
       if (list.length >= TOWN_MAX) break;
     }
+    for (const bt of botsActive(now)) { if (list.length >= TOWN_MAX) break; if (botWhere(bt, now) !== 'town') continue; list.push(Object.assign(botPub(bt, now), botTownPos(bt, now), { say: '', sayAge: 0 })); }
     send(res, 200, { list });
+  },
+  'GET /api/bots': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    const now = Date.now(), z = Math.max(0, Math.min(5, parseInt(new URL(req.url, 'http://x').searchParams.get('z'), 10) || 0));
+    send(res, 200, { list: botsActive(now).filter(b => botWhere(b, now) === z).slice(0, 6).map(b => botPub(b, now)) });
   },
   'GET /api/fac': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
