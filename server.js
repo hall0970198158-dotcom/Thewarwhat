@@ -350,6 +350,8 @@ function ptPayload(uid) {
   return { pt, list };
 }
 
+// ---------- เมืองหลวง: ผู้เล่นที่อยู่ในเมืองเห็นกัน + บับเบิลแชทโลกเหนือหัว ----------
+const TOWN = new Map(), LASTSAY = new Map(), TOWN_ON_MS = 12000, TOWN_MAX = 40;
 const CHATLOG = []; let CHAT_ID = Date.now(); // id เริ่มจากเวลา เพื่อให้รีสตาร์ทแล้ว id ยังมากกว่าของเดิมในหน้าเว็บ
 const TEAM_MAX = 6, teamCache = new Map();
 async function teamOf(uid) { if (teamCache.has(uid)) return teamCache.get(uid); const t = await db.getTeam(uid); teamCache.set(uid, t); return t; }
@@ -535,6 +537,7 @@ const routes = {
     }
     p.lastChat = now;
     CHATLOG.push(m); if (CHATLOG.length > 600) CHATLOG.splice(0, CHATLOG.length - 600);
+    if (ch === 'world') LASTSAY.set(u.id, { t, at: now });
     send(res, 200, { ok: true, id: m.id });
   },
   'POST /api/team': async (req, res) => {
@@ -637,6 +640,26 @@ const routes = {
       ptLeave(t);
     } else return bad('คำสั่งไม่ถูกต้อง');
     send(res, 200, ptPayload(u.id));
+  },
+  'POST /api/town': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    const b = await readBody(req);
+    const p = await session(u.id);
+    if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
+    if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
+    const now = Date.now();
+    if (b.leave) { TOWN.delete(u.id); return send(res, 200, { list: [] }); }
+    TOWN.set(u.id, { n: String(p.s.name || u.display).slice(0, 16), cls: p.s.cls, lvl: p.s.lvl | 0, look: p.s.look, x: Math.max(0, Math.min(1440, Number(b.x) || 0)), y: Math.max(0, Math.min(1080, Number(b.y) || 0)), at: now });
+    for (const [id, t] of TOWN) if (now - t.at > TOWN_ON_MS * 5) TOWN.delete(id);
+    for (const [id, t] of LASTSAY) if (now - t.at > 10000) LASTSAY.delete(id);
+    const list = [];
+    for (const [id, t] of TOWN) {
+      if (id === u.id || now - t.at > TOWN_ON_MS) continue;
+      const sy = LASTSAY.get(id);
+      list.push({ uid: id, n: t.n, cls: t.cls, lvl: t.lvl, look: t.look, x: t.x, y: t.y, say: sy && now - sy.at < 7000 ? sy.t : '', sayAge: sy ? now - sy.at : 0 });
+      if (list.length >= TOWN_MAX) break;
+    }
+    send(res, 200, { list });
   },
   'GET /api/fac': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
