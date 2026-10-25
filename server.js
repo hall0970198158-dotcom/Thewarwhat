@@ -315,6 +315,7 @@ setInterval(() => { // ตัดสินรอบที่หมดเวลา
 // ---------- แชท/ทีม ----------
 // ---------- ปาร์ตี้ล่า 1–3 คน: แบ่ง XP/ทอง ให้เพื่อนที่อยู่แผนที่เดียวกัน + ส่งตำแหน่งให้เห็นกันบนแผนที่ ----------
 const PT_MAX = 3, PT_LV = 15, PT_ON_MS = 20000, PT_STALE_MS = 10 * 60e3;
+const PERF = { n: 0, sum: 0, max: 0, last: null };
 const PTR = new Map(), PTU = new Map(); let PT_ID = 500, TOPC = { at: 0, top: [] };
 const ptOf = uid => PTR.get(PTU.get(uid)) || null;
 function ptLeave(uid) {
@@ -341,19 +342,27 @@ function ptAfter(uid, p) {
   }
 }
 // หัวปาร์ตี้เริ่มสู้มอน → ลูกทีมที่เปิด "เดินตาม" (แผนที่เดียวกัน · เลเวลห่าง ≤15) เข้าสู้พร้อมกัน · ทั้งหมดได้ XP ÷2
+function ptWhy(hs, m, now) { // '' = พร้อมเข้าสู้ด้วยกัน
+  if (now - m.seen > PT_ON_MS) return 'ออฟไลน์/ปิดจอ'; const q = live.get(m.uid); if (!q || !q.s) return 'ออฟไลน์';
+  if (!hs) return 'หัวปาร์ตี้ออฟไลน์'; if ((q.s.zone | 0) !== (hs.zone | 0)) return 'อยู่คนละแผนที่';
+  if (Math.abs((q.s.lvl | 0) - (hs.lvl | 0)) > PT_LV) return 'เลเวลห่างเกิน ' + PT_LV; if ((q.s.energy | 0) < 2) return 'พลังไม่พอ';
+  return '';
+}
 function ptLead(uid, p) {
   const b = p.s && p.s.battle; if (!b || b.ptChk) return; b.ptChk = 1;
   if (b.kind !== 'monster' || b.tower || b.joint || b.pk == null) return;
   const r = ptOf(uid); if (!r || r.host !== uid) return;
   let n = 0; const jid = uid + ':' + Date.now();
   const J = { jid, nm: p.s.name, pk: b.pk, e: b.e, grp: b.grp || null, fboss: b.fboss ? 1 : 0 };
-  for (const m of ptNear(uid, p.s)) {
-    const rm = r.mem.find(x => x.uid === m.uid); if (!rm || !rm.fol) continue;
-    const q = live.get(m.uid); if (!q || !q.s || q.s.battle) continue;
+  const now = Date.now(), miss = [];
+  for (const rm of r.mem) {
+    if (rm.uid === uid || !rm.fol) continue; const why = ptWhy(p.s, rm, now); if (why) { miss.push(rm.n + ': ' + why); continue; }
+    const m = rm, q = live.get(m.uid); if (!q || !q.s) continue; if (q.s.battle) { miss.push(rm.n + ': กำลังสู้อยู่'); continue; }
     try { let ok = false; const o = engine.run(q.s, q.ui, {}, E => { ok = E.ptJoin ? E.ptJoin(J) : false; }); q.s = o.s; q.ui = o.ui; if (ok) { n++; q.v++; persist(m.uid, q); } }
     catch (e) { console.error('party join', e.message); }
   }
   if (n) { b.joint = 1; b.jid = jid; b.lines = (b.lines || []).concat(['🤝 ลูกทีม ' + n + ' คนเข้าสู้ด้วยกัน (XP ÷2)']); }
+  if (miss.length) b.lines = (b.lines || []).concat(['⚠️ เข้าสู้ด้วยไม่ได้ · ' + miss.join(' · ')]);
 }
 // สู้ด้วยกัน: ดาเมจที่ใครคนหนึ่งทำกับมอน → ลดเลือดมอนตัวเดียวกันของเพื่อนในฉากเดียวกัน (jid เดียวกัน)
 function jSnap(s) { const b = s && s.battle; if (!b || !b.jid) return null; return { jid: b.jid, kills: s.kills | 0, hp: b.grp ? b.grp.map((g, i) => i === b.gi ? b.ehp : g.ehp) : [b.ehp] }; }
@@ -374,7 +383,7 @@ function ptPayload(uid) {
   ptSweep();
   const r = ptOf(uid), now = Date.now();
   let pt = null;
-  if (r) { r.mem.forEach(ptRefresh); pt = { id: r.id, mem: r.mem.map(m => ({ uid: m.uid, n: m.n, cls: m.cls, lvl: m.lvl, z: m.z, x: m.x, y: m.y, b: m.b, look: m.look, fol: !!m.fol, on: now - m.seen <= PT_ON_MS, host: m.uid === r.host, me: m.uid === uid })) }; }
+  if (r) { r.mem.forEach(ptRefresh); const hq = live.get(r.host); r.mem.forEach(m => { m.why = m.uid === r.host ? '' : ptWhy(hq && hq.s, m, now); }); pt = { id: r.id, mem: r.mem.map(m => ({ uid: m.uid, n: m.n, cls: m.cls, lvl: m.lvl, z: m.z, x: m.x, y: m.y, b: m.b, look: m.look, fol: !!m.fol, why: m.why || '', on: now - m.seen <= PT_ON_MS, host: m.uid === r.host, me: m.uid === uid })) }; }
   const list = r ? [] : [...PTR.values()].filter(x => x.mem.length < PT_MAX).slice(0, 20).map(x => { x.mem.forEach(ptRefresh); const h0 = x.mem.find(m => m.uid === x.host) || x.mem[0]; return { id: x.id, n: h0.n, z: h0.z, c: x.mem.length, lvl: Math.round(x.mem.reduce((a, m) => a + m.lvl, 0) / x.mem.length) }; });
   return { pt, list };
 }
@@ -831,7 +840,8 @@ const routes = {
   },
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
-    send(res, 200, { server: 'V158', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
+    send(res, 200, { server: 'V160', speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -862,7 +872,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(302, { Location: '/' });
       return res.end();
     }
-    if (routes[key]) return await routes[key](req, res);
+    if (routes[key]) { if (key === 'POST /api/tick' || key === 'POST /api/act') { const t0 = process.hrtime.bigint(); try { return await routes[key](req, res); } finally { const ms = Number(process.hrtime.bigint() - t0) / 1e6; PERF.n++; PERF.sum += ms; PERF.max = Math.max(PERF.max, ms); if (PERF.n >= 400) { PERF.last = { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) }; PERF.n = 0; PERF.sum = 0; PERF.max = 0; } } } return await routes[key](req, res); }
     if (req.method === 'GET' && url.pathname === '/manifest.webmanifest') { res.writeHead(200, { 'Content-Type': 'application/manifest+json; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }); return res.end(MANIFEST); }
     if (req.method === 'GET' && ICONS[url.pathname]) { res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' }); return res.end(ICONS[url.pathname]); }
     if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
