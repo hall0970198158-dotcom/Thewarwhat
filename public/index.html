@@ -1369,8 +1369,8 @@ function grpAlive(b){var n=0;if(b.grp)b.grp.forEach(function(g,i){if(i===b.gi?b.
 function grpNext(b){
  if(!b.grp)return false;b.grp[b.gi].ehp=0;var nx=-1;for(var i=0;i<b.grp.length;i++)if(i!==b.gi&&b.grp[i].ehp>0){nx=i;break}
  if(nx<0)return false;
- var e=b.e,g=Math.round(rnd(e.gold[0],e.gold[1])*happyMul()*gGoldMul(s)*HUNT_GOLD*cityMul()),xp=Math.round(e.xp*happyMul()*ptBonus()*cityMul()),p=['ทอง +'+g,'XP +'+xp];
- ptShare(xp,g);s.gold+=g;s.kills++;dqAdd('hunt');var md=matDrop(e);if(md)p.push(md);
+ var e=b.e,g=Math.round(rnd(e.gold[0],e.gold[1])*happyMul()*gGoldMul(s)*HUNT_GOLD*cityMul()),xp=Math.round(e.xp*happyMul()*ptBonus()*cityMul()*(b.joint?0.5:1)),p=['ทอง +'+g,'XP +'+xp+(b.joint?' (÷2)':'')];
+ if(!b.joint)ptShare(xp,g);s.gold+=g;s.kills++;dqAdd('hunt');var md=matDrop(e);if(md)p.push(md);
  if(!e.cls&&Math.random()<CARD_P){var cd0=rollCard(e.n);p.push('ได้การ์ด '+cardName(cd0)+' ('+CARDC[cd0.c].n+')')}
  b.gi=nx;b.e=b.grp[nx].e;b.ehp=b.grp[nx].ehp;b.cd=b.cd||{};
  b.lines=['ล้ม '+e.n+' ('+p.join(', ')+') · เหลือ '+grpAlive(b)+' ตัว → สู้ '+b.e.n].concat(b.lines).slice(0,6);
@@ -4928,7 +4928,13 @@ if(SV){
  var FXLOG=[];
  var wrapFx=function(name,fn){return function(){FXLOG.push([name,Array.prototype.slice.call(arguments)]);return fn.apply(null,arguments)}};
  fl=wrapFx('fl',fl);fxPlayerHit=wrapFx('fxPlayerHit',fxPlayerHit);fxSkill=wrapFx('fxSkill',fxSkill);fxBuff=wrapFx('fxBuff',fxBuff);fxEnemyHit=wrapFx('fxEnemyHit',fxEnemyHit);
- window.ENGINE={ptJoin:function(pk,nm){if(!s||!s.created||s.battle||s.dup||s.res||s.energy<2)return false;s.fLast=0;huntField(pk);if(!s.battle)return false;var b=s.battle;b.joint=1;b.ptChk=1;b.jw=s.autoHunt?0:Date.now()+PT_JW;b.lines=['🤝 เดินตาม '+String(nm||'หัวปาร์ตี้').slice(0,16)+' เข้าสู้ด้วยกัน!'+(s.autoHunt?'':' กดโจมตีภายใน 5 วินาที (ไม่กด = โจมตีอัตโนมัติ)')];save();return true},townEn:function(inTown){return townEnTick(s,inTown,Date.now())},
+ window.ENGINE={ptJoin:function(J){if(!s||!s.created||s.battle||s.dup||s.res||s.energy<2||!J||!J.e)return false;var cl=function(o){return JSON.parse(JSON.stringify(o))};s.energy-=2;
+ startBattle(cl(J.e),'monster');var b=s.battle;if(J.grp&&J.grp.length){b.grp=cl(J.grp).map(function(g){g.ehp=g.e.hp;return g});b.gi=0;b.e=b.grp[0].e;b.ehp=b.grp[0].ehp}
+ b.pk=J.pk;b.joint=1;b.ptChk=1;b.jid=J.jid;if(J.fboss)b.fboss=1;b.jw=s.autoHunt?0:Date.now()+PT_JW;
+ b.lines=['🤝 เดินตาม '+String(J.nm||'หัวปาร์ตี้').slice(0,16)+' เข้าสู้ด้วยกัน! ('+(b.grp?b.grp.length+' ตัว':b.e.n)+')'+(s.autoHunt?'':' กดโจมตีภายใน 5 วินาที (ไม่กด = โจมตีอัตโนมัติ)')];save();return true},
+ jDmg:function(d){var b=s.battle;if(!b||!b.joint||!d)return false;
+ if(b.grp){for(var i=0;i<b.grp.length&&i<d.length;i++){if(!(d[i]>0))continue;if(i===b.gi)b.ehp=Math.max(0,b.ehp-d[i]);else b.grp[i].ehp=Math.max(0,b.grp[i].ehp-d[i])}}else b.ehp=Math.max(0,b.ehp-(d[0]||0));
+ var n=0;while(s.battle===b&&b.ehp<=0&&n++<8){if(!b.grp||s.hp<=0){win();break}if(grpNext(b))continue;win();break}save();return true},townEn:function(inTown){return townEnTick(s,inTown,Date.now())},
   fresh:function(){return normalize(fresh())},
   normalize:function(o){return normalize(o)},
   run:function(state,ui,fn){
