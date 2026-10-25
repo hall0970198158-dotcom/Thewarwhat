@@ -307,6 +307,43 @@ setInterval(() => { // ตัดสินรอบที่หมดเวลา
 }, 400).unref();
 
 // ---------- แชท/ทีม ----------
+// ---------- ปาร์ตี้ล่า 1–3 คน: แบ่ง XP/ทอง ให้เพื่อนที่อยู่แผนที่เดียวกัน + ส่งตำแหน่งให้เห็นกันบนแผนที่ ----------
+const PT_MAX = 3, PT_LV = 20, PT_ON_MS = 20000, PT_STALE_MS = 10 * 60e3;
+const PTR = new Map(), PTU = new Map(); let PT_ID = 500;
+const ptOf = uid => PTR.get(PTU.get(uid)) || null;
+function ptLeave(uid) {
+  const r = ptOf(uid); PTU.delete(uid); if (!r) return;
+  r.mem = r.mem.filter(m => m.uid !== uid);
+  if (!r.mem.length) { PTR.delete(r.id); return; }
+  if (r.host === uid) r.host = r.mem[0].uid;
+}
+function ptMem(uid, p) { return { uid, n: String(p.s.name || '?').slice(0, 16), cls: p.s.cls || null, lvl: p.s.lvl | 0, z: p.s.zone | 0, x: 720, y: 540, seen: Date.now(), b: 0 }; }
+function ptRefresh(m) { const q = live.get(m.uid); if (q && q.s) { m.n = String(q.s.name || m.n).slice(0, 16); m.cls = q.s.cls || m.cls; m.lvl = q.s.lvl | 0; m.z = q.s.zone | 0; m.b = q.s.battle ? 1 : 0; m.look = q.s.look; } }
+function ptNear(uid, s) { // เพื่อนที่ออนไลน์ อยู่แผนที่เดียวกัน และเลเวลห่างไม่เกิน 20
+  const r = ptOf(uid); if (!r) return [];
+  const now = Date.now();
+  return r.mem.filter(m => { if (m.uid === uid || now - m.seen > PT_ON_MS) return false; const q = live.get(m.uid); return q && q.s && (q.s.zone | 0) === (s.zone | 0) && Math.abs((q.s.lvl | 0) - (s.lvl | 0)) <= PT_LV; });
+}
+function ptPrep(uid, p) { const r = ptOf(uid); if (r) { const m = r.mem.find(x => x.uid === uid); if (m) m.seen = Date.now(); } p.s.ptyN = ptNear(uid, p.s).length; }
+function ptAfter(uid, p) {
+  const sh = p.s.pShare; delete p.s.pShare; delete p.s.ptyN;
+  if (!sh || (!sh.xp && !sh.g)) return;
+  for (const m of ptNear(uid, p.s)) {
+    const q = live.get(m.uid); if (!q || !q.s) continue;
+    try { const o = engine.run(q.s, q.ui, {}, E => E.pgrant(sh.xp, sh.g, p.s.name)); q.s = o.s; q.ui = o.ui; q.v++; persist(m.uid, q); updateSnap(m.uid, q); }
+    catch (e) { console.error('party share', e.message); }
+  }
+}
+function ptSweep() { const now = Date.now(); for (const r of [...PTR.values()]) for (const m of r.mem.slice()) if (now - m.seen > PT_STALE_MS) ptLeave(m.uid); }
+function ptPayload(uid) {
+  ptSweep();
+  const r = ptOf(uid), now = Date.now();
+  let pt = null;
+  if (r) { r.mem.forEach(ptRefresh); pt = { id: r.id, mem: r.mem.map(m => ({ uid: m.uid, n: m.n, cls: m.cls, lvl: m.lvl, z: m.z, x: m.x, y: m.y, b: m.b, look: m.look, on: now - m.seen <= PT_ON_MS, host: m.uid === r.host, me: m.uid === uid })) }; }
+  const list = r ? [] : [...PTR.values()].filter(x => x.mem.length < PT_MAX).slice(0, 20).map(x => { x.mem.forEach(ptRefresh); const h0 = x.mem.find(m => m.uid === x.host) || x.mem[0]; return { id: x.id, n: h0.n, z: h0.z, c: x.mem.length, lvl: Math.round(x.mem.reduce((a, m) => a + m.lvl, 0) / x.mem.length) }; });
+  return { pt, list };
+}
+
 const CHATLOG = []; let CHAT_ID = Date.now(); // id เริ่มจากเวลา เพื่อให้รีสตาร์ทแล้ว id ยังมากกว่าของเดิมในหน้าเว็บ
 const TEAM_MAX = 6, teamCache = new Map();
 async function teamOf(uid) { if (teamCache.has(uid)) return teamCache.get(uid); const t = await db.getTeam(uid); teamCache.set(uid, t); return t; }
@@ -430,9 +467,10 @@ const routes = {
     await prizeCheck(u.id, p);
     const before = p.s.gold;
     engine.setBoard(board(), u.id); await wbEnsure(); engine.setWB(wbCtx());
+    ptPrep(u.id, p);
     const out = engine.run(p.s, p.ui, cleanInputs(b.inp), E => E.act(a, pr));
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; p.v++; persist(u.id, p); updateSnap(u.id, p);
+    p.s = out.s; p.ui = out.ui; ptAfter(u.id, p); p.v++; persist(u.id, p); updateSnap(u.id, p);
     if (out.s.gold - before > 200000) db.audit(u.id, 'gold_jump', a + ' +' + (out.s.gold - before)).catch(() => {});
     reply(res, p, out);
   },
@@ -445,9 +483,10 @@ const routes = {
     let changed = PRIZE_PENDING.has(u.id);
     await prizeCheck(u.id, p);
     engine.setBoard(board(), u.id); engine.setWB(wbCtx());
+    ptPrep(u.id, p);
     const out = engine.run(p.s, p.ui, {}, E => { changed = E.tick(); });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui;
+    p.s = out.s; p.ui = out.ui; ptAfter(u.id, p);
     if (changed || out.fx.length) { p.v++; persist(u.id, p); updateSnap(u.id, p); }
     if (!changed && !out.fx.length && Number(b.v) === p.v) return send(res, 200, { same: true, v: p.v });
     reply(res, p, out);
@@ -563,6 +602,35 @@ const routes = {
       if (cur.st === 'won' || cur.st === 'lost') { cur.st = 'lobby'; cur.en = null; cur.loot = {}; for (const m of cur.mem) { m.ready = false; m.down = false; } cur.ver++; }
     } else return bad('คำสั่งไม่ถูกต้อง');
     send(res, 200, await dgPayload(u.id, p));
+  },
+  'POST /api/party': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    const b = await readBody(req);
+    const p = await session(u.id);
+    if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
+    if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
+    const op = String(b.op || 'sync'), cur = ptOf(u.id);
+    const bad = msg => send(res, 400, { error: msg });
+    if (op === 'sync') {
+      if (cur) { const m = cur.mem.find(x => x.uid === u.id); if (m) { m.seen = Date.now(); if (b.x != null && b.y != null) { m.x = Math.max(0, Math.min(1440, Number(b.x) || 0)); m.y = Math.max(0, Math.min(1080, Number(b.y) || 0)); } } }
+    } else if (op === 'create') {
+      if (cur) return bad('คุณอยู่ในปาร์ตี้อื่นแล้ว');
+      const r = { id: ++PT_ID, host: u.id, mem: [ptMem(u.id, p)] };
+      PTR.set(r.id, r); PTU.set(u.id, r.id);
+    } else if (op === 'join') {
+      if (cur) return bad('คุณอยู่ในปาร์ตี้อื่นแล้ว');
+      const r = PTR.get(Number(b.id));
+      if (!r) return bad('ไม่พบปาร์ตี้นี้ (อาจยุบไปแล้ว)');
+      if (r.mem.length >= PT_MAX) return bad('ปาร์ตี้เต็มแล้ว (3 คน)');
+      r.mem.push(ptMem(u.id, p)); PTU.set(u.id, r.id);
+    } else if (op === 'leave') {
+      ptLeave(u.id);
+    } else if (op === 'kick') {
+      if (!cur || cur.host !== u.id) return bad('เฉพาะหัวปาร์ตี้ที่เตะได้');
+      const t = Number(b.uid); if (t === u.id || !cur.mem.some(m => m.uid === t)) return bad('ไม่พบสมาชิกคนนี้');
+      ptLeave(t);
+    } else return bad('คำสั่งไม่ถูกต้อง');
+    send(res, 200, ptPayload(u.id));
   },
   'GET /api/fac': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
