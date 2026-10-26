@@ -33,7 +33,19 @@ if (!/<!doctype/i.test(gameHtml)) {
 }
 // ข้อความหน้าล็อกอินของโหมดออฟไลน์ เปลี่ยนให้ตรงกับโหมดออนไลน์
 gameHtml = gameHtml.replace(/บัญชีเก็บอยู่ในเบราว์เซอร์ของเครื่องนี้[^<]*/, 'บัญชีเก็บบนเซิร์ฟเวอร์ เล่นไอดีเดียวกันได้ทุกเครื่อง · ตั้งรหัสผ่านที่เดายากและอย่าบอกใคร');
+// หน้ากำลังโหลด: ขึ้นทันทีที่ข้อมูลก้อนแรกมาถึง (ก่อนสไตล์/สคริปต์ขนาดใหญ่) แล้วเกมจะลบออกเองเมื่อพร้อม
+const BOOT = '<div id="boot" style="position:fixed;inset:0;z-index:99999;background:#0b0f1f;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:sans-serif;color:#c8cde0">' +
+  '<div style="font:900 34px sans-serif;background:linear-gradient(180deg,#ffe07a,#ff7a2a 55%,#b8261a);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 8px rgba(255,90,20,.5))">ศึกชิงเมือง</div>' +
+  '<div style="font:800 18px sans-serif;color:#ffb03a;letter-spacing:1px;margin-top:2px">TheWarWhat</div>' +
+  '<div style="width:180px;height:6px;border-radius:3px;background:#1a2140;margin-top:26px;overflow:hidden"><div id="bootbar" style="width:30%;height:100%;border-radius:3px;background:linear-gradient(90deg,#ff7a2a,#ffd04a);animation:bootmv 1.1s ease-in-out infinite"></div></div>' +
+  '<div style="font-size:13px;margin-top:12px;color:#7d86a0">กำลังโหลดเกม…</div><style>@keyframes bootmv{0%{transform:translateX(-100%)}100%{transform:translateX(340%)}}</style></div>\n';
+gameHtml = gameHtml.replace('<meta name="claude:viewport-fit-sides"', BOOT + '<meta name="claude:viewport-fit-sides"');
+// ฟอนต์ Google ไม่ให้บล็อกการแสดงผล
+gameHtml = gameHtml.replace(/<link href="(https:\/\/fonts\.googleapis\.com[^"]+)" rel="stylesheet">/, '<link href="$1" rel="stylesheet" media="print" onload="this.media=\'all\'">');
 const indexHtml = gameHtml;
+const zlib = require('zlib');
+const INDEX_GZ = zlib.gzipSync(indexHtml, { level: 9 }), INDEX_BR = zlib.brotliCompressSync(indexHtml, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11 } });
+function acceptEnc(req) { return String((req && req.headers && req.headers['accept-encoding']) || ''); }
 // ---------- ติดตั้งเป็นแอป (เพิ่มลงหน้าจอหลัก) = เปิดเต็มจอ ไม่มีแถบเบราว์เซอร์ ----------
 const MANIFEST = JSON.stringify({ name: 'ศึกชิงเมือง · TheWarWhat', short_name: 'ศึกชิงเมือง', start_url: '/', scope: '/', display: 'fullscreen', display_override: ['fullscreen', 'standalone'], orientation: 'portrait', background_color: '#0e1326', theme_color: '#0e1326', lang: 'th',
   icons: [{ src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' }, { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }, { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }] });
@@ -316,6 +328,17 @@ setInterval(() => { // ตัดสินรอบที่หมดเวลา
 // ---------- ปาร์ตี้ล่า 1–3 คน: แบ่ง XP/ทอง ให้เพื่อนที่อยู่แผนที่เดียวกัน + ส่งตำแหน่งให้เห็นกันบนแผนที่ ----------
 const PT_MAX = 3, PT_LV = 15, PT_ON_MS = 20000, PT_STALE_MS = 10 * 60e3;
 const PERF = { n: 0, sum: 0, max: 0, last: null };
+// ===== นับขั้นตอนผู้เล่นใหม่ (ไม่เก็บข้อมูลส่วนตัว): เปิดเว็บ → บัญชีใหม่ → สร้างตัว → ฆ่ามอนตัวแรก → Lv5 → กลับมาวันถัดไป =====
+const FUN = { loaded: false, days: {}, ips: { d: -1, set: new Set() }, dirty: false, saveAt: 0 };
+const funDay = () => Math.floor((Date.now() + 7 * 3600e3) / 864e5);
+function funInc(k) { const d = funDay(); const o = FUN.days[d] || (FUN.days[d] = {}); o[k] = (o[k] | 0) + 1; FUN.dirty = true; funSave(); }
+function funHit(k, ip) { const d = funDay(); if (FUN.ips.d !== d) FUN.ips = { d, set: new Set() }; const key = crypto.createHash('sha1').update(String(ip)).digest('hex').slice(0, 12); if (FUN.ips.set.has(key)) return; FUN.ips.set.add(key); funInc(k); }
+function funSave(force) { if (!FUN.dirty || (!force && Date.now() - FUN.saveAt < 60000)) return; FUN.dirty = false; FUN.saveAt = Date.now(); const keep = {}; Object.keys(FUN.days).map(Number).sort((a, b) => b - a).slice(0, 30).forEach(d => keep[d] = FUN.days[d]); FUN.days = keep; (db.putMeta || db.setMeta)('funnel', JSON.stringify(keep)).catch(e => console.error('funnel', e.message)); }
+async function funLoad() { if (FUN.loaded) return; FUN.loaded = true; try { const v = await db.getMeta('funnel'); if (v) { const o = JSON.parse(v) || {}; for (const d in o) { const cur = FUN.days[d] || {}, add = o[d] || {}; for (const k in add) cur[k] = (cur[k] | 0) + (add[k] | 0); FUN.days[d] = cur; } } } catch (e) {} }
+function funMark(p) { const s = p && p.s; if (!s || !s.created) return; const d = funDay();
+  if (!s.fn) { if ((s.kills | 0) > 0 || (s.lvl | 0) > 1) { s.fn = { c: -1, k: 1, l: (s.lvl | 0) >= 5 ? 1 : 0, r: 1 }; return; } s.fn = { c: d }; funInc('created'); }
+  const f = s.fn; if (!f.k && (s.kills | 0) >= 1) { f.k = 1; funInc('firstKill'); } if (!f.l && (s.lvl | 0) >= 5) { f.l = 1; funInc('lv5'); } if (!f.r && f.c > 0 && d > f.c) { f.r = 1; funInc('returnNextDay'); } }
+function funReport() { const d = funDay(), K = ['visit', 'newAccount', 'created', 'firstKill', 'lv5', 'returnNextDay'], sum = (from) => { const o = {}; K.forEach(k => o[k] = 0); for (let x = from; x <= d; x++) { const r = FUN.days[x]; if (r) K.forEach(k => o[k] += r[k] | 0); } return o; }; return { today: sum(d), last7days: sum(d - 6) }; }
 // ===== ผลสงครามสี่ฝ่าย: เซิร์ฟเวอร์รวมแต้มครั้งเดียวตอนศึกจบ แล้วทุกคนใช้ผลเดียวกัน =====
 const FACRES = { loaded: false, map: {} };
 async function facResLoad() { if (FACRES.loaded) return; FACRES.loaded = true; try { const v = await db.getMeta('facres'); if (v) FACRES.map = JSON.parse(v) || {}; } catch (e) {} }
@@ -553,8 +576,9 @@ function takeToken(p) { // ผู้เล่นส่งคำสั่งไ�
 const MAX_BODY = 16 * 1024;
 const SEC_HEADERS = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin', 'X-Frame-Options': 'SAMEORIGIN' };
 function send(res, code, obj) {
-  res.writeHead(code, Object.assign({ 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }, SEC_HEADERS));
-  res.end(JSON.stringify(obj));
+  const body = JSON.stringify(obj), h = Object.assign({ 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Vary': 'Accept-Encoding' }, SEC_HEADERS);
+  if (body.length > 1024 && /\bgzip\b/.test(acceptEnc(res.req))) { h['Content-Encoding'] = 'gzip'; res.writeHead(code, h); return res.end(zlib.gzipSync(body, { level: 5 })); }
+  res.writeHead(code, h); res.end(body);
 }
 function readBody(req) {
   return new Promise((resolve, reject) => {
@@ -582,7 +606,7 @@ const routes = {
     const pw = crypto.randomBytes(12).toString('hex'), salt = crypto.randomBytes(16).toString('hex');
     const uid = await db.addUser(key, key, salt, await hashPw(pw, salt));
     const u = await db.userById(uid); const p = await session(u.id); await persist(u.id, p);
-    send(res, 200, { token: issue(u), username: key, password: pw });
+    funInc('newAccount'); send(res, 200, { token: issue(u), username: key, password: pw });
   },
   'POST /api/claim': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -614,7 +638,7 @@ const routes = {
     try { uid = await db.addUser(key, id, salt, await hashPw(pw, salt)); }
     catch (e) { if (/UNIQUE/i.test(e.message)) return send(res, 409, { error: 'ไอดีนี้ถูกใช้แล้ว ลองไอดีอื่น' }); throw e; }
     const u = await db.userById(uid);
-    const p = await session(u.id); await persist(u.id, p);
+    const p = await session(u.id); await persist(u.id, p); funInc('newAccount');
     send(res, 200, { token: issue(u) });
   },
   'POST /api/login': async (req, res) => {
@@ -635,7 +659,7 @@ const routes = {
     const p = await session(u.id);
     await wbEnsure(); engine.setWB(wbCtx()); engine.setBoard(board(), u.id);
     await wbPrizes(u.id, p).catch(e => console.error('prize', e.message));
-    await cityLoad(); cityTick(); await facResLoad(); facResTick();
+    await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad();
     const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); E.enter(); });
     p.s = out.s; p.ui = out.ui; p.v++; persist(u.id, p); updateSnap(u.id, p);
     send(res, 200, { s: out.s, ui: out.ui, fx: [], fxt: {}, v: p.v, user: u.display, uid: u.id });
@@ -651,11 +675,11 @@ const routes = {
     const before = p.s.gold;
     engine.setBoard(board(), u.id); await wbEnsure(); engine.setWB(wbCtx());
     ptPrep(u.id, p);
-    await cityLoad(); cityTick(); await facResLoad(); facResTick();
+    await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad();
     const js0 = jSnap(p.s);
     const out = engine.run(p.s, p.ui, cleanInputs(b.inp), E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); E.act(a, pr); });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; ptAfter(u.id, p); cityAfter(p); p.v++; persist(u.id, p); updateSnap(u.id, p);
+    p.s = out.s; p.ui = out.ui; ptAfter(u.id, p); cityAfter(p); funMark(p); p.v++; persist(u.id, p); updateSnap(u.id, p);
     if (out.s.gold - before > 200000) db.audit(u.id, 'gold_jump', a + ' +' + (out.s.gold - before)).catch(() => {});
     reply(res, p, out);
   },
@@ -669,11 +693,11 @@ const routes = {
     await prizeCheck(u.id, p);
     engine.setBoard(board(), u.id); engine.setWB(wbCtx());
     ptPrep(u.id, p);
-    await cityLoad(); cityTick(); await facResLoad(); facResTick();
+    await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad();
     const twn = TOWN.get(u.id), inTown = !!(twn && now - twn.at < 6000), js0 = jSnap(p.s);
     const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); const tg = E.townEn ? E.townEn(inTown) : false; changed = E.tick() || tg || changed; });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; ptAfter(u.id, p); if (p.s.cityRes) { cityAfter(p); changed = true; }
+    p.s = out.s; p.ui = out.ui; ptAfter(u.id, p); funMark(p); if (p.s.cityRes) { cityAfter(p); changed = true; }
     if (changed || out.fx.length) { p.v++; persist(u.id, p); updateSnap(u.id, p); }
     if (!changed && !out.fx.length && Number(b.v) === p.v) return send(res, 200, { same: true, v: p.v });
     reply(res, p, out);
@@ -823,7 +847,7 @@ const routes = {
   },
   'GET /api/city': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
-    await cityLoad(); cityTick(); await facResLoad(); facResTick();
+    await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad();
     send(res, 200, cityCtx());
   },
   'POST /api/town': async (req, res) => {
@@ -850,7 +874,7 @@ const routes = {
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
     const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
-    send(res, 200, { server: 'V161', speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    send(res, 200, { server: 'V166', funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -885,8 +909,11 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && url.pathname === '/manifest.webmanifest') { res.writeHead(200, { 'Content-Type': 'application/manifest+json; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }); return res.end(MANIFEST); }
     if (req.method === 'GET' && ICONS[url.pathname]) { res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' }); return res.end(ICONS[url.pathname]); }
     if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
-      res.writeHead(200, Object.assign({ 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' }, SEC_HEADERS));
-      return res.end(indexHtml);
+      funHit('visit', clientIp(req));
+      const ae = acceptEnc(req), hh = Object.assign({ 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache', 'Vary': 'Accept-Encoding' }, SEC_HEADERS);
+      if (/\bbr\b/.test(ae)) { hh['Content-Encoding'] = 'br'; res.writeHead(200, hh); return res.end(INDEX_BR); }
+      if (/\bgzip\b/.test(ae)) { hh['Content-Encoding'] = 'gzip'; res.writeHead(200, hh); return res.end(INDEX_GZ); }
+      res.writeHead(200, hh); return res.end(indexHtml);
     }
     send(res, 404, { error: 'ไม่พบหน้า' });
   } catch (e) {
@@ -908,7 +935,7 @@ async function loadLadder() {
   for (const r of await db.allLadder()) { try { LADDER.set(Number(r.user_id), Object.assign(JSON.parse(r.snap), { id: Number(r.user_id), upd: Number(r.upd) })); } catch (e) {} }
   boardDirty = true;
 }
-db.init().then(ensureSecret).then(async src => { await loadLadder(); await offBoot(); await wbEnsure();
+db.init().then(ensureSecret).then(async src => { await loadLadder(); await offBoot(); await funLoad(); await wbEnsure();
   if (src === 'auto') console.log('JWT_SECRET: ไม่ได้ตั้งหรือสั้นเกินไป ใช้รหัสลับที่สร้างอัตโนมัติและเก็บในฐานข้อมูลแทน');
   server.listen(PORT, () => console.log('ศึกชิงเมือง server · port ' + PORT + ' · DB ' + db.kind));
 }).catch(e => { console.error('เชื่อมต่อฐานข้อมูลไม่สำเร็จ:', e.message); process.exit(1); });
@@ -916,6 +943,7 @@ db.init().then(ensureSecret).then(async src => { await loadLadder(); await offBo
 // ปิดเซิร์ฟเวอร์ (เช่น Render สั่งหลับ/อัปเดต) → บันทึกข้อมูลที่ค้างก่อน
 for (const sig of ['SIGTERM', 'SIGINT']) process.on(sig, async () => {
   server.close();
+  try { funSave(true); } catch (e) {}
   try { await Promise.race([flushAll(), new Promise(z => setTimeout(z, 8000))]); } catch (e) {}
   process.exit(0);
 });
