@@ -328,6 +328,30 @@ setInterval(() => { // ตัดสินรอบที่หมดเวลา
 // ---------- ปาร์ตี้ล่า 1–3 คน: แบ่ง XP/ทอง ให้เพื่อนที่อยู่แผนที่เดียวกัน + ส่งตำแหน่งให้เห็นกันบนแผนที่ ----------
 const PT_MAX = 3, PT_LV = 15, PT_ON_MS = 20000, PT_STALE_MS = 10 * 60e3;
 const PERF = { n: 0, sum: 0, max: 0, last: null };
+// ===== กิจกรรมเปิดตัว "ผู้บุกเบิก" (100 คนแรกที่ถึง Lv30) + ระบบชวนเพื่อน (เพื่อนถึง Lv10 ได้รางวัลทั้งคู่) =====
+const PION_MAX = 100, PION_LV = 30, REF_LV = 10, REF_MAX = 20;
+const LAUNCH = { loaded: false, pion: [], refs: {} }; // pion: [{uid,n,at}] · refs: {rid:{n,ok}}
+async function launchLoad() { if (LAUNCH.loaded) return; LAUNCH.loaded = true; try { const a = await db.getMeta('pioneers'); if (a) LAUNCH.pion = JSON.parse(a) || []; const b = await db.getMeta('refs'); if (b) LAUNCH.refs = JSON.parse(b) || {}; } catch (e) {} }
+function launchSave(k) { (db.putMeta || db.setMeta)(k, JSON.stringify(k === 'pioneers' ? LAUNCH.pion : LAUNCH.refs)).catch(e => console.error('launch', e.message)); }
+const refCode = uid => 'W' + Number(uid).toString(36).toUpperCase();
+function refDecode(c) { c = String(c || '').trim().toUpperCase(); if (!/^W[0-9A-Z]{1,8}$/.test(c)) return 0; return parseInt(c.slice(1), 36) || 0; }
+async function refAttach(uid, p, code) { const rid = refDecode(code); if (!rid || rid === uid) return; try { const ru = await db.userById(rid); if (!ru || ru.banned) return; p.s.refBy = rid; const o = LAUNCH.refs[rid] || (LAUNCH.refs[rid] = { n: 0, ok: 0 }); o.n++; launchSave('refs'); } catch (e) {} }
+// ตรวจหลังทุกคำสั่ง: เพื่อนที่ถูกชวนถึง Lv10 · ใครถึง Lv30 เป็นผู้บุกเบิก
+async function launchCheck(uid, p) {
+  const st = p.s; if (!st || !st.created) return false; let ch = false;
+  if (st.refBy && !st.refDone && (st.lvl | 0) >= REF_LV) {
+    st.refDone = 1; ch = true; const rid = st.refBy, o = LAUNCH.refs[rid] || (LAUNCH.refs[rid] = { n: 1, ok: 0 });
+    const out = engine.run(st, p.ui, {}, E => { if (E.refGrant) E.refGrant('invitee', ''); }); p.s = out.s; p.ui = out.ui;
+    if (o.ok < REF_MAX) { o.ok++; launchSave('refs');
+      try { const q = await session(rid); const o2 = engine.run(q.s, q.ui, {}, E => { if (E.refGrant) E.refGrant('inviter', String(p.s.name || '')); }); q.s = o2.s; q.ui = o2.ui; q.v++; persist(rid, q); } catch (e) { console.error('ref grant', e.message); } }
+  }
+  if (!p.s.pion && (p.s.lvl | 0) >= PION_LV && LAUNCH.pion.length < PION_MAX && !LAUNCH.pion.some(x => x.uid === uid)) {
+    const rank = LAUNCH.pion.length + 1; LAUNCH.pion.push({ uid, n: String(p.s.name || '').slice(0, 16), at: Date.now() }); launchSave('pioneers');
+    const out = engine.run(p.s, p.ui, {}, E => { if (E.pionGrant) E.pionGrant(rank); }); p.s = out.s; p.ui = out.ui; ch = true;
+    sysChat('🏆 ' + String(p.s.name || '').slice(0, 16) + ' เป็นผู้บุกเบิกคนที่ ' + rank + '/' + PION_MAX + ' แล้ว!' + (rank === PION_MAX ? ' ครบ 100 คน ปิดกิจกรรม' : ''));
+  }
+  return ch;
+}
 // ===== นับขั้นตอนผู้เล่นใหม่ (ไม่เก็บข้อมูลส่วนตัว): เปิดเว็บ → บัญชีใหม่ → สร้างตัว → ฆ่ามอนตัวแรก → Lv5 → กลับมาวันถัดไป =====
 const FUN = { loaded: false, days: {}, ips: { d: -1, set: new Set() }, dirty: false, saveAt: 0 };
 const funDay = () => Math.floor((Date.now() + 7 * 3600e3) / 864e5);
@@ -601,11 +625,12 @@ const routes = {
   // ===== ผู้เยี่ยมชม: สร้างบัญชีสุ่มให้ทันที · ภายหลังตั้งไอดี/รหัสผ่านถาวรได้ (/api/claim) =====
   'POST /api/guest': async (req, res) => {
     if (ipLimited(clientIp(req), 'guest', 6, 3600e3)) return send(res, 429, { error: 'สร้างบัญชีผู้เยี่ยมชมบ่อยเกินไป ลองใหม่ภายหลัง' });
+    const b = await readBody(req).catch(() => ({})) || {};
     let key = '', tries = 0;
     do { key = 'guest_' + crypto.randomBytes(4).toString('hex'); tries++; } while (tries < 5 && await db.userByName(key));
     const pw = crypto.randomBytes(12).toString('hex'), salt = crypto.randomBytes(16).toString('hex');
     const uid = await db.addUser(key, key, salt, await hashPw(pw, salt));
-    const u = await db.userById(uid); const p = await session(u.id); await persist(u.id, p);
+    const u = await db.userById(uid); const p = await session(u.id); await launchLoad(); await refAttach(u.id, p, b.ref); await persist(u.id, p);
     funInc('newAccount'); send(res, 200, { token: issue(u), username: key, password: pw });
   },
   'POST /api/claim': async (req, res) => {
@@ -638,7 +663,7 @@ const routes = {
     try { uid = await db.addUser(key, id, salt, await hashPw(pw, salt)); }
     catch (e) { if (/UNIQUE/i.test(e.message)) return send(res, 409, { error: 'ไอดีนี้ถูกใช้แล้ว ลองไอดีอื่น' }); throw e; }
     const u = await db.userById(uid);
-    const p = await session(u.id); await persist(u.id, p); funInc('newAccount');
+    const p = await session(u.id); await launchLoad(); await refAttach(u.id, p, b.ref); await persist(u.id, p); funInc('newAccount');
     send(res, 200, { token: issue(u) });
   },
   'POST /api/login': async (req, res) => {
@@ -659,7 +684,7 @@ const routes = {
     const p = await session(u.id);
     await wbEnsure(); engine.setWB(wbCtx()); engine.setBoard(board(), u.id);
     await wbPrizes(u.id, p).catch(e => console.error('prize', e.message));
-    await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad();
+    await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad(); await launchLoad();
     const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); E.enter(); });
     p.s = out.s; p.ui = out.ui; p.v++; persist(u.id, p); updateSnap(u.id, p);
     send(res, 200, { s: out.s, ui: out.ui, fx: [], fxt: {}, v: p.v, user: u.display, uid: u.id });
@@ -675,11 +700,11 @@ const routes = {
     const before = p.s.gold;
     engine.setBoard(board(), u.id); await wbEnsure(); engine.setWB(wbCtx());
     ptPrep(u.id, p);
-    await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad();
+    await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad(); await launchLoad();
     const js0 = jSnap(p.s);
     const out = engine.run(p.s, p.ui, cleanInputs(b.inp), E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); E.act(a, pr); });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; ptAfter(u.id, p); cityAfter(p); funMark(p); p.v++; persist(u.id, p); updateSnap(u.id, p);
+    p.s = out.s; p.ui = out.ui; ptAfter(u.id, p); cityAfter(p); funMark(p); await launchCheck(u.id, p); p.v++; persist(u.id, p); updateSnap(u.id, p);
     if (out.s.gold - before > 200000) db.audit(u.id, 'gold_jump', a + ' +' + (out.s.gold - before)).catch(() => {});
     reply(res, p, out);
   },
@@ -693,11 +718,11 @@ const routes = {
     await prizeCheck(u.id, p);
     engine.setBoard(board(), u.id); engine.setWB(wbCtx());
     ptPrep(u.id, p);
-    await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad();
+    await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad(); await launchLoad();
     const twn = TOWN.get(u.id), inTown = !!(twn && now - twn.at < 6000), js0 = jSnap(p.s);
     const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); const tg = E.townEn ? E.townEn(inTown) : false; changed = E.tick() || tg || changed; });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; ptAfter(u.id, p); funMark(p); if (p.s.cityRes) { cityAfter(p); changed = true; }
+    p.s = out.s; p.ui = out.ui; ptAfter(u.id, p); funMark(p); if (await launchCheck(u.id, p)) changed = true; if (p.s.cityRes) { cityAfter(p); changed = true; }
     if (changed || out.fx.length) { p.v++; persist(u.id, p); updateSnap(u.id, p); }
     if (!changed && !out.fx.length && Number(b.v) === p.v) return send(res, 200, { same: true, v: p.v });
     reply(res, p, out);
@@ -847,7 +872,7 @@ const routes = {
   },
   'GET /api/city': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
-    await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad();
+    await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad(); await launchLoad();
     send(res, 200, cityCtx());
   },
   'POST /api/town': async (req, res) => {
@@ -871,10 +896,16 @@ const routes = {
     for (const bt of botsActive(now)) { if (list.length >= TOWN_MAX) break; if (botWhere(bt, now) !== 'town') continue; list.push(Object.assign(botPub(bt, now), botTownPos(bt, now), { say: '', sayAge: 0 })); }
     send(res, 200, { list });
   },
+  'GET /api/launch': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    await launchLoad(); const p = await session(u.id), o = LAUNCH.refs[u.id] || { n: 0, ok: 0 };
+    send(res, 200, { pion: { count: LAUNCH.pion.length, max: PION_MAX, lv: PION_LV, me: p.s.pion | 0, last: LAUNCH.pion.slice(-5).reverse().map((x, i) => ({ n: x.n, rank: LAUNCH.pion.length - i })) },
+      ref: { code: refCode(u.id), invited: o.n | 0, ok: o.ok | 0, max: REF_MAX, lv: REF_LV, mine: p.s.refBy ? { done: !!p.s.refDone } : null } });
+  },
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
     const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
-    send(res, 200, { server: 'V166', funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    send(res, 200, { server: 'V167', pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -935,7 +966,7 @@ async function loadLadder() {
   for (const r of await db.allLadder()) { try { LADDER.set(Number(r.user_id), Object.assign(JSON.parse(r.snap), { id: Number(r.user_id), upd: Number(r.upd) })); } catch (e) {} }
   boardDirty = true;
 }
-db.init().then(ensureSecret).then(async src => { await loadLadder(); await offBoot(); await funLoad(); await wbEnsure();
+db.init().then(ensureSecret).then(async src => { await loadLadder(); await offBoot(); await funLoad(); await launchLoad(); await wbEnsure();
   if (src === 'auto') console.log('JWT_SECRET: ไม่ได้ตั้งหรือสั้นเกินไป ใช้รหัสลับที่สร้างอัตโนมัติและเก็บในฐานข้อมูลแทน');
   server.listen(PORT, () => console.log('ศึกชิงเมือง server · port ' + PORT + ' · DB ' + db.kind));
 }).catch(e => { console.error('เชื่อมต่อฐานข้อมูลไม่สำเร็จ:', e.message); process.exit(1); });
