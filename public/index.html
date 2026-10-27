@@ -80,8 +80,17 @@ p{margin:0}
 .q0{color:#e8eaf2}.q1{color:#5fd16f}.q2{color:#5fb4ff}.q3{color:#b48cff}.q4{color:#ff9a3c}.q5{color:#ff5a5a}
 .qb.q5{box-shadow:0 0 8px #ff5a5a88}.qb.q4{box-shadow:0 0 6px #ff9a3c66}
 .modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(5,8,18,.78)}
-.modal .card{width:100%;max-width:360px;margin:0;box-shadow:0 12px 40px rgba(0,0,0,.6)}
+.modal .card{width:100%;max-width:360px;max-height:88vh;overflow:auto;margin:0;box-shadow:0 12px 40px rgba(0,0,0,.6)}
 .pend{border-color:var(--brass)}.row2{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.pcmp{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:9px;background:rgba(5,8,18,.35);color:var(--text)}
+.pcmp h4{margin:0 0 8px;font-size:14px;color:var(--brass)}
+.pcnames{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.pcnames>div{min-width:0;padding:7px;border-radius:6px;background:var(--surface2);display:flex;flex-direction:column;gap:3px}
+.pcnames small{font-size:11px;color:var(--muted)}.pcnames b{font-size:12px;overflow-wrap:anywhere}
+.pcrow{display:grid;grid-template-columns:1.15fr .65fr .65fr .65fr;gap:4px;align-items:center;padding:5px 2px;border-top:1px solid var(--line);font-size:12px}
+.pcrow span:nth-child(2),.pcrow b,.pcrow strong{text-align:right;font-variant-numeric:tabular-nums}
+.pcrow strong{color:var(--text)}.pcrow .pcup{color:#5fd16f}.pcrow .pcdown{color:#ff7777}
+.pcrow.pchead{font-size:10px;color:var(--muted);border-top:0;padding-top:0}
 .oddrow{display:flex;justify-content:space-between;align-items:center;padding:4px 0;color:var(--muted);font-size:14px}
 .fab{position:fixed;right:12px;bottom:68px;z-index:30;width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:var(--brass);color:#1a1405;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.5)}
 .fab[hidden],.cpanel[hidden]{display:none}
@@ -1439,7 +1448,7 @@ function climb(){
 // ===== บอสโลก: ไฮดราเก้าเศียร (เล่นได้ในเวอร์ชันออนไลน์) =====
 // ลงได้วันละ 3 ครั้ง · เข้ารอบได้ทอง 1,000 ทุกครั้ง · บอสตีแรงขึ้นทุกเทิร์น (×1 ×2 ×3 ...) จนเราสลบ · ดาเมจรวมทุกคนหักจากเลือดบอสร่วมกัน
 // อันดับดาเมจ 1–3 ของวัน ได้ทอง + ยาฟื้นเลือดเต็ม (แจกหลังเที่ยงคืนเวลาไทย)
-var WB_TRIES=3,WB_GOLD=1000,WB_HP=9000000,WB_DEF=0,WB_NAME='ไฮดราเก้าเศียร';
+var WB_TRIES=3,WB_GOLD=1000,WB_HP=20000000,WB_DEF=0,WB_NAME='ไฮดราเก้าเศียร';
 var WB_PRIZE=[{g:14000,f:3},{g:7000,f:2},{g:3500,f:1}]; // ลดทอง 30% จากเดิม 20k/10k/5k
 var WBDONE=null;
 function wbDay(){return dqDay()}
@@ -2135,6 +2144,7 @@ function pendHtml(){if(!s.pend)return '';var p=s.pend,pi=pendIco(p),u=gearIcon(p
   '<div class="cpbox"><div class="cpray"></div><div class="cpglow"></div><div class="cpico">'+ico+'</div><i class="spk k1"></i><i class="spk k2"></i><i class="spk k3"></i><i class="spk k4"></i><i class="spk k5"></i></div>'+
   '<h3 class="cpt">'+(p.boss?'👑 ดรอปจากบอส!':'✨ คราฟสำเร็จ!')+'</h3><div class="nm cpn">'+pendName(p)+'</div><div style="text-align:center;margin:4px 0 6px">'+qBadge(p.t)+'</div><div class="st">'+pendDesc(p)+'</div>'+
   (p.k!=='a'&&cardLost(p)?'<div class="st" style="color:#ff7a7a">⚠ ถ้าสวมชิ้นนี้ การ์ดที่ใส่อยู่จะหายไป '+cardLost(p)+' ใบ (รูไม่พอ)</div>':'')+
+  pendCompareHtml(p)+
   '<div class="row2"><button class="btn primary" data-a="pe" style="flex:1">สวมใส่</button><button class="btn" data-a="ps" style="flex:1">ขาย '+pendPrice(p)+' ทอง</button></div></section></div>'}
 // ของบอสซ้ำกับที่ใส่อยู่ (ช่องเดียวกัน ขั้นเดียวกัน และที่ใส่อยู่ระดับม่วงขึ้นไป) → ต้องกดย่อยเป็นแร่หินสีม่วง
 function isDup(d){
@@ -2183,6 +2193,37 @@ function dupHtml(){
 function resolveDup(){if(!s.dup)return;var d=s.dup;addItem('purple',d.amt);say('ย่อย '+d.n+' ได้ '+RES.purple+' +'+d.amt);s.dup=null;gqPump();save()}
 function pendName(p){return p.k==='w'?wName(p.i):p.k==='a'?ARMORS[p.i].n:ACC[p.i].n+' Lv'+LV_REQ[p.g|0]}
 function pendDesc(p){var m=QT[p.t].m;return (p.by?'<span style="color:#e8c26a">🔒 คราฟโดย '+esc(p.by)+' (ผูกกับผู้คราฟ)</span><br>':'')+(p.sk?'<b style="color:#7ad7ff">มีรู '+p.sk+' ช่อง '+skTxt(p.sk)+'</b><br>':'')+(p.k==='w'?'พลังโจมตี +'+Math.round(WEAPONS[p.i].p*m):p.k==='a'?'ป้องกัน +'+Math.round(ARMORS[p.i].d*m):ACC[p.i].d(m*ACCG[p.g|0]))}
+function pendCompareHtml(p){
+ if(!p||p.fail)return '';
+ var m=QT[p.t|0].m, enh=0, old=[], neu=[], title='', slot='', cur=null;
+ function line(label,a,b){
+  var d=Math.round((b-a)*10)/10,fmt=function(v){return (Math.round(v*10)/10).toLocaleString('th-TH')};
+  return '<div class="pcrow"><span>'+label+'</span><span>'+fmt(a)+'</span><b class="'+(d>0?'pcup':d<0?'pcdown':'')+'">'+(d>0?'+':'')+fmt(d)+'</b><strong>'+fmt(b)+'</strong></div>';
+ }
+ if(p.k==='w'){
+  title='⚔️ อาวุธ';slot='อาวุธ';enh=s.wEnh|0;cur=s.weapon>0;
+  old=[['พลังโจมตี',wPow(s)]];
+  neu=[['พลังโจมตี',Math.round(WEAPONS[p.i].p*m*enhMul(enh))]];
+ }else if(p.k==='a'){
+  title='🛡️ เกราะ';slot='เกราะ';enh=s.aEnh|0;cur=s.armor>0;
+  old=[['ป้องกัน',aDef(s)]];
+  neu=[['ป้องกัน',Math.round(ARMORS[p.i].d*m*enhMul(enh))]];
+ }else{
+  slot=ACC[p.i].n;title='🛡️ '+slot;var c=s.acc[p.i];enh=c?(c.e|0):0;cur=!!c;
+  var v=ACC[p.i].v;
+  Object.keys(v).forEach(function(k){
+   var label=({atk:'โจมตี',def:'ป้องกัน',hp:'HP',mp:'MP',crit:'คริติคอล',dodge:'หลบ'})[k]||k;
+   old.push([label,c?Math.round(v[k]*QT[c.t|0].m*ACCG[c.g|0]*enhMul(c.e)):0]);
+   neu.push([label,Math.round(v[k]*m*ACCG[p.g|0]*enhMul(enh))]);
+  });
+ }
+ var rows='';
+ neu.forEach(function(n,i){rows+=line(n[0],old[i]?old[i][1]:0,n[1])});
+ return '<section class="pcmp"><h4>📊 เปรียบเทียบกับ'+(cur?'ของที่สวมอยู่':'ช่องที่ยังว่าง')+'</h4>'+
+  '<div class="pcnames"><div><small>ของเดิม</small><b>'+(cur?esc(slot==='อาวุธ'?wName(s.weapon):slot==='เกราะ'?ARMORS[s.armor].n:ACC[p.i].n):'ยังไม่มี')+'</b></div><div><small>ของที่ได้รับ</small><b>'+esc(pendName(p))+'</b></div></div>'+
+  '<div class="pcrow pchead"><span>ค่าสถานะ</span><span>เดิม</span><span>เปลี่ยน</span><strong>ใหม่</strong></div>'+rows+
+  '<p class="hint">คำนวณตามระดับของไอเทมและค่าตีบวกที่มีอยู่ · ยังไม่สวมใส่จนกว่าจะกดยืนยัน</p></section>';
+}
 function pendPrice(p){var c=craftCost(p.k,p.i,p.g|0),n=0;for(var k in c)n+=c[k];return Math.round(n*6*QT[p.t].m)}
 function pendResolve(eq){
  var p=s.pend;if(!p)return;
