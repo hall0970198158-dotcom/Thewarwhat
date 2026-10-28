@@ -44,7 +44,17 @@ gameHtml = gameHtml.replace('<meta name="claude:viewport-fit-sides"', BOOT + '<m
 gameHtml = gameHtml.replace(/<link href="(https:\/\/fonts\.googleapis\.com[^"]+)" rel="stylesheet">/, '<link href="$1" rel="stylesheet" media="print" onload="this.media=\'all\'">');
 const indexHtml = gameHtml;
 const zlib = require('zlib');
-const INDEX_GZ = zlib.gzipSync(indexHtml, { level: 9 }), INDEX_BR = zlib.brotliCompressSync(indexHtml, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11 } });
+// Prepare compressed copies in the background. Port binding and requests must
+// not wait for compression of the embedded sprite sheets.
+let INDEX_GZ = null, INDEX_BR = null;
+zlib.gzip(indexHtml, { level: 6 }, (err, bytes) => {
+  if (err) console.error('Game gzip unavailable:', err.message);
+  else { INDEX_GZ = bytes; console.log('Game gzip ready'); }
+});
+zlib.brotliCompress(indexHtml, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } }, (err, bytes) => {
+  if (err) console.error('Game Brotli unavailable:', err.message);
+  else { INDEX_BR = bytes; console.log('Game Brotli ready'); }
+});
 function acceptEnc(req) { return String((req && req.headers && req.headers['accept-encoding']) || ''); }
 // ---------- ติดตั้งเป็นแอป (เพิ่มลงหน้าจอหลัก) = เปิดเต็มจอ ไม่มีแถบเบราว์เซอร์ ----------
 const MANIFEST = JSON.stringify({ name: 'ศึกชิงเมือง · TheWarWhat', short_name: 'ศึกชิงเมือง', start_url: '/', scope: '/', display: 'fullscreen', display_override: ['fullscreen', 'standalone'], orientation: 'portrait', background_color: '#0e1326', theme_color: '#0e1326', lang: 'th',
@@ -383,7 +393,7 @@ function ptLeave(uid) {
   if (r.host === uid) r.host = r.mem[0].uid;
 }
 function ptMem(uid, p) { return { uid, n: String(p.s.name || '?').slice(0, 16), cls: p.s.cls || null, lvl: p.s.lvl | 0, z: p.s.zone | 0, x: 720, y: 540, seen: Date.now(), b: 0 }; }
-function ptRefresh(m) { const q = live.get(m.uid); if (q && q.s) { m.n = String(q.s.name || m.n).slice(0, 16); m.cls = q.s.cls || m.cls; m.lvl = q.s.lvl | 0; m.z = q.s.zone | 0; m.b = q.s.battle ? 1 : 0; m.look = q.s.look; } }
+function ptRefresh(m) { const q = live.get(m.uid); if (q && q.s) { m.n = String(q.s.name || m.n).slice(0, 16); m.cls = q.s.cls || m.cls; m.lvl = q.s.lvl | 0; m.z = q.s.zone | 0; m.b = q.s.battle ? 1 : 0; m.look = q.s.look; m.hp = Math.max(0,Number(q.s.hp)||0); m.mhp = Math.max(1,Number(q.s.maxhp)||1); } }
 function ptNear(uid, s) { // เพื่อนที่ออนไลน์ อยู่แผนที่เดียวกัน และเลเวลห่างไม่เกิน 15
   const r = ptOf(uid); if (!r) return [];
   const now = Date.now();
@@ -441,7 +451,7 @@ function ptPayload(uid) {
   ptSweep();
   const r = ptOf(uid), now = Date.now();
   let pt = null;
-  if (r) { r.mem.forEach(ptRefresh); const hq = live.get(r.host); r.mem.forEach(m => { m.why = m.uid === r.host ? '' : ptWhy(hq && hq.s, m, now); }); pt = { id: r.id, mem: r.mem.map(m => ({ uid: m.uid, n: m.n, cls: m.cls, lvl: m.lvl, z: m.z, x: m.x, y: m.y, b: m.b, look: m.look, fol: !!m.fol, why: m.why || '', on: now - m.seen <= PT_ON_MS, host: m.uid === r.host, me: m.uid === uid })) }; }
+  if (r) { r.mem.forEach(ptRefresh); const hq = live.get(r.host); r.mem.forEach(m => { m.why = m.uid === r.host ? '' : ptWhy(hq && hq.s, m, now); }); pt = { id: r.id, mem: r.mem.map(m => ({ uid: m.uid, n: m.n, hp: m.hp, mhp: m.mhp, cls: m.cls, lvl: m.lvl, z: m.z, x: m.x, y: m.y, b: m.b, look: m.look, fol: !!m.fol, why: m.why || '', on: now - m.seen <= PT_ON_MS, host: m.uid === r.host, me: m.uid === uid })) }; }
   const list = r ? [] : [...PTR.values()].filter(x => x.mem.length < PT_MAX).slice(0, 20).map(x => { x.mem.forEach(ptRefresh); const h0 = x.mem.find(m => m.uid === x.host) || x.mem[0]; return { id: x.id, n: h0.n, z: h0.z, c: x.mem.length, lvl: Math.round(x.mem.reduce((a, m) => a + m.lvl, 0) / x.mem.length) }; });
   return { pt, list };
 }
@@ -863,6 +873,11 @@ const routes = {
     } else if (op === 'leave') {
       ptLeave(u.id);
     } else if (op === 'follow') { // ปิดระบบเดินตามแล้ว
+    } else if (op === 'transfer') {
+      if (!cur || cur.host !== u.id) return bad('เฉพาะหัวหน้าปาร์ตี้ที่โอนได้');
+      const t = Number(b.uid);
+      if (!Number.isSafeInteger(t) || t === u.id || !cur.mem.some(m => m.uid === t)) return bad('ไม่พบสมาชิกคนนี้');
+      cur.host = t;
     } else if (op === 'kick') {
       if (!cur || cur.host !== u.id) return bad('เฉพาะหัวปาร์ตี้ที่เตะได้');
       const t = Number(b.uid); if (t === u.id || !cur.mem.some(m => m.uid === t)) return bad('ไม่พบสมาชิกคนนี้');
@@ -942,8 +957,8 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
       funHit('visit', clientIp(req));
       const ae = acceptEnc(req), hh = Object.assign({ 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache', 'Vary': 'Accept-Encoding' }, SEC_HEADERS);
-      if (/\bbr\b/.test(ae)) { hh['Content-Encoding'] = 'br'; res.writeHead(200, hh); return res.end(INDEX_BR); }
-      if (/\bgzip\b/.test(ae)) { hh['Content-Encoding'] = 'gzip'; res.writeHead(200, hh); return res.end(INDEX_GZ); }
+      if (INDEX_BR && /\bbr\b/.test(ae)) { hh['Content-Encoding'] = 'br'; res.writeHead(200, hh); return res.end(INDEX_BR); }
+      if (INDEX_GZ && /\bgzip\b/.test(ae)) { hh['Content-Encoding'] = 'gzip'; res.writeHead(200, hh); return res.end(INDEX_GZ); }
       res.writeHead(200, hh); return res.end(indexHtml);
     }
     send(res, 404, { error: 'ไม่พบหน้า' });
@@ -968,7 +983,7 @@ async function loadLadder() {
 }
 db.init().then(ensureSecret).then(async src => { await loadLadder(); await offBoot(); await funLoad(); await launchLoad(); await wbEnsure();
   if (src === 'auto') console.log('JWT_SECRET: ไม่ได้ตั้งหรือสั้นเกินไป ใช้รหัสลับที่สร้างอัตโนมัติและเก็บในฐานข้อมูลแทน');
-  server.listen(PORT, () => console.log('ศึกชิงเมือง server · port ' + PORT + ' · DB ' + db.kind));
+  server.listen(PORT, '0.0.0.0', () => console.log('ศึกชิงเมือง server · port ' + PORT + ' · DB ' + db.kind));
 }).catch(e => { console.error('เชื่อมต่อฐานข้อมูลไม่สำเร็จ:', e.message); process.exit(1); });
 
 // ปิดเซิร์ฟเวอร์ (เช่น Render สั่งหลับ/อัปเดต) → บันทึกข้อมูลที่ค้างก่อน
