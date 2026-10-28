@@ -1,4 +1,4 @@
-<title>ศึกชิงเมือง · TheWarWhat · แก้การเลื่อนมือถือ B29</title>
+<title>ศึกชิงเมือง · TheWarWhat · กรอบสถานะและปุ่มกระชับ B30</title>
 <meta name="thewarwhat-balance" content="B3-2026-10-28">
 <meta name="thewarwhat-characters" content="B14-tile-tint-cache-simple-tier4">
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -500,6 +500,11 @@ body.creating-character #status,body.creating-character #nav,body.creating-chara
 /* Rotated game stages need pointer deltas in their local coordinate space. */
 body.town-landscape :is(.menu-content,.menu-sidebar,.auto-content,.battle-details,.field-menu-panel,.field-zone-list,.battle-actions,.town-bottom,.party-panel,.gear-panel,.shop-panel,#dqPanel,#chatPanel .chatlog){touch-action:none!important;overscroll-behavior:contain;scroll-behavior:auto;overflow-anchor:none;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
 #menuStage{min-height:0}#menuStage .menu-content{box-sizing:border-box;height:100%;max-height:100%;min-height:0;padding-bottom:36px}#menuStage .menu-sidebar{box-sizing:border-box;height:100%;min-height:0}#menuStage .menu-content .skill{display:block;padding:12px 0}#menuStage .menu-content .skill>.top{margin-bottom:6px}#menuStage .menu-content .skill>.row2{justify-content:flex-start}#menuStage .menu-content .skill>.btn{width:auto;min-width:100px;max-width:280px}#menuStage .menu-content .grid2>.btn{width:100%;min-width:0}#menuStage .menu-content .skill .top .nm{min-width:0;font-size:13px}#menuStage .menu-content .skill .hint{max-width:760px}
+
+/* Compact field controls leave the centre of the map free. */
+#gameWrap .auto-hud.hud-compact{box-sizing:border-box;min-width:0;width:184px;padding:7px 9px;border-radius:9px;background:#101a2de8}#gameWrap .hud-compact>b{display:flex;align-items:center;justify-content:space-between;gap:8px;max-width:100%;font-size:12px;line-height:1.4;overflow-wrap:anywhere;margin-bottom:4px;color:#f7e5b9}#gameWrap .hud-compact>b>span{font-size:10px;white-space:nowrap;color:#b9c9df}#gameWrap .hud-compact .hud-resource{display:flex;justify-content:space-between;align-items:center;gap:7px;line-height:1.4;min-width:0}#gameWrap .hud-compact .hud-resource small{font-size:9px;line-height:1.4;color:#bbc9dc}#gameWrap .hud-compact .hud-resource strong{font-size:10px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}#gameWrap .hud-compact .town-meter{height:4px;margin:2px 0 4px;border-radius:2px}#gameWrap .hud-compact .mp-meter i{background:#ab97ec}#gameWrap .hud-compact .xp-meter{height:3px;margin-bottom:0}#gameWrap .hud-compact .hud-energy{color:#f2ce80;margin:3px 0}#gameWrap .left-player{max-width:184px}#gameWrap .left-player .party-hud{max-width:184px}#gameWrap .left-player .party-create.btn{min-height:34px;font-size:10px;padding:5px 9px}#gameWrap .left-player .party-member{padding:4px 8px;min-height:48px}
+#gameWrap #townStage .town-bottom{right:auto;left:max(12px,env(safe-area-inset-left));bottom:max(9px,env(safe-area-inset-bottom));width:max-content;max-width:calc(100% - 24px);box-sizing:border-box;padding:6px;gap:7px;align-items:center;border-radius:10px;background:#101a2de3;box-shadow:0 3px 12px #0003}#gameWrap #townStage .town-bottom .btn{min-width:64px;min-height:44px;flex:0 0 auto;font-size:12px;line-height:1.3;padding:7px 10px;border-radius:8px}#gameWrap #townStage .town-bottom>.btn[data-a=chatopen]{min-width:44px}#gameWrap #townStage .town-bottom>span{flex:0 1 auto;max-width:220px;font-size:10px;line-height:1.4;white-space:normal;text-align:left;padding:0 4px}#gameWrap #townStage .town-instruction{bottom:76px;font-size:9px;opacity:.82}#gameWrap #townStage .mat-field{bottom:76px}
+@media(max-height:390px) and (orientation:landscape){#gameWrap .auto-hud.hud-compact{width:172px;padding:5px 8px}#gameWrap .left-player{max-width:172px}#gameWrap .hud-compact .town-meter{height:3px;margin-bottom:3px}#gameWrap #townStage .town-bottom{bottom:max(6px,env(safe-area-inset-bottom));padding:5px}}
 
 </style>
 
@@ -5343,9 +5348,12 @@ function drawField(c,W,H,tn){
   if(Math.hypot(m.x-FLD.px,m.y-FLD.py)<90||FLD.follow===m)fLabel(c,T(mob.n),mx,my-26,FLD.follow===m?'#ffd04a':'#ffffff')});
  if(FLD.town){for(var fs=0;fs<10;fs++){var fa=tn/700+fs*0.63,fr=(tn/9+fs*37)%40;c.fillStyle='rgba(220,240,255,'+(1-fr/40)+')';c.fillRect(Math.round(720-cx+Math.cos(fa)*fr*1.1),Math.round(600-cy-60+fr*1.4-Math.sin(fr/40*3.1)*30),2,2)}}
  if(!FLD.town)zoneAmb(c,W,H,z,tn);vignette(c,W,H,0.38);
+ // Legacy canvas bars are only needed when the full HUD is absent.
+ if(!fieldLandscapeActive()){
  // แถบสถานะเล็ก
  c.fillStyle='rgba(6,9,22,.6)';c.fillRect(4,4,108,22);
  hudBar(c,8,8,100,5,s.hp/Math.max(1,s.maxhp),s.hp/Math.max(1,s.maxhp),'#6fd36a',false);hudBar(c,8,17,100,4,s.mp/Math.max(1,s.maxmp),s.mp/Math.max(1,s.maxmp),'#9a7bff',false);
+ }
  c.font='700 8px Kanit,sans-serif';c.textAlign='right';c.lineWidth=3;c.strokeStyle='rgba(0,0,0,.8)';var zn=FLD.town?T('เมืองหลวง'):T(zz.n);c.strokeText(zn,W-6,12);c.fillStyle='#fff';c.fillText(zn,W-6,12);
  var bl=bossReadyAt(s,s.zone)-Date.now();var bt=FLD.town?T('เขตปลอดภัย')+(CL?' · '+TOWN.n+' '+T('คน'):''):bl>0?T('บอสเกิดใน')+' '+mmss(bl):T('บอสสนามปรากฏแล้ว!');if(FLD.town)bl=1;c.strokeText(bt,W-6,23);c.fillStyle=bl>0?'#c8cde0':'#ff9a8a';c.fillText(bt,W-6,23);
  var gr=FLD.grace-nowMs();if(gr>0){var ct=T('หนีเร็ว!')+' '+Math.ceil(gr/1000)+'s';c.textAlign='center';c.strokeText(ct,W/2,H-8);c.fillStyle='#ff9a8a';c.fillText(ct,W/2,H-8)}
@@ -5798,7 +5806,8 @@ function autoRestore(){if(SV||!AUTO_UI.open)return;var el=document.getElementByI
 
 function autoRunning(){var b=s&&s.battle;return !!(b&&noFlee(b)?b.auto:b&&b.tower?s.autoTower:s&&(s.autoHunt||s.autoTower||b&&jwOn(b)))}
 function autoChoice(key,on,label){return '<div class="auto-option"><b>'+label+'</b><div class="auto-choice">'+[1,0].map(function(v){return '<button class="btn" data-a="autoset" data-p="'+key+':'+v+'" aria-pressed="'+(!!on===!!v)+'">'+(v?'เปิด':'ปิด')+'</button>'}).join('')+'</div></div>'}
-function autoHud(){var duel=s.battle&&isDuel(s.battle),mul=duel?DUEL_HP:1;return '<div class="town-player auto-hud"><b>'+esc(nick())+' · Lv '+s.lvl+'</b><div class="town-meter"><i style="width:'+pct(s.hp,s.maxhp)+'%"></i></div><small>HP '+Math.max(0,s.hp*mul)+' / '+s.maxhp*mul+'</small><small>MP '+s.mp+' / '+s.maxmp+' <span>⚡ '+Math.floor(s.energy)+' / '+Math.floor(s.maxEnergy)+'</span></small><small class="xp-line">XP '+Math.floor(s.xp)+' / '+Math.floor(xpNeed(s.lvl))+'</small><div class="town-meter xp-meter"><i style="width:'+pct(s.xp,xpNeed(s.lvl))+'%"></i></div></div>'}
+function autoHud(){var duel=s.battle&&isDuel(s.battle),mul=duel?DUEL_HP:1;return '<div class="town-player auto-hud hud-compact"><b>'+esc(nick())+' <span>Lv '+s.lvl+'</span></b><div class="hud-resource"><small>HP</small><strong>'+Math.max(0,s.hp*mul)+' / '+s.maxhp*mul+'</strong></div><div class="town-meter"><i style="width:'+pct(s.hp,s.maxhp)+'%"></i></div><div class="hud-resource"><small>MP</small><strong>'+s.mp+' / '+s.maxmp+'</strong></div><div class="town-meter mp-meter"><i style="width:'+pct(s.mp,s.maxmp)+'%"></i></div><div class="hud-resource hud-energy"><small>⚡ พลัง</small><strong>'+Math.floor(s.energy)+' / '+Math.floor(s.maxEnergy)+'</strong></div><div class="hud-resource xp-line"><small>XP</small><strong>'+Math.floor(s.xp)+' / '+Math.floor(xpNeed(s.lvl))+'</strong></div><div class="town-meter xp-meter"><i style="width:'+pct(s.xp,xpNeed(s.lvl))+'%"></i></div></div>'}
+
 function autoPopup(){
  if(!AUTO_UI.open||!s||!s.created)return '';
  var z=ZONES[s.zone],ft=fTarget(),flee=s.autoFlee!==false,fp=Number(s.fleePct);if(!(fp>=5&&fp<=95))fp=20;
