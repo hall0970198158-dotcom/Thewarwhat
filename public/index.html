@@ -1,4 +1,4 @@
-<title>ศึกชิงเมือง · TheWarWhat · วัตถุดิบและเก็บเกี่ยว B28</title>
+<title>ศึกชิงเมือง · TheWarWhat · แก้การเลื่อนมือถือ B29</title>
 <meta name="thewarwhat-balance" content="B3-2026-10-28">
 <meta name="thewarwhat-characters" content="B14-tile-tint-cache-simple-tier4">
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -496,6 +496,10 @@ body.creating-character #status,body.creating-character #nav,body.creating-chara
 
 .gear-modal{position:absolute;inset:0;z-index:100;display:grid;place-items:center;padding:12px;background:#050b168c;touch-action:pan-y}.gear-panel{width:min(420px,100%);max-height:94%;overflow:auto;background:#17253a;border:1px solid #c7ac77;border-radius:13px;padding:16px;box-sizing:border-box}.gear-panel header,.gear-title{display:flex;align-items:center;gap:12px;justify-content:space-between}.gear-panel h3{font-size:15px}.gear-title{justify-content:flex-start}.gear-title img{image-rendering:pixelated}.gear-panel p{font-size:12px;line-height:1.6}.gear-title b{font-size:15px}
 .mat-picker{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}.mat-picker .btn small{display:block;font-size:11px;margin-top:4px}.mat-progress{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;margin:12px 0;background:#101d31;border:1px solid #5c7390;border-radius:9px;font-size:12px}.mat-find{margin-left:5px}.mat-field{position:absolute;bottom:82px;right:14px;max-width:310px;display:flex;align-items:center;gap:8px;padding:7px 10px;background:#101a2ded;border:1px solid #b59a60;border-radius:9px;pointer-events:auto}.mat-field span{font-size:11px;color:#ffe3a0}.mat-field .btn{font-size:11px!important;min-height:40px!important;padding:5px 9px!important}.salvage-hint{margin:10px 0;border-top:1px solid #67758a55;padding-top:10px;font-size:11px;line-height:1.6}.chip .mat-find{display:inline-block;min-height:36px;padding:6px 8px;background:#273f5d;border:1px solid #a0b7d1;border-radius:6px;color:#e9f1ff;font:inherit;cursor:pointer}
+
+/* Rotated game stages need pointer deltas in their local coordinate space. */
+body.town-landscape :is(.menu-content,.menu-sidebar,.auto-content,.battle-details,.field-menu-panel,.field-zone-list,.battle-actions,.town-bottom,.party-panel,.gear-panel,.shop-panel,#dqPanel,#chatPanel .chatlog){touch-action:none!important;overscroll-behavior:contain;scroll-behavior:auto;overflow-anchor:none;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+#menuStage{min-height:0}#menuStage .menu-content{box-sizing:border-box;height:100%;max-height:100%;min-height:0;padding-bottom:36px}#menuStage .menu-sidebar{box-sizing:border-box;height:100%;min-height:0}#menuStage .menu-content .skill{display:block;padding:12px 0}#menuStage .menu-content .skill>.top{margin-bottom:6px}#menuStage .menu-content .skill>.row2{justify-content:flex-start}#menuStage .menu-content .skill>.btn{width:auto;min-width:100px;max-width:280px}#menuStage .menu-content .grid2>.btn{width:100%;min-width:0}#menuStage .menu-content .skill .top .nm{min-width:0;font-size:13px}#menuStage .menu-content .skill .hint{max-width:760px}
 
 </style>
 
@@ -4622,7 +4626,7 @@ function viewBattleLegacy(){
 
 var TABI=(function(){var P={wild:'<path d="M5 19l9-9M14 4h6v6l-9 9M4 20l2-2M7 13l4 4"/>',char:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.6-4 4.6-6 8-6s6.4 2 8 6"/>',craft:'<path d="M3 21l9-9M11 6l3-3 7 7-3 3zM14 9l-4 4"/>',mat:'<path d="M5 9h14l-1.2 11H6.2zM9 9V7a3 3 0 016 0v2"/>',pvp:'<path d="M12 3l8 3v6c0 4.8-3.4 8-8 9-4.6-1-8-4.2-8-9V6z"/><path d="M9 12l2 2 4-4"/>',tower:'<path d="M12 3l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.4l-5.2 2.8 1-5.9L3.5 9.2l5.9-.8z"/>',guild:'<path d="M6 21V4M6 4h11l-2.5 4L17 12H6"/>',me:'<path d="M8 4l4 2 4-2 4 3-2.2 4-1.8-1v10H8V10l-1.8 1L4 7z"/>'};var o={};for(var k in P)o[k]='<svg viewBox="0 0 24 24" aria-hidden="true">'+P[k]+'</svg>';return o})();
 function render(){
- if(SV)return;if(ECO.on)return;menuRememberScroll();autoRemember();shopRemember(); // จอดำอยู่: กลับมาค่อยวาดใหม่
+ if(SV)return;if(ECO.on)return;if(SCROLL_UI.drag&&SCROLL_UI.drag.moved){SCROLL_UI.pending=true;return}scrollRemember();menuRememberScroll();autoRemember();shopRemember(); // จอดำอยู่: กลับมาค่อยวาดใหม่
  try{sndWatch()}catch(e){}
  try{fieldWatch()}catch(e){}
  document.body.classList.toggle('creating-character',!!s&&!s.created);
@@ -4636,7 +4640,7 @@ function render(){
  if(landscapeMenuActive())v=menuWrap(v);
  document.getElementById('view').innerHTML=(battlePresentationActive()?'':offHtml()+sockHtml()+noPotHtml()+dupHtml())+v+autoPopup()+partyPopup()+shopPopup()+gearPopup();
  try{restoreDraft()}catch(e){}
- menuRestoreScroll();autoRestore();shopUpdate();
+ menuRestoreScroll();autoRestore();shopUpdate();scrollRestore();
  chatUI();try{dqFabInit();dqUI()}catch(e){}
  document.getElementById('logbox').innerHTML=((s.battle&&!BAWAY)||!s.created)?'':'<section class="card log"><h3>บันทึก</h3><ol>'+s.log.slice(0,5).map(function(t){return '<li>'+t+'</li>'}).join('')+'</ol></section>';
  var tabs=[['wild','ล่า'],['char','ตัวละคร'],['craft','ตีของ'],['mat','วัตถุดิบ'],['pvp','PvP'],['tower','กิจกรรม'],['guild','ฝ่าย'],['me','แต่งตัว']];
@@ -5891,6 +5895,19 @@ viewMat=function(){var k=MAT_UI.selected,n=s.inv[k]|0,g=FLD.gat,normal=MATS.inde
  '<section class="card"><h3>ย่อยอุปกรณ์ที่ไม่ใช้</h3><p class="hint">ย่อยอุปกรณ์ใหม่ที่ยังไม่ได้เลือกสวมใส่หรือขาย · คืนวัตถุดิบบางส่วนตามระดับ · ของม่วง/ส้มตั้งแต่ Lv20 ได้แร่ม่วงเพิ่ม · อุปกรณ์ที่สวมอยู่ยังอยู่ครบ</p>'+(s.pend&&!s.pend.fail?'<p>'+esc(pendName(s.pend))+'</p><p class="hint">ได้รับ: '+salvageText(s.pend)+'</p><button class="btn" data-a="salvage">ย่อยชิ้นนี้</button>':'<p class="hint">ยังไม่มีอุปกรณ์รอเลือก เมื่อได้ของใหม่จะมีปุ่มย่อยในหน้ารับของ</p>')+'<p class="hint">อุปกรณ์รอในคิว '+(Array.isArray(s.gq)?s.gq.length:0)+' ชิ้น</p></section><section class="card"><h3>กระเป๋าวัตถุดิบและของใช้</h3>'+bagHtml()+'</section>'};
 function matLive(tn){if(SV||!s||tn-MAT_UI.last<250)return;MAT_UI.last=tn;function txt(id,t){var e=document.getElementById(id);if(e&&e.textContent!==t)e.textContent=t}txt('matStatus',matStatus());txt('matFieldStatus',matStatus());txt('matGoal',matTrack());Object.keys(RES).forEach(function(k){txt('matCount-'+k,(s.inv[k]|0)+' / '+BAG_MAX)});if(FLD.gat&&MAT_UI.need>0&&FLD.gat.res===MAT_UI.selected&&(s.inv[MAT_UI.selected]|0)>=MAT_UI.need)gatherStop('เก็บครบจำนวนที่ต้องการแล้ว')}
 var oldNodeB28=fNode;fNode=function(c,n,x,y,tn){oldNodeB28(c,n,x,y,tn);if(n.k===MAT_UI.selected&&n.until<=Date.now()){c.strokeStyle='#ffe3a0';c.lineWidth=1;c.beginPath();c.ellipse(x,y+1,16,7,0,0,Math.PI*2);c.stroke()}};
+
+var SCROLL_UI={drag:null,pending:false,blockUntil:0,positions:Object.create(null)};
+var SCROLL_PANELS='.menu-content,.menu-sidebar,.auto-content,.battle-details,.field-menu-panel,.field-zone-list,.battle-actions,.town-bottom,.party-panel,.gear-panel,.shop-panel,#dqPanel,#chatPanel .chatlog';
+function scrollRotated(){return document.body.classList.contains('town-landscape')&&window.innerHeight>window.innerWidth}
+function scrollPoint(dx,dy,rotated){return rotated?{x:dy,y:-dx}:{x:dx,y:dy}}
+function scrollPanelAt(target){var el=target&&target.closest?target.closest(SCROLL_PANELS):null;while(el){if(el.scrollHeight>el.clientHeight+1||el.scrollWidth>el.clientWidth+1)return el;el=el.parentElement&&el.parentElement.closest?el.parentElement.closest(SCROLL_PANELS):null}return null}
+function scrollStart(ev){SCROLL_UI.blockUntil=0;if(SV||!document.body.classList.contains('town-landscape')||ev.isPrimary===false||(ev.pointerType==='mouse'&&ev.button!==0))return;if(ev.target.closest&&ev.target.closest('input,textarea,select,[contenteditable=true],canvas'))return;var panel=scrollPanelAt(ev.target);if(!panel)return;SCROLL_UI.drag={id:ev.pointerId,el:panel,x:ev.clientX,y:ev.clientY,top:panel.scrollTop,left:panel.scrollLeft,rotated:scrollRotated(),moved:false}}
+function scrollMove(ev){var d=SCROLL_UI.drag;if(!d||d.id!==ev.pointerId)return;var p=scrollPoint(ev.clientX-d.x,ev.clientY-d.y,d.rotated);if(!d.moved&&Math.hypot(p.x,p.y)<7)return;if(!d.moved){d.moved=true;if(d.el.setPointerCapture)try{d.el.setPointerCapture(d.id)}catch(e){}}if(ev.cancelable)ev.preventDefault();d.el.scrollTop=Math.max(0,Math.min(d.el.scrollHeight-d.el.clientHeight,d.top-p.y));d.el.scrollLeft=Math.max(0,Math.min(d.el.scrollWidth-d.el.clientWidth,d.left-p.x))}
+function scrollEnd(ev){var d=SCROLL_UI.drag;if(!d||d.id!==ev.pointerId)return;if(d.moved)SCROLL_UI.blockUntil=Date.now()+400;if(d.el.releasePointerCapture)try{d.el.releasePointerCapture(d.id)}catch(e){}SCROLL_UI.drag=null;if(SCROLL_UI.pending){SCROLL_UI.pending=false;render()}}
+function scrollClick(ev){if(Date.now()<SCROLL_UI.blockUntil&&(ev.detail!==0||ev.pointerType)){ev.preventDefault();ev.stopImmediatePropagation()}}
+function scrollRemember(){if(SV)return;['.menu-sidebar','.battle-details','.field-menu-panel','.field-zone-list','.battle-actions','.town-bottom'].forEach(function(sel){var e=document.querySelector(sel);if(e)SCROLL_UI.positions[menuCurrentKey()+sel]=[e.scrollLeft,e.scrollTop]})}
+function scrollRestore(){if(SV)return;['.menu-sidebar','.battle-details','.field-menu-panel','.field-zone-list','.battle-actions','.town-bottom'].forEach(function(sel){var e=document.querySelector(sel),p=SCROLL_UI.positions[menuCurrentKey()+sel];if(e&&p){e.scrollLeft=p[0];e.scrollTop=p[1]}})}
+if(!SV){document.addEventListener('pointerdown',scrollStart,{capture:true,passive:true});document.addEventListener('pointermove',scrollMove,{capture:true,passive:false});document.addEventListener('pointerup',scrollEnd,true);document.addEventListener('pointercancel',scrollEnd,true);document.addEventListener('click',scrollClick,true)}
 
 function frame(tn){
  matLive(tn);
