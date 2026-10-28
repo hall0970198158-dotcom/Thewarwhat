@@ -1,4 +1,4 @@
-<title>ศึกชิงเมือง · TheWarWhat · UI กระชับทุกแท็บ B33</title>
+<title>ศึกชิงเมือง · TheWarWhat · ปีกใหม่ตามท่าตัวละคร B34</title>
 <meta name="thewarwhat-balance" content="B3-2026-10-28">
 <meta name="thewarwhat-characters" content="B14-tile-tint-cache-simple-tier4">
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -3229,7 +3229,7 @@ function drawCharacterSheet(c,look,cls,ox,gy,u,t,flip,alpha){
  var key=characterSheetKey(cls,look),record=characterImage(key);if(!record||!record.ready)return false;
  var pose=CPOSE||{},row=typeof pose.dir==='number'?Math.max(0,Math.min(7,pose.dir|0)):(flip?2:6),frame=characterFrame(pose,t),size=Math.max(1,Math.round(44*u)),foot=CHARACTER_SHEETS[key].feet[row*12+frame],pivot=CHARACTER_SHEETS[key].pivots,pivotX=pivot?pivot[row*12+frame][0]:32,x=Math.round(ox+12*u-size*pivotX/64),y=Math.round(gy-size*foot/64);
  c.save();c.globalAlpha=alpha==null?1:alpha;
- fashionBack(c,look,ox+12*u,gy,u,t,row);
+ fashionBack(c,look,ox+12*u,gy,u,t,row,wingRig(key,frame,row,x,y,size));
  c.imageSmoothingEnabled=false;c.drawImage(characterTint(key,record,look,frame,row),0,0,64,64,Math.round(x),Math.round(y),size,size);
  c.restore();CPOSE=null;return true;
 }
@@ -5953,13 +5953,36 @@ WING2.blue={k:'feather',c:['#183f7a','#397dd1','#72b9f0','#cbefff','#ffffff'],fx
 WING2.pink={k:'feather',c:['#713653','#c06998','#f39fc7','#ffe0f0','#ffffff'],fx:'mote',n:6,sp:[150,258]};
 WING2.dark={k:'feather',c:['#181324','#302744','#68588b','#a796c4','#d8caef'],fx:'smoke',n:6,sp:[150,258]};
 WING2.gold={k:'feather',c:['#72501e','#b1852e','#e6bf56','#fff0ad','#ffffff'],fx:'mote',n:6,sp:[150,258]};
-function fashionBack(c,look,cx,gy,u,t,row){
+function fashionBack(c,look,cx,gy,u,t,row,rig){
  c.save();
  if(look.aura&&AURA[look.aura]){var a=AURA[look.aura],pulse=.5+.5*Math.sin(t/500);c.save();c.globalAlpha*=.42;c.strokeStyle=a[0];c.lineWidth=Math.max(1,u);c.beginPath();c.ellipse(cx,gy+u,16*u,5*u,0,0,Math.PI*2);c.stroke();c.globalAlpha*=.75;c.strokeStyle=a[1];c.lineWidth=Math.max(1,u*.5);c.beginPath();c.ellipse(cx,gy+u,12*u,3.5*u,0,0,Math.PI*2);c.stroke();c.restore();for(var i=0;i<5;i++){var p=((t/1400)+i*.2)%1;c.save();c.globalAlpha*=(1-p)*.65;c.fillStyle=a[i%2];c.fillRect(Math.round(cx+(i-2)*6*u+Math.sin(t/650+i)*u),Math.round(gy-p*15*u),Math.max(1,u*.7),Math.max(1,u*.7));c.restore()}}
- if(look.wing&&WING2[look.wing]){var wu=u*.72,side=(row===2||row===6)?.55:(row%2?.82:1);c.save();c.translate(cx,gy-7*u);c.scale(side,1);c.translate(-12*wu,-16*wu);drawWing2(c,look.wing,wu,t,0);c.restore()}
+ if(look.wing&&WING2[look.wing]){var root=rig||{x:cx,y:gy-10*u};wingDraw(c,look.wing,root.x,root.y,u,t,row,CPOSE||{});}
  c.restore();
 }
 function fashionPet(c,look,cx,gy,u,t,row,alpha){if(!look.pet||look.pet==='none')return;var p=Math.max(.8,u*.7),left=row===1||row===2||row===3,side=left?-1:1,x=cx+side*24*u,y=gy+2*u;c.save();c.globalAlpha*=alpha==null?1:alpha;shadowAt(c,x,y,5*p);c.translate(x,y);if(left)c.scale(-1,1);drawPet(c,look.pet,-5*p,0,p,t);c.restore()}
+
+var WING_ART=new Map();
+function wingFrame(pose,t){return pose&&pose.pose==='atk'?Math.max(0,Math.min(3,pose.f|0)):Math.floor(t/(pose&&pose.pose==='walk'?125:250))%4}
+function wingRig(key,frame,row,x,y,size){var meta=CHARACTER_SHEETS[key],a=meta.anchors[row*12+frame],foot=meta.feet[row*12+frame],pivot=meta.pivots?meta.pivots[row*12+frame][0]:32;return {x:x+(.6*a[0]+.4*pivot)*size/64,y:y+(a[1]+.68*(foot-a[1]))*size/64}}
+function wingArt(id,frame){var key=id+':'+frame;if(WING_ART.has(key))return WING_ART.get(key);var d=WING2[id];if(!d)return null;var cv=document.createElement('canvas');cv.width=64;cv.height=64;var c=cv.getContext('2d'),p=d.c,fold=[1,.94,.80,.94][frame],drop=[0,2,5,2][frame];c.translate(46,36);c.scale(fold,1);function poly(a,color){c.fillStyle=color;c.beginPath();a.forEach(function(q,i){var x=q[0],y=q[1]+(q[0]<-12?drop:0);if(i)c.lineTo(x,y);else c.moveTo(x,y)});c.closePath();c.fill()}
+ if(id==='abyss'||id==='dark'){
+  poly([[0,3],[-5,-10],[-15,-22],[-29,-28],[-25,-12],[-29,-3],[-20,-1],[-19,9],[-10,6],[-4,14]],p[0]);
+  poly([[-3,2],[-6,-8],[-16,-18],[-26,-23],[-22,-10],[-25,-4],[-16,-3],[-16,5],[-9,3],[-4,10]],p[1]);
+  [[[-2,2],[-14,-18],[-9,-3]],[[-2,2],[-25,-23],[-19,-7]],[[-2,2],[-17,6],[-11,3]]].forEach(function(a){poly(a,p[2])});
+  poly([[-2,3],[-7,-10],[-15,-22],[-16,-20],[-9,-6],[-4,5]],p[3]);
+ }else if(id==='arcane'||id==='azure'||id==='arena'){
+  for(var i=5;i>=0;i--){var tx=-27+i*3,ty=-26+i*7;poly([[-3,2],[tx+2,ty-3],[tx-3,ty],[tx+3,ty+7],[-5,8]],p[0]);poly([[-4,2],[tx+1,ty-1],[tx,ty+4],[-6,6]],p[2]);poly([[tx+1,ty-1],[tx+2,ty],[tx+1,ty+3],[-4,3]],p[4]);}
+  poly([[-1,-3],[-8,-1],[-10,7],[-4,11],[0,5]],p[1]);poly([[-3,0],[-6,2],[-5,6],[-2,4]],p[4]);
+ }else{
+  poly([[0,2],[-5,-9],[-14,-19],[-25,-28],[-29,-24],[-25,-14],[-28,-10],[-23,-4],[-25,1],[-20,4],[-20,10],[-14,10],[-14,15],[-7,12],[-2,7]],p[0]);
+  for(var i=6;i>=0;i--){var tx=-27+i*2.2,ty=-25+i*6;poly([[-3,0],[-10,-8],[tx,ty],[tx+3,ty+8],[-8+i*.5,9],[-2,5]],p[1]);poly([[-5,-1],[tx+1,ty+2],[tx+3,ty+7],[-7,7]],p[2]);poly([[-6,-1],[tx+2,ty+3],[tx+2,ty+5],[-7,4]],p[3]);}
+  poly([[0,3],[-5,-7],[-13,-15],[-23,-23],[-24,-20],[-13,-11],[-5,4],[-2,7]],p[3]);poly([[-2,0],[-6,-6],[-13,-11],[-18,-14],[-13,-7],[-6,2]],p[4]);
+  if(id==='phoenix'){poly([[-7,8],[-16,22],[-13,11],[-20,17],[-16,5]],p[2]);poly([[-9,9],[-15,18],[-12,10]],p[4]);}
+ }
+ c.setTransform(1,0,0,1,0,0);var im=c.getImageData(0,0,64,64),src=new Uint8ClampedArray(im.data),out=im.data;for(var y=0;y<64;y++)for(var x=0;x<64;x++){var at=(y*64+x)*4;if(src[at+3]>110){out[at+3]=255;continue}var edge=false;for(var j=0;j<4;j++){var nx=x+[1,-1,0,0][j],ny=y+[0,0,1,-1][j];if(nx>=0&&nx<64&&ny>=0&&ny<64&&src[(ny*64+nx)*4+3]>110)edge=true}out[at]=18;out[at+1]=24;out[at+2]=37;out[at+3]=edge?255:0}c.putImageData(im,0,0);WING_ART.set(key,cv);return cv}
+function wingDraw(c,id,x,y,u,t,row,pose){var frame=wingFrame(pose,t),image=wingArt(id,frame);if(!image)return;var widths=[[1,1],[.58,1],[.22,.78],[.6,1],[1,1],[1,.6],[.78,.22],[1,.58]][row]||[1,1],base=u*.84;for(var i=0;i<2;i++){c.save();c.translate(Math.round(x),Math.round(y));c.scale(i===0?widths[0]*base:-widths[1]*base,base);c.imageSmoothingEnabled=false;c.drawImage(image,-46,-36);c.restore()}}
+// Same artwork is used in the inventory icon and in the game.
+var oldCosIconB34=cosIcon;cosIcon=function(slot,id,locked){if(slot!=='wing'||id==='none')return oldCosIconB34(slot,id,locked);var key='b34:'+id+':'+!!locked;if(COS_IC[key])return COS_IC[key];var cv=document.createElement('canvas');cv.width=48;cv.height=48;var c=cv.getContext('2d');c.globalAlpha=locked?.35:1;wingDraw(c,id,24,28,.82,0,0,{pose:'idle'});return COS_IC[key]=cv.toDataURL()};
 
 function frame(tn){
  matLive(tn);
