@@ -1,4 +1,4 @@
-<title>ศึกชิงเมือง · TheWarWhat · ทุกหน้าจอแนวนอน B31</title>
+<title>ศึกชิงเมือง · TheWarWhat · UI กระชับทุกแท็บ B33</title>
 <meta name="thewarwhat-balance" content="B3-2026-10-28">
 <meta name="thewarwhat-characters" content="B14-tile-tint-cache-simple-tier4">
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -515,6 +515,21 @@ body.entry-landscape #login .auth-world>.auth-kicker{font-size:8px!important;mar
 body.entry-landscape #login .login-in{min-height:0;height:100%;max-height:100%;overflow-y:auto;display:block;padding:20px 24px 30px;box-sizing:border-box;touch-action:none;overscroll-behavior:contain;scrollbar-width:thin}body.entry-landscape #login .login-in>h2{font-size:20px;margin:0 0 7px}body.entry-landscape #login .login-in>.auth-kicker{font-size:8px!important;margin-bottom:6px}body.entry-landscape #login .tagline{font-size:11px;margin:0 0 10px}body.entry-landscape #login .login-in>.btn,body.entry-landscape #login #guestWrap{margin:8px 0}body.entry-landscape #login #loginForm{gap:7px;margin-top:10px}body.entry-landscape #login .btn{min-height:44px;font-size:13px}body.entry-landscape #login .txt{min-height:44px;padding:9px 11px;font-size:16px}body.entry-landscape #login .auth-note{font-size:10px;margin-top:12px;padding-top:10px}body.entry-landscape #login .auth-footer{display:block;margin:12px 0 0}body.entry-landscape #login .chk{min-height:40px}
 body.entry-landscape.creating-character #gameWrap{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;margin:0;padding:12px 16px;box-sizing:border-box;overflow:hidden}body.entry-landscape.creating-character #gameWrap main{height:100%;position:relative}body.entry-landscape.creating-character #view{height:100%}body.entry-landscape.landscape-portrait.creating-character #gameWrap{inset:auto;left:50%;top:50%;width:100dvh;height:100vw;transform:translate(-50%,-50%) rotate(90deg);transform-origin:center}body.entry-landscape .create-shell{display:flex;flex-direction:column;height:100%;min-height:0}body.entry-landscape .create-header{flex-shrink:0;margin-bottom:10px}body.entry-landscape .create-header h2{font-size:18px}body.entry-landscape .create-header .auth-kicker{font-size:8px!important}body.entry-landscape .create-layout{flex:1;min-height:0;display:grid;grid-template-columns:minmax(160px,.65fr) minmax(250px,1.35fr);gap:12px;align-items:stretch}body.entry-landscape .create-preview{position:static;display:block;height:100%;min-height:0;overflow-y:auto;touch-action:none}body.entry-landscape .create-stage{padding:20px 8px 0}body.entry-landscape .create-stage canvas.scene{width:100%;max-width:230px}body.entry-landscape .create-role{padding:10px 14px}body.entry-landscape .create-role h2{font-size:19px;margin:4px 0}body.entry-landscape .create-role p:not(.auth-kicker){font-size:11px}body.entry-landscape .create-growth{font-size:10px;padding-top:8px}body.entry-landscape .create-account{padding:0 14px 8px;font-size:10px}body.entry-landscape .create-options{height:100%;min-height:0;overflow-y:auto;box-sizing:border-box;padding:14px;touch-action:none;scrollbar-width:thin}body.entry-landscape .create-options h3{font-size:13px}body.entry-landscape .create-options>section{margin-bottom:16px}
 body #eco{box-sizing:border-box;align-items:center;width:100vw;height:100dvh}body #eco[hidden]{display:none!important}body.landscape-portrait #eco{inset:auto;left:50%;top:50%;width:100dvh;height:100vw;transform:translate(-50%,-50%) rotate(90deg);transform-origin:center}body #eco .ew{display:grid;grid-template-columns:minmax(145px,1fr) minmax(240px,1.2fr);grid-template-rows:auto auto auto;align-items:center;column-gap:28px;row-gap:6px;width:min(680px,85%);margin-top:-30px}body #eco .et{grid-column:1;grid-row:1;font-size:54px;line-height:1;margin:0;text-align:center}body #eco .ed{grid-column:1;grid-row:2;font-size:12px;margin:0;text-align:center}body #eco .em{grid-column:1;grid-row:3;font-size:11px;margin:4px 0 0;justify-content:center}body #eco .ec{grid-column:2;grid-row:1/4;margin:0;width:100%;box-sizing:border-box;padding:12px 14px}body #eco .ew2{font-size:12px}body #eco .es{bottom:16px;width:min(330px,65%);height:54px}body #eco .ek{width:46px;height:46px;top:3px}body #eco .es span{font-size:12px}
+
+/* B33: compact tabs with a consistent navy, brass and slate palette. */
+:root{--surface:#152137;--surface2:#223149;--line:#3b4d68;--muted:#a9b8cc;--brass:#dfbd79}
+#gameWrap #menuStage{grid-template-columns:76px minmax(0,1fr);grid-template-rows:52px minmax(0,1fr);background:radial-gradient(ellipse at 100% 0,#21334b,#111c2d 70%)}
+#gameWrap #menuStage .menu-header{padding:4px 12px;gap:10px;border-color:#64718a;background:#101b2deF}#gameWrap #menuStage .menu-header .btn{min-height:44px;min-width:76px;padding:5px 9px;font-size:11px;border-radius:7px}#gameWrap #menuStage .menu-header b{font-size:13px;line-height:1.35}#gameWrap #menuStage .menu-header small{font-size:9px;line-height:1.4}#gameWrap #menuStage .menu-wallet{font-size:11px}
+#gameWrap #menuStage .menu-sidebar{gap:4px;padding:7px 5px;background:#0d1728;border-color:#3e4d64}#gameWrap #menuStage .menu-link{min-height:44px;padding:5px 2px;gap:3px;font-size:10px;line-height:1.3;border-radius:7px;color:#b7c7dc}#gameWrap #menuStage .menu-link svg{width:17px;height:17px}#gameWrap #menuStage .menu-link[aria-current=page]{border:1px solid #be9f62;color:#ffe4a7;background:linear-gradient(110deg,#433b2b,#263449);box-shadow:none}#gameWrap #menuStage .menu-link[aria-current=page]:before{content:'';position:absolute;left:2px;top:50%;width:2px;height:18px;transform:translateY(-50%);border-radius:2px;background:#f0d292}#gameWrap #menuStage .menu-dot{right:7px;top:5px;width:5px;height:5px}
+#gameWrap #menuStage .menu-content{padding:10px 12px 24px}#gameWrap #menuStage .menu-content>.card{margin-bottom:9px}#gameWrap #menuStage .menu-content .card{padding:11px 12px;gap:8px;border:1px solid #3a4b65;border-radius:9px;background:linear-gradient(145deg,#1b2a40,#152035);box-shadow:inset 0 1px 0 #ffffff06,0 3px 10px #050c1629;font-size:12px;line-height:1.5}#gameWrap #menuStage .menu-content .card h2{font-size:16px;line-height:1.4;margin:0}#gameWrap #menuStage .menu-content .card h3{font-size:13px;line-height:1.4;margin:0}#gameWrap #menuStage .menu-content p{margin:4px 0;font-size:12px;line-height:1.55}#gameWrap #menuStage .menu-content .hint,#gameWrap #menuStage .menu-content .st{font-size:11px;line-height:1.55;color:#b0bfd2}#gameWrap #menuStage .menu-content .eyebrow{font-size:9px;letter-spacing:1px;color:#e0c389}
+#gameWrap .btn,#login .btn,#chatPanel .btn,#dqPanel .btn{min-height:44px;padding:7px 11px;font-size:12px;line-height:1.35;border-radius:8px;text-shadow:none;box-shadow:inset 0 1px 0 #ffffff0c,0 1px 0 #07101d}#gameWrap .btn:not(.primary):not(.danger):not(.tg):not(.sw):not([aria-pressed=true]){background:linear-gradient(#2c405b,#223149);border:1px solid #5d7390;color:#eef3fa}#gameWrap .btn.primary:not([aria-pressed=true]){background:linear-gradient(#e9ce98,#c2a063);border:1px solid #f1dba8;color:#281f10;box-shadow:inset 0 1px 0 #fff6d64d,0 1px 0 #68522b}
+#gameWrap #menuStage .menu-content .btn{min-height:44px;min-width:44px;padding:7px 10px;font-size:11px;line-height:1.4;border-radius:8px}#gameWrap #menuStage .menu-content .btn small{font-size:10px;line-height:1.4}#gameWrap #menuStage .menu-content .cat{gap:7px;display:flex;flex-wrap:wrap}#gameWrap #menuStage .menu-content .cat .btn{flex:1 1 110px;min-width:100px}#gameWrap #menuStage .menu-content .row2{gap:7px;margin-top:7px}#gameWrap #menuStage .menu-content .grid2,#gameWrap #menuStage .menu-content .grid3{gap:8px}#gameWrap #menuStage .menu-content .item{padding:9px 0;gap:6px 9px;border-color:#3c4c653d}#gameWrap #menuStage .menu-content .item .nm{font-size:12px}#gameWrap #menuStage .menu-content .chips{gap:6px}#gameWrap #menuStage .menu-content .chip{font-size:10px;line-height:1.4;padding:4px 7px;border-radius:6px}#gameWrap #menuStage .menu-content .mat-find{min-height:32px;padding:4px 6px;font-size:10px}
+#gameWrap #menuStage .menu-content .stats{gap:7px;grid-template-columns:repeat(auto-fit,minmax(108px,1fr))}#gameWrap #menuStage .menu-content .stat{padding:8px 10px;border:1px solid #40516c;border-radius:8px;background:#1c2b42;box-shadow:none}#gameWrap #menuStage .menu-content .stat span{font-size:10px}#gameWrap #menuStage .menu-content .stat b{font-size:16px}#gameWrap #menuStage .menu-content .srow{padding:6px 0;gap:8px;font-size:11px}#gameWrap #menuStage .menu-content .srow .btn{font-size:14px;min-width:44px;padding:5px 8px}#gameWrap #menuStage .menu-content .srow .v{font-size:16px}#gameWrap #menuStage .menu-content .skill{padding:10px 0}#gameWrap #menuStage .menu-content .skill .top .nm{font-size:12px}#gameWrap #menuStage .menu-content .skic{width:32px;height:32px}#gameWrap #menuStage .menu-content .pill{font-size:10px;padding:3px 7px}
+#gameWrap #menuStage .equipped-compact{max-width:360px}#gameWrap #menuStage .equipped-compact .doll{grid-template-columns:48px 84px 48px;gap:8px}#gameWrap #menuStage .equipped-compact .slot{width:44px;height:44px;min-height:44px}#gameWrap #menuStage .equipped-compact .slot .sgi{width:30px;height:30px}#gameWrap #menuStage .equipped-compact .dollc{width:84px;height:98px}#gameWrap #menuStage .cosgrid{grid-template-columns:repeat(auto-fit,minmax(82px,1fr));gap:7px}#gameWrap #menuStage .cosgrid .btn{font-size:10px;padding:6px}#gameWrap #menuStage .cosgrid img{max-width:44px;height:auto}#gameWrap #menuStage .pick{gap:8px}#gameWrap #menuStage .pick .btn.sw{width:44px;height:44px;min-height:44px;flex-basis:44px}
+#gameWrap .auto-panel{width:min(380px,calc(100% - 16px));height:min(340px,calc(100% - 8px));border-radius:11px;background:#162338}#gameWrap .auto-panel>header,#gameWrap .auto-panel>footer{padding:6px 11px}#gameWrap .auto-panel h2{font-size:14px}#gameWrap .auto-panel .auto-content{padding:0 11px 11px}#gameWrap .auto-panel .auto-option>b{font-size:11px}#gameWrap .auto-panel .auto-content h3{font-size:12px}#gameWrap .auto-panel .auto-option{padding:6px 0}#gameWrap .auto-panel .btn{font-size:11px;min-height:44px}#gameWrap .party-panel,#gameWrap .gear-panel,#gameWrap .shop-panel{width:min(370px,94%);padding:12px;border-radius:11px}#gameWrap :is(.party-panel,.gear-panel,.shop-panel) h3{font-size:14px}#gameWrap :is(.party-panel,.gear-panel,.shop-panel) p{font-size:11px;line-height:1.5}#gameWrap .field-menu-panel,#gameWrap .battle-details{width:min(390px,88%);padding:11px;border-radius:10px}#gameWrap .field-zone-list{gap:7px;padding:10px}#gameWrap .field-zone-list .btn{font-size:11px;min-height:44px}
+#gameWrap .auto-hud.hud-compact{width:170px;padding:6px 8px}#gameWrap .left-player,#gameWrap .left-player .party-hud{max-width:170px}#gameWrap .hud-compact>b{font-size:11px;margin-bottom:3px}#gameWrap .hud-compact .hud-resource strong{font-size:10px}#gameWrap .town-top .btn{min-height:44px;font-size:11px;padding:6px 10px}#gameWrap #townStage .town-bottom{padding:5px;gap:6px}#gameWrap #townStage .town-bottom .btn{min-height:44px;min-width:58px;font-size:11px;padding:6px 9px}#gameWrap .battle-top{font-size:11px}#gameWrap .battle-actions{grid-auto-columns:minmax(76px,1fr);gap:7px}#gameWrap .battle-actions .btn{min-width:76px;min-height:72px;padding:7px 5px;font-size:12px}#gameWrap .battle-actions .btn small,#gameWrap .battle-actions .skb .skt small{font-size:10px}#gameWrap .battle-actions .skb .skt b{font-size:11px}
+body.entry-landscape #login .login-in{padding:16px 22px 24px}body.entry-landscape #login .login-in>h2{font-size:19px}body.entry-landscape .create-options{padding:12px}body.entry-landscape .create-class.btn{min-height:64px;padding:8px}body.entry-landscape .create-class b{font-size:12px}body.entry-landscape .create-class small{font-size:10px}
+@media(max-height:390px) and (orientation:landscape){#gameWrap #menuStage{grid-template-columns:70px minmax(0,1fr);grid-template-rows:50px minmax(0,1fr)}#gameWrap #menuStage .menu-header{padding-top:3px;padding-bottom:3px}#gameWrap #menuStage .menu-content{padding:8px 9px 20px}#gameWrap .battle-actions .btn{min-height:64px}#gameWrap .auto-hud.hud-compact{width:164px}#gameWrap .left-player{max-width:164px}}
 
 </style>
 
@@ -2589,7 +2604,7 @@ function openBox(){
   var j=pick(JUNK),g=rnd(1,30);s.gold+=g;
   s.boxMsg='ได้ขยะ: '+j+' (ขายได้ '+g+' ทอง)';s.boxIt=null;say('เปิดกล่อง ได้ขยะ '+j);return}
  var pool=[],tot=0,W={1:55,2:35,3:10,4:2};
- Object.keys(COS).forEach(function(sl){COS[sl].forEach(function(it){
+ Object.keys(COS).filter(function(sl){return sl!=='hat'&&sl!=='face'}).forEach(function(sl){COS[sl].forEach(function(it){
   if(it.r>0&&!it.x&&s.owned[sl].indexOf(it.id)<0){pool.push({sl:sl,it:it,w:W[it.r]});tot+=W[it.r]}})});
  if(!pool.length){s.gold+=400;s.boxIt=null;s.boxMsg='ของแต่งตัวครบทุกชิ้นแล้ว แปลงเป็นทอง +400';say('เปิดกล่อง ได้ทอง +400');return}
  var r=Math.random()*tot,ch=pool[0];
@@ -3214,17 +3229,17 @@ function drawCharacterSheet(c,look,cls,ox,gy,u,t,flip,alpha){
  var key=characterSheetKey(cls,look),record=characterImage(key);if(!record||!record.ready)return false;
  var pose=CPOSE||{},row=typeof pose.dir==='number'?Math.max(0,Math.min(7,pose.dir|0)):(flip?2:6),frame=characterFrame(pose,t),size=Math.max(1,Math.round(44*u)),foot=CHARACTER_SHEETS[key].feet[row*12+frame],pivot=CHARACTER_SHEETS[key].pivots,pivotX=pivot?pivot[row*12+frame][0]:32,x=Math.round(ox+12*u-size*pivotX/64),y=Math.round(gy-size*foot/64);
  c.save();c.globalAlpha=alpha==null?1:alpha;
- if(look.aura&&AURA[look.aura]){var color=AURA[look.aura];c.save();c.globalAlpha*=0.22;c.fillStyle=color[0];c.beginPath();c.ellipse(ox+12*u,gy-18*u,19*u,24*u,0,0,Math.PI*2);c.fill();c.restore()}
- if(look.wing&&WING2[look.wing]){c.save();c.translate(ox,gy-31*u);drawWing2(c,look.wing,u,t,0);c.restore()}
+ fashionBack(c,look,ox+12*u,gy,u,t,row);
  c.imageSmoothingEnabled=false;c.drawImage(characterTint(key,record,look,frame,row),0,0,64,64,Math.round(x),Math.round(y),size,size);
- characterAccessories(c,look,key,frame,row,x,y,size);c.restore();CPOSE=null;return true;
+ c.restore();CPOSE=null;return true;
 }
 function drawChar(c,look,cls,ox,gy,u,t,flip,alpha){
- look=look||{};if((typeof SET==='undefined'||!SET||SET.spriteChars!==false)&&drawCharacterSheet(c,look,cls,ox,gy,u,t,flip,alpha))return;
- drawClassicChar(c,look,cls,ox,gy,u,t,flip,alpha);
+ look=Object.assign({},look||{},{hat:'none',face:'none'});var pose=CPOSE||{},row=typeof pose.dir==='number'?pose.dir:(flip?2:6);
+ if(!((typeof SET==='undefined'||!SET||SET.spriteChars!==false)&&drawCharacterSheet(c,look,cls,ox,gy,u,t,flip,alpha))){c.save();c.globalAlpha=alpha==null?1:alpha;fashionBack(c,look,ox+12*u,gy,u,t,row);c.restore();drawClassicChar(c,Object.assign({},look,{aura:'none',wing:'none'}),cls,ox,gy,u,t,flip,alpha)}
+ fashionPet(c,look,ox+12*u,gy,u,t,row,alpha);
 }
 
-function drawClassicChar(c,look,cls,ox,gy,u,t,flip,alpha){
+function drawClassicChar(c,look,cls,ox,gy,u,t,flip,alpha){look=Object.assign({},look||{},{hat:'none',face:'none'});
  var K=CLASSES[cls]||CLASSES.warrior,T=Math.min(2,charTier(look)),BR=T===2?charBranch(look):null,ALT=T===2&&['knight','venom','curse','judge','sniper'].indexOf(BR)>=0;
  var oc=DYE[look.dye]||K.base,hc=HAIR[look.hc]||HAIR[0],dyed=!!DYE[look.dye];
  var b=Math.round(Math.sin(t/260));
@@ -3798,7 +3813,7 @@ function drawScene(cv,tn){
  if(mode==='preview'){
   bgScene(c,W,H,0,tn);timeTint(c,W,H);
   CPOSE={pose:'idle',dir:0};drawChar(c,s.look,s.cls,Math.round(W/2-60),gy,5,tn,false,1);
-  drawPet(c,s.look.pet,Math.round(W/2+70),gy,5,tn);
+
   return;
  }
  var shA=fx.shake.a*Math.max(0,1-(tn-fx.shake.t)/260),shOn=tn>=fx.shake.t&&shA>0.3;
@@ -3812,7 +3827,7 @@ function drawScene(cv,tn){
  if(tn>fx.pHit&&tn-fx.pHit<260)alpha=(Math.floor(tn/60)%2)?0.35:1;
  shadowAt(c,px+dx+36,gy+1,22);
  CPOSE={pose:a>=0&&a<1?'atk':'idle',f:Math.floor(Math.max(0,a)*4),ex:tn>fx.pHit&&tn-fx.pHit<450?'hurt':''};drawChar(c,s.look,s.cls,px+dx,gy,3,tn,false,alpha);
- drawPet(c,s.look.pet,px+19*3,gy,3,tn);
+
  if(b&&b.grp){var SL=[[W-122,gy-14],[W-152,gy+2],[W-96,gy-30],[W-182,gy-16]],si=0;
   b.grp.forEach(function(g,i){if(i===b.gi||g.ehp<=0||!g.e.k||si>=SL.length)return;var q=SL[si++],bob=Math.round(Math.sin(tn/300+i)*2);
    shadowAt(c,q[0],q[1]+1,g.e.boss?30:18);c.save();c.globalAlpha=0.92;fMob(c,g.e.k,q[0],q[1]+bob,g.e.boss?2.2:1.6,tn,false,i);c.restore();
@@ -4287,7 +4302,7 @@ function viewCreate(){
  '<section><h3><span class="create-step">02</span> เลือกอาชีพเริ่มต้น</h3>'+createClassPicker()+'</section>'+
  '<section class="create-hair"><h3><span class="create-step">03</span> ปรับลุคของคุณ</h3>'+hairPicker()+'</section>'+
  '<details class="create-tree"><summary>ดูเส้นทางพัฒนาอาชีพขั้น 1–4</summary>'+jobTreeHtml(s.cls)+'</details>'+
- '<div class="create-submit"><button class="btn primary" data-a="start">เริ่มผจญภัย · '+CLASSES[s.cls].n+' →</button><p class="hint">หมวก ปีก สัตว์เลี้ยง และสีชุด หาเพิ่มได้ระหว่างผจญภัย</p></div>'+
+ '<div class="create-submit"><button class="btn primary" data-a="start">เริ่มผจญภัย · '+CLASSES[s.cls].n+' →</button><p class="hint">ปีก ออร่า สัตว์เลี้ยง และสีชุด หาเพิ่มได้ระหว่างผจญภัย</p></div>'+
  (CLOUD_ENABLED&&ON.ok&&ON.cloud?'<button class="btn" data-a="clouddn">โหลดเซฟจากคลาวด์ ('+esc(ON.cloud.nick)+' Lv'+(ON.cloud.lvl|0)+')</button>':'')+'</div></div></section>';
 }
 function viewDress(){
@@ -4300,7 +4315,7 @@ function viewDress(){
   '<section class="card"><h3>ตัวละคร</h3><p>'+(titleOf(s.title)?'<span style="color:'+titleOf(s.title).c+'">['+esc(titleOf(s.title).n)+']</span> ':'')+'<b>'+esc(nick())+'</b> · '+clsName(s)+'</p></section>'+
   '<section class="card"><h3>เลือกหมวด</h3><div class="cat">'+DT.map(function(c){return '<button class="btn'+(od===c[0]?' primary':'')+'" data-a="dtab" data-p="'+c[0]+'" aria-pressed="'+(od===c[0])+'">'+c[1]+(c[0]==='box'&&s.boxes>0?' ('+s.boxes+')':'')+'</button>'}).join('')+'</div></section>';
  var body='';
- if(od==='look')body='<section class="card">'+hairPicker()+slotPick('hat')+slotPick('face')+slotPick('wing')+slotPick('pet')+slotPick('aura')+slotPick('dye')+'</section>';
+ if(od==='look')body='<section class="card"><p class="hint">ปีกและออร่าจะแสดงร่วมกับตัวละคร สัตว์เลี้ยงอยู่ข้างตัว · หมวกและของตกแต่งใบหน้าปิดใช้งานแล้ว</p>'+hairPicker()+slotPick('wing')+slotPick('pet')+slotPick('aura')+slotPick('dye')+'</section>';
  else if(od==='title')body=titleHtml();
  else if(od==='book')body=bookHtml();
  else if(od==='box')body='<section class="card"><h3>กล่องสุ่มของแต่งตัว</h3>'+reveal+
@@ -4852,7 +4867,7 @@ function drawLogin(cv,tn){
  c.clearRect(0,0,W,H);
  bgScene(c,W,H,0,tn);timeTint(c,W,H);
  CPOSE={pose:'idle',dir:0};drawChar(c,{hair:0,hc:0,hat:'none',face:'none',wing:'none',pet:'cat',dye:'def'},'warrior',Math.round(W/2-48),gy,4,tn,false,1);
- drawPet(c,'cat',Math.round(W/2+60),gy,4,tn);
+
 }
 // ===== แอนิเมชันตีบวก: ค้อนตี 3 ครั้งบนทั่ง → ผลลัพธ์ (สำเร็จ / ลดขั้น / ไม่ติด / แตก) =====
 var ENH_MS=1500,ENHA={at:0,t0:-1e9};
@@ -5675,7 +5690,7 @@ function drawBattleLandscape(c,W,H,tn,visual){
  battleDiamond(c,px,py,'#7de5e5');shadowAt(c,player.x,player.y+1,17);
  var hurt=tn-fx.pHit,alpha=hurt>=0&&hurt<260&&Math.floor(tn/60)%2?.35:1;
  if(visual&&visual.type==='defeat')alpha*=1-Math.max(0,Math.min(1,(tn-BATTLE_PRESENT.hitAt)/340));
- CPOSE={pose:player.pose,f:player.f,dir:player.dir};drawChar(c,actor.look,actor.cls,player.x-24,player.y,2,tn,false,alpha);drawPet(c,actor.look.pet,px-48,py+15,1.5,tn);
+ CPOSE={pose:player.pose,f:player.f,dir:player.dir};drawChar(c,actor.look,actor.cls,player.x-24,player.y,2,tn,false,alpha);
  fLabel(c,visual?actor.name:nick(),player.x,player.y-72,'#ffdf92');battleUnitBar(c,player.x,player.y-64,actor.hp,actor.maxhp,'#79cb76');
  var group=b.grp?b.grp.map(function(g,i){return {e:g.e,hp:i===b.gi?b.ehp:g.ehp,active:i===b.gi}}).filter(function(g){return g.hp>0||!!(visual&&g.active)}):[{e:b.e,hp:b.ehp,active:true}];
  var spare=0,units=group.map(function(g){var i=g.active?-1:spare++,slots=[[W*.81,H*.42],[W*.82,H*.66],[W*.59,H*.39],[W*.59,H*.66]],pos=i<0?[activeX,activeY]:slots[i%slots.length];return {g:g,x:pos[0],y:pos[1]}}).sort(function(a,b){return a.y-b.y});
@@ -5932,6 +5947,19 @@ function devicePortrait(){var sc=window.screen;if(sc&&sc.orientation&&typeof sc.
 function entryLayoutSync(){if(SV)return;document.body.classList.toggle('landscape-portrait',devicePortrait());document.body.classList.toggle('entry-landscape',!s||!s.created)}
 function ecoSlideDelta(start,event){return devicePortrait()?event.clientY-start.y0:event.clientX-start.x0}
 if(!SV){entryLayoutSync();window.addEventListener('resize',entryLayoutSync);window.addEventListener('orientationchange',entryLayoutSync)}
+
+// Fashion shares the character's ground pivot and stays behind its body.
+WING2.blue={k:'feather',c:['#183f7a','#397dd1','#72b9f0','#cbefff','#ffffff'],fx:'snow',n:6,sp:[150,258]};
+WING2.pink={k:'feather',c:['#713653','#c06998','#f39fc7','#ffe0f0','#ffffff'],fx:'mote',n:6,sp:[150,258]};
+WING2.dark={k:'feather',c:['#181324','#302744','#68588b','#a796c4','#d8caef'],fx:'smoke',n:6,sp:[150,258]};
+WING2.gold={k:'feather',c:['#72501e','#b1852e','#e6bf56','#fff0ad','#ffffff'],fx:'mote',n:6,sp:[150,258]};
+function fashionBack(c,look,cx,gy,u,t,row){
+ c.save();
+ if(look.aura&&AURA[look.aura]){var a=AURA[look.aura],pulse=.5+.5*Math.sin(t/500);c.save();c.globalAlpha*=.42;c.strokeStyle=a[0];c.lineWidth=Math.max(1,u);c.beginPath();c.ellipse(cx,gy+u,16*u,5*u,0,0,Math.PI*2);c.stroke();c.globalAlpha*=.75;c.strokeStyle=a[1];c.lineWidth=Math.max(1,u*.5);c.beginPath();c.ellipse(cx,gy+u,12*u,3.5*u,0,0,Math.PI*2);c.stroke();c.restore();for(var i=0;i<5;i++){var p=((t/1400)+i*.2)%1;c.save();c.globalAlpha*=(1-p)*.65;c.fillStyle=a[i%2];c.fillRect(Math.round(cx+(i-2)*6*u+Math.sin(t/650+i)*u),Math.round(gy-p*15*u),Math.max(1,u*.7),Math.max(1,u*.7));c.restore()}}
+ if(look.wing&&WING2[look.wing]){var wu=u*.72,side=(row===2||row===6)?.55:(row%2?.82:1);c.save();c.translate(cx,gy-7*u);c.scale(side,1);c.translate(-12*wu,-16*wu);drawWing2(c,look.wing,wu,t,0);c.restore()}
+ c.restore();
+}
+function fashionPet(c,look,cx,gy,u,t,row,alpha){if(!look.pet||look.pet==='none')return;var p=Math.max(.8,u*.7),left=row===1||row===2||row===3,side=left?-1:1,x=cx+side*24*u,y=gy+2*u;c.save();c.globalAlpha*=alpha==null?1:alpha;shadowAt(c,x,y,5*p);c.translate(x,y);if(left)c.scale(-1,1);drawPet(c,look.pet,-5*p,0,p,t);c.restore()}
 
 function frame(tn){
  matLive(tn);
