@@ -1,4 +1,4 @@
-<title>ศึกชิงเมือง · TheWarWhat · ฉากต่อเนื่องขณะเปิดเมนูและปุ่มต่อสู้เล็ก B56</title>
+<title>ศึกชิงเมือง · TheWarWhat · PvP ดันเจี้ยน บอสโลกเต็มจอ B57</title>
 <meta name="thewarwhat-balance" content="B3-2026-10-28">
 <meta name="thewarwhat-characters" content="B52-resolve-job-before-look-copy">
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -618,6 +618,8 @@ body.view-portrait #gameWrap #menuStage.live-menu55{left:0;top:26%;border-left:0
 
 
 #gameWrap #battleStage .battle-actions{grid-auto-columns:minmax(60px,1fr);gap:5px;padding:2px 1px 3px}#gameWrap #battleStage .battle-actions .btn{min-width:60px;min-height:52px;padding:5px 4px;font-size:11px;gap:3px;border-radius:7px}#gameWrap #battleStage .battle-actions .btn small,#gameWrap #battleStage .battle-actions .skb .skt small{font-size:9px;line-height:1.3}#gameWrap #battleStage .battle-actions .skb .skt b{font-size:10px}#gameWrap #battleStage .battle-actions .skb img{width:22px;height:22px}#gameWrap #battleStage .battle-dock{padding:5px;gap:6px}#gameWrap #battleStage .battle-self{font-size:10px;width:118px}body.view-portrait #gameWrap #battleStage .battle-self{width:auto;max-height:58px}body.view-portrait #gameWrap #battleStage .battle-actions{grid-auto-columns:minmax(58px,1fr)}body.view-portrait #gameWrap #battleStage .battle-actions .btn{min-width:58px;min-height:52px}
+
+#gameWrap #menuStage:not(.live-menu55) .menu-content>.card{max-width:1080px;width:100%;box-sizing:border-box}#gameWrap #menuStage:not(.live-menu55) .menu-content{padding:12px 16px 64px}#gameWrap #menuStage:not(.live-menu55) .menu-content>.card>h2{font-size:18px}#gameWrap #menuStage:not(.live-menu55) .menu-content .stats{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}body.view-portrait #gameWrap #menuStage:not(.live-menu55) .menu-content{padding:10px 9px 66px}
 </style>
 
 <section id="login" class="login">
@@ -1315,7 +1317,7 @@ function initOnline(){
     chatUI();
     ON.unsub=db.collection('ladder').orderBy('rating','desc').limit(60).onSnapshot(function(snap){
      ON.board=snap.docs.map(function(d){var x=d.data()||{};x.id=d.id;return x}).filter(function(x){return typeof x.n==='string'&&CLASSES[x.cls]&&x.lvl>0});
-     if(s&&s.tab==='pvp'&&!s.battle)render();
+     if(s&&(BAWAY||s.tab)==='pvp'&&!s.battle)render();
     },function(){ON.ok=false});
     onlineSync();
     try{db.collection('chat').orderBy('ts','desc').limit(40).onSnapshot(function(snap){
@@ -1332,7 +1334,7 @@ function initOnline(){
      if(snap.metadata&&snap.metadata.fromCache)return;
      ON[key]=snap.docs.map(function(d){var x=d.data()||{};x.id=d.id;return x}).filter(fix);ON.gl|=flag;
      facSettle();
-     if(s&&!s.battle&&!s.res&&(s.tab==='guild'||s.tab==='pvp'))render();
+     if(s&&!s.battle&&!s.res&&(s.tab==='guild'||(BAWAY||s.tab)==='pvp'))render();
     },function(){})}catch(e){}}
     sub('wars','fac',300,16,function(x){return typeof x.fac==='number'&&x.fac>=0&&x.fac<4&&typeof x.n==='string'});
    })})}).catch(function(){})}
@@ -1921,7 +1923,7 @@ function viewEvents(){
  return head+(et==='dg'?dgSection():et==='wb'?viewWB():et==='launch'?launchHtml():viewTower())}
 var REF_LV=10,REF_RW={coin:30,pot:5,gold:1000};
 function netLaunch(force){if(!CL||!NET.token||NET.lnBusy||(!force&&Date.now()-(NET.lnAt||0)<10000))return;NET.lnBusy=true;NET.lnAt=Date.now();
- apiCall('GET','/api/launch').then(function(j){NET.launch=j;if(s&&s.tab==='tower'&&s.etab==='launch'&&!s.battle)render()}).catch(function(){}).then(function(){NET.lnBusy=false})}
+ apiCall('GET','/api/launch').then(function(j){NET.launch=j;if(s&&(BAWAY||s.tab)==='tower'&&s.etab==='launch'&&!s.battle)render()}).catch(function(){}).then(function(){NET.lnBusy=false})}
 function refLink(){var L=NET.launch;return L?location.origin+'/?ref='+L.ref.code:''}
 function refShareTxt(){return 'มาเล่นศึกชิงเมืองด้วยกัน! ⚔️ RPG พิกเซลออนไลน์บนมือถือ ไม่ต้องโหลดแอป กดเล่นได้เลย 👉 '+refLink()}
 function refShare(){var t=refShareTxt();if(!refLink())return;try{if(navigator.share){navigator.share({title:'ศึกชิงเมือง · TheWarWhat',text:t}).catch(function(){});return}}catch(e){}refCopy()}
@@ -3966,7 +3968,7 @@ function ptSection(){
 function netDG(force){if(battlePresentationActive()||scene53Busy())return;
  if(!CL||!NET.token||NET.dgBusy)return;var r=dgRoom(),iv=r?(r.st==='fight'?800:1500):4000;
  if(!force&&Date.now()-(NET.dgAt||0)<iv)return;NET.dgBusy=true;NET.dgAt=Date.now();
- apiCall('GET','/api/dg').then(function(j){var k0=dgKey(NET.dg);var previous=dgRoom();dgAnim(j);dungeonFinishVisual(previous,j.room);NET.dg=j;if(s&&(s.tab==='wild'||s.tab==='tower'&&s.etab==='dg')&&!s.battle&&!pressing&&dgKey(j)!==k0)render()}).catch(function(){}).then(function(){NET.dgBusy=false})}
+ apiCall('GET','/api/dg').then(function(j){var k0=dgKey(NET.dg);var previous=dgRoom();dgAnim(j);dungeonFinishVisual(previous,j.room);NET.dg=j;if(s&&(s.tab==='wild'||(BAWAY||s.tab)==='tower'&&s.etab==='dg')&&!s.battle&&!pressing&&dgKey(j)!==k0)render()}).catch(function(){}).then(function(){NET.dgBusy=false})}
 function dgOp(op,p){
  if(!CL){say('ดันเจี้ยนเล่นได้ในเวอร์ชันออนไลน์');render();return}
  var b={op:op};if(op==='join')b.id=parseInt(p,10)||0;if(op==='pick')b.act=p;
@@ -4235,7 +4237,7 @@ function viewPvp(){
  return msg+pvp+pshopHtml()+rankHub(lb);
 }
 function netTop(){if(!CL||!NET.token||NET.topBusy||Date.now()-(NET.topAt||0)<60000)return;NET.topBusy=true;NET.topAt=Date.now();
- apiCall('GET','/api/top').then(function(j){NET.top=j.top||[];if(s&&s.tab==='pvp'&&NET.rkOpen)render()}).catch(function(){}).then(function(){NET.topBusy=false})}
+ apiCall('GET','/api/top').then(function(j){NET.top=j.top||[];if(s&&(BAWAY||s.tab)==='pvp'&&NET.rkOpen)render()}).catch(function(){}).then(function(){NET.topBusy=false})}
 function rankHub(lb){
  var open=!!NET.rkOpen,tb=NET.rkTab||'pvp';
  var btn='<button class="btn'+(open?' primary':'')+'" data-a="rktog" style="width:100%">🏆 '+(open?'ซ่อนอันดับ':'ดูอันดับ (PvP · เลเวล · บอสโลก)')+'</button>';
@@ -4662,7 +4664,7 @@ function viewBattleLegacy(){
 
 var TABI=(function(){var P={wild:'<path d="M5 19l9-9M14 4h6v6l-9 9M4 20l2-2M7 13l4 4"/>',char:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.6-4 4.6-6 8-6s6.4 2 8 6"/>',craft:'<path d="M3 21l9-9M11 6l3-3 7 7-3 3zM14 9l-4 4"/>',mat:'<path d="M5 9h14l-1.2 11H6.2zM9 9V7a3 3 0 016 0v2"/>',pvp:'<path d="M12 3l8 3v6c0 4.8-3.4 8-8 9-4.6-1-8-4.2-8-9V6z"/><path d="M9 12l2 2 4-4"/>',tower:'<path d="M12 3l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.4l-5.2 2.8 1-5.9L3.5 9.2l5.9-.8z"/>',guild:'<path d="M6 21V4M6 4h11l-2.5 4L17 12H6"/>',me:'<path d="M8 4l4 2 4-2 4 3-2.2 4-1.8-1v10H8V10l-1.8 1L4 7z"/>'};var o={};for(var k in P)o[k]='<svg viewBox="0 0 24 24" aria-hidden="true">'+P[k]+'</svg>';return o})();
 function render(){
- if(SV)return;scene53Sync();if(ECO.on)return;if(SCROLL_UI.drag&&SCROLL_UI.drag.moved){SCROLL_UI.pending=true;return}scrollRemember();menuRememberScroll();autoRemember();shopRemember(); // จอดำอยู่: กลับมาค่อยวาดใหม่
+ if(SV)return;scene53Sync();specialNav57();if(ECO.on)return;if(SCROLL_UI.drag&&SCROLL_UI.drag.moved){SCROLL_UI.pending=true;return}scrollRemember();menuRememberScroll();autoRemember();shopRemember(); // จอดำอยู่: กลับมาค่อยวาดใหม่
  try{sndWatch()}catch(e){}
  try{fieldWatch()}catch(e){}
  document.body.classList.toggle('creating-character',!!s&&!s.created);
@@ -4671,6 +4673,7 @@ function render(){
  if(battlePresentationActive()&&!BAWAY)v=battlePresentView();
  else if(!s.created)v=viewCreate();
  else if(s.battle&&!BAWAY)v=viewBattle();
+ else if(!BAWAY&&specialKind57()==='dg')v=viewDgLandscape();
  else if(s.res&&!BAWAY)v=viewResult();
  else v=(BAWAY?miniBattle():'')+({wild:viewWild,char:viewChar,craft:viewCraft,mat:viewMat,pvp:viewPvp,tower:viewEvents,guild:viewGuild,me:viewDress}[BAWAY||s.tab]||viewWild)();
  if(landscapeMenuActive())v=menuWrap(v);
@@ -4752,7 +4755,7 @@ function logicTick(){if(!s)return false;var ch=preTick();var r=autoLogic();if(r.
 if(!SV)setInterval(function(){
  if(!s)return;
  if(CL){var wn=Date.now();if(NET.busy&&wn-(NET.busyAt||wn)>15000){NET.busy=false;netPump()}if(NET.tickBusy&&wn-(NET.tickAt||wn)>15000)NET.tickBusy=false;if(NET.ptBusy&&wn-(NET.ptAt||wn)>15000)NET.ptBusy=false;if(NET.dgBusy&&wn-(NET.dgAt||wn)>15000)NET.dgBusy=false;
-  if(!document.hidden&&!pressing){netTick();if((s.tab==='wild'&&!s.battle)||dgRoom()||s.tab==='tower'&&s.etab==='dg')netDG();if(s.tab==='wild'||(NET.pt&&NET.pt.pt))netPT();if(TOWN.on&&s.tab==='wild')netTown()}else if(!document.hidden)renderStatus();return}
+  if(!document.hidden&&!pressing){netTick();if((s.tab==='wild'&&!s.battle)||dgRoom()||(BAWAY||s.tab)==='tower'&&s.etab==='dg')netDG();if(s.tab==='wild'||(NET.pt&&NET.pt.pt))netPT();if(TOWN.on&&s.tab==='wild')netTown()}else if(!document.hidden)renderStatus();return}
  var ch=preTick();
  if(document.hidden)return;
  renderStatus();
@@ -4762,8 +4765,8 @@ if(!SV)setInterval(function(){
  var ck=s.battle?-1:Math.ceil(cdLeft()/1000),ae=document.activeElement,typing=!!(ae&&ae.tagName==='INPUT');
  if(s.res&&!typing){render()}
  else if(acted){lastCd=ck;save();render()}
- else if(!typing&&(ch||(ck!==lastCd&&(s.tab==='wild'||s.tab==='pvp')))){lastCd=ck;render()}
- else if(ck!==lastCd&&!(s.tab==='wild'||s.tab==='pvp'))lastCd=ck;
+ else if(!typing&&(ch||(ck!==lastCd&&(s.tab==='wild'||(BAWAY||s.tab)==='pvp')))){lastCd=ck;render()}
+ else if(ck!==lastCd&&!(s.tab==='wild'||(BAWAY||s.tab)==='pvp'))lastCd=ck;
 },900);
 if(!SV)setInterval(function(){if(CL&&s&&s.battle&&s.battle.joint&&!document.hidden&&!pressing&&Date.now()-(NET.tickAt||0)>=450)netTick()},250);
 /* ---------- บัญชีผู้เล่น (เก็บในเบราว์เซอร์ของเครื่องนี้) ---------- */
@@ -4832,7 +4835,7 @@ function doLogin(){
   startGame(key,false);
  }).catch(function(){setMsg('เข้าเกมส์ไม่สำเร็จ ลองใหม่อีกครั้ง')}).then(function(){setBusy(false)});
 }
-function showLogin(){scene53Reset();BAWAY=null;GEAR_UI.slot=null;SHOP_UI.open=false;PARTY_UI.open=false;PARTY_UI.uid=0;AUTO_UI.open=false;BATTLE_PRESENT.data=null;BATTLE_PRESENT.until=0;document.body.classList.remove('town-landscape');document.body.classList.remove('creating-character');
+function showLogin(){SPECIAL57.key='';SPECIAL57.back=null;SPECIAL57.etab=null;scene53Reset();BAWAY=null;GEAR_UI.slot=null;SHOP_UI.open=false;PARTY_UI.open=false;PARTY_UI.uid=0;AUTO_UI.open=false;BATTLE_PRESENT.data=null;BATTLE_PRESENT.until=0;document.body.classList.remove('town-landscape');document.body.classList.remove('creating-character');
  var an=document.getElementById('authNote');if(an)an.textContent=CL?'เล่นออนไลน์: สมัครไอดีเพื่อใช้บัญชีเดิมข้ามเครื่อง · ผู้เยี่ยมชมควรตั้งไอดีถาวรก่อนเปลี่ยนเครื่อง':'โหมดเล่นในเครื่อง: บัญชีและเซฟอยู่ในเบราว์เซอร์นี้ กรุณาใช้เครื่องเดิมเพื่อเล่นต่อ';
  s=null;curUser=null;ON.open=false;entryLayoutSync();
  document.getElementById('login').hidden=false;
@@ -5612,7 +5615,7 @@ function fieldIsoView(){
 }
 
 var BATTLE_UI={details:false,ground:null,key:''};
-function battleLandscapeActive(){var r=dgRoom();return !!(s&&s.created&&!BAWAY&&(s.battle||((s.tab==='wild'||s.tab==='tower'&&s.etab==='dg')&&r&&r.st==='fight')))}
+function battleLandscapeActive(){var r=dgRoom();return !!(s&&s.created&&!BAWAY&&(s.battle||(r&&r.st==='fight')))}
 function battleIsoGround(c,W,H,z){
  var key=W+'|'+H+'|'+z;if(BATTLE_UI.key!==key){
   var cv=document.createElement('canvas');cv.width=W;cv.height=H;var g=cv.getContext('2d'),P=FPAL[z]||FPAL[0];
@@ -5827,7 +5830,17 @@ function autoRestore(){if(SV||!AUTO_UI.open)return;var el=document.getElementByI
 function bonusHud55(){return '<div class="bonus55'+(happyIdx()>=0?' active':'')+'" id="bonusHud55">'+bonusText55()+'</div>'}
 function bonusText55(){return (happyIdx()>=0?'🔥 โบนัส XP/ทอง +50% · เหลือ ':'โบนัส 13–14 / 21–22 น. · อีก ')+hms(happyLeft())+' (ไทย)'}
 function autoControls55(on){return '<div class="auto-controls55"><button class="btn auto-chip38 '+(on?'is-on':'is-off')+'" data-a="autotoggle55" aria-pressed="'+!!on+'">ออโต้ <b>'+(on?'เปิด ●':'ปิด ○')+'</b></button><button class="btn auto-gear55" data-a="autoopen" aria-haspopup="dialog" aria-label="ตั้งค่าออโต้">⚙</button></div>'}
-function menuLive55(){return !!(s&&s.created&&BAWAY)}
+var SPECIAL57={key:'',back:null,etab:null};
+function specialKind57(){var b=s&&s.battle,r=dgRoom();return b?(b.wb?'wb':b.tower?'tower':b.kind==='pvp'?'pvp':b.kind==='war'?'war':b.kind!=='monster'?'other':''):r&&r.st==='fight'?'dg':''}
+function specialNav57(){
+ if(SV||!s||!s.created)return;
+ var kind=specialKind57(),b=s.battle,r=dgRoom();
+ if(kind){var key=kind+':'+(b?(b.key50||b.jid||b.intro53Until||b.e.n):r.id+':'+r.stage);
+  if(SPECIAL57.key!==key){SPECIAL57.key=key;SPECIAL57.back=kind==='pvp'?'pvp':kind==='war'?'guild':kind==='other'?(BAWAY||s.tab):'tower';SPECIAL57.etab=kind==='wb'?'wb':kind==='dg'?'dg':kind==='tower'?'tower':null;BAWAY=null;BATTLE_UI.details=false}
+ }else if(SPECIAL57.key&&!battlePresentationActive()&&!s.res){if(!BAWAY){BAWAY=SPECIAL57.back;if(SPECIAL57.etab)s.etab=SPECIAL57.etab}SPECIAL57.key='';SPECIAL57.back=null;SPECIAL57.etab=null}
+}
+function miniAllowed57(){var key=BAWAY||s.tab;return !specialKind57()&&!SPECIAL57.key&&key!=='pvp'&&!(key==='tower'&&(s.etab==='dg'||s.etab==='wb'))}
+function menuLive55(){return !!(s&&s.created&&BAWAY&&miniAllowed57())}
 function menuStatus56(){var b=s.battle,r=dgRoom(),d=battlePresentationActive()?BATTLE_PRESENT.data:null;return d?(d.type==='defeat'?'พ่ายแพ้':d.type==='escape'?'หลบหนีสำเร็จ':d.type==='target'?'เตรียมเป้าหมายถัดไป':'ชนะการต่อสู้'):b?'เทิร์น '+(b.turn|0)+' · '+(autoRunning()?'ออโต้กำลังต่อสู้':'รอเลือกคำสั่ง'):r&&r.st==='fight'?'ดันเจี้ยน รอบ '+(r.round|0):s.res?'สรุปผลการต่อสู้':FLD.moving?'กำลังเดิน':autoRunning()?'กำลังหามอนสเตอร์':TOWN.on?'เมืองหลวง':'แผนที่ล่า'}
 function menuScene55(){return '<div class="live-under55"><canvas id="menuScene55" width="360" height="450" aria-label="ฉากเกมต่อเนื่องขณะเปิดเมนู"></canvas><div class="live-label55"><b>'+esc(nick())+'</b><small id="menuStatus56">'+esc(menuStatus56())+'</small><button class="btn sm" data-a="bback">กลับฉากเกม ▶</button></div></div>'}
 function menuPaint55(tn){
@@ -6364,16 +6377,16 @@ function netPump(){
  apiCall('POST','/api/act',x).then(netApply).catch(netErr).then(function(){NET.busy=false;netPump()})}
 function netTick(){if(battlePresentationActive()||scene53Busy())return;
  if(NET.tickBusy||NET.busy||!NET.token||!s)return;NET.tickBusy=true;NET.tickAt=Date.now();
- apiCall('POST','/api/tick',{v:NET.v}).then(function(j){netBadge();if(j&&j.s)netApply(j);else{renderStatus();var ck=s.battle?-1:Math.ceil(cdLeft()/1000);if(ck!==lastCd&&(s.tab==='wild'||s.tab==='pvp')){lastCd=ck;render()}}}).catch(netErr).then(function(){NET.tickBusy=false})}
+ apiCall('POST','/api/tick',{v:NET.v}).then(function(j){netBadge();if(j&&j.s)netApply(j);else{renderStatus();var ck=s.battle?-1:Math.ceil(cdLeft()/1000);if(ck!==lastCd&&(s.tab==='wild'||(BAWAY||s.tab)==='pvp')){lastCd=ck;render()}}}).catch(netErr).then(function(){NET.tickBusy=false})}
 function netWB(){
  if(!NET.token||NET.wbBusy||Date.now()-NET.wbAt<15000)return;NET.wbBusy=true;NET.wbAt=Date.now();
- apiCall('GET','/api/wboss').then(function(j){NET.wb=j;HYD_IMG={};if(s&&s.tab==='tower'&&!s.battle)render()}).catch(function(){}).then(function(){NET.wbBusy=false})}
+ apiCall('GET','/api/wboss').then(function(j){NET.wb=j;HYD_IMG={};if(s&&(BAWAY||s.tab)==='tower'&&!s.battle)render()}).catch(function(){}).then(function(){NET.wbBusy=false})}
 function netFac(){
  if(!NET.token||NET.facBusy||Date.now()-NET.facAt<20000)return;NET.facBusy=true;NET.facAt=Date.now();
  apiCall('GET','/api/fac').then(function(j){NET.fac=j.list||[];if(s&&s.tab==='guild'&&!s.battle)render()}).catch(function(){}).then(function(){NET.facBusy=false})}
 function netLadder(){
  if(!NET.token||NET.ladBusy||Date.now()-NET.ladAt<20000)return;NET.ladBusy=true;NET.ladAt=Date.now();
- apiCall('GET','/api/ladder').then(function(j){NET.ladder=j;if(s&&s.tab==='pvp'&&!s.battle)render()}).catch(function(){}).then(function(){NET.ladBusy=false})}
+ apiCall('GET','/api/ladder').then(function(j){NET.ladder=j;if(s&&(BAWAY||s.tab)==='pvp'&&!s.battle)render()}).catch(function(){}).then(function(){NET.ladBusy=false})}
 function isGuest(){return CL&&/^guest_/i.test(curUser||'')}
 function guestCard(){if(!isGuest())return '';
  return '<section class="card" style="border-color:#5fd16f"><p class="eyebrow">บัญชีผู้เยี่ยมชม</p><h3>ตั้งไอดีถาวร</h3><p class="hint">ตอนนี้ตัวละครผูกกับเครื่องนี้เท่านั้น ถ้าล้างเบราว์เซอร์หรือเปลี่ยนเครื่องจะเข้าไม่ได้ · ตั้งไอดีและรหัสผ่านเพื่อเก็บตัวละครไว้เล่นได้ทุกเครื่อง (ตัวละครและของทั้งหมดอยู่ครบ)</p>'+
