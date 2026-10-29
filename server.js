@@ -397,7 +397,9 @@ function ptMem(uid, p) { return { uid, n: String(p.s.name || '?').slice(0, 16), 
 function playerLook52(o){
  const owners={knight:'warrior',berserk:'warrior',shadow:'rogue',venom:'rogue',seal:'mage',curse:'mage',templar:'paladin',judge:'paladin',ranger:'archer',sniper:'archer'};
  const br=owners[o.job2]===o.cls?o.job2:null,tier=br?(o.job3&&o.job4===br&&o.lvl>=100?3:o.job3?2:1):0;
- return Object.assign({},o.look||{},{tier,br});
+ const c=o.collect59,z=c&&c.fx,colors=['#85d98b', '#a6b7ff', '#ff985d', '#f7d06d', '#8de8ff', '#bb8aff', '#a6e85a', '#77cfff', '#ffa7dd'];
+ const collect59=Number.isInteger(z)&&z>=0&&z<9&&c.q&&Array.isArray(c.q[z])&&c.q[z].length===3&&c.q[z].every(n=>n>=3)?colors[z]:null;
+ return Object.assign({},o.look||{},{tier,br,collect59});
 }
 function ptRefresh(m) { const q = live.get(m.uid); if (q && q.s) { m.n = String(q.s.name || m.n).slice(0, 16); m.cls = q.s.cls || m.cls; m.lvl = q.s.lvl | 0; m.z = q.s.zone | 0; m.b = q.s.battle ? 1 : 0; m.look = playerLook52(q.s); m.hp = Math.max(0,Number(q.s.hp)||0); m.mhp = Math.max(1,Number(q.s.maxhp)||1); } }
 function ptNear(uid, s) { // เพื่อนที่ออนไลน์ อยู่แผนที่เดียวกัน และเลเวลห่างไม่เกิน 15
