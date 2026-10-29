@@ -115,7 +115,7 @@ function updateSnap(uid, p) {
 }
 
 // ---------- บอสโลก ไฮดรา (รวมดาเมจทุกคน รีเซ็ตเที่ยงคืนเวลาไทย) ----------
-const WB_HP = 9000000, WB_PRIZE = [{ g: 14000, f: 3 }, { g: 7000, f: 2 }, { g: 3500, f: 1 }]; // ทองลด 30% จากเดิม
+const WB_HP = 2000000, WB_PRIZE = [{ g: 14000, f: 3 }, { g: 7000, f: 2 }, { g: 3500, f: 1 }]; // ทองลด 30% จากเดิม
 const PRIZE_PENDING = new Set(); // ผู้เล่นที่มีรางวัลรอรับ (แจกตอนส่งคำสั่งครั้งถัดไป ไม่ต้องรีเฟรช)
 const today = () => Math.floor((Date.now() + 7 * 3600e3) / 864e5);
 const WB = { day: 0, total: 0, dmg: new Map(), prev: [], killed: false }; // dmg: uid -> {n, cls, dmg}
@@ -393,7 +393,13 @@ function ptLeave(uid) {
   if (r.host === uid) r.host = r.mem[0].uid;
 }
 function ptMem(uid, p) { return { uid, n: String(p.s.name || '?').slice(0, 16), cls: p.s.cls || null, lvl: p.s.lvl | 0, z: p.s.zone | 0, x: 720, y: 540, seen: Date.now(), b: 0 }; }
-function ptRefresh(m) { const q = live.get(m.uid); if (q && q.s) { m.n = String(q.s.name || m.n).slice(0, 16); m.cls = q.s.cls || m.cls; m.lvl = q.s.lvl | 0; m.z = q.s.zone | 0; m.b = q.s.battle ? 1 : 0; m.look = q.s.look; m.hp = Math.max(0,Number(q.s.hp)||0); m.mhp = Math.max(1,Number(q.s.maxhp)||1); } }
+// Attach authoritative job appearance to presence, without altering the saved fashion.
+function playerLook52(o){
+ const owners={knight:'warrior',berserk:'warrior',shadow:'rogue',venom:'rogue',seal:'mage',curse:'mage',templar:'paladin',judge:'paladin',ranger:'archer',sniper:'archer'};
+ const br=owners[o.job2]===o.cls?o.job2:null,tier=br?(o.job3&&o.job4===br&&o.lvl>=100?3:o.job3?2:1):0;
+ return Object.assign({},o.look||{},{tier,br});
+}
+function ptRefresh(m) { const q = live.get(m.uid); if (q && q.s) { m.n = String(q.s.name || m.n).slice(0, 16); m.cls = q.s.cls || m.cls; m.lvl = q.s.lvl | 0; m.z = q.s.zone | 0; m.b = q.s.battle ? 1 : 0; m.look = playerLook52(q.s); m.hp = Math.max(0,Number(q.s.hp)||0); m.mhp = Math.max(1,Number(q.s.maxhp)||1); } }
 function ptNear(uid, s) { // เพื่อนที่ออนไลน์ อยู่แผนที่เดียวกัน และเลเวลห่างไม่เกิน 15
   const r = ptOf(uid); if (!r) return [];
   const now = Date.now();
@@ -416,36 +422,38 @@ function ptWhy(hs, m, now) { // '' = พร้อมเข้าสู้ด้�
   if (Math.abs((q.s.lvl | 0) - (hs.lvl | 0)) > PT_LV) return 'เลเวลห่างเกิน ' + PT_LV; if ((q.s.energy | 0) < 2) return 'พลังไม่พอ';
   return '';
 }
-function ptLead(uid, p) {
-  const b = p.s && p.s.battle; if (!b || b.ptChk) return; b.ptChk = 1;
-  if (b.kind !== 'monster' || b.tower || b.joint || b.pk == null) return;
-  const r = ptOf(uid); if (!r || r.host !== uid) return;
-  let n = 0; const jid = uid + ':' + Date.now();
-  const J = { jid, nm: p.s.name, pk: b.pk, e: b.e, grp: b.grp || null, fboss: b.fboss ? 1 : 0 };
-  const now = Date.now(), miss = [];
-  for (const rm of r.mem) {
-    if (rm.uid === uid || !rm.fol) continue; const why = ptWhy(p.s, rm, now); if (why) { miss.push(rm.n + ': ' + why); continue; }
-    const m = rm, q = live.get(m.uid); if (!q || !q.s) continue; if (q.s.battle) { miss.push(rm.n + ': กำลังสู้อยู่'); continue; }
-    try { let ok = false; const o = engine.run(q.s, q.ui, {}, E => { ok = E.ptJoin ? E.ptJoin(J) : false; }); q.s = o.s; q.ui = o.ui; if (ok) { n++; q.v++; persist(m.uid, q); } }
-    catch (e) { console.error('party join', e.message); }
-  }
-  if (n) { b.joint = 1; b.jid = jid; b.lines = (b.lines || []).concat(['🤝 ลูกทีม ' + n + ' คนเข้าสู้ด้วยกัน (XP ÷2)']); }
-  if (miss.length) b.lines = (b.lines || []).concat(['⚠️ เข้าสู้ด้วยไม่ได้ · ' + miss.join(' · ')]);
+const PARTY_JOINT_ENABLED51=false; // temporarily pause shared-battle entry; ordinary parties remain
+function ptLead(uid,p){
+ if(!PARTY_JOINT_ENABLED51)return;
+ const b=p.s&&p.s.battle;if(!b||b.ptChk)return;b.ptChk=1;
+ if(b.kind!=='monster'||b.tower||b.joint||b.pk==null)return;
+ const r=ptOf(uid);if(!r)return;const jid=crypto.randomUUID(),now=Date.now(),joined=[uid],miss=[];
+ const J={jid,nm:p.s.name,pk:b.pk,e:b.e,grp:b.grp||null,fboss:b.fboss?1:0};
+ for(const m of r.mem){if(m.uid===uid)continue;ptRefresh(m);let why=ptWhy(p.s,m,now),q=live.get(m.uid);if(!why&&q&&q.s.battle)why='กำลังสู้อยู่';if(!why&&q&&(q.s.dup||q.s.res))why='กำลังรับผล/รางวัล';const tw=TOWN.get(m.uid);if(!why&&tw&&now-tw.at<6000)why='อยู่เมืองหลวง';if(why){miss.push(m.n+': '+why);continue}
+  try{let ok=false;const out=engine.run(q.s,q.ui,{},E=>{ok=E.ptJoin?E.ptJoin(J):false});q.s=out.s;q.ui=out.ui;if(ok){joined.push(m.uid);q.s.battle.key50=jid;q.v++;persist(m.uid,q)}else miss.push(m.n+': เป้าหมายออโต้ต่างกันหรือยังไม่พร้อม')}catch(e){console.error('party join',e.message)}
+ }
+ if(joined.length>1){b.joint=1;b.jid=jid;b.key50=jid;for(const id of joined){const q=live.get(id);if(q&&q.s.battle){q.s.battle.roster50=joined.slice();q.s.battle.lines=(q.s.battle.lines||[]).concat(['ร่วมรบ '+joined.length+' คน · มอนชุดเดียวกัน · XP ตามกติกาปาร์ตี้']);}}}
+ if(miss.length)b.lines=(b.lines||[]).concat(['เข้าร่วมไม่ได้ · '+miss.join(' · ')]);
 }
-// สู้ด้วยกัน: ดาเมจที่ใครคนหนึ่งทำกับมอน → ลดเลือดมอนตัวเดียวกันของเพื่อนในฉากเดียวกัน (jid เดียวกัน)
-function jSnap(s) { const b = s && s.battle; if (!b || !b.jid) return null; return { jid: b.jid, kills: s.kills | 0, hp: b.grp ? b.grp.map((g, i) => i === b.gi ? b.ehp : g.ehp) : [b.ehp] }; }
-function jSync(uid, p, js) {
-  if (!js) return; const b = p.s.battle; let post;
-  if (b && b.jid === js.jid) post = b.grp ? b.grp.map((g, i) => i === b.gi ? b.ehp : g.ehp) : [b.ehp];
-  else if ((p.s.kills | 0) > js.kills) post = js.hp.map(() => 0); else return;
-  const dmg = js.hp.map((h, i) => Math.max(0, (h | 0) - (post[i] | 0))); if (!dmg.some(x => x > 0)) return;
-  const r = ptOf(uid); if (!r) return;
-  for (const m of r.mem) {
-    if (m.uid === uid) continue; const q = live.get(m.uid); if (!q || !q.s || !q.s.battle || q.s.battle.jid !== js.jid) continue;
-    try { const o = engine.run(q.s, q.ui, {}, E => { if (E.jDmg) E.jDmg(dmg); }); q.s = o.s; q.ui = o.ui; q.v++; persist(m.uid, q); }
-    catch (e) { console.error('joint sync', e.message); }
-  }
+function jSnap(s){const b=s&&s.battle;if(!b||!b.jid)return null;return {jid:b.jid,hp:b.grp?b.grp.map((g,i)=>i===b.gi?b.ehp:g.ehp):[b.ehp]}}
+function jSync(uid,p,previous,out){
+ if(!previous)return;const b=p.s.battle,ended=out&&out.joint50;let hp=b&&b.jid===previous.jid?(b.grp?b.grp.map((g,i)=>i===b.gi?b.ehp:g.ehp):[b.ehp]):ended&&ended.jid===previous.jid?ended.hp:null;
+ if(!hp||hp.length!==previous.hp.length||!hp.some((n,i)=>n!==previous.hp[i]))return;
+ const finishAt=Date.now()+5000;
+ for(const [id,q] of live){if(id===uid||!q.s||!q.s.battle||q.s.battle.jid!==previous.jid)continue;
+  try{const o=engine.run(q.s,q.ui,{},E=>{if(E.jHp50)E.jHp50(hp)});q.s=o.s;q.ui=o.ui;const scenes=(o.fx||[]).filter(x=>x[0]==='fxScene');if(scenes.length)q.partyFx50={at:Date.now(),fx:scenes.slice(-1)};if(q.s.res&&q.s.res.kind==='party')q.s.res.until=finishAt;q.v++;persist(id,q);updateSnap(id,q)}catch(e){console.error('party HP sync',e.message)}
+ }
+ if(p.s.res&&p.s.res.kind==='party')p.s.res.until=finishAt;
 }
+function jRoster50(uid,p,out){
+ const b=p.s&&p.s.battle;if(!b)return;if(!b.key50)b.key50=crypto.randomUUID();if(!b.jid)return;
+ if(out&&out.fxt&&out.fxt.pAtk!=null)p.partyAction50={at:Date.now(),style:battleStyle50(p.s.cls)};
+ const active=[...live].filter(([id,q])=>q.s&&q.s.battle&&q.s.battle.jid===b.jid),members=active.map(([id,q])=>{const o=q.s;return {uid:id,n:String(o.name||'').slice(0,16),cls:o.cls,look:playerLook52(o),hp:o.hp,mhp:o.maxhp,at:q.partyAction50&&q.partyAction50.at||0,style:q.partyAction50&&q.partyAction50.style||'idle'}});
+ const key=JSON.stringify(members);for(const [id,q] of active){if(JSON.stringify(q.s.battle.party50)!==key){q.s.battle.party50=members;if(id!==uid){q.v++;persist(id,q)}}}
+}
+function battleStyle50(cls){return ['warrior','rogue','paladin'].includes(cls)?'melee':'ranged'}
+function partyAfter50(uid,p,previous,out){ptLead(uid,p);jSync(uid,p,previous,out);jRoster50(uid,p,out)}
+
 function ptSweep() { const now = Date.now(); for (const r of [...PTR.values()]) for (const m of r.mem.slice()) if (now - m.seen > PT_STALE_MS) ptLeave(m.uid); }
 function ptPayload(uid) {
   ptSweep();
@@ -481,7 +489,7 @@ function realOnline(now) { let n = 0; for (const p of live.values()) if (p.s && 
 // ===== ตัวละครออฟไลน์ (ออโต้ 💤) · ผู้เล่นจริงที่ออกเกมไม่เกิน 8 ชม. ยังเดินล่าในแผนที่สุดท้าย =====
 // เซิร์ฟเวอร์ไม่จำลองการต่อสู้ แค่ส่งรายชื่อให้เครื่องผู้เล่นวาด · อ่านฐานข้อมูลครั้งเดียวตอนเปิดเซิร์ฟเวอร์
 const OFFL = new Map(), OFF_MS = 8 * 3600000, OFF_MAX_MEM = 400;
-function offProf(s, at) { if (!s || !s.created || !s.name) return null; return { n: String(s.name).slice(0, 16), cls: s.cls, lvl: s.lvl | 0, look: s.look, z: Math.max(0, Math.min(5, s.zone | 0)), at }; }
+function offProf(s, at) { if (!s || !s.created || !s.name) return null; return { n: String(s.name).slice(0, 16), cls: s.cls, lvl: s.lvl | 0, look: playerLook52(s), z: Math.max(0, Math.min(5, s.zone | 0)), at }; }
 function offRemember(uid, s, at) { const pr = offProf(s, at); if (!pr) return; OFFL.set(uid, pr); if (OFFL.size > OFF_MAX_MEM) { const old = [...OFFL.entries()].sort((a, b) => a[1].at - b[1].at).slice(0, OFFL.size - OFF_MAX_MEM); for (const [k] of old) OFFL.delete(k); } }
 async function offBoot() { try { const rows = await db.recentSaves(Date.now() - OFF_MS); for (const r of rows || []) { if (OFFL.has(r.user_id)) continue; try { offRemember(r.user_id, JSON.parse(r.data), Number(r.updated_at) || 0); } catch (e) {} } console.log('ตัวละครออฟไลน์ที่โหลด:', OFFL.size); } catch (e) { console.error('offBoot', e.message); } }
 let OFFC = { at: 0, list: [] };
@@ -629,7 +637,7 @@ function cleanInputs(inp) {
   if (inp && typeof inp === 'object') for (const k of ['cname', 'gname', 'gamt']) if (typeof inp[k] === 'string') o[k] = inp[k].slice(0, 40);
   return o;
 }
-const reply = (res, p, out, user) => send(res, 200, { s: out.s, ui: out.ui, fx: out.fx || [], fxt: out.fxt || {}, v: p.v, user });
+const reply=(res,p,out,user)=>{const pending=p.partyFx50;delete p.partyFx50;return send(res,200,{s:p.s,ui:p.ui,fx:(out.fx||[]).concat(pending&&Date.now()-pending.at<5000?pending.fx:[]),fxt:out.fxt||{},v:p.v,user})};
 
 // B48: public equipment views and opt-in party invitations, kept outside saves.
 const PT_INV48 = new Map(); let PT_INV_ID48 = Date.now();
@@ -743,6 +751,8 @@ const routes = {
     if (!/^[a-z0-9]{1,20}$/.test(a) || (pr && pr.length > 80)) return send(res, 400, { error: 'คำสั่งไม่ถูกต้อง' });
     const p = await session(u.id);
     if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
+    if(/^m51(add|cap|reset)$/.test(a)){const room=DGR.get(DGU.get(u.id));if(room&&room.st==='fight')return send(res,409,{error:'จบดันเจี้ยนทีมก่อนปรับความชำนาญ'});}
+    if(a==='b'&&b.fight&&(!p.s.battle||p.s.battle.key50!==b.fight||(p.s.battle.gi||0)!==Number(b.target)))return reply(res,p,{fx:[],fxt:{}});
     await prizeCheck(u.id, p);
     const before = p.s.gold;
     engine.setBoard(board(), u.id); await wbEnsure(); engine.setWB(wbCtx());
@@ -751,7 +761,7 @@ const routes = {
     const js0 = jSnap(p.s);
     const out = engine.run(p.s, p.ui, cleanInputs(b.inp), E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); E.act(a, pr); });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; ptAfter(u.id, p); cityAfter(p); funMark(p); await launchCheck(u.id, p); p.v++; persist(u.id, p); updateSnap(u.id, p);
+    p.s = out.s; p.ui = out.ui; partyAfter50(u.id,p,js0,out);ptAfter(u.id, p); cityAfter(p); funMark(p); await launchCheck(u.id, p); p.v++; persist(u.id, p); updateSnap(u.id, p);
     if (out.s.gold - before > 200000) db.audit(u.id, 'gold_jump', a + ' +' + (out.s.gold - before)).catch(() => {});
     reply(res, p, out);
   },
@@ -759,7 +769,7 @@ const routes = {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
     const b = await readBody(req);
     const p = await session(u.id), now = Date.now();
-    if (now - p.lastTick < 500) return send(res, 200, { same: true, v: p.v }); // tick ถี่กว่า 0.5 วินาทีไม่นับ
+    if(now-p.lastTick<500){if(Number(b.v)!==p.v)return reply(res,p,{fx:[],fxt:{}});return send(res,200,{same:true,v:p.v})} // tick ถี่กว่า 0.5 วินาทีไม่นับ
     p.lastTick = now;
     let changed = PRIZE_PENDING.has(u.id);
     await prizeCheck(u.id, p);
@@ -769,7 +779,7 @@ const routes = {
     const twn = TOWN.get(u.id), inTown = !!(twn && now - twn.at < 6000), js0 = jSnap(p.s);
     const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); const tg = E.townEn ? E.townEn(inTown) : false; changed = E.tick() || tg || changed; });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; ptAfter(u.id, p); funMark(p); if (await launchCheck(u.id, p)) changed = true; if (p.s.cityRes) { cityAfter(p); changed = true; }
+    p.s = out.s; p.ui = out.ui; partyAfter50(u.id,p,js0,out);ptAfter(u.id, p); funMark(p); if (await launchCheck(u.id, p)) changed = true; if (p.s.cityRes) { cityAfter(p); changed = true; }
     if (changed || out.fx.length) { p.v++; persist(u.id, p); updateSnap(u.id, p); }
     if (!changed && !out.fx.length && Number(b.v) === p.v) return send(res, 200, { same: true, v: p.v });
     reply(res, p, out);
@@ -945,7 +955,7 @@ const routes = {
     if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
     const now = Date.now();
     if (b.leave) { TOWN.delete(u.id); return send(res, 200, { list: [] }); }
-    TOWN.set(u.id, { n: String(p.s.name || u.display).slice(0, 16), cls: p.s.cls, lvl: p.s.lvl | 0, look: p.s.look, x: Math.max(0, Math.min(1440, Number(b.x) || 0)), y: Math.max(0, Math.min(1080, Number(b.y) || 0)), at: now });
+    TOWN.set(u.id, { n: String(p.s.name || u.display).slice(0, 16), cls: p.s.cls, lvl: p.s.lvl | 0, look: playerLook52(p.s), x: Math.max(0, Math.min(1440, Number(b.x) || 0)), y: Math.max(0, Math.min(1080, Number(b.y) || 0)), at: now });
     for (const [id, t] of TOWN) if (now - t.at > TOWN_ON_MS * 5) TOWN.delete(id);
     for (const [id, t] of LASTSAY) if (now - t.at > 10000) LASTSAY.delete(id);
     const list = [];
