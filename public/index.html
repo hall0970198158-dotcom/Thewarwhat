@@ -1,4 +1,4 @@
-<title>ศึกชิงเมือง · TheWarWhat · แก้เลื่อนหน้าสร้างตัวบน iPhone B64</title>
+<title>ศึกชิงเมือง · TheWarWhat · แก้กลับหน้าล่าและแผนที่ B66</title>
 <meta name="thewarwhat-balance" content="B3-2026-10-28">
 <meta name="thewarwhat-characters" content="B52-resolve-job-before-look-copy">
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -2867,9 +2867,9 @@ function act(a,p){
  if(a==='fieldtog'&&!SV){SET.field=SET.field===false;setSave();FLD.fmSent=-1e9;render();return}
  if(a==='ftarget'&&!SV){targetSelect49(p);return}
  if(a==='bset'&&!SV){BSET=!BSET;try{localStorage.setItem('shuk-bset',BSET?'1':'0')}catch(e){}render();return}
- if(a==='bback'&&!SV){BAWAY=null;render();if(window.scrollTo)window.scrollTo(0,0);return}
+ if(a==='bback'&&!SV){returnWorld66();return}
  if(a==='tab'&&!SV){
-  if(s.created){BAWAY=p==='wild'?null:p;render();if(window.scrollTo)window.scrollTo(0,0);return}
+  if(s.created){if(p==='wild'){returnWorld66();return}NAV66.world=false;BAWAY=p;render();if(window.scrollTo)window.scrollTo(0,0);return}
   BAWAY=null}
  if(CL&&!CL_LOCAL[a]){netAct(a,p);return}
  if(a==='farmreset63'){farmReset63(p);return}
@@ -4929,9 +4929,9 @@ function doLogin(){
   startGame(key,false);
  }).catch(function(){setMsg('เข้าเกมส์ไม่สำเร็จ ลองใหม่อีกครั้ง')}).then(function(){setBusy(false)});
 }
-function showLogin(){FARM63_UI.ask=false;COL_UI59.session=false;COL_UI59.show=false;COL_UI59.z=0;SPECIAL57.key='';SPECIAL57.back=null;SPECIAL57.etab=null;scene53Reset();BAWAY=null;GEAR_UI.slot=null;SHOP_UI.open=false;PARTY_UI.open=false;PARTY_UI.uid=0;AUTO_UI.open=false;BATTLE_PRESENT.data=null;BATTLE_PRESENT.until=0;document.body.classList.remove('town-landscape');document.body.classList.remove('creating-character');
+function showLogin(){NAV66.world=false;FARM63_UI.ask=false;COL_UI59.session=false;COL_UI59.show=false;COL_UI59.z=0;SPECIAL57.key='';SPECIAL57.back=null;SPECIAL57.etab=null;scene53Reset();BAWAY=null;GEAR_UI.slot=null;SHOP_UI.open=false;PARTY_UI.open=false;PARTY_UI.uid=0;AUTO_UI.open=false;BATTLE_PRESENT.data=null;BATTLE_PRESENT.until=0;document.body.classList.remove('town-landscape');document.body.classList.remove('creating-character');
  var an=document.getElementById('authNote');if(an)an.textContent=CL?'เล่นออนไลน์: สมัครไอดีเพื่อใช้บัญชีเดิมข้ามเครื่อง · ผู้เยี่ยมชมควรตั้งไอดีถาวรก่อนเปลี่ยนเครื่อง':'โหมดเล่นในเครื่อง: บัญชีและเซฟอยู่ในเบราว์เซอร์นี้ กรุณาใช้เครื่องเดิมเพื่อเล่นต่อ';
- s=null;curUser=null;ON.open=false;entryLayoutSync();
+ s=null;curUser=null;ON.open=false;SNDW.b=false;SNDW.lvl=0;MUS_DEMO=0;SND.last63={};musTick();SCROLL_UI.drag=null;SCROLL_UI.pending=false;SCROLL_UI.positions=Object.create(null);ENTRY_TOUCH64=null;entryLayoutSync();
  document.getElementById('login').hidden=false;
  document.getElementById('gameWrap').hidden=true;
  document.getElementById('nav').hidden=true;
@@ -5041,14 +5041,21 @@ function drawEnh(cv,tn){
   enhText(c,'แตก!',W/2,34,30,'#ff5a4a',Math.min(1,t/120))}
 }
 
-var SET=(function(){var d={sfx:true,mus:true,vs:85,vm:60,lang:'th',field:true,ft:{},fs:true,bul:true,spriteChars:true,quiet63:true};try{var o=JSON.parse(localStorage.getItem('shuk-settings')||'{}');for(var k in o)if(k in d)d[k]=o[k]}catch(e){}return d})();
+var SET=(function(){var d={sfx:true,mus:true,vs:85,vm:60,lang:'th',field:true,ft:{},fs:true,bul:true,spriteChars:true,quiet63:true,eco:true};try{var o=JSON.parse(localStorage.getItem('shuk-settings')||'{}');for(var k in o)if(k in d)d[k]=o[k]}catch(e){}return d})();
 function setSave(){try{localStorage.setItem('shuk-settings',JSON.stringify(SET))}catch(e){}}
 var SND={ctx:null,sfxG:null,musG:null,track:null,want:null,next:0,step:0,timer:null,nb:null};
 function sndInit(){
  if(SV||SND.ctx)return;var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
- try{SND.ctx=new AC();SND.sfxG=SND.ctx.createGain();SND.musG=SND.ctx.createGain();var cp=SND.ctx.createDynamicsCompressor();cp.threshold.value=-18;cp.knee.value=18;cp.ratio.value=3;cp.attack.value=.006;cp.release.value=.25;SND.sfxG.connect(cp);SND.musG.connect(cp);var master=SND.ctx.createGain();master.gain.value=.75;cp.connect(master);master.connect(SND.ctx.destination);var n=SND.ctx.sampleRate,b=SND.ctx.createBuffer(1,n,n),d=b.getChannelData(0);for(var i=0;i<n;i++)d[i]=Math.random()*2-1;SND.nb=b;sndVol()}catch(e){SND.ctx=null}}
-function sndVol(){if(!SND.ctx)return;var t=SND.ctx.currentTime,quiet=audioQuiet63(),mute=document.hidden||ECO.on;SND.sfxG.gain.setTargetAtTime(!mute&&SET.sfx?Math.max(0,Math.min(100,Number(SET.vs)||0))/100*(quiet?.28:.75):0,t,.06);SND.musG.gain.setTargetAtTime(!mute&&SET.mus?Math.max(0,Math.min(100,Number(SET.vm)||0))/100*(quiet?.23:.48):0,t,.2)}
-function sndWake(){if(SV)return;sndInit();if(SND.ctx&&SND.ctx.state==='suspended')SND.ctx.resume();musTick()}
+ try{SND.ctx=new AC();SND.sfxG=SND.ctx.createGain();SND.musG=SND.ctx.createGain();var cp=SND.ctx.createDynamicsCompressor();cp.threshold.value=-18;cp.knee.value=18;cp.ratio.value=3;cp.attack.value=.006;cp.release.value=.25;SND.sfxG.connect(cp);SND.musG.connect(cp);var master=SND.ctx.createGain();master.gain.value=1;cp.connect(master);master.connect(SND.ctx.destination);var n=SND.ctx.sampleRate,b=SND.ctx.createBuffer(1,n,n),d=b.getChannelData(0);for(var i=0;i<n;i++)d[i]=Math.random()*2-1;SND.nb=b;sndVol()}catch(e){SND.ctx=null}}
+function sndVol(){if(!SND.ctx)return;var t=SND.ctx.currentTime,quiet=audioQuiet63(),mute=document.hidden||ECO.on;SND.sfxG.gain.setTargetAtTime(!mute&&SET.sfx?Math.max(0,Math.min(100,Number(SET.vs)||0))/100*(quiet?.72:1.15):0,t,.06);SND.musG.gain.setTargetAtTime(!mute&&SET.mus?Math.max(0,Math.min(100,Number(SET.vm)||0))/100*(quiet?.58:.9):0,t,.2)}
+function sndWake(){
+ if(SV||document.hidden)return null;sndInit();var c=SND.ctx;if(!c)return null;
+ if(c.state==='suspended'||c.state==='interrupted'){
+  if(SND.resume65)return SND.resume65;
+  try{var p=c.resume();if(p&&p.then){SND.resume65=p.then(function(){SND.resume65=null;if(SND.ctx===c)musTick()},function(){SND.resume65=null});return SND.resume65}}catch(e){}
+ }
+ musTick();return null;
+}
 if(!SV){['pointerdown','keydown','touchstart'].forEach(function(ev){document.addEventListener(ev,sndWake,{passive:true})})}
 function tone(f,t0,dur,type,vol,dest,slide){var c=SND.ctx,o=c.createOscillator(),g=c.createGain();o.type=type||'square';o.frequency.setValueAtTime(f,t0);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t0+dur);
  g.gain.setValueAtTime(0.0001,t0);g.gain.exponentialRampToValueAtTime(vol,t0+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);o.connect(g);g.connect(dest||SND.sfxG);o.start(t0);o.stop(t0+dur+0.03)}
@@ -5071,7 +5078,7 @@ var SFX={
  same:function(t){noise(t,0.3,0.25,600,null,true);tone(330,t,0.22,'triangle',0.12,null,300)},
  click:function(t){tone(1200,t,0.025,'square',0.05)},
  coin:function(t){tone(1318,t,0.08,'square',0.09);tone(1760,t+0.06,0.14,'square',0.09)}};
-function sfx(k,ms){if(SV||!SET.sfx||!SFX[k]||document.hidden||ECO.on)return;sndInit();if(!SND.ctx||SND.ctx.state!=='running')return;var quiet=audioQuiet63(),now=Date.now(),key=/^(win|lose|lvl)$/.test(k)?'reward':/^(hit|crit|skill|ehit|fire|buff)$/.test(k)?'combat':k;SND.last63=SND.last63||{};if(quiet&&SND.last63[key]!=null&&now-SND.last63[key]<(key==='reward'?4000:800))return;SND.last63[key]=now;try{SFX[k](SND.ctx.currentTime+.01+(ms||0)/1000)}catch(e){}}
+function sfx(k,ms,preview65){if(SV||!SET.sfx||!SFX[k]||document.hidden||ECO.on)return;sndInit();if(!SND.ctx||SND.ctx.state!=='running')return;var quiet=audioQuiet63(),now=Date.now(),key=/^(win|lose|lvl)$/.test(k)?'reward':/^(hit|crit|skill|ehit|fire|buff)$/.test(k)?'combat':k;SND.last63=SND.last63||{};if(!preview65&&quiet&&SND.last63[key]!=null&&now-SND.last63[key]<(key==='reward'?4000:800))return;if(!preview65)SND.last63[key]=now;try{SFX[k](SND.ctx.currentTime+.01+(ms||0)/1000)}catch(e){}}
 var MUS={
  town:{bpm:92,bass:[45,45,41,41,48,48,43,43],arp:[[57,60,64],[57,60,64],[53,57,60],[53,57,60],[60,64,67],[60,64,67],[55,59,62],[55,59,62]],
   mel:[69,0,72,0,76,0,74,72, 69,0,0,0,67,69,72,0, 65,0,69,0,72,0,71,69, 67,0,0,0,64,0,0,0]},
@@ -5119,7 +5126,7 @@ function settingsHtml(){
  return '<section class="card"><h3>⚙️ ตั้งค่า</h3>'+
   orientationChoices()+'<h4 class="st">ตัวละคร</h4>'+tgl('setsprites',SET.spriteChars!==false,'ชุดตัวละครใหม่','เปิด: ภาพตามอาชีพพร้อมแอนิเมชัน 8 ทิศทาง · ปิด: ภาพเดิมที่ปรับทรงผมและสีชุดได้ครบ')+
   '<h4 class="st">เสียง</h4>'+volRow('volSfx','เสียงเอฟเฟกต์',SET.sfx,SET.vs,'setsfx')+volRow('volMus','เพลงพื้นหลัง',SET.mus,SET.vm,'setmus')+
-  tgl('setquiet63',SET.quiet63,'ออโต้เสียงเบา','ลดระดับเสียงและเว้นระยะเสียงซ้ำระหว่างออโต้')+
+  tgl('setquiet63',SET.quiet63,'ออโต้เสียงเบา','ลดเสียงระหว่างออโต้เล็กน้อยและเว้นเสียงซ้ำ · ปิดเพื่อใช้เสียงเต็มตามแถบปรับ')+
   '<div class="grid2"><button class="btn" data-a="sndtest" data-p="sfx">🔊 ลองเสียงเอฟเฟกต์</button><button class="btn" data-a="sndtest" data-p="mus">🎵 ฟังเพลงต่อสู้</button></div>'+
   '<p class="hint">เพลงใหม่เปลี่ยนตามฉาก: เมือง / แผนที่ / ต่อสู้ / บอส · ถ้าไม่มีเสียง ให้แตะหน้าจอหนึ่งครั้ง (เบราว์เซอร์มือถือต้องแตะก่อนจึงเล่นเสียงได้) และเช็กปุ่มปิดเสียงของเครื่อง</p>'+
   '<h4 class="st">ภาษา / Language</h4><div class="grid2"><button class="btn" data-a="setlang" data-p="th" aria-pressed="'+(SET.lang==='th')+'">🇹🇭 ภาษาไทย</button><button class="btn" data-a="setlang" data-p="en" aria-pressed="'+(SET.lang==='en')+'">🇬🇧 English</button></div>'+
@@ -5127,6 +5134,11 @@ function settingsHtml(){
   '<h4 class="st">แชท</h4>'+tgl('setbul',SET.bul!==false,'ข้อความแชทลอยผ่านหน้าจอ','เวลามีคนพิมพ์ ข้อความจะวิ่งผ่านแล้วหายไป')+fsHtml()+'<h4 class="st">บทสอน</h4><button class="btn" data-a="tutreplay" style="width:100%">📖 ดูบทสอนผู้เล่นใหม่อีกครั้ง</button>'+
   '<p class="hint">การตั้งค่าเก็บในเครื่องนี้ (แต่ละเครื่องตั้งแยกกันได้)</p></section>'}
 var MUS_DEMO=0;
+function soundTest65(kind){
+ if(kind==='mus')SET.mus=true;else SET.sfx=true;setSave();
+ function play(){if(!SND.ctx||SND.ctx.state!=='running'||document.hidden||ECO.on)return;sndVol();if(kind==='mus'){MUS_DEMO=Date.now()+12000;SND.track=null;musTick()}else{sfx('hit',0,true);sfx('crit',350,true);sfx('skill',800,true);sfx('win',1400,true)}}
+ var p=sndWake();if(p&&p.then)p.then(play);else play();
+}
 var FS={prompt:null,auto:false};
 function fsStand(){try{return (window.matchMedia&&(matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches))||navigator.standalone===true}catch(e){return false}}
 function fsCan(){var d=document.documentElement;return !!(d&&(d.requestFullscreen||d.webkitRequestFullscreen))&&!fsStand()}
@@ -5155,7 +5167,7 @@ function setAct(a,p){
  else if(a==='setmus'){SET.mus=!SET.mus;setSave();sndWake();sndVol();musTick()}
  else if(a==='setlang'){var nl=p==='en'?'en':'th';if(nl!==SET.lang){SET.lang=nl;setSave();try{location.reload()}catch(e){}return}}
  else if(a==='tutreplay'){if(!s.battle){act('tab','wild');setTimeout(tutStart,350)}return}
- else if(a==='sndtest'){sndWake();if(p==='mus'){if(!SET.mus){SET.mus=true;setSave();sndVol()}MUS_DEMO=Date.now()+12000;SND.track=null;musTick()}else{sfx('hit');sfx('crit',350);sfx('skill',800);sfx('win',1400)}}
+ else if(a==='sndtest'){soundTest65(p)}
  render()}
 if(!SV)document.addEventListener('input',function(ev){var x=ev.target;if(!x||(x.id!=='volSfx'&&x.id!=='volMus'))return;var v=Math.max(0,Math.min(100,parseInt(x.value,10)||0));
  if(x.id==='volSfx')SET.vs=v;else SET.vm=v;setSave();sndWake();sndVol();var o=document.getElementById(x.id+'v');if(o)o.textContent=v;if(x.id==='volSfx')sfx('click')});
@@ -5164,7 +5176,7 @@ var TUT_STEPS=[
  {t:null,th:['ยินดีต้อนรับสู่ศึกชิงเมือง!','มาดูพื้นฐานกันสั้น ๆ ประมาณ 1 นาที จะได้เล่นเป็นทันที (กด "ข้าม" ได้ทุกเมื่อ)'],en:['Welcome to TheWarWhat!','A quick 1-minute tour of the basics (tap "Skip" any time)']},
  {t:'.hud',th:['แถบสถานะ','เลเวล · ทอง · คะแนน PvP ของคุณ ช่วงชั่วโมงทองจะมีป้าย 🔥 +50% ขึ้นตรงนี้'],en:['Status bar','Your level · gold · PvP rating. A 🔥 +50% badge appears here during golden hours']},
  {t:'.bars',th:['เลือด พลัง และ XP','HP หมด = แพ้ · การล่าใช้ "พลัง" ครั้งละ 2 (ฟื้นเอง 1 หน่วยทุก 3 นาที) · XP เต็มแล้วเลเวลอัป'],en:['HP, energy and XP','HP 0 = defeat · each hunt costs 2 energy (regains 1 every 3 min) · fill XP to level up']},
- {t:'.clock',th:['นาฬิกาและชั่วโมงทอง','ทุกวัน 13:00–14:00 และ 21:00–22:00 ได้ XP และทองจากการต่อสู้ +50% อย่าพลาด!'],en:['Clock & golden hours','Daily 12:00–13:00 and 18:00–19:00: +50% XP and gold from battles']},
+ {t:'.clock',th:['นาฬิกาและชั่วโมงทอง','ทุกวัน 13:00–14:00 และ 21:00–22:00 ได้ XP และทองจากการต่อสู้ +50% อย่าพลาด!'],en:['Clock & golden hours','Daily 13:00–14:00 and 21:00–22:00 (Thailand): +50% XP and gold from battles']},
  {t:'[data-a=zonemenu]',th:['เลือกแผนที่','แต่ละแผนที่มีเลเวลแนะนำ เริ่มที่ป่าเขียว แล้วย้ายเมื่อเลเวลถึง มอนเก่งขึ้น แต่ได้ของดีขึ้น'],en:['Choose a map','Each map has a recommended level. Start in Green Forest and move on as you level up']},
  {t:'#scene[data-mode=field]',th:['เดินล่ามอนในแผนที่','แตะหรือลากบนแผนที่เพื่อเดิน เดินชนมอนเพื่อเข้าสู้ (ใช้ 2 พลัง) ชนะได้ทอง XP วัตถุดิบ การ์ด · บอสสนามมงกุฎทองเกิดทุก 10 นาที'],en:['Walk & hunt on the map','Tap or drag on the map to walk; bump into a monster to fight (2 energy). Win gold, XP, materials, cards · a crowned field boss spawns every 10 min']},
  {t:'[data-a=autohunt]',th:['ล่าออโต้','เปิดแล้วตัวละครจะเดินหามอนในแผนที่ สู้ ใช้สกิล และดื่มยาให้เอง จนพลังหมดหรือยาหมด'],en:['Auto hunt','Turn on to hunt, fight, use skills and drink potions automatically until energy or potions run out']},
@@ -5922,6 +5934,11 @@ function menuOpen(key){
  if(key==='bag'||key==='settings'){act('tab','me');act('dtabset',key==='bag'?'bag':'set');return}
  act('tab',key);
 }
+var NAV66={world:false};
+function returnWorld66(){
+ if(!s||!s.created)return;NAV66.world=true;s.tab='wild';BAWAY=null;MENU_UI.jump=null;FIELD_ISO.menu=false;zoneOpen=false;confirmReset=false;confirmLeave=false;
+ render();if(window.scrollTo)window.scrollTo(0,0);
+}
 function menuBack(){MENU_UI.jump=null;if(BAWAY||s.battle||s.autoHunt||s.autoTower)act('bback');else act('tab','wild')}
 function menuWrap(content){
  var current=BAWAY||s.tab,key=menuCurrentKey(),tabs=[['wild','ล่า','wild'],['char','ตัวละคร','char'],['skills','สกิล','char'],['collect','ของสะสม','me'],['farm','สรุปฟาร์ม','wild'],['craft','ตีของ','craft'],['bag','กระเป๋า','mat'],['mat','วัตถุดิบ/เก็บ','mat'],['pvp','PvP','pvp'],['tower','กิจกรรม','tower'],['guild','ฝ่าย','guild'],['settings','ตั้งค่า','me'],['me','แต่งตัว','me']];
@@ -6140,7 +6157,7 @@ var oldCosIcon46=cosIcon;cosIcon=function(slot,id,locked){if(slot!=='pet'||id===
 var VIEW_UI={mode:'landscape',angle:0,width:800,height:450,button:null};
 if(!SV){try{var storedView=localStorage.getItem('shuk-orientation');if(storedView==='portrait'||storedView==='landscape')VIEW_UI.mode=storedView}catch(e){}}
 function viewAngle(){if(typeof VIEW_UI==='undefined'||!VIEW_UI)return 0;return VIEW_UI.angle||0}
-function viewSet(mode){if(mode!=='portrait'&&mode!=='landscape')return;VIEW_UI.mode=mode;if(!SV)try{localStorage.setItem('shuk-orientation',mode)}catch(e){}if(typeof SCROLL_UI!=='undefined'){SCROLL_UI.drag=null;SCROLL_UI.pending=false;ENTRY_TOUCH64=null}if(typeof FLD!=='undefined')FLD.hold=false;viewSync();if(s&&!ECO.on)render()}
+function viewSet(mode){if(mode!=='portrait'&&mode!=='landscape')return;if(!SV&&s&&!s.created){var draft65=document.getElementById('cname');if(draft65&&typeof draft65.value==='string')s.name=draft65.value.slice(0,12)}VIEW_UI.mode=mode;if(!SV)try{localStorage.setItem('shuk-orientation',mode)}catch(e){}if(typeof SCROLL_UI!=='undefined'){SCROLL_UI.drag=null;SCROLL_UI.pending=false;ENTRY_TOUCH64=null}if(typeof FLD!=='undefined')FLD.hold=false;viewSync();if(s&&!ECO.on)render()}
 function viewSync(){
  if(SV||typeof VIEW_UI==='undefined'||!VIEW_UI||!document.body)return;
  var physicalPortrait=devicePortrait(),wantPortrait=VIEW_UI.mode==='portrait',angle=physicalPortrait===wantPortrait?0:(physicalPortrait?90:-90),w=Math.max(1,window.innerWidth||800),h=Math.max(1,window.innerHeight||450);
@@ -6488,7 +6505,7 @@ function netApply(j){
  if(!j||!j.s)return;if(Number.isFinite(j.v)&&j.v<NET.v)return;
  var keep=s?!!s.dqOpen:false;
  var wl=s&&s.wbLast?s.wbLast.at:0;
- if(!s||!s.mastery51||!j.s.mastery51||s.mastery51.rev!==j.s.mastery51.rev)M51_UI.reset=false;s=j.s;targetAck49();s.dqOpen=keep;NET.v=j.v;uiSet(j.ui);if(j.uid)NET.uid=j.uid;
+ if(!s||!s.mastery51||!j.s.mastery51||s.mastery51.rev!==j.s.mastery51.rev)M51_UI.reset=false;s=j.s;if(NAV66.world&&s.created)s.tab='wild';targetAck49();s.dqOpen=keep;NET.v=j.v;uiSet(j.ui);if(j.uid)NET.uid=j.uid;
  if(s.wbLast&&s.wbLast.at!==wl){NET.wbAt=0}
  var now=nowMs();
  if(j.fxt)Object.keys(j.fxt).forEach(function(k){fx[k]=now+j.fxt[k]});
