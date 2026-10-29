@@ -1001,10 +1001,26 @@ const routes = {
   'GET /api/health': async (req, res) => send(res, 200, { ok: true, players: live.size, db: db.kind.split(' ')[0] }),
 };
 
+// Hashed images are standalone files; allow only one safe filename below assets/images.
+async function serveImage61(req,res,pathname){
+ if(!pathname.startsWith('/assets/'))return false;
+ if(req.method!=='GET'&&req.method!=='HEAD'){send(res,405,{error:'Method not allowed'});return true}
+ const m=/^\/assets\/images\/([a-z0-9][a-z0-9_-]{0,100}\.(png|jpe?g|gif|webp))$/.exec(pathname);
+ if(!m){send(res,404,{error:'Image not found'});return true}
+ const file=path.join(PUBLIC,'assets','images',m[1]);let stat;
+ try{stat=await fs.promises.stat(file)}catch(e){if(e.code==='ENOENT'||e.code==='ENOTDIR'){send(res,404,{error:'Image not found'});return true}throw e}
+ if(!stat.isFile()){send(res,404,{error:'Image not found'});return true}
+ const hashed=/^[a-f0-9]{64}\./.test(m[1]),etag='"'+m[1]+':'+stat.size+':'+Math.trunc(stat.mtimeMs)+'"',h=Object.assign({'Content-Type':'image/'+(/jpe?g/.test(m[2])?'jpeg':m[2]),'Cache-Control':hashed?'public, max-age=31536000, immutable':'public, max-age=3600',ETag:etag},SEC_HEADERS);
+ if(req.headers['if-none-match']===etag){res.writeHead(304,h);res.end();return true}
+ h['Content-Length']=stat.size;res.writeHead(200,h);if(req.method==='HEAD'){res.end();return true}
+ const stream=fs.createReadStream(file);stream.on('error',()=>res.destroy());res.on('close',()=>stream.destroy());stream.pipe(res);return true;
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   const key = req.method + ' ' + url.pathname;
   try {
+    if(await serveImage61(req,res,url.pathname))return;
     // เปิดลิงก์ /api/... หรือหน้าที่ไม่มีอยู่ตรงๆ ในเบราว์เซอร์ → พากลับหน้าเกม แทนการโชว์ข้อความ JSON
     if (req.method === 'GET' && url.pathname !== '/' && /text\/html/.test(req.headers.accept || '') && url.pathname !== '/index.html') {
       res.writeHead(302, { Location: '/' });
