@@ -453,7 +453,7 @@ function ptPayload(uid) {
   let pt = null;
   if (r) { r.mem.forEach(ptRefresh); const hq = live.get(r.host); r.mem.forEach(m => { m.why = m.uid === r.host ? '' : ptWhy(hq && hq.s, m, now); }); pt = { id: r.id, mem: r.mem.map(m => ({ uid: m.uid, n: m.n, hp: m.hp, mhp: m.mhp, cls: m.cls, lvl: m.lvl, z: m.z, x: m.x, y: m.y, b: m.b, look: m.look, fol: !!m.fol, why: m.why || '', on: now - m.seen <= PT_ON_MS, host: m.uid === r.host, me: m.uid === uid })) }; }
   const list = r ? [] : [...PTR.values()].filter(x => x.mem.length < PT_MAX).slice(0, 20).map(x => { x.mem.forEach(ptRefresh); const h0 = x.mem.find(m => m.uid === x.host) || x.mem[0]; return { id: x.id, n: h0.n, z: h0.z, c: x.mem.length, lvl: Math.round(x.mem.reduce((a, m) => a + m.lvl, 0) / x.mem.length) }; });
-  return { pt, list };
+  return { pt, list, invites: ptInvites48(uid) };
 }
 
 // ---------- เมืองหลวง: ผู้เล่นที่อยู่ในเมืองเห็นกัน + บับเบิลแชทโลกเหนือหัว ----------
@@ -631,6 +631,43 @@ function cleanInputs(inp) {
 }
 const reply = (res, p, out, user) => send(res, 200, { s: out.s, ui: out.ui, fx: out.fx || [], fxt: out.fxt || {}, v: p.v, user });
 
+// B48: public equipment views and opt-in party invitations, kept outside saves.
+const PT_INV48 = new Map(); let PT_INV_ID48 = Date.now();
+async function playerId48(uid, name) {
+  if (uid != null && uid !== '' && Number(uid) !== 0) { const n = Number(uid); if (!Number.isSafeInteger(n) || n <= 0) return 0; return (await userById(n)) ? n : 0; }
+  name = String(name || '').trim().slice(0, 16); if (!name) return 0;
+  for (const [id, p] of live) if (p.s && p.s.created && p.s.name === name) return id;
+  const row = await db.findByName(name); return row ? Number(row.user_id) : 0;
+}
+function chatDto48(m, uid) { return { id: m.id, ch: m.ch, uid: m.from, n: m.n, t: m.t, to: m.to, toUid: m.toId, mine: m.from === uid }; }
+function publicPlayer48(uid, p) {
+  const o = p.s, acc = {}, sn = engine.snap(o) || {};
+  for (const k of ['ring','neck','brooch','helm','armor','gloves','boots']) { const a = o.acc && o.acc[k]; acc[k] = a ? { t: a.t|0, g: a.g|0, e: a.e|0, sk: a.sk|0, cd: Array.isArray(a.cd) ? a.cd.slice(0, 5) : [] } : null; }
+  return { uid, n: String(o.name || '').slice(0,16), cls: o.cls, lvl: o.lvl|0, look: sn.look || o.look, hp: sn.hp, atk: sn.atk, def: sn.def,
+    gear: { cls: o.cls, weapon: o.weapon|0, wq: o.wq|0, wEnh: o.wEnh|0, wSk: o.wSk|0, wCards: Array.isArray(o.wCards) ? o.wCards.slice(0,5) : [], armor: o.armor|0, aq: o.aq|0, aEnh: o.aEnh|0, acc } };
+}
+function ptInvites48(uid) {
+  const now = Date.now(), out = [];
+  for (const [id, v] of PT_INV48) { const r = PTR.get(v.party); if (v.expires <= now || !r || r.host !== v.from || ptOf(v.to)) { PT_INV48.delete(id); continue; } if (v.to === uid) out.push({ id, from: v.from, n: v.n, party: v.party, expires: v.expires }); }
+  return out.slice(-10);
+}
+async function ptSocial48(uid, p, b) {
+  if (b.op === 'invite') {
+    const target = await playerId48(b.uid, b.name); if (!target) return { error: 'ไม่พบผู้เล่นคนนี้' }; if (target === uid) return { error: 'ชวนตัวเองไม่ได้' };
+    const q = await session(target); if (!q.s.created) return { error: 'ผู้เล่นยังไม่ได้สร้างตัวละคร' };
+    let r = ptOf(uid); if (r && r.host !== uid) return { error: 'เฉพาะหัวหน้าปาร์ตี้ที่ชวนได้' }; if (r && r.mem.length >= PT_MAX) return { error: 'ปาร์ตี้เต็มแล้ว (3 คน)' }; if (ptOf(target)) return { error: 'ผู้เล่นอยู่ในปาร์ตี้แล้ว' };
+    ptInvites48(target); const pending = [...PT_INV48.values()].filter(v => v.to === target), prior = pending.find(v => v.from === uid);
+    if (prior && Date.now() - prior.created < 10000) return { error: 'ส่งคำเชิญแล้ว รอสักครู่ก่อนชวนซ้ำ' }; if (!prior && pending.length >= 10) return { error: 'ผู้เล่นมีคำเชิญรออยู่มากแล้ว' };
+    if (!r) { r = { id: ++PT_ID, host: uid, mem: [ptMem(uid,p)] }; PTR.set(r.id,r); PTU.set(uid,r.id); }
+    const now = Date.now(), id = prior ? prior.id : ++PT_INV_ID48; PT_INV48.set(id,{id,from:uid,to:target,n:String(p.s.name||'').slice(0,16),party:r.id,created:now,expires:now+120000});
+    return { ok: true, invite: id };
+  }
+  ptInvites48(uid); const id = Number(b.invite), v = PT_INV48.get(id); if (!Number.isSafeInteger(id) || !v || v.to !== uid) return { error: 'คำเชิญหมดอายุหรือไม่ใช่ของคุณ' };
+  if (b.op === 'decline') { PT_INV48.delete(id); return { ok: true }; }
+  if (ptOf(uid)) return { error: 'คุณอยู่ในปาร์ตี้แล้ว' }; const r = PTR.get(v.party); if (!r || r.host !== v.from) return { error: 'ปาร์ตี้นี้ไม่พร้อมแล้ว' }; if (r.mem.length >= PT_MAX) return { error: 'ปาร์ตี้เต็มแล้ว (3 คน)' };
+  r.mem.push(ptMem(uid,p)); PTU.set(uid,r.id); for (const [key, x] of PT_INV48) if (x.to === uid) PT_INV48.delete(key); return { ok: true };
+}
+
 const routes = {
   // ===== ผู้เยี่ยมชม: สร้างบัญชีสุ่มให้ทันที · ภายหลังตั้งไอดี/รหัสผ่านถาวรได้ (/api/claim) =====
   'POST /api/guest': async (req, res) => {
@@ -748,9 +785,16 @@ const routes = {
     for (const m of CHATLOG) {
       if (m.id <= since) continue;
       const ok = m.ch === 'world' || (m.ch === 'fac' && fac != null && m.key === fac) || (m.ch === 'team' && team && m.key === team) || (m.ch === 'dm' && (m.from === u.id || m.toId === u.id));
-      if (ok) out.push({ id: m.id, ch: m.ch, n: m.n, t: m.t, to: m.to, mine: m.from === u.id });
+      if (ok) out.push(chatDto48(m,u.id));
     }
-    send(res, 200, { msgs: out.slice(-120), team, fac, me: p.s.name || u.display });
+    send(res, 200, { msgs: out.slice(-120), team, fac, me: p.s.name || u.display, meUid: u.id, invites: ptInvites48(u.id) });
+  },
+  'GET /api/player': async (req,res) => {
+    const u=await auth(req);if(!u)return send(res,401,{error:'กรุณาเข้าสู่ระบบ'});
+    const p=await session(u.id);if(!takeToken(p))return send(res,429,{error:'ดูข้อมูลเร็วเกินไป'});
+    const params=new URL(req.url,'http://x').searchParams,id=await playerId48(params.get('uid'),params.get('name'));
+    if(!id)return send(res,404,{error:'ไม่พบผู้เล่น'});const q=await session(id);
+    if(!q.s.created)return send(res,404,{error:'ไม่พบตัวละคร'});send(res,200,{player:publicPlayer48(id,q)});
   },
   'POST /api/chat': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -760,23 +804,24 @@ const routes = {
     const p = await session(u.id), now = Date.now();
     if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
     if (now - (p.lastChat || 0) < 1200) return send(res, 429, { error: 'ส่งเร็วเกินไป รอสักครู่' });
-    const m = { id: ++CHAT_ID, ch, n: String(p.s.name || u.display).slice(0, 16), t, from: u.id, ts: now };
+    if(p.chatBusy48)return send(res,429,{error:'กำลังส่งข้อความ'});p.chatBusy48=true;try{
+    const m = { id: 0, ch, n: String(p.s.name || u.display).slice(0, 16), t, from: u.id, ts: now };
     if (ch === 'fac') { if (p.s.fac == null) return send(res, 400, { error: 'ยังไม่ได้เข้าฝ่าย' }); m.key = p.s.fac; }
     if (ch === 'team') { const team = await teamOf(u.id); if (!team) return send(res, 400, { error: 'ยังไม่มีทีม' }); m.key = team; }
     if (ch === 'dm') {
-      const to = String(b.to || '').trim().slice(0, 12);
-      if (!to) return send(res, 400, { error: 'ใส่ชื่อผู้รับ' });
-      let target = null;
-      for (const [id, q] of live) if (q.s && q.s.name === to) { target = id; break; }
-      if (!target) { const row = await db.findByName(to); if (row) target = Number(row.user_id); }
-      if (!target) return send(res, 404, { error: 'ไม่พบผู้เล่นชื่อ ' + to });
-      if (target === u.id) return send(res, 400, { error: 'กระซิบหาตัวเองไม่ได้' });
-      m.toId = target; m.to = to;
+      const to = String(b.to || '').trim().slice(0,16);
+      if (!to && !b.toUid) return send(res,400,{error:'ใส่ชื่อผู้รับ'});
+      const target = await playerId48(b.toUid,to);
+      if (!target) return send(res,404,{error:'ไม่พบผู้เล่นชื่อ '+to});
+      if (target === u.id) return send(res,400,{error:'กระซิบหาตัวเองไม่ได้'});
+      const q = await session(target); if (!q.s.created) return send(res,404,{error:'ไม่พบตัวละครผู้รับ'});
+      m.toId = target; m.to = String(q.s.name||to).slice(0,16);
     }
     p.lastChat = now;
-    CHATLOG.push(m); if (CHATLOG.length > 600) CHATLOG.splice(0, CHATLOG.length - 600);
+    m.id=++CHAT_ID;CHATLOG.push(m); if (CHATLOG.length > 600) CHATLOG.splice(0, CHATLOG.length - 600);
     if (ch === 'world') LASTSAY.set(u.id, { t, at: now });
-    send(res, 200, { ok: true, id: m.id });
+    send(res, 200, { ok: true, id: m.id, message: chatDto48(m,u.id) });
+    }finally{p.chatBusy48=false}
   },
   'POST /api/team': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -857,6 +902,8 @@ const routes = {
     if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
     if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
     const op = String(b.op || 'sync'), cur = ptOf(u.id);
+    if (['invite','accept','decline'].includes(op)) { const result=await ptSocial48(u.id,p,Object.assign({},b,{op}));if(result.error)return send(res,400,result);return send(res,200,Object.assign(ptPayload(u.id),result)); }
+
     const bad = msg => send(res, 400, { error: msg });
     if (op === 'sync') {
       if (cur) { const m = cur.mem.find(x => x.uid === u.id); if (m) { m.seen = Date.now(); if (b.x != null && b.y != null) { m.x = Math.max(0, Math.min(1440, Number(b.x) || 0)); m.y = Math.max(0, Math.min(1080, Number(b.y) || 0)); } } }

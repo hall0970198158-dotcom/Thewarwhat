@@ -63,6 +63,9 @@ function loadEngine(htmlPath) {
     requestAnimationFrame: () => 0, cancelAnimationFrame: () => {},
     setInterval: () => 0, clearInterval: () => {}, setTimeout: () => 0, clearTimeout: () => {},
     console, Math, Date, JSON, crypto: require('crypto').webcrypto, TextEncoder, TextDecoder,
+    // VM contexts do not inherit Node's browser-compatible Base64 globals.
+    atob: value => Buffer.from(String(value), 'base64').toString('binary'),
+    btoa: value => Buffer.from(String(value), 'binary').toString('base64'),
     fetch: () => Promise.reject(new Error('no fetch on server')),
   };
   window.window = window;
