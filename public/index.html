@@ -4300,7 +4300,7 @@ function viewResult(){
   '<h2 style="color:'+(r.won?'var(--moss)':'var(--blood)')+'">'+(r.won?'ชนะ':'แพ้')+'</h2>'+
   '<p>'+esc(r.n)+(r.cls&&CLASSES[r.cls]?' · '+CLASSES[r.cls].n+' Lv'+(r.lvl|0):'')+'</p>'+
   '<div class="reveal"><b>'+r.text+'</b></div>'+statusBars(false)+
-  ((r.kind==='pvp'||r.kind==='party')?'<p class="hint" role="status">กลับอัตโนมัติใน '+left+' วินาที</p>':'<button class="btn primary" data-a="skip">ข้าม ('+left+')</button>')+'</section>'}
+  ((r.kind==='pvp'||r.kind==='party')?'<p id="resultWait85" class="hint" role="status">กลับอัตโนมัติใน '+left+' วินาที</p>':'<button class="btn primary" data-a="skip">ข้าม ('+left+')</button>')+'</section>'}
 var zoneOpen=false;
 var DG_ACT={atk:'⚔️ โจมตี',sk:'✨ สกิล',grd:'🛡️ ป้องกัน',heal:'💚 ฟื้นฟูทีม'};
 var DG_SKN={warrior:'ฟันทลายเกราะ ×2.2',rogue:'แทงคู่เงา 2 ครั้ง',mage:'ลูกไฟระเบิด ×2.8',paladin:'ค้อนศักดิ์สิทธิ์ ×2',archer:'ศรทะลวง ×2.4 ทะลุเกราะ'};
@@ -4564,13 +4564,21 @@ function pshopHtml(){var P=s.pvp,c=P.c|0;
  return '<section class="card"><p class="eyebrow">ร้านเหรียญ PvP</p><div class="row"><h2>🪙 '+c+' เหรียญ</h2></div><p class="hint">ชนะ PvP +'+PVP_COIN_W+' · แพ้ +'+PVP_COIN_L+' เหรียญ</p>'+
   PSHOP.map(function(it,i){var own=it.once&&pshopOwned(it),dd=it.day&&enUsed()>=it.day,dis=own||dd||c<it.c;if(it.day)it.d='วันละ '+it.day+' ครั้ง · วันนี้เหลือ '+Math.max(0,it.day-enUsed());
    return '<div class="oddrow" style="align-items:center;gap:8px"><span><b>'+it.n+'</b><br><span class="hint">'+it.d+'</span></span><button class="btn sm'+(dis?'':' primary')+'" data-a="pshop" data-p="'+i+'"'+(dis?' disabled':'')+'>'+(own?(it.id==='wing'?'ซื้อแล้ว · ผูกไอดี':'มีแล้ว'):dd?'พรุ่งนี้':'🪙 '+it.c)+'</button></div>'}).join('')+'</section>'}
+// B85: keep elapsed PvP timers live without waiting for a changed server snapshot.
+var PVP_UI85={at:0,syncAt:0};
+function pvpMatchState85(){var left=Math.ceil(cdLeft()/1000),pending=CL&&(NET.busy||NET.q.some(function(x){return x.a==='pvpfind'}));return {disabled:!!(s.battle||left>0||!pvpCanPay()||pending),text:s.battle?'กำลังต่อสู้':pending?'กำลังจับคู่…':left>0?'พัก '+left+' วินาทีก่อนสู้ครั้งต่อไป':!pvpCanPay()?'ทองไม่พอ · ต้องใช้ '+PVP_PRICE+' ทอง':pvpFreeLeft()>0?'จับคู่หาคู่ต่อสู้ (ฟรี เหลือ '+pvpFreeLeft()+'/'+PVP_FREE+')':'จับคู่หาคู่ต่อสู้ ('+PVP_PRICE+' ทอง)'}}
+function pvpTimers85(tn){if(SV||!s||tn-PVP_UI85.at<100)return;PVP_UI85.at=tn;var button=document.getElementById('pvpFind85');if(button){var state=pvpMatchState85();button.disabled=state.disabled;if(button.textContent!==state.text)button.textContent=state.text}
+ var wait=document.getElementById('resultWait85');if(wait&&s.res){var left=Math.max(0,Math.ceil((s.res.until-Date.now())/1000)),text=left?'กลับอัตโนมัติใน '+left+' วินาที':'กำลังกลับไปหน้าจับคู่…';if(wait.textContent!==text)wait.textContent=text;
+  if(!left&&CL&&tn-PVP_UI85.syncAt>=900){PVP_UI85.syncAt=tn;netTick()}
+ }
+}
 function viewPvp(){
- var P=s.pvp,tot=P.w+P.l,msg=s.guildMsg?'<section class="card"><div class="reveal"><b>'+esc(s.guildMsg)+'</b></div></section>':'';
+ var match85=pvpMatchState85(),P=s.pvp,tot=P.w+P.l,msg=s.guildMsg?'<section class="card"><div class="reveal"><b>'+esc(s.guildMsg)+'</b></div></section>':'';
  var pvp='<section class="card"><p class="eyebrow">PvP จับคู่ 1-1</p>'+
   '<div class="row"><h2>ระดับ'+tierOf(P.r)+'</h2><span class="meta">เรทติ้ง <b>'+P.r+'</b></span></div>'+
   '<div class="stats"><div class="stat"><span>ชนะ / แพ้</span><b>'+P.w+' / '+P.l+'</b></div><div class="stat"><span>ชนะติดต่อกัน</span><b>'+P.streak+'</b></div>'+
   '<div class="stat"><span>อัตราชนะ</span><b>'+(tot?Math.round(P.w/tot*100)+'%':'-')+'</b></div><div class="stat"><span>เรทติ้งสูงสุด</span><b>'+P.best+'</b></div></div>'+
-  '<button class="btn primary" data-a="pvpfind"'+(!pvpCanPay()||cdLeft()>0?' disabled':'')+'>'+(cdLeft()>0?'พัก '+Math.ceil(cdLeft()/1000)+' วินาทีก่อนสู้ครั้งต่อไป':pvpFreeLeft()>0?'จับคู่หาคู่ต่อสู้ (ฟรี เหลือ '+pvpFreeLeft()+'/'+PVP_FREE+')':'จับคู่หาคู่ต่อสู้ ('+PVP_PRICE+' ทอง)')+'</button>'+
+  '<button id="pvpFind85" class="btn primary" data-a="pvpfind"'+(match85.disabled?' disabled':'')+'>'+match85.text+'</button>'+
   '<p class="hint">ฟรี '+PVP_FREE+' ครั้งต่อวัน หลังจากนั้นครั้งละ '+PVP_PRICE+' ทอง · รางวัลเป็นทองอย่างเดียว · เลือดทั้งสองฝ่าย ×3 · ใช้ยาได้ไม่เกิน 3 ขวดต่อแมตช์ · สู้จบ HP เต็ม</p></section>';
  var g=s.guild,war='';
  if(g&&g.gid){war=warCardOn()}
@@ -6176,9 +6184,9 @@ function battlePresentationTick(tn){if(BATTLE_PRESENT.data&&tn>=BATTLE_PRESENT.u
 function battleButtonsSync(tn){
  if(SV||tn-(BATTLE_UI.buttonAt||0)<60)return;BATTLE_UI.buttonAt=tn;
  var stage=document.getElementById('battleStage');if(!stage||!s||!s.battle||battlePresentationActive())return;
- var b=s.battle;if(stage._battleStamp!==b.nextAt){stage._battleStamp=b.nextAt;stage._battleReady=tn+Math.max(0,Math.min(1500,(b.nextAt||0)-Date.now()-60))}
+ var b=s.battle,key85=b.key50||b.intro53Until||b.e.n;if(stage._battleFight85!==key85||stage._battleStamp!==b.nextAt){stage._battleFight85=key85;stage._battleStamp=b.nextAt;stage._battleReady=tn+Math.max(0,Math.min(150000,(b.nextAt||0)-Date.now()-60))}
  var left=Math.max(0,(stage._battleReady||0)-tn),busy=CL&&(NET.busy||NET.q.some(function(x){return x.a==='b'}));
- stage.querySelectorAll('[data-a="b"]').forEach(function(button){if(button._baseDisabled==null)button._baseDisabled=button.disabled;button.disabled=button._baseDisabled||left>0||busy||scene53Busy();button.setAttribute('aria-busy',(!button._baseDisabled&&busy)?'true':'false');button.classList.toggle('command-waiting',!button._baseDisabled&&(left>0||busy))});
+ stage.querySelectorAll('[data-a="b"]').forEach(function(button){var eligible85=battleCommand50(button.getAttribute('data-p'),b);button.disabled=!eligible85||left>0||busy||scene53Busy();button.setAttribute('aria-busy',(eligible85&&busy)?'true':'false');button.classList.toggle('command-waiting',eligible85&&(left>0||busy))});
  var el=document.getElementById('battleReady');if(el){var message=scene53Busy()?'กำลังเตรียมฉากต่อสู้…':busy?'กำลังส่งคำสั่ง…':left>0?'พร้อมใน '+(Math.ceil(left/100)/10).toFixed(1)+' วินาที':'พร้อมเลือกคำสั่ง';if(el.textContent!==message)el.textContent=message}
  var actions=stage.querySelector('.battle-actions');if(actions)actions.classList.toggle('has-overflow',actions.scrollWidth>actions.clientWidth+2);
 }
@@ -6885,7 +6893,7 @@ function battleCommand50(a,b){if(a==='atk')return true;if(a==='flee')return !noF
 function frame(tn){
  newsPaint75();
  farmLive68(tn);matLive(tn);colPreview69(tn);bioPreview70(tn);ar73Live(tn);
- craftButtonsTick();
+ craftButtonsTick();pvpTimers85(tn);
  battlePresentationTick(tn);scene53Paint(tn);battleButtonsSync(tn);
  if(ECO.on){ecoField(tn);requestAnimationFrame(frame);return} // ประหยัดพลังงาน: ไม่วาดฉาก แต่ยังเดินหามอน
  if(TOWN.on&&s&&!s.battle&&!FLD.moving&&!FLD.hold){
