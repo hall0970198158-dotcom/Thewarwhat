@@ -3690,7 +3690,7 @@ function drawCharacterSheet(c,look,cls,ox,gy,u,t,flip,alpha){
  var key=characterSheetKey(cls,look),record=characterImage(key);if(!record||!record.ready)return false;
  var pose=CPOSE||{},row=typeof pose.dir==='number'?Math.max(0,Math.min(7,pose.dir|0)):(flip?2:6),frame=characterFrame(pose,t),meta=CHARACTER_SHEETS[key],foot=meta.feet[row*12+frame],pivot=meta.pivots,pivotX=pivot?pivot[row*12+frame][0]:32,size=Math.max(1,Math.round(44*u)),x=Math.round(ox+12*u-size*pivotX/64),y=Math.round(gy-size*foot/64),tile=characterTint(key,record,look,frame,row);
  if(!tile||!isFinite(x)||!isFinite(y))return false;
- c.save();try{c.globalAlpha=alpha==null?1:alpha;fashionBack(c,look,ox+12*u,gy,u,t,row,wingRig(key,frame,row,x,y,size,tile));c.imageSmoothingEnabled=false;c.drawImage(tile,0,0,64,64,x,y,size,size)}finally{c.restore()}
+ var rig84=wingRig(key,frame,row,x,y,size,tile);c.save();try{c.globalAlpha=alpha==null?1:alpha;fashionBack(c,look,ox+12*u,gy,u,t,row,rig84);c.imageSmoothingEnabled=false;c.drawImage(tile,0,0,64,64,x,y,size,size);fashionWingFront84(c,look,ox+12*u,gy,u,t,row,rig84,pose)}finally{c.restore()}
  CPOSE=null;return true;
 }
 
@@ -3701,7 +3701,7 @@ function characterLook52(cls,look,owner){
 }
 function drawChar(c,look,cls,ox,gy,u,t,flip,alpha){
  look=Object.assign(characterLook52(cls,look),{hat:'none',face:'none',dye:'def'});colDraw59(c,look,ox+12*u,gy,u,t,alpha);var pose=CPOSE||{},row=typeof pose.dir==='number'?pose.dir:(flip?2:6);
- if(!((typeof SET==='undefined'||!SET||SET.spriteChars!==false)&&drawCharacterSheet(c,look,cls,ox,gy,u,t,flip,alpha))){c.save();c.globalAlpha=alpha==null?1:alpha;fashionBack(c,look,ox+12*u,gy,u,t,row);c.restore();drawClassicChar(c,Object.assign({},look,{aura:'none',wing:'none'}),cls,ox,gy,u,t,flip,alpha)}
+ if(!((typeof SET==='undefined'||!SET||SET.spriteChars!==false)&&drawCharacterSheet(c,look,cls,ox,gy,u,t,flip,alpha))){c.save();c.globalAlpha=alpha==null?1:alpha;fashionBack(c,look,ox+12*u,gy,u,t,row);c.restore();drawClassicChar(c,Object.assign({},look,{aura:'none',wing:'none'}),cls,ox,gy,u,t,flip,alpha);fashionWingFront84(c,look,ox+12*u,gy,u,t,row,null,pose,alpha)}
  auraFront80(c,look,ox+12*u,gy,u,t,alpha);
  fashionPet(c,look,ox+12*u,gy,u,t,row,alpha);
 }
@@ -6467,7 +6467,7 @@ WING2.gold={k:'feather',c:['#72501e','#b1852e','#e6bf56','#fff0ad','#ffffff'],fx
 function fashionBack(c,look,cx,gy,u,t,row,rig){
  c.save();
  if(look.aura&&AURA[look.aura])auraDraw76(c,look.aura,cx,gy,u,t,undefined,'back');
- if(look.wing&&WING2[look.wing]){var root=rig||{x:cx+([0,1,2,1,0,-1,-2,-1][row]||0)*u,y:gy-13*u};wingDraw(c,look.wing,root.x,root.y,u,t,row,CPOSE||{});}
+ if(look.wing&&WING2[look.wing]){var root=rig||{x:cx+([0,1,2,1,0,-1,-2,-1][row]||0)*u,y:gy-13*u};wingDraw(c,look.wing,root.x,root.y,u,t,row,CPOSE||{},'back');}
  c.restore();
 }
 
@@ -6800,7 +6800,10 @@ function wingRig(key,frame,row,x,y,size,tile){
  var backX=[0,3.2,4.5,3.2,0,-3.2,-4.5,-3.2][row]||0,backY=[-1.8,-1.2,0,1.2,1.8,1.2,0,-1.2][row]||0;
  return {x:x+(root.x+backX)*size/64,y:y+(root.y+backY)*size/64};
 }
-function wingDraw(c,id,x,y,u,t,row,pose){if(!Number.isFinite(u)||u<=0||!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(t))return;var still=(typeof ECO!=='undefined'&&ECO.on)||(typeof MOTION69!=='undefined'&&MOTION69&&MOTION69.matches),tm=still?0:t,frame=still?0:wingFrame(pose,tm),image=wingArt(id,frame);if(!image)return;var widths=[[1,1],[.62,.96],[.30,.78],[.62,.96],[1,1],[.96,.62],[.78,.30],[.96,.62]][row]||[1,1],base=u*.52,flutter=still?0:Math.sin(tm/(pose&&pose.pose==='walk'?180:320))*.025;for(var i=0;i<2;i++){c.save();try{c.translate(x+(i?1:-1)*1.3*u,y);c.scale(i===0?widths[0]*base:-widths[1]*base,base);c.rotate(flutter);c.imageSmoothingEnabled=true;c.drawImage(image,0,0,160,160,-64,-48,80,80)}finally{c.restore()}}}
+// B84: visible back faces the camera in north-facing poses; draw depth accordingly.
+function wingNear84(row,side){return row===4||((row===2||row===3)&&side===1)||((row===5||row===6)&&side===0)}
+function fashionWingFront84(c,look,cx,gy,u,t,row,rig,pose,alpha){if(!look.wing||!WING2[look.wing])return;var root=rig||{x:cx+([0,1,2,1,0,-1,-2,-1][row]||0)*u,y:gy-13*u};c.save();try{if(alpha!=null)c.globalAlpha=alpha;wingDraw(c,look.wing,root.x,root.y,u,t,row,pose||{},'front')}finally{c.restore()}}
+function wingDraw(c,id,x,y,u,t,row,pose,layer){if(!Number.isFinite(u)||u<=0||!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(t))return;var still=(typeof ECO!=='undefined'&&ECO.on)||(typeof MOTION69!=='undefined'&&MOTION69&&MOTION69.matches),tm=still?0:t,frame=still?0:wingFrame(pose,tm),image=wingArt(id,frame);if(!image)return;var widths=[[1,1],[.62,.96],[.30,.78],[.62,.96],[1,1],[.96,.62],[.78,.30],[.96,.62]][row]||[1,1],base=u*.52,flutter=still?0:Math.sin(tm/(pose&&pose.pose==='walk'?180:320))*.025;for(var i=0;i<2;i++){var near84=wingNear84(row,i);if(layer==='back'&&near84||layer==='front'&&!near84)continue;c.save();try{c.translate(x+(i?1:-1)*1.3*u,y);c.scale(i===0?widths[0]*base:-widths[1]*base,base);c.rotate(flutter);c.imageSmoothingEnabled=true;c.drawImage(image,0,0,160,160,-64,-48,80,80)}finally{c.restore()}}}
 
 var LG30=Array.from({length:30},function(_,i){var n=i+1,w={g:150+n*10};if(n%5===0){w.g=500;w.p3=3}if(n%7===0)w.pur=1;if(n===30)w={g:5000,pur:5,box:1};w.t='ทอง '+w.g.toLocaleString()+(w.p3?' · ยา 150 ×'+w.p3:'')+(w.pur?' · แร่ม่วง ×'+w.pur:'')+(w.box?' · กล่องสุ่ม ×1':'');return w});
 function lg30State(){var a=s.lg30||{},days=Math.max(0,Math.min(30,a.days|0)),got=(a.last|0)>=dqDay();return {days:days,got:got,next:got?days:days>=30?1:days+1}}
