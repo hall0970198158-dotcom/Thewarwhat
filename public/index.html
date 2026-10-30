@@ -3690,7 +3690,7 @@ function drawCharacterSheet(c,look,cls,ox,gy,u,t,flip,alpha){
  var key=characterSheetKey(cls,look),record=characterImage(key);if(!record||!record.ready)return false;
  var pose=CPOSE||{},row=typeof pose.dir==='number'?Math.max(0,Math.min(7,pose.dir|0)):(flip?2:6),frame=characterFrame(pose,t),meta=CHARACTER_SHEETS[key],foot=meta.feet[row*12+frame],pivot=meta.pivots,pivotX=pivot?pivot[row*12+frame][0]:32,size=Math.max(1,Math.round(44*u)),x=Math.round(ox+12*u-size*pivotX/64),y=Math.round(gy-size*foot/64),tile=characterTint(key,record,look,frame,row);
  if(!tile||!isFinite(x)||!isFinite(y))return false;
- c.save();try{c.globalAlpha=alpha==null?1:alpha;fashionBack(c,look,ox+12*u,gy,u,t,row,wingRig(key,frame,row,x,y,size));c.imageSmoothingEnabled=false;c.drawImage(tile,0,0,64,64,x,y,size,size)}finally{c.restore()}
+ c.save();try{c.globalAlpha=alpha==null?1:alpha;fashionBack(c,look,ox+12*u,gy,u,t,row,wingRig(key,frame,row,x,y,size,tile));c.imageSmoothingEnabled=false;c.drawImage(tile,0,0,64,64,x,y,size,size)}finally{c.restore()}
  CPOSE=null;return true;
 }
 
@@ -6467,7 +6467,7 @@ WING2.gold={k:'feather',c:['#72501e','#b1852e','#e6bf56','#fff0ad','#ffffff'],fx
 function fashionBack(c,look,cx,gy,u,t,row,rig){
  c.save();
  if(look.aura&&AURA[look.aura])auraDraw76(c,look.aura,cx,gy,u,t,undefined,'back');
- if(look.wing&&WING2[look.wing]){var root=rig||{x:cx+([0,1,2,1,0,-1,-2,-1][row]||0)*u,y:gy-15*u};wingDraw(c,look.wing,root.x,root.y,u,t,row,CPOSE||{});}
+ if(look.wing&&WING2[look.wing]){var root=rig||{x:cx+([0,1,2,1,0,-1,-2,-1][row]||0)*u,y:gy-13*u};wingDraw(c,look.wing,root.x,root.y,u,t,row,CPOSE||{});}
  c.restore();
 }
 
@@ -6528,7 +6528,7 @@ function fieldArtCheck(tn){
  if(!blank)return;
  var saved=Object.assign({},FLD);try{fieldBuild(s.zone|0);var art=FLD.map,decor=FLD.isoDecor;Object.assign(FLD,saved);FLD.map=art;FLD.isoDecor=decor}catch(e){Object.assign(FLD,saved)}
 }
-function renderCachesRestore(){AURA_ART76.clear();BATTLE_UI.key='';CHARACTER_TINT.clear();MON_ART37.clear();WB_ART37.clear();TOWER_ART41.key='';PET_ART46.clear();PET_ART70.clear();AR73_BIRDS.clear();RARE_ART70.clear();BOOK_ART70.clear();WING_ART.clear();VFX71.glows.clear();FXSK41=[];CARD_IMGC={};PORT_C={};FIELD_ART_NEXT=0;ISO_TOWN.objectCache=null;ISO_TOWN.ground=null;if(!SV&&s&&!ECO.on)render()}
+function renderCachesRestore(){WING_RIG83.clear();AURA_ART76.clear();BATTLE_UI.key='';CHARACTER_TINT.clear();MON_ART37.clear();WB_ART37.clear();TOWER_ART41.key='';PET_ART46.clear();PET_ART70.clear();AR73_BIRDS.clear();RARE_ART70.clear();BOOK_ART70.clear();WING_ART.clear();VFX71.glows.clear();FXSK41=[];CARD_IMGC={};PORT_C={};FIELD_ART_NEXT=0;ISO_TOWN.objectCache=null;ISO_TOWN.ground=null;if(!SV&&s&&!ECO.on)render()}
 if(!SV){document.addEventListener('contextlost',function(e){if(e.target&&e.target.tagName==='CANVAS')e.preventDefault()},true);document.addEventListener('contextrestored',renderCachesRestore,true);document.addEventListener('visibilitychange',function(){if(!document.hidden){FIELD_ART_NEXT=0;CHARACTER_TINT.clear()}},true)}
 
 var MON_ART37=new Map();
@@ -6785,8 +6785,22 @@ function petArt46(id,frame){
 }
 function drawPet(c,id,ox,gy,u,t){drawPet70(c,id,ox,gy,u,t,1)}
 function fashionPet(c,look,cx,gy,u,t,row,alpha){if(!look.pet||look.pet==='none')return;var p=Math.max(.8,u*.78),left=row===1||row===2||row===3,side=left?-1:1,x=cx+side*29*u,y=gy+2*u;c.save();try{c.globalAlpha*=alpha==null?1:alpha;shadowAt(c,x,y,8*p);c.translate(x,y);if(left)c.scale(-1,1);drawPet70(c,look.pet,-5*p,0,p,t,Math.max(1,Math.min(3,look.petStage70|0||1)))}finally{c.restore()}}
-function wingRig(key,frame,row,x,y,size){var meta=CHARACTER_SHEETS[key],a=meta.anchors[row*12+frame],foot=meta.feet[row*12+frame],pivot=meta.pivots?meta.pivots[row*12+frame][0]:32,back=[0,2,3.5,2,0,-2,-3.5,-2][row]||0;return {x:x+(.8*a[0]+.2*pivot+back)*size/64,y:y+(a[1]+.56*(foot-a[1]))*size/64}}
-function wingDraw(c,id,x,y,u,t,row,pose){if(!Number.isFinite(u)||u<=0||!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(t))return;var still=(typeof ECO!=='undefined'&&ECO.on)||(typeof MOTION69!=='undefined'&&MOTION69&&MOTION69.matches),tm=still?0:t,frame=still?0:wingFrame(pose,tm),image=wingArt(id,frame);if(!image)return;var widths=[[1,1],[.62,.96],[.30,.78],[.62,.96],[1,1],[.96,.62],[.78,.30],[.96,.62]][row]||[1,1],base=u*.78,flutter=still?0:Math.sin(tm/(pose&&pose.pose==='walk'?180:320))*.025;for(var i=0;i<2;i++){c.save();try{c.translate(x+(i?1:-1)*1.3*u,y);c.scale(i===0?widths[0]*base:-widths[1]*base,base);c.rotate(flutter);c.imageSmoothingEnabled=true;c.drawImage(image,0,0,160,160,-64,-48,80,80)}finally{c.restore()}}}
+// B83: keep the attachment on the torso, not on the moving hair/head anchor.
+var WING_RIG83=new Map();
+function wingRig(key,frame,row,x,y,size,tile){
+ var meta=CHARACTER_SHEETS[key],idx=row*12+frame,a=meta.anchors[idx],foot=meta.feet[idx],cacheKey=key+':'+idx,root=WING_RIG83.get(cacheKey);
+ if(!root){var cx=a[0],top=Math.max(8,Math.min(51,a[1]+a[2]*.97)),bottom=Math.max(top+2,Math.min(foot-4,top+12)),cy=top+(bottom-top)*.28;
+  if(tile&&tile.getContext){try{var pixels=tile.getContext('2d').getImageData(0,0,64,64).data,lo=Math.max(0,Math.floor(cx-8)),hi=Math.min(63,Math.ceil(cx+8)),sum=0,total=0;
+   for(var yy=Math.max(0,Math.floor(top));yy<=Math.min(63,Math.floor(bottom));yy++)for(var xx=lo;xx<=hi;xx++){if(pixels[(yy*64+xx)*4+3]>160){sum+=xx+.5;total++}}
+   if(total>=12)cx=Math.max(cx-5,Math.min(cx+5,sum/total));
+   root={x:cx,y:cy};WING_RIG83.set(cacheKey,root);if(WING_RIG83.size>3360)WING_RIG83.delete(WING_RIG83.keys().next().value);
+  }catch(e){}}
+  if(!root)root={x:cx,y:cy};
+ }
+ var backX=[0,3.2,4.5,3.2,0,-3.2,-4.5,-3.2][row]||0,backY=[-1.8,-1.2,0,1.2,1.8,1.2,0,-1.2][row]||0;
+ return {x:x+(root.x+backX)*size/64,y:y+(root.y+backY)*size/64};
+}
+function wingDraw(c,id,x,y,u,t,row,pose){if(!Number.isFinite(u)||u<=0||!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(t))return;var still=(typeof ECO!=='undefined'&&ECO.on)||(typeof MOTION69!=='undefined'&&MOTION69&&MOTION69.matches),tm=still?0:t,frame=still?0:wingFrame(pose,tm),image=wingArt(id,frame);if(!image)return;var widths=[[1,1],[.62,.96],[.30,.78],[.62,.96],[1,1],[.96,.62],[.78,.30],[.96,.62]][row]||[1,1],base=u*.52,flutter=still?0:Math.sin(tm/(pose&&pose.pose==='walk'?180:320))*.025;for(var i=0;i<2;i++){c.save();try{c.translate(x+(i?1:-1)*1.3*u,y);c.scale(i===0?widths[0]*base:-widths[1]*base,base);c.rotate(flutter);c.imageSmoothingEnabled=true;c.drawImage(image,0,0,160,160,-64,-48,80,80)}finally{c.restore()}}}
 
 var LG30=Array.from({length:30},function(_,i){var n=i+1,w={g:150+n*10};if(n%5===0){w.g=500;w.p3=3}if(n%7===0)w.pur=1;if(n===30)w={g:5000,pur:5,box:1};w.t='ทอง '+w.g.toLocaleString()+(w.p3?' · ยา 150 ×'+w.p3:'')+(w.pur?' · แร่ม่วง ×'+w.pur:'')+(w.box?' · กล่องสุ่ม ×1':'');return w});
 function lg30State(){var a=s.lg30||{},days=Math.max(0,Math.min(30,a.days|0)),got=(a.last|0)>=dqDay();return {days:days,got:got,next:got?days:days>=30?1:days+1}}
