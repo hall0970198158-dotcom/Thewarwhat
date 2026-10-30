@@ -143,7 +143,7 @@ async function wbRecord(uid, p, res) {
   cur.n = String(p.s.name || '').slice(0, 16); cur.cls = p.s.cls; cur.dmg += dmg;
   WB.dmg.set(uid, cur); WB.total += dmg;
   await db.wbAdd(WB.day, uid, cur.n, cur.cls, dmg);
-  if (!WB.killed && WB.total >= WB_HP) await wbKilled();
+  if (!WB.killed && WB.total >= WB_HP){newsPush75('boss',0,'📢 ประกาศ','👑 ผู้เล่นร่วมกันโค่นบอสโลกสำเร็จแล้ว!');await wbKilled();}
 }
 async function wbPrizes(uid, p) { // ส่งรางวัลที่ค้างให้ผู้เล่น
   const rows = await db.wbPrizeGet(uid);
@@ -526,6 +526,48 @@ function botTownPos(b, now) {
 }
 function botPub(b, now) { return { uid: 'bot' + b.i, n: b.n, cls: b.cls, lvl: botLvl(b, now), look: b.look }; }
 
+// B75: public notices are produced from authoritative before/after state only.
+const NEWS75 = { log: [], seq: 0, epoch: crypto.randomBytes(8).toString('hex'), clock: null, pending: null };
+function newsPush75(kind,uid,name,text){
+ const m={id:++NEWS75.seq,ch:'notice',uid:Number(uid)||0,n:String(name||'📢 ประกาศ').slice(0,16),t:String(text).slice(0,160),ts:Date.now(),kind,mine:false};
+ NEWS75.log.push(m);if(NEWS75.log.length>120)NEWS75.log.splice(0,NEWS75.log.length-120);return m;
+}
+function newsSnap75(o){
+ const gear={weapon:Number(o.wEnh)||0,armor:Number(o.aEnh)||0};for(const k of ['ring','neck','brooch','helm','armor','gloves','boots'])gear['acc_'+k]=Number(o.acc&&o.acc[k]&&o.acc[k].e)||0;
+ return {created:!!o.created,tier:o.job2?(o.job4===o.job2?4:o.job3?3:2):1,tower:Math.max(0,Number(o.tower&&o.tower.best)||0),gear};
+}
+function newsState75(p){
+ let q=p.s.news75;if(!q||typeof q!=='object'||Array.isArray(q))q=p.s.news75={enter:0,marks:{}};
+ if(!q.marks||typeof q.marks!=='object'||Array.isArray(q.marks))q.marks={};return q;
+}
+function newsTouch75(p){p.newsSeen75=Date.now()}
+function newsEnter75(uid,p){
+ if(!p.s.created)return;const now=Date.now(),q=newsState75(p),last=p.newsSeen75||0;newsTouch75(p);
+ if((!q.enter||!last||now-last>=900000)&&now-(Number(q.enter)||0)>=900000){q.enter=now;newsPush75('login',uid,p.s.name,'🟢 เข้าสู่เกม');}
+}
+function newsAfter75(uid,p,before){
+ const o=p.s;if(!o.created)return;const after=newsSnap75(o),q=newsState75(p);
+ const emit=(key,kind,text)=>{if(q.marks[key])return;q.marks[key]=true;newsPush75(kind,uid,o.name,text)};
+ if(!before.created){newsEnter75(uid,p);return;}newsTouch75(p);
+ if(after.tier>before.tier)emit('tier'+after.tier,'class','✨ เปลี่ยนอาชีพขั้น '+after.tier+' สำเร็จ!');
+ const slots={weapon:'อาวุธ',armor:'เกราะ',acc_ring:'แหวน',acc_neck:'สร้อย',acc_brooch:'เข็มกลัด',acc_helm:'หมวก',acc_armor:'ชุดเกราะ',acc_gloves:'ถุงมือ',acc_boots:'รองเท้า'};
+ for(const k of Object.keys(after.gear))for(const n of [10,15,20])if(before.gear[k]<n&&after.gear[k]>=n)emit(k+':'+n,'enhance','⚒️ ตีบวก'+slots[k]+'ถึง +'+n+' สำเร็จ!');
+ if(after.tower>before.tower&&after.tower%10===0)emit('tower'+after.tower,'tower','🏆 พิชิตหอคอยชั้น '+after.tower+'!');
+}
+async function newsClock75(){
+ if(NEWS75.pending)return NEWS75.pending;
+ NEWS75.pending=(async()=>{
+  const now=Date.now(),day=today(),hr=((now+7*3600e3)%864e5)/3600e3,slot=hr>=13&&hr<14?13:hr>=21&&hr<22?21:0;
+  const cur={day,slot};
+  if(!NEWS75.clock){try{const raw=await db.getMeta('news75_clock');NEWS75.clock=raw?JSON.parse(raw):cur;}catch(_){NEWS75.clock=cur}}
+  const prev=NEWS75.clock;NEWS75.clock=cur;
+  if(prev.day!==day&&WB.day===day&&WB.total<WB_HP)newsPush75('boss',0,'📢 ประกาศ','👑 บอสโลกประจำวันปรากฏตัวแล้ว!');
+  if(slot&&(prev.day!==day||prev.slot!==slot))newsPush75('bonus',0,'📢 ประกาศ','🎉 เริ่มเวลาโบนัส '+slot+':00–'+(slot+1)+':00 น. (เวลาไทย) XP และทอง +50%');
+  if(!slot&&prev.day===day&&prev.slot)newsPush75('bonus',0,'📢 ประกาศ','⏰ สิ้นสุดช่วงเวลาโบนัสแล้ว พบกันรอบถัดไป');
+  if(prev.day!==day||prev.slot!==slot){try{await (db.putMeta||db.setMeta).call(db,'news75_clock',JSON.stringify(cur));}catch(e){console.error('notice clock',e.message)}}
+ })();try{await NEWS75.pending}finally{NEWS75.pending=null}
+}
+
 const CHATLOG = []; let CHAT_ID = Date.now(); // id เริ่มจากเวลา เพื่อให้รีสตาร์ทแล้ว id ยังมากกว่าของเดิมในหน้าเว็บ
 // ---------- ศึกชิงเมือง: เจ้าของเมืองเก็บในฐานข้อมูล (meta 'city') · ศึกทุกเสาร์-อาทิตย์ 20:00–21:00 น. ----------
 const CITY_N = 7, CITY_DEF = [-1, 0, 1, 2, 3, -1, -1], CITY_H0 = 20, CITY_H1 = 21, DAYMS = 864e5, HMS = 36e5, TZMS = 7 * HMS;
@@ -544,7 +586,7 @@ function cityClock(now) {
     if (en <= now) last = 'c' + d; else if (!cur) cur = { start: st, end: en, open: st <= now, wid: 'c' + d }; }
   return Object.assign({ open: false, wid: '', start: 0, end: 0 }, cur || {}, { last });
 }
-function sysChat(t) { CHATLOG.push({ id: ++CHAT_ID, ch: 'world', n: '📢 ประกาศ', t, from: 0, ts: Date.now() }); if (CHATLOG.length > 600) CHATLOG.splice(0, CHATLOG.length - 600); }
+function sysChat(t) { newsPush75('system',0,'📢 ประกาศ',t);CHATLOG.push({ id: ++CHAT_ID, ch: 'world', n: '📢 ประกาศ', t, from: 0, ts: Date.now() }); if (CHATLOG.length > 600) CHATLOG.splice(0, CHATLOG.length - 600); }
 function cityTick() {
   const c = cityClock();
   if (c.open && CITY.announced !== c.wid) { CITY.announced = c.wid; sysChat('⚔️ สงครามชิงเมืองเริ่มแล้ว! บุกยึดหรือป้องกันเมืองได้ที่แท็บ "ฝ่าย"'); citySave(); }
@@ -745,7 +787,7 @@ const routes = {
     await wbPrizes(u.id, p).catch(e => console.error('prize', e.message));
     await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad(); await launchLoad();
     const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); E.enter(); });
-    p.s = out.s; p.ui = out.ui; p.v++; persist(u.id, p); updateSnap(u.id, p);
+    p.s = out.s; p.ui = out.ui;newsEnter75(u.id,p);await newsClock75(); p.v++; persist(u.id, p); updateSnap(u.id, p);
     send(res, 200, { s: out.s, ui: out.ui, fx: [], fxt: {}, v: p.v, user: u.display, uid: u.id });
   },
   'POST /api/act': async (req, res) => {
@@ -762,10 +804,10 @@ const routes = {
     engine.setBoard(board(), u.id); await wbEnsure(); engine.setWB(wbCtx());
     ptPrep(u.id, p);
     await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad(); await launchLoad();
-    const js0 = jSnap(p.s);
+    const js0 = jSnap(p.s), newsBefore=newsSnap75(p.s);
     const out = engine.run(p.s, p.ui, cleanInputs(b.inp), E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); E.act(a, pr); });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; partyAfter50(u.id,p,js0,out);ptAfter(u.id, p); cityAfter(p); funMark(p); await launchCheck(u.id, p); p.v++; persist(u.id, p); updateSnap(u.id, p);
+    p.s = out.s; p.ui = out.ui; newsAfter75(u.id,p,newsBefore);partyAfter50(u.id,p,js0,out);ptAfter(u.id, p); cityAfter(p); funMark(p); await launchCheck(u.id, p); p.v++; persist(u.id, p); updateSnap(u.id, p);
     if (out.s.gold - before > 200000) db.audit(u.id, 'gold_jump', a + ' +' + (out.s.gold - before)).catch(() => {});
     reply(res, p, out);
   },
@@ -780,10 +822,10 @@ const routes = {
     engine.setBoard(board(), u.id); engine.setWB(wbCtx());
     ptPrep(u.id, p);
     await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad(); await launchLoad();
-    const twn = TOWN.get(u.id), inTown = !!(twn && now - twn.at < 6000), js0 = jSnap(p.s);
+    const twn = TOWN.get(u.id), inTown = !!(twn && now - twn.at < 6000), js0 = jSnap(p.s),newsBefore=newsSnap75(p.s);newsTouch75(p);
     const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); const tg = E.townEn ? E.townEn(inTown) : false; changed = E.tick() || tg || changed; });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; partyAfter50(u.id,p,js0,out);ptAfter(u.id, p); funMark(p); if (await launchCheck(u.id, p)) changed = true; if (p.s.cityRes) { cityAfter(p); changed = true; }
+    p.s = out.s; p.ui = out.ui; newsAfter75(u.id,p,newsBefore);partyAfter50(u.id,p,js0,out);ptAfter(u.id, p); funMark(p); if (await launchCheck(u.id, p)) changed = true; if (p.s.cityRes) { cityAfter(p); changed = true; }
     if (changed || out.fx.length) { p.v++; persist(u.id, p); updateSnap(u.id, p); }
     if (!changed && !out.fx.length && Number(b.v) === p.v) return send(res, 200, { same: true, v: p.v });
     reply(res, p, out);
@@ -792,6 +834,8 @@ const routes = {
   'GET /api/chat': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
     const p = await session(u.id);
+    newsTouch75(p);await wbEnsure();await newsClock75();
+    const newsSince=Math.max(0,Number(new URL(req.url,'http://x').searchParams.get('newsSince'))||0);
     const team = await teamOf(u.id);
     const since = Number(new URL(req.url, 'http://x').searchParams.get('since')) || 0;
     const fac = p.s.fac == null ? null : p.s.fac;
@@ -801,7 +845,7 @@ const routes = {
       const ok = m.ch === 'world' || (m.ch === 'fac' && fac != null && m.key === fac) || (m.ch === 'team' && team && m.key === team) || (m.ch === 'dm' && (m.from === u.id || m.toId === u.id));
       if (ok) out.push(chatDto48(m,u.id));
     }
-    send(res, 200, { msgs: out.slice(-120), team, fac, me: p.s.name || u.display, meUid: u.id, invites: ptInvites48(u.id) });
+    send(res, 200, { msgs: out.slice(-120), notices: NEWS75.log.filter(m=>m.id>newsSince),noticeEpoch:NEWS75.epoch,team, fac, me: p.s.name || u.display, meUid: u.id, invites: ptInvites48(u.id) });
   },
   'GET /api/player': async (req,res) => {
     const u=await auth(req);if(!u)return send(res,401,{error:'กรุณาเข้าสู่ระบบ'});
@@ -1019,6 +1063,7 @@ async function serveImage61(req,res,pathname){
  const stream=fs.createReadStream(file);stream.on('error',()=>res.destroy());res.on('close',()=>stream.destroy());stream.pipe(res);return true;
 }
 
+setInterval(()=>{wbEnsure().then(newsClock75).catch(e=>console.error('notice schedule',e.message))},15000).unref();
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   const key = req.method + ' ' + url.pathname;
@@ -1059,7 +1104,7 @@ async function loadLadder() {
   for (const r of await db.allLadder()) { try { LADDER.set(Number(r.user_id), Object.assign(JSON.parse(r.snap), { id: Number(r.user_id), upd: Number(r.upd) })); } catch (e) {} }
   boardDirty = true;
 }
-db.init().then(ensureSecret).then(async src => { await loadLadder(); await offBoot(); await funLoad(); await launchLoad(); await wbEnsure();
+db.init().then(ensureSecret).then(async src => { await loadLadder(); await offBoot(); await funLoad(); await launchLoad(); await wbEnsure();await newsClock75();
   if (src === 'auto') console.log('JWT_SECRET: ไม่ได้ตั้งหรือสั้นเกินไป ใช้รหัสลับที่สร้างอัตโนมัติและเก็บในฐานข้อมูลแทน');
   server.listen(PORT, '0.0.0.0', () => console.log('ศึกชิงเมือง server · port ' + PORT + ' · DB ' + db.kind));
 }).catch(e => { console.error('เชื่อมต่อฐานข้อมูลไม่สำเร็จ:', e.message); process.exit(1); });
