@@ -399,7 +399,9 @@ function playerLook52(o){
  const br=owners[o.job2]===o.cls?o.job2:null,tier=br?(o.job3&&o.job4===br&&o.lvl>=100?3:o.job3?2:1):0;
  const c=o.collect59,z=c&&c.fx,colors=['#85d98b', '#a6b7ff', '#ff985d', '#f7d06d', '#8de8ff', '#bb8aff', '#a6e85a', '#77cfff', '#ffa7dd'];
  const collect59=Number.isInteger(z)&&z>=0&&z<9&&c.q&&Array.isArray(c.q[z])&&c.q[z].length===3&&c.q[z].every(n=>n>=3)?colors[z]:null;
- return Object.assign({},o.look||{},{tier,br,collect59});
+ const pet=o.look&&o.look.pet,owned=['cat','pcat','slime','peng','fox','bunny','owl','dragon','dawnbird73'].includes(pet)&&o.owned&&Array.isArray(o.owned.pet)&&o.owned.pet.includes(pet),p=o.book70&&o.book70.pets&&o.book70.pets[pet];
+ const max=p&&Number.isFinite(p.bond)&&p.bond>=500?3:p&&Number.isFinite(p.bond)&&p.bond>=100?2:1,stage=owned&&p?Math.max(1,Math.min(max,p.stage|0)):1,petStage70=owned&&p?Math.max(1,Math.min(stage,p.form|0||stage)):1;
+ return Object.assign({},o.look||{},{tier,br,collect59,petStage70});
 }
 function ptRefresh(m) { const q = live.get(m.uid); if (q && q.s) { m.n = String(q.s.name || m.n).slice(0, 16); m.cls = q.s.cls || m.cls; m.lvl = q.s.lvl | 0; m.z = q.s.zone | 0; m.b = q.s.battle ? 1 : 0; m.look = playerLook52(q.s); m.hp = Math.max(0,Number(q.s.hp)||0); m.mhp = Math.max(1,Number(q.s.maxhp)||1); } }
 function ptNear(uid, s) { // เพื่อนที่ออนไลน์ อยู่แผนที่เดียวกัน และเลเวลห่างไม่เกิน 15
@@ -753,7 +755,7 @@ const routes = {
     if (!/^[a-z0-9]{1,20}$/.test(a) || (pr && pr.length > 80)) return send(res, 400, { error: 'คำสั่งไม่ถูกต้อง' });
     const p = await session(u.id);
     if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
-    if(/^m51(add|cap|reset)$/.test(a)){const room=DGR.get(DGU.get(u.id));if(room&&room.st==='fight')return send(res,409,{error:'จบดันเจี้ยนทีมก่อนปรับความชำนาญ'});}
+    if(/^m51(add|cap|reset)$/.test(a)||a==='petevolve70'||a==='ar73start'){const room=DGR.get(DGU.get(u.id));if(a==='ar73start'&&room)return send(res,409,{error:'ออกจากห้องดันเจี้ยนก่อนเข้าท้าประลอง'});if(room&&room.st==='fight')return send(res,409,{error:a==='ar73start'?'จบดันเจี้ยนทีมก่อนเข้าท้าประลอง':a==='petevolve70'?'จบดันเจี้ยนทีมก่อนวิวัฒนาการสัตว์เลี้ยง':'จบดันเจี้ยนทีมก่อนปรับความชำนาญ'});}
     if(a==='b'&&b.fight&&(!p.s.battle||p.s.battle.key50!==b.fight||(p.s.battle.gi||0)!==Number(b.target)))return reply(res,p,{fx:[],fxt:{}});
     await prizeCheck(u.id, p);
     const before = p.s.gold;
@@ -868,6 +870,7 @@ const routes = {
     if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
     if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
     const op = String(b.op || ''), cur = DGR.get(DGU.get(u.id));
+    if(p.s.battle&&p.s.battle.challenge73&&op!=='sync'&&op!=='leave')return send(res,409,{error:'จบท้าประลองก่อนเข้าดันเจี้ยน'});
     const bad = msg => send(res, 400, { error: msg });
     if (op === 'create') {
       if (cur) return bad('คุณอยู่ในห้องอื่นแล้ว');
