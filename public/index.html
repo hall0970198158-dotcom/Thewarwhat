@@ -1048,6 +1048,30 @@ function j2Req(){
   {ok:sm>=J2_ENH,t:'สวมอุปกรณ์ครบ 5 ชิ้น (อาวุธ หมวก เกราะ ถุงมือ รองเท้า) ตีบวก +'+J2_ENH+' ทุกชิ้น ('+(sm<0?'ยังสวมไม่ครบ':'ต่ำสุด +'+sm)+')'},
   {ok:tb>=J2_TOWER,t:'ผ่านหอคอยชั้น '+J2_TOWER+' (ผ่านสูงสุด ชั้น '+tb+')'},
   {ok:s.gold>=J2_GOLD,t:'ทอง '+J2_GOLD.toLocaleString()+' (มี '+s.gold.toLocaleString()+')'}]}
+// B96 เปลี่ยนอาชีพ: ครั้งแรกฟรี ต่อไปครั้งละ 1,000,000 ทอง · พัก 3 วัน · ย้ายสายขั้น 2-4/สกิล/ความชำนาญ ตามลำดับเดิม
+var CLS_CH_GOLD=1000000,CLS_CH_CD=3*864e5;
+function clsChLeft96(){return Math.max(0,((s.clsCh&&s.clsCh.at)||0)+CLS_CH_CD-Date.now())}
+function clsChCost96(){return (s.clsCh&&s.clsCh.n>0)?CLS_CH_GOLD:0}
+function clsChange96(to){
+ if(!s||!s.created||s.battle||!CLASSES[to]||to===s.cls)return;var cost=clsChCost96();
+ if(clsChLeft96()>0){say('เปลี่ยนอาชีพได้อีกครั้งใน '+Math.ceil(clsChLeft96()/3600000)+' ชม.');return}
+ if((s.gold|0)<cost){say('ทองไม่พอ · เปลี่ยนอาชีพใช้ '+cost.toLocaleString('th-TH')+' ทอง');return}
+ var from=s.cls,lv=Math.max(0,(s.lvl|0)-1),gOld=GROW[from]||{},gNew=GROW[to]||{},k,i;
+ s.gold-=cost;
+ for(k in gOld){s.st[k]=Math.max(0,(s.st[k]|0)-gOld[k]*lv);if(s.gr)s.gr[k]=Math.max(0,(s.gr[k]|0)-gOld[k]*lv)}
+ s.gr=s.gr||{};for(k in gNew){s.st[k]=(s.st[k]|0)+gNew[k]*lv;s.gr[k]=(s.gr[k]|0)+gNew[k]*lv}
+ var oS=SK[from]||[],nS=SK[to]||[],sk={},au={};for(i=0;i<oS.length&&i<nS.length;i++){if(s.sk&&s.sk[oS[i].id])sk[nS[i].id]=s.sk[oS[i].id];if(s.skAuto&&s.skAuto[oS[i].id]===false)au[nS[i].id]=false}s.sk=sk;s.skAuto=au;
+ var oj=JOB2[from]||[],nj=JOB2[to]||[];if(s.job2){var ji=-1;oj.forEach(function(x,n){if(x.id===s.job2)ji=n});var nb=nj[ji];var had4=s.job4===s.job2;s.job2=nb?nb.id:null;if(!nb){s.job3=null;s.job4=null}else if(had4)s.job4=nb.id}
+ if(s.mastery51&&s.mastery51.cls===from)s.mastery51.cls=to;
+ s.cls=to;s.clsCh={n:((s.clsCh&&s.clsCh.n)|0)+1,at:Date.now()};if(typeof PORT_C!=='undefined')PORT_C={};
+ s.maxhp=calcMax(s);s.maxmp=calcMaxMp(s);s.hp=Math.min(s.hp,s.maxhp);s.mp=Math.min(s.mp,s.maxmp);recalc();
+ say('เปลี่ยนอาชีพเป็น '+CLASSES[to].n+' แล้ว'+(cost?' (−'+cost.toLocaleString('th-TH')+' ทอง)':' (ครั้งแรกฟรี)'));save()}
+function clsChHtml96(){
+ var left=clsChLeft96(),cost=clsChCost96(),hh=Math.ceil(left/3600000),busy=!!s.battle;
+ return '<section class="card"><h3>เปลี่ยนอาชีพ</h3><p>อาชีพตอนนี้: <b style="color:var(--brass)">'+CLASSES[s.cls].n+'</b></p>'+
+  '<p class="hint">'+(cost?'ค่าเปลี่ยน <b>'+cost.toLocaleString('th-TH')+'</b> ทอง':'<b style="color:#5fd16f">ครั้งแรกฟรี</b> · ครั้งต่อไป '+CLS_CH_GOLD.toLocaleString('th-TH')+' ทอง')+' · เปลี่ยนได้ทุก 3 วัน'+(left>0?' · <b style="color:#ff9a8a">เปลี่ยนได้อีกใน '+(hh>=24?Math.floor(hh/24)+' วัน '+(hh%24)+' ชม.':hh+' ชม.')+'</b>':'')+'</p>'+
+  '<div class="cls-grid">'+CLS_ORDER.filter(function(c){return c!==s.cls}).map(function(c){return '<button class="btn" data-a="clsch96" data-p="'+c+'"'+(left>0||busy||(s.gold|0)<cost?' disabled':'')+'><b>'+CLASSES[c].n+'</b></button>'}).join('')+'</div>'+
+  '<p class="hint">เลเวล อุปกรณ์ แต้มสเตตัสที่ลงเอง และแต้มสกิลยังอยู่ครบ · สกิลย้ายไปช่องเดียวกันของอาชีพใหม่ · สายขั้น 2/3/4 ย้ายเป็นสายลำดับเดียวกัน · ค่าสเตตัสที่ได้ฟรีทุกเลเวลเปลี่ยนตามอาชีพใหม่</p></section>'}
 function job2Html(){
  var cur=job2Of(s),list=JOB2[s.cls]||[];
  if(cur)return '<section class="card"><h3>อาชีพขั้น 2</h3><p><b style="color:var(--brass)">'+esc(cur.n)+'</b> ('+CLASSES[s.cls].n+')</p><div class="reveal"><b>สกิลติดตัว: '+esc(cur.sk)+'</b><br>'+job2Desc(cur)+'</div></section>'+job3Html();
@@ -1063,11 +1087,11 @@ var SK={
  warrior:[
   {id:'w0',n:'ผิวเหล็ก',t:'p',req:1,p:{hp:6,def:0.6}},
   {id:'w1',n:'ฟันเกลียวคลื่น',t:'a',req:2,mp:6,cd:2,m:[0.8,0.1],hits:1},
-  {id:'w3',n:'คำรามสงคราม',t:'b',req:4,mp:8,cd:6,dur:4,b:{atk:[10,2.5],def:[1,0.25]}}],
+  {id:'w3',n:'คำรามสงคราม',t:'b',req:4,mp:8,cd:6,dur:4,b:{atk:[20,2.5],defp:[6,1],hpp:[3,.5]}}],
  rogue:[
   {id:'r0',n:'สัมผัสเงา',t:'p',req:1,p:{crit:2,dodge:1}},
   {id:'r1',n:'แทงสองจังหวะ',t:'a',req:2,mp:5,cd:2,m:[0.45,0.05],hits:2},
-  {id:'r3',n:'หายตัว',t:'b',req:4,mp:8,cd:6,dur:3,b:{crit:[12.5,1.5],dodge:[10,1]}}],
+  {id:'r3',n:'หายตัว',t:'b',req:4,mp:8,cd:6,dur:3,b:{atk:[3,.5],dodge:[6,1],cdmg:[3,.5]}}],
  mage:[
   {id:'m0',n:'จิตเวท',t:'p',req:1,p:{mp:6,atk:0.5}},
   {id:'m1',n:'ลูกไฟ',t:'a',req:2,mp:7,cd:1,m:[0.9,0.125],hits:1},
@@ -1079,12 +1103,12 @@ var SK={
  archer:[
   {id:'a0',n:'ตาเหยี่ยว',t:'p',req:1,p:{crit:2,atk:1}},
   {id:'a1',n:'ห่าธนู',t:'a',req:2,mp:6,cd:2,m:[0.3,0.035],hits:3},
-  {id:'a3',n:'เล็งแม่น',t:'b',req:4,mp:8,cd:6,dur:4,b:{crit:[10,1.5],atk:[7.5,1.5]}}]
+  {id:'a3',n:'เล็งแม่น',t:'b',req:4,mp:8,cd:6,dur:4,b:{atk:[6,1],dodge:[3,.5]}}]
 };
 var SKMAP={},SKMAX=5;
 CLS_ORDER.forEach(function(c){CLASSES[c].sk=SK[c];SK[c].forEach(function(k){SKMAP[k.id]=k})});
 var LPAS={hp:['HP สูงสุด +',''],mp:['MP สูงสุด +',''],atk:['โจมตี +',''],def:['เกราะ +',''],crit:['คริติคอล +','%'],dodge:['หลบ +','%']};
-var LBUF={atk:['โจมตี +','%'],def:['เกราะ +',''],crit:['คริติคอล +','%'],dodge:['หลบ +','%'],regen:['ฟื้น HP +',' ต่อตา']};
+var LBUF={atk:['โจมตี +','%'],def:['เกราะ +',''],defp:['เกราะ +','%'],hpp:['HP สูงสุด +','%'],cdmg:['คริดาเมจ +','%'],crit:['คริติคอล +','%'],dodge:['หลบ +','%'],regen:['ฟื้น HP +',' ต่อตา']};
 /* กิลด์ */
 var GUILD_MAX=20,GUILD_LVMAX=10,GUILD_COST=150;
 var GUILDS=[
@@ -1619,7 +1643,7 @@ function setMin(o){
  for(i=0;i<ks.length;i++){var a=o.acc[ks[i]];if(!a)return -1;if((a.e|0)<m)m=a.e|0}
  return m}
 function setBonus(o){var m=setMin(o);return m>=20?0.25:m>=15?0.18:m>=10?0.10:m>=5?0.05:0}
-function calcMax(o){return Math.round(clsB88(o,'hp')*(o.title==='t11'?1.03:1)*(50+(o.lvl-1)*12+CLASSES[o.cls].hp+sv(o,'vit')*8+Math.floor(passiveOf(o,'hp'))+Math.round(accVal(o,'hp')))*(1+gLvOf(o)*0.01)*(1+setBonus(o))*(1+cardBonus(o,'hp'))*(1+j3Self(o,'hp'))*(1+m51Val(o,'hp',o.battle)))}
+function calcMax(o){return Math.round((o===s&&s&&s.battle?1+bb('hpp')/100:1)*clsB88(o,'hp')*(o.title==='t11'?1.03:1)*(50+(o.lvl-1)*12+CLASSES[o.cls].hp+sv(o,'vit')*10+Math.floor(passiveOf(o,'hp'))+Math.round(accVal(o,'hp')))*(1+gLvOf(o)*0.01)*(1+setBonus(o))*(1+cardBonus(o,'hp'))*(1+j3Self(o,'hp'))*(1+m51Val(o,'hp',o.battle)))}
 function calcMaxMp(o){return Math.round(clsB88(o,'mp')*(20+(o.lvl-1)*3+sv(o,'int')*4+Math.floor(passiveOf(o,'mp'))+Math.round(accVal(o,'mp'))+CLASSES[o.cls].mp)*(1+j3Self(o,'mp'))*(1+m51Val(o,'mp',o.battle)))}
 function fresh(){var o={job4:null,j4Quest:null,j4Version:J4_SAVE_VERSION,day:1,gold:30,lvl:1,xp:0,hp:65,maxhp:65,energy:30,maxEnergy:30,cdAt:0,eAt:Date.now(),rAt:Date.now(),pAt:periodId(Date.now()),
  inv:{wood:3,stone:0,ore:0,hide:0,herb:2,purple:0},potions:1,pot2:0,pot3:0,pot4:0,pot5:0,pot6:0,weapon:0,armor:0,wq:0,aq:0,wEnh:0,aEnh:0,erst:null,acc:{ring:null,neck:null,brooch:null,helm:null,armor:null,gloves:null,boots:null},pend:null,
@@ -1979,12 +2003,12 @@ function bb(key){
  var b=s.battle,t=0;if(!b||!b.buffs)return 0;
  for(var id in b.buffs){if(b.buffs[id]>0){var k=SKMAP[id];if(k&&k.b&&k.b[key])t+=lvVal(k.b[key],skLv(id))}}
  return t}
-var CLSB88={warrior:{atk:1.12,hp:1.10,def:1},mage:{atk:1.12,hp:1.05,def:1,mp:1.10},paladin:{atk:1.10,hp:1.10,def:1.12}};
+var CLSB88={rogue:{atk:.95},archer:{atk:.95},warrior:{atk:1.12,hp:1.10,def:1},mage:{atk:1.12,hp:1.05,def:1,mp:1.10},paladin:{atk:1.10,hp:1.10,def:1.12}};
 function clsB88(o,k){var c=o&&CLSB88[o.cls];return c&&c[k]||1}
 function pAtk(){
  var base=2+s.lvl+wPow(s)+CLASSES[s.cls].atk+mainAtk()+Math.round(passive('atk'))+Math.round(accVal(s,'atk'));
  return Math.max(1,Math.round(clsB88(s,'atk')*base*(1+bb('atk')/100)*(1+setBonus(s))*(1+cardBonus(s,'atk'))*(1+j3Self(s,'atk'))*(1+m51Val(s,'atk',s.battle))))}
-function pDef(){return Math.round(clsB88(s,'def')*(gsetOf(s)==='fort'?1.1:1)*(aDef(s)+Math.round(accVal(s,'def'))+CLASSES[s.cls].def+Math.floor(sv(s,'vit')/2)+Math.floor(passive('def'))+Math.round(bb('def')))*(1+setBonus(s))*(1+cardBonus(s,'def'))*(1+j3Self(s,'def'))*(1+m51Val(s,'def',s.battle)))}
+function pDef(){return Math.round((1+bb('defp')/100)*clsB88(s,'def')*(gsetOf(s)==='fort'?1.1:1)*(aDef(s)+Math.round(accVal(s,'def'))+CLASSES[s.cls].def+sv(s,'vit')+Math.floor(passive('def'))+Math.round(bb('def')))*(1+setBonus(s))*(1+cardBonus(s,'def'))*(1+j3Self(s,'def'))*(1+m51Val(s,'def',s.battle)))}
 function pMdef(){return Math.round(clsB88(s,'def')*(Math.round(accVal(s,'mdef'))+Math.floor(sv(s,'int')/2)+Math.floor(sv(s,'vit')/3)+Math.floor(passive('def')/2)+Math.round(bb('def')/2))*(1+setBonus(s))*(1+cardBonus(s,'def'))*(1+j3Self(s,'def')))}
 function magicHit89(e,msk){return !!msk||!!(e&&e.cls==='mage')}
 function critPct(){return Math.min(75,5+(gsetOf(s)==='hunt'?10:0)+CLASSES[s.cls].crit+softStat43(sv(s,'luk'),80,.5)*0.1+passive('crit')+bb('crit')+accVal(s,'crit')+j3Self(s,'crit')+m51Val(s,'crit',s.battle))}
@@ -2002,7 +2026,7 @@ function skPow(){
 }
 function mainAtk(){return s.cls==='archer'?sv(s,'dex'):s.cls==='mage'?sv(s,'int'):s.cls==='rogue'?sv(s,'str')*1.5+sv(s,'agi')*1.1:sv(s,'str')*2}
 function hitPct(){return Math.min(100,90+sv(s,'dex')*0.25+gearStat('acc'))}
-function critMul(){return 2+softStat43(sv(s,'luk'),80,.5)*0.005+m51Val(s,'critmul',s.battle)+gearStat('cdmg')/100+(gsetOf(s)==='hunt'?.2:0)}
+function critMul(){return 2+softStat43(sv(s,'luk'),80,.5)*0.005+m51Val(s,'critmul',s.battle)+gearStat('cdmg')/100+bb('cdmg')/100+(gsetOf(s)==='hunt'?.2:0)}
 function skAtk(){return pAtk()}
 var MAGE_DMG=1.15; // B1: ลดตัวคูณซ้ำซ้อน; INT และคูลดาวน์เดิมยังทำงาน
 function healAmt(){return 75}
@@ -2639,7 +2663,7 @@ function battleActBase73(a){if(s.battle&&s.battle.jw&&Date.now()<s.battle.jw)s.b
   j4PayMp(b,k);b.cd[k.id]=k.cd+1-(k.cd>1&&Math.random()*100<gearStat('cdt')?1:0);fx.pAtk=now;fxApproach(k.t==='b'?'buff':(s.cls==='warrior'||s.cls==='rogue')?'melee':'ranged');if(!b.j4Trial)dqAdd('skill');
   if(k.t==='a'){j4Attack=true;j4PrepareAttack(b,k)}
   if(k.t==='b'){
-   b.buffs[k.id]=k.dur+(k.id==='a3'&&s.job2==='sniper'&&job3Of(s)?1:0);if(k.id==='r3')b.balAmbush=true;j4Buff(b,k.id,l);m51Buff(b,k,l);l.push('ใช้ '+k.n+' ('+skDesc(k,lv)+')');fl('p',k.n,'#5fb4ff');fxBuff();
+   b.buffs[k.id]=k.dur+(k.id==='a3'&&s.job2==='sniper'&&job3Of(s)?1:0);if(k.b&&k.b.hpp){s._hpb97=1;recalc()}if(k.id==='r3')b.balAmbush=true;j4Buff(b,k.id,l);m51Buff(b,k,l);l.push('ใช้ '+k.n+' ('+skDesc(k,lv)+')');fl('p',k.n,'#5fb4ff');fxBuff();
   }else{
    var tot=0,cr=0,ms=0,i,skillBonus=(balSkillBonus(b,k)+j4DamageBonus(b))*pveRoleBonus()*m51Bonus(b,k),pierce=Math.min(0.8,(k.ign||0)+balPierce(b,k)+j4Pierce(b)+statPierce43()+m51Val(s,'pierce',b));
    for(i=0;i<(k.hits||1);i++){
@@ -2708,7 +2732,7 @@ function battleActBase73(a){if(s.battle&&s.battle.jw&&Date.now()<s.battle.jw)s.b
    if(Math.random()*100<dodgePct()){m51Dodge(b);l.push('หลบ '+g.e.n+' ได้');return}
    var dd=Math.max(1,Math.round(hit(g.e.atk*(1-dbf('atk')*j2Mul(b)),pDef(),g.e.lvl||s.lvl)*balWard(b)));var j4GroupLoss=gearIncoming(b,m51Incoming(b,j4Incoming(b,dd,g.e,l),g.e,l),l);s.hp-=j4GroupLoss;gsetGuard(b,l);j4AfterIncoming(b,j4GroupLoss,l);m51Received(b,j4GroupLoss);if(j4On(b)||s.lvl>=100)dd=j4GroupLoss;gd+=dd;l.push(g.e.n+' รุมโจมตี −'+dd)});
   if(gd>0){fx.pHit=now+700;fl('p','−'+gd,'#ff9a6a',720)}}
- for(id in b.buffs){if(b.buffs[id]>0)b.buffs[id]--}
+ var hpb97=false;for(id in b.buffs){if(b.buffs[id]>0){b.buffs[id]--;if(!b.buffs[id]&&SKMAP[id]&&SKMAP[id].b&&SKMAP[id].b.hpp)hpb97=true}}if(hpb97)recalc();
  j4FinishAction(b,eAct);m51Finish(b,l);
  b.lines=l.slice().reverse().concat(b.lines).slice(0,6);
  if(b.ehp<=0){if(!b.grp)return win();if(s.hp>0){if(grpNext(b))return;return win()}}
@@ -3294,6 +3318,7 @@ function act(a,p){
    else s.bagCf=p}}
  else if(a==='chtabset'){if(['stat','pow','skill','job2','mastery'].indexOf(p)>=0)s.chtab=p}
  else if(a==='chtab'){s.chtab=(s.chtab===p)?'':p}
+ else if(a==='clsch96'){clsChange96(p)}
  else if(a==='dtabset'){if(['look','title','book','box','bag','set','collect','farm','goals','bestiary','pets'].indexOf(p)>=0)s.dtab=p}
  else if(a==='dtab'){s.dtab=(s.dtab===p)?'':p}
  else if(a==='title'){var tx=titleOf(p);if(tx&&titleHas(tx))s.title=(s.title===p)?'':p;recalc()}
@@ -4889,7 +4914,7 @@ function skillCard(k){
   '<div class="grid2"><button class="btn primary" data-a="learn" data-p="'+k.id+'"'+(can?'':' disabled')+'>'+label+'</button>'+au+'</div></div>';
 }
 function viewChar(){
- var rows=[['str','STR พลังโจมตี','นักดาบ/ผู้พิทักษ์: โจมตี +2 และเสริมพลังสกิล · นักฆ่า: STR×1.5 รวมกับ AGI×1.1'],['vit','VIT ความอึด','HP +8 ต่อแต้ม · เกราะ +1 ทุก 2 แต้ม · เกราะลดดาเมจเป็นสัดส่วน สูงสุด 65%'],
+ var rows=[['str','STR พลังโจมตี','นักดาบ/ผู้พิทักษ์: โจมตี +2 และเสริมพลังสกิล · นักฆ่า: STR×1.5 รวมกับ AGI×1.1'],['vit','VIT ความอึด','HP +10 และเกราะ +1 ต่อแต้ม · เกราะลดดาเมจเป็นสัดส่วน สูงสุด 65%'],
  ['agi','AGI ความคล่อง','ตีเร็วและหลบ · ส่วนเกินรวม 80 ได้ผลครึ่งหนึ่ง · นักฆ่าได้โจมตี +1.1 ต่อแต้ม'],['int','INT สติปัญญา','MP +4 · นักเวทได้โจมตีและพลังสกิลหลัก · สายประชิดได้พลังสกิลเสริมเล็กน้อย'],
  ['dex','DEX ความแม่นยำ','แม่น +0.25 จุด% จนเต็ม 100% · ส่วนเกิน 40 เพิ่มเจาะเกราะ สูงสุด 10% · ธนูได้โจมตีและพลังสกิล'],['luk','LUK โชค','คริ +0.1 จุด% และคริดาเมจ +0.5% ต่อแต้ม · ส่วนเกินรวม 80 ได้ผลครึ่งหนึ่ง']].map(function(r){
   var gb=(s.gr&&s.gr[r[0]])|0,v=s.st[r[0]]-gb;
@@ -4914,9 +4939,9 @@ function viewChar(){
   (skSpent(s)>=skTotal(s)?'<p class="hint">สกิลเลเวล 5 ครบทุกสกิลแล้ว หยุดแจกแต้มสกิล จะแจกอีกครั้งเมื่อเลื่อนขั้นคลาสถัดไป</p>':'')+
   '<p class="hint">ออโต้สกิลใช้ในตีออโต้และล่าออโต้ ลงบัพก่อนแล้วใช้สกิลโจมตีแรงที่สุดที่พร้อม ปิดรายสกิลได้ที่ปุ่มของแต่ละสกิล ได้แต้มสกิล 1 แต้มทุกเลเวล</p>'+
   '<div>'+skills+'</div>'+(job4Of(s)?'<h3>สกิลติดตัวขั้น 4 · ทำงานอัตโนมัติ</h3>'+j4SkillHtml(s.job2):'')+'</section>';
- var CH=[['stat','สเตตัส',s.sp>0],['pow','ค่าพลัง',false],['skill','สกิล',s.skp>0],['mastery','ความชำนาญ Lv100',m51Budget(s)>m51Spent(s)],['job2','เลื่อนขั้นอาชีพ',(!s.job2&&j2Req().every(function(x){return x.ok}))||(!!s.job2&&!s.job3&&j3Req().every(function(x){return x.ok}))||(j4Eligible(s)&&!job4Of(s))]],oc=s.chtab||'';
+ var CH=[['stat','สเตตัส',s.sp>0],['pow','ค่าพลัง',false],['skill','สกิล',s.skp>0],['mastery','ความชำนาญ Lv100',m51Budget(s)>m51Spent(s)],['clsch','เปลี่ยนอาชีพ',false],['job2','เลื่อนขั้นอาชีพ',(!s.job2&&j2Req().every(function(x){return x.ok}))||(!!s.job2&&!s.job3&&j3Req().every(function(x){return x.ok}))||(j4Eligible(s)&&!job4Of(s))]],oc=s.chtab||'';
  var head='<section class="card"><h3>เลือกหมวด</h3><div class="cat">'+CH.map(function(c){return '<button class="btn'+(oc===c[0]?' primary':'')+'" data-a="chtab" data-p="'+c[0]+'" aria-expanded="'+(oc===c[0])+'">'+c[1]+(c[2]?' <span style="color:#ff6a5a">●</span>':'')+' '+(oc===c[0]?'▲':'▼')+'</button>'}).join('')+'</div><p class="hint">กดหมวดเพื่อเปิด กดอีกครั้งเพื่อเก็บ · จุดแดง = มีแต้มให้ลงหรือพร้อมเปลี่ยนอาชีพ</p></section>';
- return head+({stat:secStat,pow:secPow,skill:secSk,job2:job2Html(),mastery:m51Html()}[oc]||'');
+ return head+({stat:secStat,pow:secPow,skill:secSk,job2:job2Html(),mastery:m51Html(),clsch:clsChHtml96()}[oc]||'');
 }
 var FAC=[{n:'มังกรเพลิง',c:'#e0523a'},{n:'หงส์เหมันต์',c:'#4aa3ff'},{n:'พยัคฆ์พงไพร',c:'#5fbf6a'},{n:'เต่าทมิฬ',c:'#a77be0'}];
 var FW_TRIES=3,FW_START=19,FW_END=22,FTZ=7*3600000,FDAY=864e5,FH=36e5;
@@ -5209,7 +5234,7 @@ function townEnTick(st,inTown,now){var T=st.townE;if(!T||T.d!==townEnDay())T=st.
  if(st.energy>=st.maxEnergy||T.n>=TOWN_E_MAX)return false;T.acc+=dt;if(T.acc<TOWN_E_MS)return false;
  T.acc-=TOWN_E_MS;st.energy=Math.min(st.maxEnergy,st.energy+1);T.n++;st.eAt=now;return true}
 function townEnLeft(){var T=s&&s.townE;return T&&T.d===townEnDay()?Math.max(0,TOWN_E_MAX-T.n):TOWN_E_MAX}
-function preTick(){var ch=offCheck();if(s&&s.created)ch=pvpWeekCheck90()||ch;if(!SV&&!CL&&typeof TOWN!=='undefined')ch=townEnTick(s,!!TOWN.on,Date.now())||ch;ch=timeTick()||ch;if(s.res&&Date.now()>=s.res.until){s.res=null;ch=true;save()}return ch}
+function preTick(){var ch=offCheck();if(s&&s._hpb97&&!s.battle){s._hpb97=0;recalc();ch=true}if(s&&s.created)ch=pvpWeekCheck90()||ch;if(!SV&&!CL&&typeof TOWN!=='undefined')ch=townEnTick(s,!!TOWN.on,Date.now())||ch;ch=timeTick()||ch;if(s.res&&Date.now()>=s.res.until){s.res=null;ch=true;save()}return ch}
 function autoLogic(){
  var tracked68=farmTrack68(),acted=false;
  if(!s.battle&&s.created){
