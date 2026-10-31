@@ -6683,7 +6683,8 @@ function devicePortrait(){
 }
 function entryLayoutSync(){viewSync()}
 function ecoSlideDelta(start,event){var a=viewAngle();return a===90?event.clientY-start.y0:a===-90?start.y0-event.clientY:event.clientX-start.x0}
-if(!SV){entryLayoutSync();window.addEventListener('resize',entryLayoutSync);window.addEventListener('orientationchange',entryLayoutSync)}
+function lockPortrait95(){try{var o=window.screen&&screen.orientation;if(o&&o.lock&&!/^portrait/.test(o.type||''))o.lock('portrait').then(function(){setTimeout(entryLayoutSync,60)}).catch(function(){})}catch(e){}}
+if(!SV){entryLayoutSync();lockPortrait95();window.addEventListener('resize',entryLayoutSync);window.addEventListener('orientationchange',entryLayoutSync);var lk95=0;document.addEventListener('pointerdown',function(){var n=Date.now();if(n-lk95>1500){lk95=n;lockPortrait95()}},true);document.addEventListener('fullscreenchange',function(){setTimeout(lockPortrait95,120)})}
 
 WING2.blue={k:'feather',c:['#183f7a','#397dd1','#72b9f0','#cbefff','#ffffff'],fx:'snow',n:6,sp:[150,258]};
 WING2.pink={k:'feather',c:['#713653','#c06998','#f39fc7','#ffe0f0','#ffffff'],fx:'mote',n:6,sp:[150,258]};
@@ -6730,8 +6731,10 @@ function viewSet(mode){if(mode!=='portrait'&&mode!=='landscape')return;mode='por
 function viewSync(){
  if(SV||typeof VIEW_UI==='undefined'||!VIEW_UI||!document.body)return;
  var physicalPortrait=devicePortrait(),nativeChat78=!!(typeof CHAT!=='undefined'&&CHAT.open),wantPortrait=true, // B94 แชทก็แนวตั้ง
- angle=0,box77=viewBox77(),w=box77.w,h=box77.h; // B91 แนวตั้งอย่างเดียว ไม่หมุนจอ · จอแนวนอนแสดงเป็นแถบแนวตั้งตรงกลาง
- VIEW_UI.effectiveMode78=wantPortrait?'portrait':'landscape';VIEW_UI.angle=0;VIEW_UI.width=wantPortrait&&w>h?Math.round(Math.min(w,h*.6)):w;VIEW_UI.height=h;var mob91=false;try{mob91=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches}catch(e){}document.body.classList.toggle('rotate91',!!(wantPortrait&&w>h&&h<600&&mob91));
+ angle=0,box77=viewBox77(),w=box77.w,h=box77.h; // B91 แนวตั้งอย่างเดียว · B95 แอปที่ติดตั้งแล้วถูกบังคับแนวนอน → หมุน UI ให้ตั้งตรงในมือ
+ var mob91=false,app95=false;try{mob91=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches;app95=window.matchMedia('(display-mode: fullscreen)').matches||window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true}catch(e){}
+ var forced95=wantPortrait&&w>h&&h<600&&mob91&&app95;if(forced95){var ot95=window.screen&&screen.orientation&&screen.orientation.type||'';angle=ot95==='landscape-secondary'?90:-90}
+ VIEW_UI.effectiveMode78=wantPortrait?'portrait':'landscape';VIEW_UI.angle=angle;VIEW_UI.width=forced95?h:wantPortrait&&w>h?Math.round(Math.min(w,h*.6)):w;VIEW_UI.height=forced95?w:h;document.body.classList.toggle('rotate91',!!(wantPortrait&&w>h&&h<600&&mob91&&!app95));
  var body=document.body;body.classList.toggle('chat-native-active78',nativeChat78);body.classList.toggle('entry-rotated64',angle!==0&&(!s||!s.created));body.classList.add('view-ready');body.classList.toggle('view-portrait',wantPortrait);body.classList.toggle('view-landscape',!wantPortrait);body.classList.toggle('landscape-portrait',physicalPortrait);body.classList.toggle('entry-landscape',!s||!s.created);
  body.style.setProperty('--app-w',VIEW_UI.width+'px');body.style.setProperty('--app-h',VIEW_UI.height+'px');body.style.setProperty('--app-transform','translate(-50%,-50%) rotate('+angle+'deg)');
  var host=document.getElementById('viewOverlayHost');if(!host){host=document.createElement('div');host.id='viewOverlayHost';host.className='view-overlay';document.body.appendChild(host)}
