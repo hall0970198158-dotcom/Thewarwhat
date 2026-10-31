@@ -699,6 +699,8 @@ body.view-portrait #gameWrap #battleStage.ts169 .battle-actions .skb .skt b{font
 body.view-portrait #gameWrap #battleStage.ts169 .battle-actions .btn:disabled{filter:grayscale(.75) brightness(.62)}
 body.view-portrait #gameWrap #battleStage.ts169 .battle-actions .skb img{width:24px;height:24px}
 .gop87{margin:6px 0;padding:6px 8px;border:1px solid #7a62c0;border-radius:8px;background:#1d1838;font-size:12px;text-align:left}.gop87 b{display:block;color:#cdb8ff;margin-bottom:2px}.gop87 span{display:block;color:#efe6ff}.gop87.set{border-color:#c9a04f;background:#2a2012}.gop87.set b{color:#ffd98a}.gopt87{color:#cdb8ff}
+html,body{background:#0b0f1e}
+body.rotate91::after{content:'📱\A กรุณาหมุนมือถือเป็นแนวตั้ง\A เกมนี้เล่นแนวตั้งเท่านั้น';white-space:pre;position:fixed;inset:0;z-index:2147483000;background:#0b0f1e;color:#ffe3a0;display:flex;align-items:center;justify-content:center;text-align:center;font:700 20px/1.7 Kanit,sans-serif}
 </style>
 
 <section id="login" class="login">
@@ -2052,12 +2054,12 @@ function fxFlash(col,delay){fx.flash={t:nowMs()+(delay||0),col:col}}
 function fxProj(kind,x0,y0,x1,y1,dur,col,delay){fx.projs.push({k:kind,x0:x0,y0:y0,x1:x1,y1:y1,t0:nowMs()+(delay||0),dur:dur,col:col})}
 function fxRing(x,y,col,delay,max){fx.rings.push({x:x,y:y,col:col,t0:nowMs()+(delay||0),max:max||40})}
 var CLS_FX={warrior:['#ffd08a','#ff8a3a','#ffffff'],rogue:['#c87aff','#ff6ad8','#ffffff'],mage:['#ff8a2a','#ffd04a','#ff4a1a'],paladin:['#fff3a0','#ffffff','#ffd04a'],archer:['#a0f0ff','#5fd16f','#ffffff']};
-function fxPlayerHit(crit,heavy){sfx(crit?'crit':'hit',170);
+function fxPlayerHit(crit,heavy){if(!SV)pfxPush93(crit?'impacts_crit-hit':'impacts_hit-spark','e',120);sfx(crit?'crit':'hit',170);
  var E=FXE,C=CLS_FX[s.cls]||CLS_FX.warrior;
  fxBurst(E[0],E[1],heavy?16:10,C,2.2,0,380,180,2);
  if(crit){fxBlood(E[0],E[1]+4,22,180);fxShake(6,180);fxFlash('rgba(255,40,40,.35)',180);fxRing(E[0],E[1],'#ff3a3a',180,46)}
  else fxShake(heavy?4:2,180)}
-function fxSkill(k,crit,meta){var mark71=SV?null:skillMark71();sfx('skill');if(crit)sfx('crit',300);
+function fxSkill(k,crit,meta){var mark71=SV?null:skillMark71();if(!SV){var pk93=pfxKey93('atk'),pr93=s.cls==='mage'||s.cls==='archer';pfxPush93(pk93,pr93?'pe':'e',0);if(pr93)pfxPush93('impacts_hit-spark','e',s.cls==='mage'?320:240);if(crit)pfxPush93('impacts_crit-hit','e',pr93?300:150)}sfx('skill');if(crit)sfx('crit',300);
  var cl=s.cls,C=CLS_FX[cl]||CLS_FX.warrior,E=FXE,P=FXP,d=180;
  if(cl==='mage'){fxProj('ball',P[0]+30,P[1]-8,E[0],E[1],320,C,0);d=320;fxBurst(E[0],E[1],26,C,3,0.05,520,d,3);fxRing(E[0],E[1],'#ffb03a',d,52);fxFlash('rgba(255,140,40,.25)',d)}
  else if(cl==='archer'){var h=k.hits||1;for(var i=0;i<h;i++)fxProj('arrow',P[0]+30,P[1]-4+i*4,E[0],E[1]-4+i*4,240,C,i*90);d=240;fxBurst(E[0],E[1],14,C,2.4,0,420,d,2)}
@@ -2066,10 +2068,10 @@ function fxSkill(k,crit,meta){var mark71=SV?null:skillMark71();sfx('skill');if(c
  else{fxProj('wave',P[0]+30,P[1]+6,E[0],E[1]+6,260,C,0);d=260;fxBurst(E[0],E[1],18,C,2.6,0,420,d,3);fxShake(3,d)}
  if(crit){fxBlood(E[0],E[1]+4,24,d);fxShake(7,d);fxFlash('rgba(255,40,40,.35)',d)}
  skillAccent41(k,crit,d,meta);skillMuteLegacy71(mark71);return d}
-function fxBuff(){sfx('buff');var C=CLS_FX[s.cls]||CLS_FX.warrior,P=FXP;
+function fxBuff(){if(!SV)pfxPush93(pfxKey93('buff'),'p',0);sfx('buff');var C=CLS_FX[s.cls]||CLS_FX.warrior,P=FXP;
  fxRing(P[0],FXGY-4,C[0],0,40);fxRing(P[0],FXGY-4,C[1],160,52);
  var t0=nowMs();for(var i=0;i<22;i++)fx.parts.push({x:P[0]-26+Math.random()*52,y:FXGY-2-Math.random()*10,vx:0,vy:-(0.6+Math.random()*1.4),g:0,t0:t0+Math.random()*400,life:700,col:C[i%3],sz:2})}
-function fxEnemyHit(skill,boss,delay){var P=FXP;if(!(s&&s.battle&&s.battle.wb))sfx('ehit',delay);
+function fxEnemyHit(skill,boss,delay){if(!SV&&!(s&&s.battle&&s.battle.wb))pfxPush93(skill?'shadow_dark-explosion':'impacts_hit-spark','p',Math.max(0,(delay|0)-40));var P=FXP;if(!(s&&s.battle&&s.battle.wb))sfx('ehit',delay);
  if(s&&s.battle&&s.battle.wb){sfx('fire',Math.max(0,delay-260));var wm=Math.max(1,s.battle.turn|0);fx.projs.push({k:'fire',x0:WBMOUTH[0],y0:WBMOUTH[1],x1:P[0]+6,y1:P[1]+4,t0:nowMs()+delay-280,dur:320,col:['#ff4a1a','#ff9a2a','#ffe07a']});
   fxBurst(P[0],P[1]+4,Math.min(40,16+wm*3),['#ff4a1a','#ff9a2a','#ffe07a','#3a1a1a'],2.6,-0.04,650,delay,3);fxShake(Math.min(16,4+wm*1.5),delay);fxFlash('rgba(255,90,20,'+Math.min(0.5,0.15+wm*0.04)+')',delay);fxRing(P[0],P[1],'#ff6a2a',delay,50);return}
  fx.projs.push({k:'claw',x0:P[0],y0:P[1],x1:0,y1:0,t0:nowMs()+delay-60,dur:240,col:skill?['#ff8a2a','#ffd04a']:['#ff4a4a','#ffffff']});
@@ -6168,6 +6170,23 @@ function battleApproachPose(elapsed,x,y,tx,ty,gap,melee,attack){
 
 // ===== V169 ฉากต่อสู้แนวตั้งแบบวงเวท (เปลี่ยนเฉพาะหน้าตา กติกาเดิม) =====
 // ฝั่งเราอยู่ขวาล่างหันมองขึ้นซ้ายบน · ศัตรูอยู่ซ้ายบนหันลงขวาล่าง
+
+// ===== B93 เอฟเฟกต์ sprite sheet จาก pixelfx (MIT · © 2026 Patch · © 2026 Hugo Duprez) · สีแยกตามสายอาชีพขั้น 2 =====
+var PFX93={"m":{"melee_spin-slash":{"w":178,"h":101,"c":11,"n":13,"ms":67,"px":77,"py":82,"a":0,"y0":0},"arcane_spell-charge@red":{"w":104,"h":81,"c":16,"n":16,"ms":100,"px":44,"py":76,"a":0,"y0":202},"melee_spin-slash@gold":{"w":178,"h":101,"c":11,"n":13,"ms":67,"px":77,"py":82,"a":0,"y0":283},"arcane_spell-charge@gold":{"w":104,"h":81,"c":16,"n":16,"ms":100,"px":44,"py":76,"a":0,"y0":485},"melee_spin-slash@red":{"w":178,"h":101,"c":11,"n":13,"ms":67,"px":77,"py":82,"a":0,"y0":566},"arcane_spell-charge@crimson":{"w":104,"h":81,"c":16,"n":16,"ms":100,"px":44,"py":76,"a":0,"y0":768},"melee_dagger-flurry":{"w":107,"h":86,"c":15,"n":15,"ms":67,"px":9,"py":69,"a":1,"y0":0},"arcane_blink-out":{"w":110,"h":91,"c":13,"n":13,"ms":133,"px":53,"py":76,"a":1,"y0":86},"melee_dagger-flurry@void":{"w":106,"h":85,"c":15,"n":15,"ms":67,"px":9,"py":68,"a":1,"y0":177},"arcane_blink-out@void":{"w":110,"h":91,"c":13,"n":13,"ms":133,"px":53,"py":76,"a":1,"y0":262},"melee_dagger-flurry@tox":{"w":106,"h":86,"c":15,"n":15,"ms":67,"px":9,"py":69,"a":1,"y0":353},"arcane_blink-out@tox":{"w":110,"h":91,"c":13,"n":13,"ms":133,"px":53,"py":76,"a":1,"y0":439},"fire_fireball":{"w":117,"h":54,"c":17,"n":18,"ms":67,"px":94,"py":27,"a":2,"y0":0},"holy_divine-shield@blue":{"w":72,"h":76,"c":15,"n":15,"ms":167,"px":36,"py":62,"a":2,"y0":108},"fire_fireball@ice":{"w":117,"h":54,"c":17,"n":18,"ms":67,"px":94,"py":27,"a":2,"y0":184},"holy_divine-shield@ice":{"w":72,"h":76,"c":15,"n":15,"ms":167,"px":36,"py":62,"a":2,"y0":292},"fire_fireball@void":{"w":117,"h":54,"c":17,"n":18,"ms":67,"px":94,"py":27,"a":2,"y0":368},"holy_divine-shield@purple":{"w":72,"h":76,"c":15,"n":15,"ms":167,"px":36,"py":62,"a":2,"y0":476},"holy_smite":{"w":179,"h":173,"c":11,"n":22,"ms":133,"px":90,"py":146,"a":3,"y0":0},"holy_heal-aoe":{"w":234,"h":117,"c":8,"n":18,"ms":167,"px":117,"py":86,"a":3,"y0":346},"holy_smite@blue":{"w":179,"h":173,"c":11,"n":22,"ms":133,"px":90,"py":146,"a":3,"y0":697},"holy_heal-aoe@blue":{"w":236,"h":117,"c":8,"n":18,"ms":167,"px":118,"py":86,"a":3,"y0":1043},"holy_smite@crimson":{"w":179,"h":173,"c":11,"n":22,"ms":133,"px":90,"py":146,"a":3,"y0":1394},"holy_heal-aoe@red":{"w":236,"h":117,"c":8,"n":18,"ms":167,"px":118,"py":86,"a":3,"y0":1740},"projectiles_arrow":{"w":94,"h":18,"c":18,"n":18,"ms":33,"px":88,"py":10,"a":4,"y0":0},"arcane_rune-circle@green":{"w":118,"h":95,"c":15,"n":15,"ms":267,"px":59,"py":75,"a":4,"y0":18},"projectiles_arrow@forest":{"w":94,"h":18,"c":18,"n":18,"ms":33,"px":88,"py":10,"a":4,"y0":113},"arcane_rune-circle@forest":{"w":118,"h":94,"c":15,"n":15,"ms":267,"px":59,"py":74,"a":4,"y0":131},"projectiles_arrow@purple":{"w":94,"h":18,"c":18,"n":18,"ms":33,"px":88,"py":10,"a":4,"y0":225},"arcane_rune-circle@purple":{"w":118,"h":96,"c":15,"n":15,"ms":267,"px":59,"py":76,"a":4,"y0":243},"impacts_hit-spark":{"w":122,"h":71,"c":16,"n":16,"ms":33,"px":34,"py":56,"a":5,"y0":0},"impacts_crit-hit":{"w":173,"h":131,"c":11,"n":14,"ms":67,"px":77,"py":102,"a":5,"y0":71},"shadow_dark-explosion":{"w":240,"h":231,"c":8,"n":20,"ms":200,"px":120,"py":190,"a":5,"y0":333}},"a":["assets/images/0fec68f8e2fece2914c55ab40e63d9960d381796faa5030ce57edf03f0a76787.webp","assets/images/aa27f88da6fcce503f218252aba708512537df4d0a14130c677aa61abd17df29.webp","assets/images/e8a69d71374f49c479783a57f2cff2a353cd4648340c20e734744ee6fcec13ad.webp","assets/images/11b5c7935dfafe2a5abc083b48f5f955c4527b88c531c6dadb7325516e293f4c.webp","assets/images/4bf4409bb47b88934e72a91698f246ff2a18fc0fe3a6b1ab0a2c622ad4ef4541.webp","assets/images/f9f414aad7d32e010e1a23ac52f9d53f70c577a5a9acba750bb46435079237ce.webp"],"j":{"warrior":["melee/spin-slash","arcane/spell-charge",{"":[null,"red"],"knight":["gold","gold"],"berserk":["red","crimson"]}],"rogue":["melee/dagger-flurry","arcane/blink-out",{"":[null,null],"shadow":["void","void"],"venom":["tox","tox"]}],"mage":["fire/fireball","holy/divine-shield",{"":[null,"blue"],"seal":["ice","ice"],"curse":["void","purple"]}],"paladin":["holy/smite","holy/heal-aoe",{"":[null,null],"templar":["blue","blue"],"judge":["crimson","red"]}],"archer":["projectiles/arrow","arcane/rune-circle",{"":[null,"green"],"ranger":["forest","forest"],"sniper":["purple","purple"]}]}},PFX_IMG93={},PFXL93=[],PFX_GROUND93={'melee_spin-slash':1,'holy_smite':1,'holy_heal-aoe':1,'arcane_rune-circle':1,'arcane_blink-out':1,'arcane_spell-charge':1,'holy_divine-shield':1,'shadow_dark-explosion':1};
+function pfxImg93(i){if(SV||typeof Image==='undefined')return null;var im=PFX_IMG93[i];if(!im){im=new Image();im.src=PFX93.a[i];PFX_IMG93[i]=im}return im.complete&&im.naturalWidth?im:null}
+function pfxKey93(kind){if(!s)return null;var J=PFX93.j[s.cls];if(!J)return null;var br=s.job2&&J[2][s.job2]?s.job2:'',pal=J[2][br][kind==='atk'?0:1];return (kind==='atk'?J[0]:J[1]).replace('/','_')+(pal?'@'+pal:'')}
+function pfxPush93(key,at,delay){if(SV||!key||!PFX93.m[key])return;pfxImg93(PFX93.m[key].a);PFXL93.push({k:key,at:at,t0:nowMs()+(delay||0)});if(PFXL93.length>14)PFXL93.shift()}
+function pfxDraw93(c,tn,px,py,ex,ey){
+ if(!PFXL93.length)return;var S=1.7;
+ PFXL93=PFXL93.filter(function(o){var m=PFX93.m[o.k];if(!m)return false;var age=tn-o.t0;if(age<0)return true;var fi=Math.floor(age/m.ms);if(fi>=m.n)return false;var im=pfxImg93(m.a);if(!im)return age<3000;
+  var sx=(fi%m.c)*m.w,sy=m.y0+Math.floor(fi/m.c)*m.h,x,y,ang=0,flip=false,base=o.k.split('@')[0];
+  if(o.at==='pe'){var k=Math.min(1,age/Math.max(1,m.n*m.ms*.8));x=px+(ex-px)*k;y=py-30+(ey-py)*k;ang=Math.atan2(ey-py,ex-px)}
+  else if(o.at==='e'){x=ex;y=ey-(PFX_GROUND93[base]?0:26);flip=ex<px}
+  else{x=px;y=py-(PFX_GROUND93[base]?0:26);flip=false}
+  c.save();c.translate(x,y);if(ang)c.rotate(ang);if(flip)c.scale(-1,1);c.imageSmoothingEnabled=false;c.globalCompositeOperation=base.indexOf('impacts_')===0||base.indexOf('holy_')===0?'lighter':'source-over';
+  c.drawImage(im,sx,sy,m.w,m.h,-m.px*S,-m.py*S,m.w*S,m.h*S);c.restore();return true});
+}
+function pfxCredit93(){return '<h4 class="st">เครดิตเอฟเฟกต์</h4><details><summary class="hint">เอฟเฟกต์สกิลจาก pixelfx · MIT License</summary><p class="hint" style="white-space:pre-wrap;font-size:11px">pixelfx https://github.com/patch-gg/pixelfx\nMIT License\nCopyright (c) 2026 Patch\nCopyright (c) 2026 Hugo Duprez\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \u201cSoftware\u201d), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \u201cAS IS\u201d, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p></details>'}
 var TS169={env:null,key:'',paintAt:0};
 function ts169Rng(seed){var v=seed|0||1;return function(){v=(v*16807)%2147483647;return v/2147483647}}
 function ts169RR(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
@@ -6234,7 +6253,7 @@ function ts169Plate(c,name,lv,x,y,hp,mhp,mp,mmp,side,mine){
  c.textBaseline='alphabetic';c.restore();
 }
 function ts169Ring(c,x,y,col,tn,dash){c.save();c.strokeStyle=col;c.lineWidth=2;if(dash){c.setLineDash([5,4]);c.lineDashOffset=-tn/40}c.beginPath();c.ellipse(x,y+2,dash?28:24,dash?11:10,0,0,7);c.stroke();c.restore()}
-function ts169Layout(W,H){return {px:W*.66,py:H*.70,ex:W*.34,ey:H*.50,slots:[[W*.13,H*.565],[W*.51,H*.445],[W*.13,H*.40],[W*.33,H*.355]],mates:[[W*.88,H*.62],[W*.84,H*.79]]}}
+function ts169Layout(W,H){return {px:W*.84,py:H*.645,ex:W*.18,ey:H*.425,slots:[[W*.40,H*.365],[W*.12,H*.56],[W*.36,H*.29]],mates:[[W*.66,H*.74],[W*.90,H*.80]]}}
 function drawBattleTS169(c,W,H,tn,visual){
  var b=visual?visual.battle:s.battle,actor=visual?visual.player:s;if(!b)return;var L=ts169Layout(W,H),px=L.px,py=L.py,activeX=L.ex,activeY=L.ey;
  if(b.challenge73)towerArena41(c,W,H,10);else if(b.tower)towerArena41(c,W,H,b.tower);else{var z=b.wb?2:Math.max(0,s.zone|0),d=battleDensity76(c,W,H),key=W+'|'+H+'|'+z+'|'+d;if(TS169.key!==key){TS169.env=ts169Env(W,H,z,d);TS169.key=key}c.imageSmoothingEnabled=false;c.drawImage(TS169.env,0,0,W,H)}
@@ -6257,7 +6276,7 @@ function drawBattleTS169(c,W,H,tn,visual){
   else if(CLASSES[e.cls]){CPOSE={pose:enemy.pose,f:enemy.f,dir:enemy.dir};drawChar(c,e.look||{},e.cls,x-24,y,2,tn,true,hit)}
   u.labelX=x;u.labelY=y;c.restore();
  });
- battleFxLandscape(c,W,H,tn,px,py,activeX,activeY,b);
+ battleFxLandscape(c,W,H,tn,px,py,activeX,activeY,b);pfxDraw93(c,tn,player.x,player.y,activeX,activeY);
  ts169Plate(c,visual?actor.name:nick(),actor.lvl,player.x,player.y-80,actor.hp,actor.maxhp,actor.mp,actor.maxmp,'p',true);
  units.forEach(function(u){var e=u.g.e,top=e.k==='hydra'?Math.min(150,H*.24):e.boss?104:(MBASE[e.k]==='bat'?84:74);ts169Plate(c,(e.boss?'👑 ':e.rare70?'✦ ':'')+String(e.n||''),e.lvl,u.labelX,u.labelY-top,u.g.hp,e.hp,0,0,'e',false);
   if(u.g.active&&!visual){var ay=u.labelY-top-20+Math.sin(tn/180)*3;c.fillStyle='#ff5a50';c.beginPath();c.moveTo(u.labelX-7,ay);c.lineTo(u.labelX+7,ay);c.lineTo(u.labelX,ay+9);c.closePath();c.fill()}});
@@ -6673,7 +6692,7 @@ WING2.gold={k:'feather',c:['#72501e','#b1852e','#e6bf56','#fff0ad','#ffffff'],fx
 function fashionBack(c,look,cx,gy,u,t,row,rig){
  c.save();
  if(look.aura&&AURA[look.aura])auraDraw76(c,look.aura,cx,gy,u,t,undefined,'back');
- if(look.wing&&WING2[look.wing]){var root=rig||{x:cx+([0,1,2,-.5,0,.5,-2,-1][row]||0)*u,y:gy-13*u};wingDraw(c,look.wing,root.x,root.y,u,t,row,CPOSE||{},'back');}
+ if(look.wing&&WING2[look.wing]){var root=rig||{x:cx+([0,1,2,0,0,0,-2,-1][row]||0)*u,y:gy-([0,0,0,15,15,15,0,0][row]||13)*u};wingDraw(c,look.wing,root.x,root.y,u,t,row,CPOSE||{},'back');}
  c.restore();
 }
 
@@ -6710,8 +6729,9 @@ function viewAngle(){if(typeof VIEW_UI==='undefined'||!VIEW_UI)return 0;return V
 function viewSet(mode){if(mode!=='portrait'&&mode!=='landscape')return;mode='portrait';if(!SV&&s&&!s.created){var draft65=document.getElementById('cname');if(draft65&&typeof draft65.value==='string')s.name=draft65.value.slice(0,12)}VIEW_UI.mode=mode;if(!SV)try{localStorage.setItem('shuk-orientation',mode)}catch(e){}if(typeof SCROLL_UI!=='undefined'){SCROLL_UI.drag=null;SCROLL_UI.pending=false;ENTRY_TOUCH64=null}if(typeof FLD!=='undefined')FLD.hold=false;viewSync();if(s&&!ECO.on)render()}
 function viewSync(){
  if(SV||typeof VIEW_UI==='undefined'||!VIEW_UI||!document.body)return;
- var physicalPortrait=devicePortrait(),nativeChat78=!!(typeof CHAT!=='undefined'&&CHAT.open),wantPortrait=nativeChat78?physicalPortrait:VIEW_UI.mode==='portrait',angle=physicalPortrait===wantPortrait?0:(physicalPortrait?90:-90),box77=viewBox77(),w=box77.w,h=box77.h;
- VIEW_UI.effectiveMode78=wantPortrait?'portrait':'landscape';VIEW_UI.angle=angle;VIEW_UI.width=angle?h:w;VIEW_UI.height=angle?w:h;
+ var physicalPortrait=devicePortrait(),nativeChat78=!!(typeof CHAT!=='undefined'&&CHAT.open),wantPortrait=true, // B94 แชทก็แนวตั้ง
+ angle=0,box77=viewBox77(),w=box77.w,h=box77.h; // B91 แนวตั้งอย่างเดียว ไม่หมุนจอ · จอแนวนอนแสดงเป็นแถบแนวตั้งตรงกลาง
+ VIEW_UI.effectiveMode78=wantPortrait?'portrait':'landscape';VIEW_UI.angle=0;VIEW_UI.width=wantPortrait&&w>h?Math.round(Math.min(w,h*.6)):w;VIEW_UI.height=h;var mob91=false;try{mob91=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches}catch(e){}document.body.classList.toggle('rotate91',!!(wantPortrait&&w>h&&h<600&&mob91));
  var body=document.body;body.classList.toggle('chat-native-active78',nativeChat78);body.classList.toggle('entry-rotated64',angle!==0&&(!s||!s.created));body.classList.add('view-ready');body.classList.toggle('view-portrait',wantPortrait);body.classList.toggle('view-landscape',!wantPortrait);body.classList.toggle('landscape-portrait',physicalPortrait);body.classList.toggle('entry-landscape',!s||!s.created);
  body.style.setProperty('--app-w',VIEW_UI.width+'px');body.style.setProperty('--app-h',VIEW_UI.height+'px');body.style.setProperty('--app-transform','translate(-50%,-50%) rotate('+angle+'deg)');
  var host=document.getElementById('viewOverlayHost');if(!host){host=document.createElement('div');host.id='viewOverlayHost';host.className='view-overlay';document.body.appendChild(host)}
@@ -6721,7 +6741,7 @@ function viewSync(){
  button.textContent=wantPortrait?'↻ แนวนอน':'↻ แนวตั้ง';button.setAttribute('aria-label','สลับเป็น'+(wantPortrait?'แนวนอน':'แนวตั้ง'));button.setAttribute('aria-pressed',String(wantPortrait));button.setAttribute('title','ตอนนี้ใช้'+(wantPortrait?'แนวตั้ง':'แนวนอน'));if(button.parentElement!==root)root.appendChild(button);
 }
 function viewClientPoint(event,rect){var nx=(event.clientX-rect.left)/rect.width,ny=(event.clientY-rect.top)/rect.height,a=viewAngle();return a===90?{x:ny,y:1-nx}:a===-90?{x:1-ny,y:nx}:{x:nx,y:ny}}
-function orientationChoices(){return '';var p=VIEW_UI.mode==='portrait';return '<h4 class="st">แนวหน้าจอ</h4><div class="grid2"><button class="btn" data-a="orientset" data-p="portrait" aria-pressed="'+p+'">▯ แนวตั้ง</button><button class="btn" data-a="orientset" data-p="landscape" aria-pressed="'+(!p)+'">▭ แนวนอน</button></div><p class="hint">จำค่าบนเครื่องนี้ · สลับได้โดยไม่ต้องออกจากเกม</p>'}
+function orientationChoices(){return pfxCredit93();var p=VIEW_UI.mode==='portrait';return '<h4 class="st">แนวหน้าจอ</h4><div class="grid2"><button class="btn" data-a="orientset" data-p="portrait" aria-pressed="'+p+'">▯ แนวตั้ง</button><button class="btn" data-a="orientset" data-p="landscape" aria-pressed="'+(!p)+'">▭ แนวนอน</button></div><p class="hint">จำค่าบนเครื่องนี้ · สลับได้โดยไม่ต้องออกจากเกม</p>'}
 var oldEcoEnterB35=ecoEnter;ecoEnter=function(){oldEcoEnterB35();viewSync()};
 if(!SV)viewSync();
 
@@ -7007,9 +7027,9 @@ function wingRig(key,frame,row,x,y,size,tile){
  return {x:x+(root.x+backX)*size/64,y:y+(root.y+backY)*size/64};
 }
 // B84: visible back faces the camera in north-facing poses; draw depth accordingly.
-function wingNear84(row,side){return row===4||((row===2||row===3)&&side===1)||((row===5||row===6)&&side===0)}
-function fashionWingFront84(c,look,cx,gy,u,t,row,rig,pose,alpha){if(!look.wing||!WING2[look.wing])return;var root=rig||{x:cx+([0,1,2,-.5,0,.5,-2,-1][row]||0)*u,y:gy-13*u};c.save();try{if(alpha!=null)c.globalAlpha=alpha;wingDraw(c,look.wing,root.x,root.y,u,t,row,pose||{},'front')}finally{c.restore()}}
-function wingDraw(c,id,x,y,u,t,row,pose,layer){if(!Number.isFinite(u)||u<=0||!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(t))return;var still=(typeof ECO!=='undefined'&&ECO.on)||(typeof MOTION69!=='undefined'&&MOTION69&&MOTION69.matches),tm=still?0:t,frame=still?0:wingFrame(pose,tm),image=wingArt(id,frame);if(!image)return;var widths=[[1,1],[.62,.96],[.30,.78],[.86,.96],[1,1],[.96,.86],[.78,.30],[.96,.62]][row]||[1,1],base=u*.52,flutter=still?0:Math.sin(tm/(pose&&pose.pose==='walk'?180:320))*.025;for(var i=0;i<2;i++){var near84=wingNear84(row,i);if(layer==='back'&&near84||layer==='front'&&!near84)continue;c.save();try{c.translate(x+(i?1:-1)*1.3*u,y);c.scale(i===0?widths[0]*base:-widths[1]*base,base);c.rotate(flutter);c.imageSmoothingEnabled=true;c.drawImage(image,0,0,160,160,-64,-48,80,80)}finally{c.restore()}}}
+function wingNear84(row,side){return row===3||row===4||row===5||(row===2&&side===1)||(row===6&&side===0)}
+function fashionWingFront84(c,look,cx,gy,u,t,row,rig,pose,alpha){if(!look.wing||!WING2[look.wing])return;var root=rig||{x:cx+([0,1,2,0,0,0,-2,-1][row]||0)*u,y:gy-([0,0,0,15,15,15,0,0][row]||13)*u};c.save();try{if(alpha!=null)c.globalAlpha=alpha;wingDraw(c,look.wing,root.x,root.y,u,t,row,pose||{},'front')}finally{c.restore()}}
+function wingDraw(c,id,x,y,u,t,row,pose,layer){if(!Number.isFinite(u)||u<=0||!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(t))return;var still=(typeof ECO!=='undefined'&&ECO.on)||(typeof MOTION69!=='undefined'&&MOTION69&&MOTION69.matches),tm=still?0:t,frame=still?0:wingFrame(pose,tm),image=wingArt(id,frame);if(!image)return;var widths=[[1,1],[.62,.96],[.30,.78],[.88,.88],[1,1],[.88,.88],[.78,.30],[.96,.62]][row]||[1,1],base=u*.52,flutter=still?0:Math.sin(tm/(pose&&pose.pose==='walk'?180:320))*.025;for(var i=0;i<2;i++){var near84=wingNear84(row,i);if(layer==='back'&&near84||layer==='front'&&!near84)continue;c.save();try{c.translate(x+(i?1:-1)*1.3*u,y);c.scale(i===0?widths[0]*base:-widths[1]*base,base);c.rotate(flutter);c.imageSmoothingEnabled=true;c.drawImage(image,0,0,160,160,-64,-48,80,80)}finally{c.restore()}}}
 
 var LG30=Array.from({length:30},function(_,i){var n=i+1,w={g:150+n*10};if(n%5===0){w.g=500;w.p3=3}if(n%7===0)w.pur=1;if(n===30)w={g:5000,pur:5,box:1};w.t='ทอง '+w.g.toLocaleString()+(w.p3?' · ยา 150 ×'+w.p3:'')+(w.pur?' · แร่ม่วง ×'+w.pur:'')+(w.box?' · กล่องสุ่ม ×1':'');return w});
 function lg30State(){var a=s.lg30||{},days=Math.max(0,Math.min(30,a.days|0)),got=(a.last|0)>=dqDay();return {days:days,got:got,next:got?days:days>=30?1:days+1}}
