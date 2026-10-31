@@ -1026,7 +1026,7 @@ const routes = {
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
     const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
-    send(res, 200, { server: 'V167', pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    send(res, 200, { server: 'B90', pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -1040,7 +1040,8 @@ const routes = {
   },
   'GET /api/ladder': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
-    const all = board().slice().sort((a, b) => (b.rating | 0) - (a.rating | 0));
+    const wk90 = Math.floor((Math.floor((Date.now() + 7 * 3600000) / 864e5) + 3) / 7); // B90 อันดับ PvP รายสัปดาห์ รีเซ็ตทุกจันทร์ 00:00
+    const all = board().filter(x => wk90 <= 2965 || x.pwk === wk90).sort((a, b) => (b.rating | 0) - (a.rating | 0));
     const idx = all.findIndex(x => x.id === u.id);
     send(res, 200, { top: all.slice(0, 10).map(x => ({ n: x.n, cls: x.cls, lvl: x.lvl, rating: x.rating, tt: x.tt, me: x.id === u.id })), rank: idx >= 0 ? idx + 1 : 0, total: all.length });
   },
