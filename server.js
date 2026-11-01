@@ -677,7 +677,7 @@ const PAY_SKU = { sup35: { amt: 3500, name: 'แพ็กผู้สนับ�
 const S105_END = Date.UTC(2026, 11, 31, 16, 59, 59);
 const PAY_BUSY = new Set();
 const envKey = n => { let v = process.env[n]; if (v == null) { const k = Object.keys(process.env).find(x => x.trim().toUpperCase() === n); if (k) v = process.env[k]; } return String(v || '').trim(); }; // ชื่อมีช่องว่าง/ตัวพิมพ์เล็กก็ยังหาเจอ
-function payStatus101() { const k = envKey('STRIPE_SECRET_KEY'), raw = process.env.STRIPE_SECRET_KEY, odd = Object.keys(process.env).some(x => x !== x.trim().toUpperCase() && /^STRIPE_|^ADMIN_KEY$/.test(x.trim().toUpperCase())); return { nameFixed: odd, key: !k ? 'missing' : /^sk_live_/.test(k) ? 'live' : /^sk_test_/.test(k) ? 'test' : /^pk_/.test(k) ? 'wrong:publishable-key' : /^rk_/.test(k) ? 'restricted-key' : 'wrong-format', space: !!raw && raw !== raw.trim(), webhook: /^whsec_/.test(envKey('STRIPE_WEBHOOK_SECRET')) ? 'ok' : envKey('STRIPE_WEBHOOK_SECRET') ? 'wrong-format' : 'missing', admin: envKey('ADMIN_KEY').length >= 16 ? 'ok' : 'missing', names: Object.keys(process.env).filter(k => /stri|ipe|admin/i.test(k) && !/^(sk|pk|rk)_|^whsec_/i.test(k)).map(k => '[' + k + ']').slice(0, 10), swapped: Object.keys(process.env).some(k => /^(sk|pk|rk)_|^whsec_/i.test(k.trim())) }; }
+function payStatus101() { const k = envKey('STRIPE_SECRET_KEY'), raw = process.env.STRIPE_SECRET_KEY, odd = Object.keys(process.env).some(x => x !== x.trim().toUpperCase() && /^STRIPE_|^ADMIN_KEY$/.test(x.trim().toUpperCase())); return { nameFixed: odd, key: !k ? 'missing' : /^sk_live_/.test(k) ? 'live' : /^sk_test_/.test(k) ? 'test' : /^pk_/.test(k) ? 'wrong:publishable-key' : /^rk_live_/.test(k) ? 'live' : /^rk_test_/.test(k) ? 'test' : 'wrong-format', space: !!raw && raw !== raw.trim(), webhook: /^whsec_/.test(envKey('STRIPE_WEBHOOK_SECRET')) ? 'ok' : envKey('STRIPE_WEBHOOK_SECRET') ? 'wrong-format' : 'missing', admin: envKey('ADMIN_KEY').length >= 16 ? 'ok' : 'missing', names: Object.keys(process.env).filter(k => /stri|ipe|admin/i.test(k) && !/^(sk|pk|rk)_|^whsec_/i.test(k)).map(k => '[' + k + ']').slice(0, 10), swapped: Object.keys(process.env).some(k => /^(sk|pk|rk)_|^whsec_/i.test(k.trim())) }; }
 const STRIPE_BASE = process.env.STRIPE_API_BASE || 'https://api.stripe.com';
 function stripeForm(o, pre, out) { out = out || []; for (const k in o) { const v = o[k], key = pre ? pre + '[' + k + ']' : k; if (v && typeof v === 'object') stripeForm(v, key, out); else if (v != null) out.push(encodeURIComponent(key) + '=' + encodeURIComponent(String(v))); } return out.join('&'); }
 async function stripeApi(method, pathq, body) {
@@ -1064,6 +1064,96 @@ function rgOp(op, b, u, p, cur) { // คืนข้อความผิดพ�
 }
 setInterval(() => { for (const r of DGR.values()) if (r.mode === 'rg') { try { rgAutoTick(r); } catch (e) { console.error('rg', e); } } }, 300).unref();
 
+// ---------- B108 ศึกชิงแดน: ดวลสด 2 คน เข้าฉากพร้อมกัน ผลัดกันกด (เซิร์ฟเวอร์ตัดสินทุกตา) ----------
+// เป่ายิ้งฉุบพร้อมกัน → ผู้ชนะเริ่มก่อน · ตาละ 8 วินาที หมดเวลา/หลุด = ระบบเลือกท่าให้ · เลือด ×2 · ไม่มีตีไว ค่าหลบยังทำงาน
+const WD = new Map(), WDU = new Map(); let WD_ID = 1;
+const WD_HPX = 2, WD_TURN = 8000, WD_RPS = 8000, WD_POTS = 3, WD_GUARD = 0.5;
+const WD_HAND = { r: '✊ ค้อน', p: '✋ กระดาษ', s: '✌️ กรรไกร' }, WD_BEAT = { r: 's', p: 'r', s: 'p' };
+function wdSide(uid, p) { const st = dgStats(p); if (!st) return null; const C = DG_CLS[st.cls] || DG_CLS.warrior; return Object.assign(st, { uid, mhp: st.mhp * WD_HPX, hp: st.mhp * WD_HPX, cd: 0, pots: WD_POTS, ug: 0, guard: false, hand: null, seen: Date.now(), skn: C.skn, skm: C.sk, hits: C.hits || 1, fac: p.s.fac }); }
+function wdOf(uid) { const d = WD.get(WDU.get(uid)); return d && d.ph !== 'end' ? d : null; }
+function wdStart(A, pa, D, pd) {
+  const a = wdSide(A, pa), b = wdSide(D, pd); if (!a || !b) return null;
+  const d = { id: WD_ID++, s: [a, b], ph: 'rps', turn: -1, deadline: Date.now() + WD_RPS, seq: 0, ver: 0, log: ['⚔️ ' + a.n + ' ท้าดวล ' + b.n + '! เป่ายิ้งฉุบเพื่อชิงตีก่อน'], ev: [], round: 0, at: Date.now() };
+  WD.set(d.id, d); WDU.set(A, d.id); WDU.set(D, d.id); return d;
+}
+function wdRpsDone(d) {
+  const [a, b] = d.s; a.hand = a.hand || pickA(['r', 'p', 's']); b.hand = b.hand || pickA(['r', 'p', 's']);
+  let first, msg;
+  if (a.hand === b.hand) { first = Math.random() < 0.5 ? 0 : 1; msg = 'เสมอ! สุ่มให้ ' + d.s[first].n + ' เริ่มก่อน'; }
+  else { first = WD_BEAT[a.hand] === b.hand ? 0 : 1; msg = d.s[first].n + ' ชนะเป่ายิ้งฉุบ ได้ตีก่อน!'; }
+  d.rps = { a: a.hand, b: b.hand, first }; d.ph = 'fight'; d.turn = first; d.round = 1; d.deadline = Date.now() + WD_TURN + 2500;
+  d.log = [msg, WD_HAND[a.hand] + ' ' + a.n + ' vs ' + b.n + ' ' + WD_HAND[b.hand]].concat(d.log).slice(0, 8); d.seq++; d.ver++;
+}
+function wdAuto(d, i) { const m = d.s[i], o = d.s[1 - i]; if (m.ug >= 100) return 'ult'; if (m.hp / m.mhp < 0.35 && m.pots > 0) return 'pot'; if (m.cd <= 0) return 'sk'; return 'atk'; }
+function wdHit(m, o, mult) { // คืน {d, crit, miss}
+  if (Math.random() * 100 < Math.min(25, o.dodge || 0)) return { d: 0, miss: true };
+  let d = m.atk * rnd(0.9, 1.1) * mult, crit = false;
+  if (Math.random() * 100 < Math.min(60, m.crit || 0)) { d *= 1.8; crit = true; }
+  const red = Math.min(0.4, o.def / (o.def + 60 + o.lvl * 8)); d *= 1 - red; if (o.guard) d *= WD_GUARD;
+  return { d: Math.max(1, Math.round(d)), crit };
+}
+function wdAct(d, i, a) {
+  if (d.ph !== 'fight' || d.turn !== i) return 'ยังไม่ถึงตาคุณ';
+  const m = d.s[i], o = d.s[1 - i], ev = { t: a, i, d: 0 }; let txt;
+  if (a === 'sk' && m.cd > 0) return 'สกิลยังติดคูลดาวน์';
+  if (a === 'ult' && m.ug < 100) return 'ไม้ตายยังไม่เต็ม';
+  if (a === 'pot' && m.pots <= 0) return 'ยาหมดแล้ว';
+  if (!['atk', 'sk', 'grd', 'pot', 'ult'].includes(a)) return 'คำสั่งไม่ถูกต้อง';
+  m.guard = false;
+  if (a === 'grd') { m.guard = true; m.ug = Math.min(100, m.ug + 15); txt = m.n + ' ตั้งท่าป้องกัน (ดาเมจตาถัดไป −50%)'; }
+  else if (a === 'pot') { const v = Math.min(m.mhp - m.hp, Math.round(m.mhp * 0.25)); m.hp += v; m.pots--; ev.h = v; txt = m.n + ' ดื่มยา +' + v.toLocaleString() + ' HP (เหลือ ' + m.pots + ')'; }
+  else {
+    const mult = a === 'ult' ? 4 : a === 'sk' ? m.skm : 1, hits = a === 'sk' ? m.hits : 1; let tot = 0, crit = false, miss = false;
+    for (let h = 0; h < hits; h++) { const r = wdHit(m, o, mult / hits); tot += r.d; crit = crit || r.crit; miss = miss || r.miss; }
+    if (a === 'sk') m.cd = 3; if (a === 'ult') m.ug = 0; else m.ug = Math.min(100, m.ug + 20);
+    o.hp = Math.max(0, o.hp - tot); if (tot > 0) o.ug = Math.min(100, o.ug + 10); ev.d = tot; ev.c = crit; ev.m = miss && !tot;
+    txt = m.n + (a === 'ult' ? ' ปล่อยไม้ตาย! ' : a === 'sk' ? ' ใช้' + m.skn + ' ' : ' โจมตี ') + (tot ? '−' + tot.toLocaleString() + (crit ? ' คริติคอล!' : '') : '· ' + o.n + ' หลบได้!');
+    o.guard = false;
+  }
+  if (m.cd > 0 && a !== 'sk') m.cd--;
+  d.ev = [ev]; d.log = [txt].concat(d.log).slice(0, 8); d.seq++; d.ver++;
+  if (o.hp <= 0) { wdEnd(d, i, o.n + ' หมดแรง!'); return null; }
+  d.turn = 1 - i; if (d.turn === 0) d.round++; d.deadline = Date.now() + WD_TURN; return null;
+}
+async function wdEnd(d, wi, why) {
+  if (d.ph === 'end') return; d.ph = 'end'; d.win = wi; d.ended = Date.now();
+  const W = d.s[wi], L = d.s[1 - wi]; d.log = ['🏆 ' + W.n + ' ชนะ! ' + (why || '')].concat(d.log).slice(0, 8); d.seq++; d.ver++;
+  try { await warLoad(); await warScore(d.s[0].uid, d.s[1].uid, wi === 0, true); d.res = { aPts: (WAR.ppl[d.s[0].uid] || {}).pts | 0, bPts: (WAR.ppl[d.s[1].uid] || {}).pts | 0 }; d.ver++; } catch (e) { console.error('wd end', e.message); }
+}
+function wdView(d, uid) {
+  if (!d) return null; const me = d.s.findIndex(x => x.uid === uid), now = Date.now();
+  return { id: d.id, ph: d.ph, me, turn: d.turn, round: d.round, left: Math.max(0, d.deadline - now), seq: d.seq, ver: d.ver, log: d.log.slice(0, 6), ev: d.ev, rps: d.ph !== 'rps' ? d.rps : null, win: d.win, res: d.res || null,
+    s: d.s.map((x, i) => ({ n: x.n, cls: x.cls, lvl: x.lvl, look: x.look, hp: x.hp, mhp: x.mhp, fac: x.fac, guard: x.guard, ug: x.ug, cd: x.cd, pots: x.pots, skn: x.skn, picked: d.ph === 'rps' ? !!x.hand : false, hand: i === me || d.ph !== 'rps' ? x.hand : null, on: now - x.seen < 15000 })) };
+}
+async function warScore(A, D, attackerWon, live) { // แต้มศึกชิงแดน (ใช้ทั้งดวลสดและดวลร่างจำลอง)
+  const now = Date.now(), pa0 = await session(A), q = await session(D);
+  const ent = (id, o) => WAR.ppl[id] || (WAR.ppl[id] = { n: String(o.name || '').slice(0, 16), fac: o.fac, pts: 0, w: 0, l: 0, st: 0 });
+  const pa = ent(A, pa0.s), pd = ent(D, q.s); pa.n = String(pa0.s.name || pa.n).slice(0, 16); pd.n = String(q.s.name || pd.n).slice(0, 16);
+  const rank = Object.entries(WAR.ppl).sort((a, b) => b[1].pts - a[1].pts).findIndex(([id]) => +id === D);
+  let msg;
+  if (attackerWon) { const gain = 10 + Math.min(5, pa.st) * 2 + (rank >= 0 && rank < 3 && pd.pts > 0 ? 5 : 0); pa.pts += gain; pa.w++; pa.st++; if (pa.fac != null) WAR.fac[pa.fac] += 10; pd.pts = Math.max(0, pd.pts - 3); pd.l++; pd.st = 0; WAR.shield[D] = now + WAR_SHIELD; msg = 'คุณแพ้ ' + pa.n + ' · เสีย 3 แต้ม · ได้โล่ 5 นาที'; }
+  else { pa.pts = Math.max(0, pa.pts - 3); pa.l++; pa.st = 0; pd.pts += live ? 10 : 5; pd.w++; pd.st++; if (pd.fac != null) WAR.fac[pd.fac] += live ? 10 : 5; WAR.shield[A] = now + WAR_SHIELD; msg = 'คุณป้องกันการท้าดวลจาก ' + pa.n + ' สำเร็จ! · ได้ ' + (live ? 10 : 5) + ' แต้ม'; }
+  if (!live) mailTo(D, { id: 'wd' + A + '_' + Math.floor(now / 60000), t: '⚔️ ถูกท้าดวลในศึกชิงแดน', from: 'ศึกชิงแดน', b: msg + '\nกลับเข้าสมรภูมิเพื่อล้างแค้นได้!', it: [] }).catch(() => {});
+  await warSave();
+}
+async function wdChallenge(uid, p, tid) {
+  if (wdOf(uid)) return { error: 'คุณกำลังดวลอยู่' }; if (wdOf(tid)) return { error: 'ผู้เล่นกำลังดวลกับคนอื่นอยู่' };
+  const chk = await warCheck(uid, p, tid); if (chk.error) return chk;
+  const q = await session(tid), d = wdStart(uid, p, tid, q); if (!d) { delete WAR.pair[uid + ':' + tid]; return { error: 'เริ่มดวลไม่ได้' }; }
+  return { wd: wdView(d, uid) };
+}
+setInterval(() => { // หมดเวลา: เลือกท่าให้ · ล้างห้องที่จบแล้ว
+  const now = Date.now();
+  for (const d of WD.values()) {
+    try {
+      if (d.ph === 'rps' && (now >= d.deadline || d.s.every(x => x.hand))) wdRpsDone(d);
+      else if (d.ph === 'fight' && now >= d.deadline) { const a = wdAuto(d, d.turn); wdAct(d, d.turn, a); if (d.log[0] && d.ph === 'fight') d.log[0] = '⏱ ' + d.log[0]; }
+      else if (d.ph === 'fight' && d.s[d.turn] && now - d.s[d.turn].seen > 12000 && now - (d.deadline - WD_TURN) > 1500) wdAct(d, d.turn, wdAuto(d, d.turn)); // หลุด/ปิดแอป = ออโต้เร็วขึ้น
+      if (d.ph === 'end' && now - d.ended > 60000) { WD.delete(d.id); for (const x of d.s) if (WDU.get(x.uid) === d.id) WDU.delete(x.uid); }
+    } catch (e) { console.error('wd', e); }
+  }
+}, 300).unref();
+
 // ---------- B106 ศึกชิงแดน: สมรภูมิแยก · เสาร์–อาทิตย์ 20:00–22:00 น. (เวลาไทย) ----------
 const WAR = { loaded: false, wk: 0, fac: [0, 0, 0, 0], ppl: {}, last: null, buff: null, testUntil: 0, pair: {}, shield: {} }, WARMAP = new Map(), WAR_LV = 30, WAR_GAP = 15, WAR_CD = 10 * 60e3, WAR_SHIELD = 5 * 60e3;
 let WAR_DIRTY = false, WAR_SAVE_AT = 0;
@@ -1106,15 +1196,7 @@ async function warCheck(uid, p, tid, ip) {
 }
 async function warResolve(uid, p) {
   const r = p.s && p.s.war106Res; if (!r) return; delete p.s.war106Res; await warLoad();
-  const A = uid, D = Number(r.uid), now = Date.now(), q = await session(D);
-  const ent = (id, o) => WAR.ppl[id] || (WAR.ppl[id] = { n: String(o.name || '').slice(0, 16), fac: o.fac, pts: 0, w: 0, l: 0, st: 0 });
-  const pa = ent(A, p.s), pd = ent(D, q.s); pa.n = String(p.s.name || pa.n).slice(0, 16); pd.n = String(q.s.name || pd.n).slice(0, 16);
-  const rank = Object.entries(WAR.ppl).sort((a, b) => b[1].pts - a[1].pts).findIndex(([id]) => +id === D);
-  let msg;
-  if (r.won) { const gain = 10 + Math.min(5, pa.st) * 2 + (rank >= 0 && rank < 3 && pd.pts > 0 ? 5 : 0); pa.pts += gain; pa.w++; pa.st++; if (pa.fac != null) WAR.fac[pa.fac] += 10; pd.pts = Math.max(0, pd.pts - 3); pd.l++; pd.st = 0; WAR.shield[D] = now + WAR_SHIELD; msg = 'คุณแพ้ ' + pa.n + ' · เสีย 3 แต้ม · ได้โล่ 5 นาที'; }
-  else { pa.pts = Math.max(0, pa.pts - 3); pa.l++; pa.st = 0; pd.pts += 5; pd.w++; if (pd.fac != null) WAR.fac[pd.fac] += 5; WAR.shield[A] = now + WAR_SHIELD; msg = 'คุณป้องกันการท้าดวลจาก ' + pa.n + ' สำเร็จ! · ได้ 5 แต้ม'; }
-  mailTo(D, { id: 'wd' + A + '_' + Math.floor(now / 60000), t: '⚔️ ถูกท้าดวลในศึกชิงแดน', from: 'ศึกชิงแดน', b: msg + '\nกลับเข้าสมรภูมิเพื่อล้างแค้นได้!', it: [] }).catch(() => {});
-  await warSave();
+  await warScore(uid, Number(r.uid), !!r.won, false);
 }
 
 // ---------- HTTP ----------
@@ -1495,7 +1577,7 @@ const routes = {
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
     const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
-    send(res, 200, { server: 'B107.3', client: CLV_SRV, pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    send(res, 200, { server: 'B109', client: CLV_SRV, pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -1528,7 +1610,7 @@ const routes = {
     if (sku === 's149' && Date.now() > S105_END) return send(res, 409, { error: 'ซีซั่น 1 จบแล้ว' });
     if (sku === 'm99' && (p.s.mc105 || 0) - Date.now() > 60 * 864e5) return send(res, 409, { error: 'บัตรรายเดือนสะสมได้ไม่เกิน 90 วัน' });
     if (!envKey('STRIPE_SECRET_KEY')) return send(res, 503, { error: 'ระบบเติมเงินยังไม่เปิด' });
-    if (/^sk_test_/.test(envKey('STRIPE_SECRET_KEY')) && !envKey('PAY_TEST_UIDS').split(/[ ,]+/).includes(String(u.id))) return send(res, 503, { error: 'ระบบเติมเงินกำลังทดสอบ · เปิดให้ซื้อจริงเร็ว ๆ นี้' }); // โหมดทดสอบ: เฉพาะไอดีที่อนุญาต
+    if (/^(sk|rk)_test_/.test(envKey('STRIPE_SECRET_KEY')) && !envKey('PAY_TEST_UIDS').split(/[ ,]+/).includes(String(u.id))) return send(res, 503, { error: 'ระบบเติมเงินกำลังทดสอบ · เปิดให้ซื้อจริงเร็ว ๆ นี้' }); // โหมดทดสอบ: เฉพาะไอดีที่อนุญาต
     const o = payOrigin(req);
     const cs = await stripeApi('POST', '/checkout/sessions', { mode: 'payment', locale: 'th', client_reference_id: String(u.id),
       payment_method_types: ['card', 'promptpay'], line_items: [{ quantity: 1, price_data: { currency: 'thb', unit_amount: it.amt, product_data: { name: it.name, description: it.desc } } }],
@@ -1674,6 +1756,7 @@ const routes = {
     const b = await readBody(req), p = await session(u.id); if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
     await warLoad(); await warRoll(); const now = Date.now();
     if (b.leave) { WARMAP.delete(u.id); return send(res, 200, { ok: true }); }
+    if (b.op === 'duel') { const r = await wdChallenge(u.id, p, parseInt(b.tid, 10)); if (r.error) return send(res, 409, r); return send(res, 200, r); }
     if (!warOpenNow()) { WARMAP.delete(u.id); return send(res, 200, Object.assign({ list: [] }, warStatus())); }
     if (!p.s.created || p.s.fac == null || (p.s.lvl | 0) < WAR_LV) return send(res, 400, { error: 'ต้องมีฝ่ายและ Lv' + WAR_LV + ' ขึ้นไป' });
     const fx = p.s.s105 && p.s.s105.fx || {};
@@ -1682,7 +1765,18 @@ const routes = {
     const me = WARMAP.get(u.id), list = [];
     for (const [id, t] of WARMAP) { if (id === u.id || now - t.at > 8000) continue; const sh = (WAR.shield[id] || 0) > now, cd = now - (WAR.pair[u.id + ':' + id] || 0) < WAR_CD;
       list.push({ uid: id, n: t.n, cls: t.cls, lvl: t.lvl, look: t.look, fac: t.fac, x: t.x, y: t.y, tt: t.tt, sp: t.sp, sh: sh ? 1 : 0, ok: t.fac !== me.fac && !sh && !cd && Math.abs(t.lvl - me.lvl) <= WAR_GAP && t.lvl >= WAR_LV ? 1 : 0 }); if (list.length >= 60) break; }
-    send(res, 200, Object.assign(warStatus(), { list, fac: WAR.fac, me: warPub(u.id) }));
+    const wd0 = wdOf(u.id); if (wd0) { const x = wd0.s.find(y => y.uid === u.id); if (x) x.seen = now; }
+    send(res, 200, Object.assign(warStatus(), { list, fac: WAR.fac, me: warPub(u.id), wd: wdView(wd0, u.id) }));
+  },
+  'POST /api/wd': async (req, res) => { // ดวลสดศึกชิงแดน
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    const b = await readBody(req), op = String(b.op || 'sync'), d = WD.get(WDU.get(u.id));
+    if (!d) return send(res, 200, { wd: null });
+    const i = d.s.findIndex(x => x.uid === u.id); if (i < 0) return send(res, 200, { wd: null }); d.s[i].seen = Date.now();
+    if (op === 'rps') { if (d.ph === 'rps' && WD_HAND[b.h]) { d.s[i].hand = b.h; d.ver++; if (d.s.every(x => x.hand)) wdRpsDone(d); } }
+    else if (op === 'act') { const p = await session(u.id); if (!takeToken(p)) return send(res, 429, { error: 'กดเร็วเกินไป' }); const e = wdAct(d, i, String(b.a || '')); if (e) return send(res, 400, { error: e, wd: wdView(d, u.id) }); }
+    else if (op === 'close') { if (d.ph === 'end') { WDU.delete(u.id); return send(res, 200, { wd: null }); } }
+    send(res, 200, { wd: wdView(d, u.id) });
   },
   'GET /api/health': async (req, res) => send(res, 200, { ok: true, players: live.size, db: db.kind.split(' ')[0] }),
 };
