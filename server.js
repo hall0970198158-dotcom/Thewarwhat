@@ -223,6 +223,7 @@ function dgHitP(m, raw) { // ดาเมจที่ผู้เล่นได
   return Math.max(1, Math.round(raw * rnd(0.9, 1.1) * (1 - red) * (m.guard ? C.grd : 1)));
 }
 function dgResolve(r) {
+  if (r.mode === 'rg') return rgResolve(r);
   const en = r.en, ev = [], log = [], idx = m => r.mem.indexOf(m);
   const picks = dgAlive(r).map(m => { let a = m.pick || 'atk'; if ((a === 'sk' && m.cd.sk > 0) || (a === 'heal' && m.cd.heal > 0)) a = 'atk'; return [m, a]; });
   const nAtk = picks.filter(([, a]) => a === 'atk' || a === 'sk').length, combo = nAtk >= 2 ? 1 + 0.15 * (nAtk - 1) : 1;
@@ -297,41 +298,45 @@ function dgReward(r, log) {
 function dgLeave(uid) {
   const id = DGU.get(uid); DGU.delete(uid); const r = DGR.get(id); if (!r) return;
   const m = r.mem.find(x => x.uid === uid);
+  if (r.mode === 'rg' && r.rg && m && (r.st === 'fight' || r.st === 'rg')) { rgRecord(r, m); r.rg.gone.push({ uid: m.uid, n: m.n }); }
   r.mem = r.mem.filter(x => x.uid !== uid);
   if (!r.mem.length) { DGR.delete(id); return; }
   if (r.host === uid) r.host = r.mem[0].uid;
   if (m) r.log = [m.n + ' ออกจากห้อง'].concat(r.log || []).slice(0, 10);
-  if (r.st === 'fight' && r.en && r.en.intent && r.en.intent.tg === uid) dgIntent(r);
+  if (r.mode === 'rg' && r.st === 'fight' && !dgAlive(r).length) rgOver(r, 'ทั้งทีมสลบ');
+  else if (r.st === 'fight' && r.en && r.en.intent && r.en.intent.tg === uid) (r.mode === 'rg' ? rgIntent : dgIntent)(r);
+  if (r.mode === 'rg' && r.rg && r.rg.ph === 'buff' && r.mem.every(x => !x.offer)) rgNext(r);
   r.ver++;
 }
 function dgView(r, uid) {
   if (!r) return null;
   const now = Date.now(), ti = r.en && r.en.intent && r.en.intent.tg != null ? r.mem.findIndex(m => m.uid === r.en.intent.tg) : -1;
   return {
-    id: r.id, st: r.st, stage: r.stage | 0, round: r.round | 0, seq: r.seq, ver: r.ver, left: r.st === 'fight' ? Math.max(0, r.deadline - now) : 0,
+    id: r.id, mode: r.mode || 'dg', rg: r.mode === 'rg' ? rgView(r, uid) : null, st: r.st, stage: r.stage | 0, round: r.round | 0, seq: r.seq, ver: r.ver, left: r.st === 'fight' ? Math.max(0, r.deadline - now) : 0,
     me: r.mem.findIndex(m => m.uid === uid),
     mem: r.mem.map(m => ({ n: m.n, cls: m.cls, lvl: m.lvl, look: m.look, hp: m.hp, mhp: m.mhp, down: m.down, ready: m.ready, host: m.uid === r.host, me: m.uid === uid,
-      picked: !!m.pick, grd: false, pick: m.uid === uid ? m.pick : null, cd: m.uid === uid ? m.cd : null })),
-    en: r.en && r.st === 'fight' ? { n: r.en.n, k: r.en.k, boss: r.en.boss, hp: r.en.hp, mhp: r.en.mhp, shell: r.en.shell, stun: r.en.stun, intent: Object.assign({}, r.en.intent, { tg: undefined, ti }) } : r.en ? { n: r.en.n, k: r.en.k, boss: r.en.boss, hp: r.en.hp, mhp: r.en.mhp } : null,
+      picked: !!m.pick, auto: !!m.auto, grd: false, pick: m.uid === uid ? m.pick : null, cd: m.uid === uid ? m.cd : null })),
+    en: r.en && r.st === 'fight' ? { n: r.en.n, k: r.en.k, boss: r.en.boss, elite: !!r.en.elite, hp: r.en.hp, mhp: r.en.mhp, shell: r.en.shell, stun: r.en.stun, intent: Object.assign({}, r.en.intent, { tg: undefined, ti }) } : r.en ? { n: r.en.n, k: r.en.k, boss: r.en.boss, hp: r.en.hp, mhp: r.en.mhp } : null,
     ev: r.ev || [], log: (r.log || []).slice(0, 8), loot: r.loot ? r.loot[uid] || null : null,
   };
 }
 async function dgPayload(uid, p) {
+  await rgLoad(); await rgRoll();
   let left = 0;
   const out = engine.run(p.s, p.ui, {}, E => { left = E.dgLeft(); });
   p.s = out.s; p.ui = out.ui;
   const r = DGR.get(DGU.get(uid));
   if (r) { const m = r.mem.find(x => x.uid === uid); if (m) m.seen = Date.now(); }
   const rooms = [...DGR.values()].filter(x => x.st === 'lobby' && x.mem.length < DG_MAX).slice(0, 20)
-    .map(x => ({ id: x.id, n: (x.mem.find(m => m.uid === x.host) || x.mem[0]).n, c: x.mem.length, lvl: Math.round(x.mem.reduce((a, m) => a + m.lvl, 0) / x.mem.length) }));
-  return { runs: { left, max: 3 }, rooms, room: dgView(r, uid) };
+    .map(x => ({ id: x.id, m: x.mode || 'dg', n: (x.mem.find(m => m.uid === x.host) || x.mem[0]).n, c: x.mem.length, lvl: Math.round(x.mem.reduce((a, m) => a + m.lvl, 0) / x.mem.length) }));
+  return { runs: { left, max: 3 }, rooms, room: dgView(r, uid), rg: rgBoard(uid) };
 }
 setInterval(() => { // ตัดสินรอบที่หมดเวลา · ล้างห้องร้าง
   const now = Date.now();
   for (const r of DGR.values()) {
     if (r.st === 'fight' && now >= r.deadline) { try { dgResolve(r); } catch (e) { console.error('dg', e); } }
     if (r.st === 'lobby') for (const m of r.mem.slice()) if (now - m.seen > 60000) dgLeave(m.uid);
-    if (DGR.has(r.id) && r.mem.every(m => now - m.seen > 180000)) { for (const m of r.mem) DGU.delete(m.uid); DGR.delete(r.id); }
+    if (DGR.has(r.id) && r.mem.every(m => now - m.seen > 180000)) { if (r.mode === 'rg' && r.rg && (r.st === 'fight' || r.st === 'rg')) for (const m of r.mem) rgRecord(r, m); for (const m of r.mem) DGU.delete(m.uid); DGR.delete(r.id); }
   }
 }, 400).unref();
 
@@ -795,6 +800,270 @@ async function admPlayer(uid) {
   return { uid, user: u.username, name: o.name || u.display, cls: o.cls, lvl: o.lvl | 0, gold: Math.floor(o.gold || 0), sup: !!o.sup100, title: o.title || '', bag: (o.gbag || []).length, mail: (o.mail || []).length, seen: p.touched || 0, online: !!(p.lastTick && Date.now() - p.lastTick < 60000), created: u.created_at, ip: LASTIP.get(uid) || '', banned: !!(bn || u.banned), reason: bn ? bn.reason : '' };
 }
 
+// ---------- B107 ดันเจี้ยนวงกต: เลือกเส้นทางเอง · มอนอ่อน/มอนเก่ง/บัพ 1 ใน 3/ร้าน/เหตุการณ์/บอส · เดี่ยวหรือทีม 1–3 คน · อันดับรายสัปดาห์ ----------
+// ใช้ห้องเดียวกับดันเจี้ยนเดิม (r.mode = 'rg') · ความแรงศัตรูคิดจากค่าพลังจริงของทีม (ไม่นับบัพ) และโหดขึ้นทุกชั้น · ฟรีวันละ 3 รอบ
+const RG_GR = 1.5, RG_GA = 1.45, RG_RUNS = 3, RG_ROWS = 5, RG_LANES = 3;
+const RG = { loaded: false, wk: 0, solo: {}, grp: {}, day: {}, last: null };
+let RG_DIRTY = false;
+const RG_TIER = ['ธรรมดา', 'หายาก', 'ตำนาน'];
+const RG_BUFF = {
+  atk: { n: 'พลังโจมตี', ic: '⚔️', v: [0.10, 0.20, 0.35], f: v => 'พลังโจมตี +' + Math.round(v * 100) + '%' },
+  crit: { n: 'คริติคอล', ic: '🎯', v: [6, 12, 20], f: v => 'โอกาสคริติคอล +' + v + '%' },
+  hp: { n: 'พลังชีวิต', ic: '❤️', v: [0.12, 0.25, 0.40], f: v => 'HP สูงสุด +' + Math.round(v * 100) + '%' },
+  red: { n: 'เกราะวงกต', ic: '🛡️', v: [0.06, 0.12, 0.20], f: v => 'ดาเมจที่ได้รับ −' + Math.round(v * 100) + '%' },
+  ls: { n: 'ดูดเลือด', ic: '🩸', v: [0.05, 0.10, 0.18], f: v => 'ฟื้น HP ' + Math.round(v * 100) + '% ของดาเมจที่ทำ' },
+  sk: { n: 'สกิลรุนแรง', ic: '✨', v: [0.20, 0.40, 0.70], f: v => 'ดาเมจสกิล +' + Math.round(v * 100) + '%' },
+  heal: { n: 'พรแห่งชีวิต', ic: '💚', v: [0.30, 0.60, 1.00], f: v => 'พลังฟื้นฟูทีม +' + Math.round(v * 100) + '%' },
+  regen: { n: 'พักฟื้น', ic: '🌿', v: [0.05, 0.10, 0.15], f: v => 'จบศึกฟื้น HP ' + Math.round(v * 100) + '%' },
+  dodge: { n: 'เงาพริ้ว', ic: '💨', v: [4, 8, 12], f: v => 'หลบหลีก +' + v + '%' },
+  coin: { n: 'โชคลาภ', ic: '🪙', v: [0.25, 0.50, 1.00], f: v => 'เหรียญวงกต +' + Math.round(v * 100) + '%' },
+  thorn: { n: 'หนามสะท้อน', ic: '🌵', v: [0.15, 0.30, 0.50], f: v => 'สะท้อนดาเมจ ' + Math.round(v * 100) + '%' },
+  first: { n: 'จู่โจมก่อน', ic: '⚡', v: [0.3, 0.6, 1.0], f: v => 'รอบแรกของศึกดาเมจ +' + Math.round(v * 100) + '%' },
+};
+const RG_KEYS = Object.keys(RG_BUFF), RG_PREF = ['atk', 'hp', 'sk', 'red', 'crit', 'ls', 'regen', 'first', 'heal', 'dodge', 'thorn', 'coin'];
+const RG_CAP = { atk: 1.0, crit: 35, hp: 0.8, red: 0.30, ls: 0.20, sk: 1.0, heal: 1.0, regen: 0.25, dodge: 20, coin: 2.0, thorn: 0.6, first: 1.5 }; // เพดานบัพรวม กันโกงเกินไป
+const RG_MON = { f: ['wolf', 'boar', 'bat', 'lizard', 'scorp', 'starbat', 'mudgolem', 'swamplizard', 'icewolf'], e: ['golem', 'sandgolem', 'stormwolf', 'voidbat'], b: ['dragon', 'icedragon', 'stormdragon', 'voiddragon', 'cosmicdragon'] };
+const RG_MN = { wolf: 'หมาป่าวงกต', boar: 'หมูป่าคลั่ง', bat: 'ค้างคาวถ้ำ', lizard: 'กิ้งก่าเงา', scorp: 'แมงป่องพิษ', starbat: 'ค้างคาวดารา', mudgolem: 'โกเลมโคลน', swamplizard: 'กิ้งก่าบึง', icewolf: 'หมาป่าน้ำแข็ง', golem: 'ผู้คุมศิลา', sandgolem: 'โกเลมทราย', stormwolf: 'จ่าฝูงพายุ', voidbat: 'ราชันค้างคาวสุญญตา', dragon: 'มังกรเฝ้าวงกต', icedragon: 'มังกรน้ำแข็ง', stormdragon: 'มังกรอัสนี', voiddragon: 'มังกรสุญญตา', cosmicdragon: 'มังกรจักรวาล' };
+const RG_POOL = { f: ['slam', 'sweep', 'slam', 'shell'], e: ['slam', 'sweep', 'charge', 'shell', 'slam'], b: ['slam', 'sweep', 'charge', 'shell', 'slam', 'sweep', 'charge'] };
+const rgDay = () => Math.floor((Date.now() + 7 * 3600e3) / 864e5);
+async function rgLoad() { if (RG.loaded) return; RG.loaded = true; try { const v = await db.getMeta('rg107'); if (v) Object.assign(RG, JSON.parse(v) || {}, { loaded: true }); } catch (e) { console.error('rg load', e.message); } if (!RG.wk) RG.wk = warWk(); }
+async function rgSave() { RG_DIRTY = false; const o = Object.assign({}, RG); delete o.loaded; await (db.putMeta || db.setMeta).call(db, 'rg107', JSON.stringify(o)).catch(e => console.error('rg save', e.message)); }
+setInterval(() => { if (RG_DIRTY) rgSave(); }, 10000).unref();
+function rgLeft(uid) { const d = RG.day[uid]; return Math.max(0, RG_RUNS - (d && d.d === rgDay() ? d.n : 0)); }
+function rgUse(uid) { const d = RG.day[uid] && RG.day[uid].d === rgDay() ? RG.day[uid] : (RG.day[uid] = { d: rgDay(), n: 0 }); d.n++; RG_DIRTY = true; }
+function rgTop(board, n) { return Object.entries(board).sort((a, b) => b[1].d - a[1].d || a[1].t - b[1].t).slice(0, n).map(([uid, x], i) => ({ r: i + 1, uid: +uid, n: x.n, d: x.d, fl: x.fl, cls: x.cls, lvl: x.lvl, tm: x.tm || '' })); }
+function rgRank(board, uid) { const L = Object.entries(board).sort((a, b) => b[1].d - a[1].d || a[1].t - b[1].t); const i = L.findIndex(([id]) => +id === uid); return i < 0 ? null : { r: i + 1, d: L[i][1].d, of: L.length }; }
+async function rgRoll() {
+  const wk = warWk(); if (RG.wk === wk) return;
+  const solo = rgTop(RG.solo, 10), grp = rgTop(RG.grp, 10), old = RG.wk;
+  RG.last = { wk: old, solo, grp }; RG.wk = wk; RG.solo = {}; RG.grp = {}; await rgSave();
+  const SR = r => r === 1 ? { t: 1, it: [{ k: 'cos', sl: 'wing', id: 'abyss107' }, { k: 'cos', sl: 'aura', id: 'maze107' }], g: 300000 } : r <= 3 ? { t: 3, it: [{ k: 'cos', sl: 'wing', id: 'abyss107' }], g: 200000 } : { t: 10, it: [{ k: 'cos', sl: 'aura', id: 'maze107' }], g: 100000 };
+  const GR = r => r <= 3 ? { t: 3, it: [{ k: 'cos', sl: 'aura', id: 'maze107' }], g: 100000 } : { t: 10, it: [], g: 50000 };
+  for (const x of solo) { const R = SR(x.r); await mailTo(x.uid, { id: 'rgs' + old + '_' + x.r, t: '🗝️ รางวัลวงกต (เดี่ยว) อันดับ ' + x.r, from: 'ดันเจี้ยนวงกต', b: 'ไปได้ไกล ' + x.d + ' ห้อง (ชั้น ' + x.fl + ') · สุดยอดมาก!', it: [{ k: 'gold', n: R.g }, { k: 'rgt', n: R.t }].concat(R.it) }).catch(() => {}); }
+  for (const x of grp) { const R = GR(x.r); await mailTo(x.uid, { id: 'rgg' + old + '_' + x.r, t: '🗝️ รางวัลวงกต (ทีม) อันดับ ' + x.r, from: 'ดันเจี้ยนวงกต', b: 'ทีมของคุณไปได้ไกล ' + x.d + ' ห้อง (ชั้น ' + x.fl + ')', it: [{ k: 'gold', n: R.g }, { k: 'rgt', n: R.t }].concat(R.it) }).catch(() => {}); }
+  if (solo[0]) newsPush75('admin', 0, '🗝️ ดันเจี้ยนวงกต', 'อันดับ 1 สัปดาห์นี้ (เดี่ยว): ' + solo[0].n + ' ไปได้ ' + solo[0].d + ' ห้อง!');
+}
+function rgRecord(r, m) {
+  const g = r.rg; if (!g || g.rec[m.uid]) return; g.rec[m.uid] = 1;
+  const d = g.depth | 0, board = g.solo ? RG.solo : RG.grp, cur = board[m.uid];
+  const tm = g.solo ? '' : r.mem.concat(g.gone || []).filter(x => x.uid !== m.uid).map(x => x.n).slice(0, 2).join(', ');
+  if (d > 0 && (!cur || d > cur.d)) { board[m.uid] = { n: String(m.n).slice(0, 16), d, fl: g.fl, t: Date.now(), cls: m.cls, lvl: m.lvl, tm }; RG_DIRTY = true; }
+  if (d > 0) { const gold = Math.min(30000, d * 500), pts = Math.min(200, d * 8); mailTo(m.uid, { id: 'rgr' + Date.now().toString(36) + m.uid, t: '🗝️ จบรอบวงกต · ' + d + ' ห้อง', from: 'ดันเจี้ยนวงกต', b: 'ไปถึงชั้น ' + g.fl + ' · ระยะ ' + d + ' ห้อง' + (g.solo ? ' (เดี่ยว)' : ' (ทีม)') + '\nติดอันดับรายสัปดาห์ รับฉายาและของแต่งตัวพิเศษทุกวันจันทร์', it: [{ k: 'gold', n: gold }, { k: 's1pts', n: pts }] }).catch(() => {}); }
+}
+function rgMap(fl) {
+  const W = { f: 40, e: 18, b: 17, s: 10, q: 15 }, roll = () => { let x = Math.random() * 100; for (const k in W) { if ((x -= W[k]) < 0) return k; } return 'f'; };
+  const map = [];
+  for (let i = 0; i < RG_ROWS; i++) { const row = []; for (let l = 0; l < RG_LANES; l++) { let t = i === 0 ? 'f' : roll(); if (t === 'e' && fl === 1 && i < 2) t = 'f'; if (i === RG_ROWS - 1 && t === 's' && Math.random() < .5) t = 'b'; row.push(t); } map.push(row); }
+  const flat = () => map.slice(2).reduce((a, r) => a.concat(r), []);
+  if (!flat().includes('b')) map[2 + Math.floor(Math.random() * 3)][Math.floor(Math.random() * 3)] = 'b';
+  if (!flat().includes('s')) { let i, l; do { i = 2 + Math.floor(Math.random() * 3); l = Math.floor(Math.random() * 3); } while (map[i][l] === 'b' && flat().filter(x => x === 'b').length < 2); map[i][l] = 's'; }
+  return map;
+}
+function rgTierRoll(boost) { const x = Math.random() * 100; return x < (boost ? 25 : 10) ? 2 : x < (boost ? 80 : 40) ? 1 : 0; }
+function rgOffer(boost) { const ks = RG_KEYS.slice().sort(() => Math.random() - 0.5).slice(0, 3); return ks.map(k => ({ k, t: rgTierRoll(boost) })); }
+function rgBuffTxt(b) { const B = RG_BUFF[b.k]; return B ? B.f(B.v[b.t]) : ''; }
+function rgEff(m) { // คำนวณค่าพลังในวงกตจากค่าพลังพื้นฐาน + บัพทั้งหมด
+  const b0 = m.b0 || (m.b0 = { atk: m.atk, crit: m.crit, dodge: m.dodge, mhp: m.mhp }), x = {};
+  for (const b of m.bf || []) x[b.k] = Math.min(RG_CAP[b.k], (x[b.k] || 0) + RG_BUFF[b.k].v[b.t]);
+  m.bx = x; const omhp = m.mhp;
+  m.atk = Math.max(1, Math.round(b0.atk * (1 + (x.atk || 0)))); m.crit = Math.min(75, b0.crit + (x.crit || 0)); m.dodge = Math.min(40, b0.dodge + (x.dodge || 0));
+  m.mhp = Math.max(1, Math.round(b0.mhp * (1 + (x.hp || 0)))); if (m.mhp > omhp && !m.down) m.hp += m.mhp - omhp; m.hp = Math.min(m.hp, m.mhp);
+}
+function rgAddBuff(m, b) { m.bf = m.bf || []; m.bf.push({ k: b.k, t: b.t }); rgEff(m); }
+function rgStart(r) {
+  for (const m of r.mem) { const p = live.get(m.uid); const st = p && dgStats(p); if (st) Object.assign(m, st); m.b0 = { atk: m.atk, crit: m.crit, dodge: m.dodge, mhp: m.mhp }; m.bf = []; m.bx = {}; m.hp = m.mhp; m.down = false; m.cd = { sk: 0, heal: 0 }; m.pick = null; m.coins = 0; m.offer = null; m.bought = []; rgUse(m.uid); }
+  r.rg = { fl: 1, row: -1, lane: 1, map: rgMap(1), depth: 0, ph: 'map', solo: r.mem.length === 1, rec: {}, gone: [], at: Date.now(), shop: null, evt: null };
+  r.st = 'rg'; r.stage = 0; r.round = 0; r.log = ['เข้าสู่ดันเจี้ยนวงกต (' + r.mem.length + ' คน) · เลือกเส้นทางได้เลย']; r.ev = []; r.loot = {};
+  r.seq++; r.ver++;
+}
+function rgEnemy(r, type) {
+  const g = r.rg, n = r.mem.length, fl = g.fl;
+  const dps = r.mem.reduce((a, m) => a + (m.b0 ? m.b0.atk : m.atk) * (1 + (m.b0 ? m.b0.crit : m.crit) / 100), 0);
+  const avg = r.mem.reduce((a, m) => a + (m.b0 ? m.b0.mhp : m.mhp), 0) / n;
+  const R = { f: 2.6, e: 4.2, b: 6.5 }[type] * Math.pow(RG_GR, fl - 1), A = { f: 0.06, e: 0.10, b: 0.13 }[type] * Math.pow(RG_GA, fl - 1);
+  const mhp = Math.max(30, Math.round(dps * R * (n === 1 ? 0.9 : n === 2 ? 1.1 : 1.2)));
+  const k = pickA(RG_MON[type]);
+  r.en = { n: (type === 'b' ? '👑 ' : type === 'e' ? '💀 ' : '') + RG_MN[k], k, boss: type === 'b', elite: type === 'e', type, hp: mhp, mhp, A: avg * A * (n === 1 ? 0.85 : n === 2 ? 1.52 : 1.89) };
+  r.stage = Math.min(2, g.fl - 1);
+  rgIntent(r); r.en.fresh = true;
+}
+function rgIntent(r) { // ใช้ตรรกะเดียวกับดันเจี้ยนเดิม แต่สุ่มจากชุดท่าตามประเภทมอน
+  const en = r.en; en.shell = false; en.stun = false;
+  if (en.stunNext) { en.stunNext = false; en.stun = true; en.intent = { t: 'stun', txt: 'มึนงง! รอบนี้ไม่โจมตี และรับดาเมจ +30%' }; return; }
+  if (en.blastNext) { en.blastNext = false; en.intent = { t: 'blast', txt: 'ระเบิดพลังใส่ทั้งทีม (แรงมาก)! กดป้องกันหรือเตรียมฟื้นฟู' }; return; }
+  let t = pickA(RG_POOL[en.type] || RG_POOL.f); if (t === en.lastT && t !== 'slam') t = 'slam'; en.lastT = t;
+  const al = dgAlive(r);
+  if (t === 'slam') { const tg = pickA(al); en.intent = { t, tg: tg.uid, txt: 'ฟาดหนักใส่ ' + tg.n + (r.mem.length > 1 ? ' — เพื่อนกดป้องกันเพื่อรับแทนได้' : ' — กดป้องกันลดดาเมจ') }; }
+  else if (t === 'sweep') en.intent = { t, txt: 'กวาดโจมตีทั้งทีม' };
+  else if (t === 'charge') { en.brk = Math.max(1, Math.round(en.mhp / ({ f: 2.6, e: 4.2, b: 6.5 }[en.type] || 4) * 0.9)); en.intent = { t, txt: 'กำลังชาร์จพลัง! ทำดาเมจรวม ' + en.brk.toLocaleString() + ' ในรอบนี้เพื่อขัดจังหวะ' }; }
+  else { en.shell = true; en.intent = { t: 'shell', txt: 'ตั้งเกราะ: รับดาเมจครึ่งเดียวรอบนี้และตีเบา ๆ — จังหวะดีที่จะฟื้นฟู' }; }
+}
+function rgFight(r, type) { const g = r.rg; for (const m of r.mem) { m.cd = { sk: 0, heal: 0 }; m.pick = null; m.guard = false; } rgEnemy(r, type); g.ph = 'fight'; r.st = 'fight'; r.round = 1; r.en.fresh = false; r.deadline = Date.now() + DG_TURN_MS; r.turnAt = Date.now(); r.log = ['เผชิญหน้า ' + r.en.n + '!'].concat(r.log || []).slice(0, 10); r.seq++; r.ver++; }
+function rgReach(g) { if (g.row >= RG_ROWS - 1) return [1]; if (g.row < 0) return [0, 1, 2]; return [g.lane - 1, g.lane, g.lane + 1].filter(l => l >= 0 && l < RG_LANES); }
+function rgGo(r, lane) {
+  const g = r.rg; if (g.ph !== 'map') return 'ยังเดินไม่ได้ตอนนี้';
+  if (!rgReach(g).includes(lane)) return 'ไปจุดนั้นไม่ได้ (เดินได้เฉพาะช่องติดกัน)';
+  g.row++; g.lane = lane; g.at = Date.now();
+  const t = g.row >= RG_ROWS ? 'B' : g.map[g.row][lane];
+  if (t === 'B') { rgFight(r, 'b'); return null; }
+  if (t === 'f' || t === 'e') { rgFight(r, t); return null; }
+  if (t === 'b') { rgDone(r); rgBuffPhase(r, false, 'พบแท่นพลังโบราณ! เลือกบัพ 1 ใน 3'); return null; }
+  if (t === 's') { rgDone(r); rgShop(r); return null; }
+  if (t === 'q') { rgDone(r); rgEvent(r); return null; }
+  return null;
+}
+function rgDone(r) { r.rg.depth++; } // เคลียร์ห้องแล้วนับระยะ
+function rgBuffPhase(r, boost, msg) { const g = r.rg; g.ph = 'buff'; g.at = Date.now(); for (const m of r.mem) m.offer = m.down ? null : rgOffer(boost); if (msg) r.log = [msg].concat(r.log || []).slice(0, 10); r.st = 'rg'; r.ver++; }
+function rgShop(r) {
+  const g = r.rg, items = [{ id: 'heal', ic: '🧪', n: 'ฟื้นเลือด 40%', p: 15 }];
+  const ks = RG_KEYS.slice().sort(() => Math.random() - 0.5).slice(0, 3);
+  for (const k of ks) { const t = rgTierRoll(false), B = RG_BUFF[k]; items.push({ id: 'b', k, t, ic: B.ic, n: B.n + ' (' + RG_TIER[t] + ')', d: B.f(B.v[t]), p: [30, 60, 110][t] }); }
+  g.shop = items; g.ph = 'shop'; g.at = Date.now(); for (const m of r.mem) m.bought = []; r.st = 'rg';
+  r.log = ['พบร้านค้าลึกลับ · ใช้เหรียญวงกตซื้อของ'].concat(r.log || []).slice(0, 10); r.ver++;
+}
+function rgEvent(r) {
+  const g = r.rg, x = Math.random(), al = dgAlive(r);
+  if (x < 0.25) { g.evt = { ic: '⛲', t: 'น้ำพุแห่งชีวิต', d: 'ทุกคนฟื้น HP 35% · ชุบชีวิตคนสลบ' }; for (const m of r.mem) { if (m.down) { m.down = false; m.hp = Math.round(m.mhp * 0.35); } else m.hp = Math.min(m.mhp, m.hp + Math.round(m.mhp * 0.35)); } }
+  else if (x < 0.5) { const c = 25; g.evt = { ic: '💰', t: 'หีบสมบัติ', d: 'ทุกคนได้เหรียญวงกต +' + c }; for (const m of r.mem) m.coins += Math.round(c * (1 + ((m.bx && m.bx.coin) || 0))); }
+  else if (x < 0.7) { g.evt = { ic: '🗿', t: 'แท่นบูชาต้องสาป', d: 'เสีย HP 15% แต่ได้บัพหายากแบบสุ่ม' }; for (const m of al) { m.hp = Math.max(1, m.hp - Math.round(m.mhp * 0.15)); const b = { k: pickA(RG_KEYS), t: 1 }; rgAddBuff(m, b); m.evb = b; } }
+  else if (x < 0.85) { g.evt = null; r.log = ['⚠️ ซุ่มโจมตี! มอนเก่งโผล่ออกมา'].concat(r.log || []).slice(0, 10); rgFight(r, 'e'); r.rg.depth--; return; }
+  else { g.evt = null; rgShop(r); r.log = ['พบพ่อค้าเร่กลางทาง'].concat(r.log || []).slice(0, 10); return; }
+  g.ph = 'event'; g.at = Date.now(); r.st = 'rg'; r.log = [g.evt.ic + ' ' + g.evt.t + ': ' + g.evt.d].concat(r.log || []).slice(0, 10); r.ver++;
+}
+function rgNext(r) { // จบร้าน/เหตุการณ์/บัพ แล้วกลับแผนที่
+  const g = r.rg; g.ph = 'map'; g.at = Date.now(); g.shop = null; g.evt = null; for (const m of r.mem) { m.offer = null; m.evb = null; } r.st = 'rg'; r.ver++;
+}
+function rgWin(r) { // ชนะศึก
+  const g = r.rg, en = r.en, type = en.type, coin = { f: 12, e: 30, b: 60 }[type] || 12;
+  rgDone(r);
+  for (const m of r.mem) {
+    if (m.down) { m.down = false; m.hp = Math.round(m.mhp * 0.25); }
+    else m.hp = Math.min(m.mhp, m.hp + Math.round(m.mhp * (0.05 + ((m.bx && m.bx.regen) || 0))));
+    m.coins += Math.round(coin * (1 + ((m.bx && m.bx.coin) || 0))); m.cd = { sk: 0, heal: 0 }; m.guard = false; m.pick = null;
+  }
+  r.log = ['โค่น ' + en.n + ' สำเร็จ! เหรียญ +' + coin].concat(r.log || []).slice(0, 10);
+  if (type === 'b') {
+    g.fl++; g.row = -1; g.lane = 1; g.map = rgMap(g.fl);
+    for (const m of r.mem) m.hp = Math.min(m.mhp, m.hp + Math.round(m.mhp * 0.35));
+    rgBuffPhase(r, true, '🏆 ผ่านชั้น ' + (g.fl - 1) + '! ทุกคนฟื้น HP 35% · เลือกบัพรางวัลบอส (โอกาสหายาก/ตำนานสูง)');
+  } else if (type === 'e') rgBuffPhase(r, false, 'มอนเก่งดรอปพลัง! เลือกบัพ 1 ใน 3');
+  else { g.ph = 'map'; g.at = Date.now(); r.st = 'rg'; }
+  r.en = Object.assign({}, en, { hp: 0 }); r.seq++; r.ver++;
+}
+function rgOver(r, why) { const g = r.rg; g.ph = 'over'; r.st = 'lost'; r.ended = Date.now(); r.log = [why + ' · ไปได้ ' + g.depth + ' ห้อง (ชั้น ' + g.fl + ')'].concat(r.log || []).slice(0, 10); for (const m of r.mem) rgRecord(r, m); r.loot = {}; for (const m of r.mem) r.loot[m.uid] = { rg: 1, d: g.depth, fl: g.fl, rank: rgRank(g.solo ? RG.solo : RG.grp, m.uid) }; r.seq++; r.ver++; }
+function rgAutoPick(r, m) { // ออโต้ฉลาดพอใช้: ชุบ/ฮีลเมื่อจำเป็น ป้องกันท่าแรง ใช้สกิลเมื่อพร้อม
+  const en = r.en, it = en.intent || {}, al = r.mem;
+  if (m.cd.heal <= 0 && (al.some(x => x.down) || al.some(x => !x.down && x.hp / x.mhp < 0.45))) return 'heal';
+  if (it.t === 'blast' && m.cd.heal > 0) return 'grd';
+  if (it.t === 'slam' && it.tg === m.uid && m.hp / m.mhp < 0.4) return 'grd';
+  if (it.t === 'shell' && m.cd.heal <= 0 && al.some(x => !x.down && x.hp / x.mhp < 0.7)) return 'heal';
+  if (m.cd.sk <= 0 && !(it.t === 'shell' && m.cls !== 'archer')) return 'sk';
+  return 'atk';
+}
+function rgAutoTick(r) {
+  const g = r.rg, now = Date.now(); if (!g) return;
+  if (r.st === 'fight') {
+    for (const m of dgAlive(r)) if (m.auto && !m.pick) { m.pick = rgAutoPick(r, m); r.ver++; }
+    if (dgAlive(r).every(x => x.pick) && now - (r.turnAt || 0) >= 1700) dgResolve(r);
+    return;
+  }
+  if (r.st !== 'rg') return;
+  const host = r.mem.find(m => m.uid === r.host), hostAuto = host && host.auto, idle = now - (g.at || now);
+  if (g.ph === 'map' && ((hostAuto && idle > 1500) || idle > 60000)) {
+    const L = rgReach(g), row = g.row + 1, hpF = r.mem.reduce((a, m) => a + m.hp / m.mhp, 0) / r.mem.length;
+    const score = l => { if (row >= RG_ROWS) return 0; const t = g.map[row][l]; return t === 'b' ? 5 : t === 'e' ? (hpF > 0.7 ? 4 : 0) : t === 's' ? (r.mem.some(m => m.coins >= 30) ? 4.5 : 1) : t === 'q' ? 3 : 2; };
+    rgGo(r, L.slice().sort((a, b) => score(b) - score(a) + Math.random() * 0.1)[0]);
+  } else if (g.ph === 'buff') {
+    for (const m of r.mem) if (m.offer && (m.auto || idle > 25000)) { const best = m.offer.slice().sort((a, b) => b.t - a.t || (RG_PREF.indexOf(a.k) - RG_PREF.indexOf(b.k)))[0]; rgAddBuff(m, best); m.offer = null; r.ver++; }
+    if (r.mem.every(m => !m.offer) && idle > 800) rgNext(r);
+  } else if (g.ph === 'shop') {
+    if ((hostAuto && idle > 1500) || idle > 45000) { for (const m of r.mem) if (m.auto) rgAutoShop(r, m); rgNext(r); }
+  } else if (g.ph === 'event') {
+    if ((hostAuto && idle > 2000) || idle > 30000) rgNext(r);
+  }
+}
+function rgBuy(r, m, i) {
+  const g = r.rg, it = g.shop && g.shop[i]; if (!it || g.ph !== 'shop') return 'ร้านปิดแล้ว';
+  if (m.bought.includes(i)) return 'ซื้อชิ้นนี้ไปแล้ว'; if (m.coins < it.p) return 'เหรียญวงกตไม่พอ';
+  if (it.id === 'heal') { if (m.hp >= m.mhp && !m.down) return 'HP เต็มอยู่แล้ว'; if (m.down) { m.down = false; m.hp = 0; } m.hp = Math.min(m.mhp, m.hp + Math.round(m.mhp * 0.4)); }
+  else rgAddBuff(m, { k: it.k, t: it.t });
+  m.coins -= it.p; m.bought.push(i); r.ver++; return null;
+}
+function rgAutoShop(r, m) { const g = r.rg; if (!g.shop) return; if (m.hp / m.mhp < 0.6) rgBuy(r, m, 0); g.shop.map((x, i) => [x, i]).filter(([x]) => x.id === 'b').sort((a, b) => b[0].t - a[0].t).forEach(([x, i]) => { if (m.coins >= x.p) rgBuy(r, m, i); }); }
+function rgResolve(r) { // เหมือน dgResolve + ผลของบัพ (ดูดเลือด สกิล ฟื้นฟู ลดดาเมจ สะท้อน จู่โจมก่อน)
+  const en = r.en, ev = [], log = [], idx = m => r.mem.indexOf(m), B = m => m.bx || {};
+  const picks = dgAlive(r).map(m => { let a = m.pick || (m.auto ? rgAutoPick(r, m) : 'atk'); if ((a === 'sk' && m.cd.sk > 0) || (a === 'heal' && m.cd.heal > 0)) a = 'atk'; return [m, a]; });
+  const nAtk = picks.filter(([, a]) => a === 'atk' || a === 'sk').length, combo = nAtk >= 2 ? 1 + 0.15 * (nAtk - 1) : 1;
+  for (const [m, a] of picks) if (a === 'grd') { m.guard = true; ev.push({ t: 'g', i: idx(m) }); log.push(m.n + ' ตั้งท่าป้องกัน'); }
+  for (const [m, a] of picks) if (a === 'heal') {
+    const C = DG_CLS[m.cls] || DG_CLS.warrior, hp = C.heal * (1 + (B(m).heal || 0)); m.cd.heal = 3; let tot = 0, rv = [];
+    for (const t of r.mem) {
+      if (t.down) { t.down = false; t.hp = Math.round(t.mhp * 0.25); rv.push(t.n); ev.push({ t: 'h', i: idx(t), v: t.hp, rv: 1 }); }
+      else { const v = Math.min(t.mhp - t.hp, Math.round(t.mhp * hp)); if (v > 0) { t.hp += v; tot += v; ev.push({ t: 'h', i: idx(t), v }); } }
+    }
+    log.push(m.n + ' ฟื้นฟูทีม' + (tot ? ' +' + tot.toLocaleString() + ' HP' : '') + (rv.length ? ' · ชุบชีวิต ' + rv.join(', ') : ''));
+  }
+  let dealt = 0;
+  for (const [m, a] of picks) if (a === 'atk' || a === 'sk') {
+    const C = DG_CLS[m.cls] || DG_CLS.warrior, hits = a === 'sk' && C.hits ? C.hits : 1, mult = (a === 'sk' ? C.sk * (1 + (B(m).sk || 0)) / hits : 1) * (r.round === 1 ? 1 + (B(m).first || 0) : 1);
+    let tot = 0, crit = false;
+    for (let h = 0; h < hits; h++) {
+      let d = m.atk * rnd(0.85, 1.15) * mult * combo;
+      if (Math.random() * 100 < m.crit + (C.crit || 0)) { d *= 2; crit = true; }
+      if (en.shell && !(a === 'sk' && C.pierce)) d *= 0.5;
+      if (en.stun) d *= 1.3;
+      tot += Math.max(1, Math.round(d));
+    }
+    if (a === 'sk') m.cd.sk = 3;
+    en.hp -= tot; dealt += tot;
+    if (B(m).ls) { const v = Math.min(m.mhp - m.hp, Math.round(tot * B(m).ls)); if (v > 0) m.hp += v; }
+    ev.push({ t: 'p', i: idx(m), a, d: tot, c: crit });
+    log.push(m.n + (a === 'sk' ? ' ใช้' + C.skn : ' โจมตี') + ' −' + tot.toLocaleString() + (crit ? ' (คริติคอล!)' : ''));
+  }
+  if (combo > 1) log.push('โจมตีประสาน ' + nAtk + ' คน! ดาเมจ +' + Math.round((combo - 1) * 100) + '%');
+  if (en.hp <= 0) { en.hp = 0; for (const m of r.mem) { m.guard = false; m.pick = null; } r.ev = ev; r.log = log.reverse().concat(r.log || []).slice(0, 10); rgWin(r); return; }
+  const it = en.intent, al = dgAlive(r), A = en.A, hits = [];
+  const hitOne = (m, raw) => { let d = dgHitP(m, raw); if (d > 0) d = Math.max(1, Math.round(d * (1 - Math.min(0.5, B(m).red || 0)))); m.hp -= d; hits.push([idx(m), d]); if (d > 0 && B(m).thorn) en.hp = Math.max(1, en.hp - Math.round(d * B(m).thorn)); if (m.hp <= 0) { m.hp = 0; m.down = true; log.push(m.n + ' สลบ!'); } return d; };
+  if (it.t === 'slam' || it.t === 'shell') {
+    const guard = al.filter(m => m.guard).sort((a, b) => (DG_CLS[a.cls] || {}).grd - (DG_CLS[b.cls] || {}).grd)[0];
+    let tg = it.t === 'slam' ? al.find(m => m.uid === it.tg) || pickA(al) : pickA(al);
+    if (guard && it.t === 'slam') tg = guard;
+    const d = hitOne(tg, A * (it.t === 'slam' ? 2.0 : 0.8));
+    log.push(en.n + (it.t === 'slam' ? ' ฟาดหนักใส่ ' : ' ตีเบา ๆ ใส่ ') + tg.n + (d ? ' −' + d.toLocaleString() : ' แต่หลบได้'));
+  } else if (it.t === 'sweep' || it.t === 'blast') {
+    for (const m of al) hitOne(m, A * (it.t === 'sweep' ? 1.1 : 2.6));
+    log.push(en.n + (it.t === 'sweep' ? ' กวาดโจมตีทั้งทีม' : ' ระเบิดพลังใส่ทั้งทีม!'));
+  } else if (it.t === 'charge') {
+    if (dealt >= en.brk) { en.stunNext = true; ev.push({ t: 'brk' }); log.push('ขัดจังหวะการชาร์จสำเร็จ! ' + en.n + ' มึนงง'); }
+    else { en.blastNext = true; log.push(en.n + ' ชาร์จพลังเต็ม... (ดาเมจรวม ' + dealt.toLocaleString() + '/' + en.brk.toLocaleString() + ')'); }
+  } else if (it.t === 'stun') log.push(en.n + ' มึนงง ไม่ได้โจมตี');
+  if (hits.length) ev.push({ t: 'e', k: it.t, hits });
+  for (const m of r.mem) { m.guard = false; m.pick = null; if (m.cd.sk > 0) m.cd.sk--; if (m.cd.heal > 0) m.cd.heal--; }
+  r.ev = ev; r.log = log.reverse().concat(r.log || []).slice(0, 10);
+  if (!dgAlive(r).length) { rgOver(r, 'ทั้งทีมสลบ'); return; }
+  rgIntent(r); r.round++; r.deadline = Date.now() + DG_TURN_MS; r.turnAt = Date.now(); r.seq++; r.ver++;
+}
+function rgView(r, uid) {
+  const g = r.rg; if (!g) return null; const me = r.mem.find(m => m.uid === uid) || {};
+  return { fl: g.fl, row: g.row, lane: g.lane, map: g.map, depth: g.depth, ph: g.ph, solo: g.solo, reach: g.ph === 'map' ? rgReach(g) : [], shop: g.shop, evt: g.evt, idle: Date.now() - (g.at || Date.now()),
+    me: { coins: me.coins | 0, auto: !!me.auto, offer: me.offer || null, bought: me.bought || [], bf: (me.bf || []).map(b => ({ k: b.k, t: b.t, ic: RG_BUFF[b.k].ic, n: RG_BUFF[b.k].n, d: rgBuffTxt(b) })), evb: me.evb ? { n: RG_BUFF[me.evb.k].n, d: rgBuffTxt(me.evb) } : null },
+    offerTxt: me.offer ? me.offer.map(b => ({ k: b.k, t: b.t, ic: RG_BUFF[b.k].ic, n: RG_BUFF[b.k].n, d: rgBuffTxt(b) })) : null,
+    mem: r.mem.map(m => ({ coins: m.coins | 0, nb: (m.bf || []).length, auto: !!m.auto, wait: !!m.offer })) };
+}
+function rgBoard(uid) { return { left: rgLeft(uid), max: RG_RUNS, solo: rgTop(RG.solo, 10), grp: rgTop(RG.grp, 10), meS: rgRank(RG.solo, uid), meG: rgRank(RG.grp, uid), last: RG.last, wkEnd: (warWk() + 1) * 7 * 864e5 - 3 * 864e5 - 7 * 3600e3 }; }
+function rgOp(op, b, u, p, cur) { // คืนข้อความผิดพลาด หรือ null
+  if (op === 'auto') { const m = cur.mem.find(x => x.uid === u.id); if (m) { m.auto = !m.auto; cur.ver++; } return null; }
+  if (!cur.rg || cur.st === 'lost') return 'รอบนี้จบแล้ว';
+  const m = cur.mem.find(x => x.uid === u.id), g = cur.rg; if (!m) return 'ไม่พบผู้เล่น';
+  if (op === 'go') { if (cur.host !== u.id) return 'หัวห้องเป็นคนเลือกเส้นทาง'; return rgGo(cur, parseInt(b.lane, 10)); }
+  if (op === 'buff') { if (g.ph !== 'buff' || !m.offer) return 'เลือกบัพไปแล้ว'; const o = m.offer[parseInt(b.i, 10)]; if (!o) return 'ไม่พบบัพ'; rgAddBuff(m, o); m.offer = null; cur.ver++; if (cur.mem.every(x => !x.offer)) rgNext(cur); return null; }
+  if (op === 'buy') return rgBuy(cur, m, parseInt(b.i, 10));
+  if (op === 'next') { if (cur.host !== u.id) return 'รอหัวห้องกดเดินต่อ'; if (g.ph !== 'shop' && g.ph !== 'event') return 'ยังไปต่อไม่ได้'; rgNext(cur); return null; }
+  if (op === 'giveup') { if (cur.host !== u.id) return 'เฉพาะหัวห้อง'; if (cur.st === 'fight' || cur.st === 'rg') rgOver(cur, 'ยอมแพ้'); return null; }
+  return 'คำสั่งไม่ถูกต้อง';
+}
+setInterval(() => { for (const r of DGR.values()) if (r.mode === 'rg') { try { rgAutoTick(r); } catch (e) { console.error('rg', e); } } }, 300).unref();
+
 // ---------- B106 ศึกชิงแดน: สมรภูมิแยก · เสาร์–อาทิตย์ 20:00–22:00 น. (เวลาไทย) ----------
 const WAR = { loaded: false, wk: 0, fac: [0, 0, 0, 0], ppl: {}, last: null, buff: null, testUntil: 0, pair: {}, shield: {} }, WARMAP = new Map(), WAR_LV = 30, WAR_GAP = 15, WAR_CD = 10 * 60e3, WAR_SHIELD = 5 * 60e3;
 let WAR_DIRTY = false, WAR_SAVE_AT = 0;
@@ -1106,6 +1375,7 @@ const routes = {
     const p = await session(u.id);
     if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
     if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
+    await rgLoad(); await rgRoll();
     const op = String(b.op || ''), cur = DGR.get(DGU.get(u.id));
     if(p.s.battle&&p.s.battle.challenge73&&op!=='sync'&&op!=='leave')return send(res,409,{error:'จบท้าประลองก่อนเข้าดันเจี้ยน'});
     const bad = msg => send(res, 400, { error: msg });
@@ -1113,14 +1383,17 @@ const routes = {
       if (cur) return bad('คุณอยู่ในห้องอื่นแล้ว');
       if (p.s.battle) return bad('จบการต่อสู้ที่ค้างอยู่ก่อน');
       const m = dgMember(u.id, p); if (!m) return bad('สร้างตัวละครก่อน');
-      const r = { id: ++DG_ID, host: u.id, st: 'lobby', mem: [m], seq: 0, ver: 0, log: [m.n + ' สร้างห้อง'], created: Date.now() };
+      if (b.mode === 'rg' && rgLeft(u.id) <= 0) return bad('ใช้สิทธิ์วงกตครบ ' + RG_RUNS + ' รอบวันนี้แล้ว · กลับมาใหม่พรุ่งนี้');
+      const r = { id: ++DG_ID, host: u.id, st: 'lobby', mode: b.mode === 'rg' ? 'rg' : undefined, mem: [m], seq: 0, ver: 0, log: [m.n + (b.mode === 'rg' ? ' สร้างห้องวงกต' : ' สร้างห้อง')], created: Date.now() };
       DGR.set(r.id, r); DGU.set(u.id, r.id);
+      if (r.mode === 'rg' && b.solo) rgStart(r);
     } else if (op === 'join') {
       if (cur) return bad('คุณอยู่ในห้องอื่นแล้ว');
       const r = DGR.get(Number(b.id));
       if (!r) return bad('ไม่พบห้องนี้ (อาจปิดไปแล้ว)');
       if (r.st !== 'lobby') return bad('ห้องนี้เริ่มลงดันไปแล้ว');
       if (r.mem.length >= DG_MAX) return bad('ห้องเต็มแล้ว (3 คน)');
+      if (r.mode === 'rg' && rgLeft(u.id) <= 0) return bad('ใช้สิทธิ์วงกตครบ ' + RG_RUNS + ' รอบวันนี้แล้ว');
       const m = dgMember(u.id, p); if (!m) return bad('สร้างตัวละครก่อน');
       r.mem.push(m); DGU.set(u.id, r.id); r.log = [m.n + ' เข้าห้อง'].concat(r.log).slice(0, 10); r.ver++;
     } else if (op === 'leave') {
@@ -1134,7 +1407,7 @@ const routes = {
       if (cur.host !== u.id) return bad('เฉพาะหัวห้องที่กดเริ่มได้');
       if (cur.st !== 'lobby') return bad('เริ่มไปแล้ว');
       if (!cur.mem.every(m => m.uid === cur.host || m.ready)) return bad('รอทุกคนกดพร้อมก่อน');
-      dgStart(cur);
+      if (cur.mode === 'rg') { const no = cur.mem.find(m => rgLeft(m.uid) <= 0); if (no) return bad(no.n + ' ใช้สิทธิ์วงกตครบ ' + RG_RUNS + ' รอบวันนี้แล้ว'); rgStart(cur); } else dgStart(cur);
     } else if (op === 'pick') {
       const a = String(b.act || ''), m = cur.mem.find(x => x.uid === u.id);
       if (cur.st !== 'fight' || !m || m.down || !['atk', 'sk', 'grd', 'heal'].includes(a)) return bad('เลือกท่านี้ไม่ได้ตอนนี้');
@@ -1143,7 +1416,10 @@ const routes = {
       if (dgAlive(cur).every(x => x.pick)) dgResolve(cur);
     } else if (op === 'again') {
       if (cur.host !== u.id) return bad('เฉพาะหัวห้อง');
-      if (cur.st === 'won' || cur.st === 'lost') { cur.st = 'lobby'; cur.en = null; cur.loot = {}; for (const m of cur.mem) { m.ready = false; m.down = false; } cur.ver++; }
+      if (cur.st === 'won' || cur.st === 'lost') { cur.st = 'lobby'; cur.en = null; cur.loot = {}; cur.rg = null; for (const m of cur.mem) { m.ready = false; m.down = false; } cur.ver++; }
+    } else if (['go', 'buff', 'buy', 'next', 'giveup', 'auto'].includes(op)) {
+      if (cur.mode !== 'rg') return bad('คำสั่งนี้ใช้ในวงกตเท่านั้น');
+      const e = rgOp(op, b, u, p, cur); if (e) return bad(e);
     } else return bad('คำสั่งไม่ถูกต้อง');
     send(res, 200, await dgPayload(u.id, p));
   },
@@ -1219,7 +1495,7 @@ const routes = {
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
     const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
-    send(res, 200, { server: 'B106.2', client: CLV_SRV, pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    send(res, 200, { server: 'B107.1', client: CLV_SRV, pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
