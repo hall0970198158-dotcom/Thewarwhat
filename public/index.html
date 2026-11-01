@@ -708,6 +708,9 @@ body.rotate91::after{content:'📱\A กรุณาหมุนมือถื�
 #gameWrap .sup100btn,.sup100btn{display:block;margin:0 0 4px;padding:3px 8px;font-size:11px;font-weight:700;color:#2a1600;background:linear-gradient(90deg,#ffd23c,#ff9a3c);border:0;border-radius:999px;box-shadow:0 0 8px rgba(255,180,40,.6);animation:sup100p 1.6s infinite alternate}@keyframes sup100p{to{box-shadow:0 0 14px rgba(255,200,60,.95)}}.sup100b{color:#ffd23c;text-shadow:0 0 6px #ffb020;font-weight:900;margin:0 3px}.qb.sp100{background:linear-gradient(90deg,#ff9a3c,#ffd23c)!important;color:#2a1600!important}.sup100cb{margin:0 0 6px}
 .hud101{display:flex;gap:6px;align-items:center;margin:0 0 4px}.hud101 .sup100btn{margin:0;white-space:nowrap}.mail101btn{position:relative;border:1px solid #6a7bb0;background:#1d2440;color:#fff;border-radius:999px;padding:2px 9px;font-size:14px;line-height:1.3}.mail101btn.has{border-color:#ffd23c;animation:sup100p 1.2s infinite alternate}.mail101btn b{position:absolute;top:-6px;right:-6px;background:#ff4a4a;color:#fff;border-radius:999px;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px}
 .mail101 .card{max-width:420px;width:calc(100% - 24px);max-height:84vh;display:flex;flex-direction:column}.mail101h{display:flex;justify-content:space-between;align-items:center}.mail101h h3{margin:0}.mail101all{width:100%;margin:6px 0}.mail101l{overflow-y:auto;flex:1;min-height:0}.mail101i{border:1px solid #3a4470;border-radius:10px;padding:8px 10px;margin:6px 0;background:rgba(255,255,255,.03)}.mail101i.new{border-color:#5fb4ff}.mail101i.pay{border:2px solid #ffb43c;background:linear-gradient(180deg,rgba(255,180,60,.12),rgba(255,180,60,.02))}.mail101i.got{opacity:.6}.mail101t{font-weight:700;display:flex;align-items:center;gap:6px}.mail101t i{width:8px;height:8px;border-radius:50%;background:#ff4a4a;display:inline-block}.mail101i small{color:#9aa7bd;font-size:11px}.mail101i p{margin:4px 0;font-size:13px;line-height:1.45}.mail101r{font-size:11px;color:#ffd9a0;background:rgba(0,0,0,.25);border-radius:6px;padding:4px 6px;margin:4px 0}.mail101a{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}.mail101a span{background:#2a3256;border-radius:6px;padding:2px 6px;font-size:12px}.mail101ok{color:#7fe08a;font-size:12px;font-weight:700}.mail101i .btn{width:100%}
+.gb-tabs{display:flex;gap:6px;margin-bottom:8px}.gb-tabs .btn{flex:1}.gb-f{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;margin-bottom:6px}.gb-f .chip{flex:none;cursor:pointer}.gb-f .chip[aria-pressed=true]{border-color:var(--brass);color:var(--brass)}.gb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:5px}.gb-c{position:relative;aspect-ratio:1;border:2px solid var(--qc,#445);border-radius:8px;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;padding:0;box-shadow:inset 0 0 10px color-mix(in srgb,var(--qc,#445) 35%,transparent)}.gb-c.on{outline:2px solid #fff;outline-offset:1px}.gb-c.empty{border-style:dashed;border-color:#333a55;box-shadow:none}.gb-c i{position:absolute;font-style:normal;font-size:10px;line-height:1}.gb-c .lk{top:2px;left:2px}.gb-c .sp{top:2px;right:3px;color:#ffd23c}.gb-c .by{bottom:2px;right:2px}
+.gb-det{border:2px solid var(--qc);border-radius:10px;padding:8px;margin:8px 0;background:rgba(0,0,0,.25)}.gb-dh{display:flex;gap:8px;align-items:center;margin-bottom:4px}.gb-act{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}.gb-sell{margin-top:8px;border-top:1px solid #334;padding-top:6px}.gb-sell input{flex:1;min-width:0;padding:8px;border-radius:8px;border:1px solid #445;background:#141a30;color:#fff;font-size:15px}.gb-bulk{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}.gb-uns{margin-top:8px;padding:8px;border:1px dashed #5a6aa0;border-radius:8px;display:flex;flex-direction:column;gap:4px}
+.mk-top{display:flex;justify-content:space-between;align-items:center;gap:6px}.mk-msg{background:rgba(255,255,255,.07);border-radius:8px;padding:6px 8px;font-size:13px}.mk-r{display:grid;grid-template-columns:40px 1fr auto;gap:6px;align-items:center;border:1px solid var(--qc);border-radius:9px;padding:6px;margin:5px 0;background:rgba(0,0,0,.2)}.mk-i{display:flex;flex-direction:column;min-width:0}.mk-i b{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mk-i small{font-size:10px;color:#9aa7bd}.mk-p{display:flex;flex-direction:column;align-items:flex-end;gap:3px}.mk-p b{color:#ffd23c;font-size:13px}.mk-d{grid-column:1/-1;font-size:12px}.mk-d summary{color:#8fd8ff;cursor:pointer}
 </style>
 
 <section id="login" class="login">
@@ -2047,7 +2050,7 @@ function bagUsed(){var a=0,k;for(k in s.inv)a+=s.inv[k]|0;POTK.forEach(function(
 function bagFree(k){if(!k)return BAG_MAX;s.inv=s.inv||{};return Math.max(0,BAG_MAX-((POTK.indexOf(k)>=0?s[k]:s.inv[k])|0))}
 function bagPrice(k){for(var i=0;i<BAGI.length;i++)if(BAGI[i][0]===k)return BAGI[i][2];return 1}
 function addItem(k,n){s.inv=s.inv||{};var m=Math.min(n,bagFree(k));if(m>0){if(POTK.indexOf(k)>=0)s[k]=(s[k]|0)+m;else s.inv[k]=(s.inv[k]|0)+m}if(m<n){var gx=(n-m)*bagPrice(k);s.gold+=gx;say('ช่องนี้เต็ม ('+BAG_MAX+') ขายส่วนเกินอัตโนมัติ +'+gx+' ทอง')}return m}
-var BAGI=[['wood','ไม้',2],['stone','หิน',3],['ore','แร่',6],['hide','หนัง',4],['herb','สมุนไพร',3],['purple','แร่หินสีม่วง',100],['potions','ยาฟื้นฟู 75',10],['pot2','ยาฟื้นฟู 100',20],['pot3','ยาฟื้นฟู 150',30],['pot4','ยาฟื้นฟู 300',50],['pot5','ยาฟื้นฟู 500',100],['pot6','ยาฟื้นฟู 1000',200],['potF','ยาฟื้นเลือดเต็ม',600]];
+var BAGI=[['wood','ไม้',2],['stone','หิน',3],['ore','แร่',6],['hide','หนัง',4],['herb','สมุนไพร',3],['purple','แร่หินสีม่วง',100],['potions','ยาฟื้นฟู 75',10],['pot2','ยาฟื้นฟู 100',20],['pot3','ยาฟื้นฟู 150',30],['pot4','ยาฟื้นฟู 300',50],['pot5','ยาฟื้นฟู 500',100],['pot6','ยาฟื้นฟู 1000',200],['potF','ยาฟื้นเลือดเต็ม',600],['unseal','หินปลดผนึก',1000]];
 function bagCount(k){return (POTK.indexOf(k)>=0?s[k]:s.inv[k])|0}
 function bagTake(k,n){if(POTK.indexOf(k)>=0)s[k]=(s[k]|0)-n;else s.inv[k]=(s.inv[k]|0)-n}
 function bagHtml(){
@@ -2420,6 +2423,57 @@ var TITLES=[
 COL59.forEach(function(x,z){TITLES.push({id:'c59'+z,n:x[3],d:'ของสะสม '+ZONES[z].n+' ครบชุด',c:x[4],cur:function(){return colDone59(z,s)?1:0},need:1})});
 bookTitles70();
 
+
+// ===== B102 กระเป๋าอุปกรณ์ 40 ช่อง · B103 ตลาดผู้เล่น + หินปลดผนึก =====
+var GBAG_MAX=40,GB={tab:'bag',f:'all',sel:-1,cf:'',mkt:null,busy:false,mf:'all',msg:'',at:0};
+var MKT_TAX=0.10,MKT_LV=30,MKT_MAXN=10,UNS_LV=50,UNS_GOLD=30000,UNS_PUR=2;
+function equipObj102(p){var cn=p.k==='a'?[]:cardNew(p);if(p.k==='w'){s.weapon=p.i;s.wq=p.t;s.wSk=p.sk|0;s.wSp100=p.sp?1:0;s.wCards=cn;s.wBy=p.by||''}else if(p.k==='a'){s.armor=p.i;s.aq=p.t}else s.acc[p.i]={t:p.t,g:p.g|0,e:(s.acc[p.i]&&s.acc[p.i].e)|0,sk:p.sk|0,cd:cn,by:p.by||'',op:p.op||null,st:p.st||null,sp:p.sp?1:0}}
+function GBsel102(){if(!SV){GB.sel=-1;GB.cf=''}}
+function gbag(){if(!Array.isArray(s.gbag))s.gbag=[];return s.gbag}
+function gSlot(p){return p.k==='w'?'w':p.k==='a'?'armor0':p.i}
+function gSlotName(k){return k==='w'?'อาวุธ':k==='armor0'?'เกราะ (เก่า)':ACC[k]?ACC[k].n:String(k)}
+function gClean(p){var o=JSON.parse(JSON.stringify(p));delete o.fail;delete o.lk;return o}
+function gStore(){var p=s.pend;if(!p||p.fail)return;if(gbag().length>=GBAG_MAX){say('กระเป๋าอุปกรณ์เต็ม ('+GBAG_MAX+' ช่อง)');return}var o=gClean(p);gbag().push(o);s.pend=null;say('🎒 เก็บ '+pendName(o)+' เข้ากระเป๋า');gqPump()}
+function gSlotItem(p){if(p.k==='w')return (s.weapon|0)>0||(s.wq|0)>0?{k:'w',i:s.weapon|0,g:0,t:s.wq|0,sk:s.wSk|0,by:s.wBy||'',sp:s.wSp100?1:0}:null;if(p.k==='a')return (s.armor|0)>0?{k:'a',i:s.armor|0,g:0,t:s.aq|0}:null;var c=s.acc&&s.acc[p.i];return c&&c.t!=null?{k:'x',i:p.i,g:c.g|0,t:c.t|0,sk:c.sk|0,by:c.by||'',op:c.op||null,st:c.st||null,sp:c.sp?1:0}:null}
+function gEquip(i){var L=gbag(),p=L[i|0];if(!p||s.battle)return;var old=gSlotItem(p);L.splice(i|0,1);equipObj102(p);if(old)L.push(old);recalc();say('สวมใส่ '+pendName(p)+(old?' · ชิ้นเดิมเก็บเข้ากระเป๋า':''))}
+function gSell(i){var L=gbag(),p=L[i|0];if(!p||p.lk)return;var g=pendPrice(p);s.gold+=g;L.splice(i|0,1);say('ขาย '+pendName(p)+' ได้ '+g+' ทอง')}
+function gSalvage(i){var L=gbag(),p=L[i|0];if(!p||p.lk)return;var out=salvageYield(p);if(!out)return;if(Object.keys(out).some(function(k){return bagFree(k)<out[k]})){say('พื้นที่วัตถุดิบไม่พอ');return}L.splice(i|0,1);Object.keys(out).forEach(function(k){addItem(k,out[k])});say('ย่อย '+pendName(p)+' ได้ '+Object.keys(out).map(function(k){return RES[k]+' +'+out[k]}).join(', '))}
+function gLock(i){var p=gbag()[i|0];if(p)p.lk=p.lk?0:1}
+function gBulk(q){var L=gbag(),n=0,g=0;for(var j=L.length-1;j>=0;j--){var p=L[j];if(!p.lk&&!p.sp&&(p.t|0)<=(q|0)){g+=pendPrice(p);L.splice(j,1);n++}}if(n){s.gold+=g;say('ขายอุปกรณ์ '+n+' ชิ้น ได้ '+g+' ทอง (ข้ามชิ้นที่ล็อก)')}}
+function gUnseal(i){var p=gbag()[i|0];s.inv=s.inv||{};if(!p||!p.by||(s.inv.unseal|0)<1)return;s.inv.unseal--;var who=p.by;p.by='';say('🔓 ปลดผนึก '+pendName(p)+' (เดิมผูกกับ '+who+') · วางขายในตลาดได้แล้ว')}
+function unsBuy(){s.inv=s.inv||{};var d=dqDay();if(s.lvl<UNS_LV||s.unsDay===d||(s.gold|0)<UNS_GOLD||(s.inv.purple|0)<UNS_PUR)return;s.gold-=UNS_GOLD;s.inv.purple-=UNS_PUR;s.unsDay=d;addItem('unseal',1);say('ได้หินปลดผนึก 🔓 ×1 (แลกได้วันละ 1 ก้อน)')}
+function mktMin(p){return Math.max(100,pendPrice(p))}
+function mktMax(p){return Math.min(10000000,Math.max(200000,pendPrice(p)*200))}
+function mktCan(p){return p&&!p.by&&!p.sp&&s.lvl>=MKT_LV}
+function gIco(p,sz){var pi=pendIco(p),u=gearIcon(pi[0],s.cls,pi[1]);return u?'<img alt="" src="'+u+'" width="'+sz+'" height="'+sz+'" style="image-rendering:pixelated">':'⚔️'}
+function gQc(p){return p.sp?'#ff9a3c':QCOL[p.t|0]}
+var GB_F=[['all','ทั้งหมด'],['w','อาวุธ'],['helm','หมวก'],['armor','เกราะ'],['gloves','ถุงมือ'],['boots','รองเท้า'],['brooch','เข็มขัด'],['neck','สร้อย'],['ring','แหวน']];
+function gbagHtml(){
+ var L=gbag(),tabs='<div class="gb-tabs"><button class="btn'+(GB.tab==='bag'?' primary':'')+'" data-a="gbtab" data-p="bag">🎒 อุปกรณ์ '+L.length+'/'+GBAG_MAX+'</button><button class="btn'+(GB.tab==='mkt'?' primary':'')+'" data-a="gbtab" data-p="mkt">🏪 ตลาดผู้เล่น</button></div>';
+ if(GB.tab==='mkt')return '<section class="card gb">'+tabs+mktHtml()+'</section>';
+ var f=GB.f,chips='<div class="gb-f">'+GB_F.map(function(x){return '<button class="chip" data-a="gbf" data-p="'+x[0]+'" aria-pressed="'+(f===x[0])+'">'+x[1]+'</button>'}).join('')+'</div>';
+ var grid='<div class="gb-grid">'+L.map(function(p,i){if(f!=='all'&&gSlot(p)!==f&&!(f==='armor'&&gSlot(p)==='armor0'))return '';return '<button class="gb-c'+(GB.sel===i?' on':'')+'" style="--qc:'+gQc(p)+'" data-a="gbsel" data-p="'+i+'">'+gIco(p,34)+(p.lk?'<i class="lk">🔒</i>':'')+(p.sp?'<i class="sp">✦</i>':'')+(p.by?'<i class="by">⛓</i>':'')+'</button>'}).join('')+(L.length<GBAG_MAX?Array(Math.min(8,GBAG_MAX-L.length)+1).join('<span class="gb-c empty"></span>'):'')+'</div>';
+ var p=L[GB.sel],det='';
+ if(p){var i=GB.sel,cf=GB.cf;det='<div class="gb-det" style="--qc:'+gQc(p)+'"><div class="gb-dh">'+gIco(p,48)+'<div><b style="color:'+gQc(p)+'">'+esc(pendName(p))+'</b><br>'+qBadge(p.t|0)+(p.sp?sp100B():'')+' <small>'+gSlotName(gSlot(p))+'</small></div></div><div class="st">'+pendDesc(p)+'</div>'+gopHtml(p)+pendCompareHtml(p)+
+  '<div class="gb-act"><button class="btn primary" data-a="gbeq" data-p="'+i+'"'+(s.battle?' disabled':'')+'>สวมใส่</button><button class="btn" data-a="gblock" data-p="'+i+'">'+(p.lk?'🔓 ปลดล็อก':'🔒 ล็อก')+'</button>'+
+  (p.lk?'':'<button class="btn" data-a="'+(cf==='s'+i||(p.t|0)<3?'gbsell':'gbcf')+'" data-p="'+(cf==='s'+i||(p.t|0)<3?i:'s'+i)+'">'+(cf==='s'+i?'ยืนยันขาย':'ขาย')+' '+pendPrice(p)+' ทอง</button><button class="btn" data-a="gbsalv" data-p="'+i+'">ย่อย</button>')+'</div>'+
+  (p.by?'<p class="hint">⛓ ผูกกับผู้คราฟ '+esc(p.by)+' · ใช้หินปลดผนึกเพื่อขายในตลาด</p><button class="btn" data-a="gbuns" data-p="'+i+'"'+((s.inv.unseal|0)<1?' disabled':'')+'>🔓 ใช้หินปลดผนึก (มี '+(s.inv.unseal|0)+')</button>':'')+
+  (CL&&!p.lk?(mktCan(p)?'<div class="gb-sell"><b>🏪 วางขายในตลาด</b><div class="row2"><input id="gbprice" type="number" inputmode="numeric" min="'+mktMin(p)+'" max="'+mktMax(p)+'" value="'+mktMin(p)*3+'"><button class="btn primary" data-a="mktlist" data-p="'+i+'"'+(GB.busy?' disabled':'')+'>วางขาย</button></div><small class="hint">ราคา '+mktMin(p).toLocaleString('th-TH')+' – '+mktMax(p).toLocaleString('th-TH')+' ทอง · ภาษี 10% · ขายได้ 48 ชม. ขายไม่ออกคืนทางจดหมาย</small></div>':
+   '<p class="hint">วางตลาดไม่ได้: '+(s.lvl<MKT_LV?'ต้อง Lv'+MKT_LV+' ขึ้นไป':p.sp?'ของจากแพ็กผู้สนับสนุน':'ต้องปลดผนึกผู้คราฟก่อน')+'</p>'):'')+'</div>'}
+ var d=dqDay(),uns='<div class="gb-uns"><b>🔓 หินปลดผนึก ×'+(s.inv.unseal|0)+'</b><small class="hint">ลบชื่อผู้คราฟเพื่อขายในตลาด · แลกได้วันละ 1 (Lv'+UNS_LV+'+) · บอสสนามดรอป 5% สัปดาห์ละ 1</small><button class="btn sm" data-a="unsbuy"'+(s.lvl<UNS_LV||s.unsDay===d||(s.gold|0)<UNS_GOLD||(s.inv.purple|0)<UNS_PUR?' disabled':'')+'>'+(s.unsDay===d?'วันนี้แลกแล้ว':'แลก · '+UNS_GOLD.toLocaleString('th-TH')+' ทอง + แร่ม่วง ×'+UNS_PUR)+'</button></div>';
+ var bulk=L.length?'<div class="gb-bulk"><button class="btn sm" data-a="'+(GB.cf==='b1'?'gbbulk':'gbcf')+'" data-p="'+(GB.cf==='b1'?'1':'b1')+'">'+(GB.cf==='b1'?'ยืนยัน':'ขาย')+'สีขาว+เขียวทั้งหมด</button><button class="btn sm" data-a="'+(GB.cf==='b2'?'gbbulk':'gbcf')+'" data-p="'+(GB.cf==='b2'?'2':'b2')+'">'+(GB.cf==='b2'?'ยืนยัน':'ขาย')+'ถึงสีฟ้าทั้งหมด</button></div>':'';
+ return '<section class="card gb">'+tabs+(L.length?chips+grid:'<p class="hint">ยังไม่มีอุปกรณ์ในกระเป๋า · ได้ของใหม่แล้วกด "🎒 เก็บเข้ากระเป๋า"</p>'+grid)+det+bulk+uns+'</section>'}
+function mktLoad(force){if(SV||!CL||GB.busy||(!force&&GB.mkt&&Date.now()-GB.at<15000))return;GB.busy=true;apiCall('GET','/api/mkt',null,15000).then(function(j){GB.mkt=j;GB.at=Date.now()}).catch(function(e){GB.msg='⚠ '+(e.message||'โหลดตลาดไม่สำเร็จ')}).then(function(){GB.busy=false;render()})}
+function mktOp(body){if(GB.busy)return;GB.busy=true;GB.msg='⏳ กำลังดำเนินการ…';render();apiCall('POST','/api/mkt',body,20000).then(function(j){GB.msg=j.msg||'✅ สำเร็จ';if(j.list){GB.mkt=j;GB.at=Date.now()}if(body.op==='list')GB.sel=-1;if(typeof netResume68==='function')netResume68()}).catch(function(e){GB.msg='⚠ '+(e.message||'ผิดพลาด')}).then(function(){GB.busy=false;render()})}
+function mktLeft(ms){ms=Math.max(0,ms);var h=Math.floor(ms/36e5);return h>=1?h+' ชม.':Math.max(1,Math.floor(ms/6e4))+' นาที'}
+function mktHtml(){if(!CL)return '<p class="hint">ตลาดผู้เล่นใช้ได้เฉพาะตอนเล่นออนไลน์ (ล็อกอิน)</p>';var M=GB.mkt;if(!M){mktLoad();return '<p class="hint">⏳ กำลังโหลดตลาด…</p>'}
+ var f=GB.mf,rows=(M.list||[]).filter(function(x){var sl=gSlot(x.it);return f==='all'||(f==='mine'?x.mine:sl===f||(f==='armor'&&sl==='armor0'))});
+ var chips='<div class="gb-f"><button class="chip" data-a="mktf" data-p="mine" aria-pressed="'+(f==='mine')+'">ของฉัน '+(M.mine|0)+'/'+MKT_MAXN+'</button>'+GB_F.map(function(x){return '<button class="chip" data-a="mktf" data-p="'+x[0]+'" aria-pressed="'+(f===x[0])+'">'+x[1]+'</button>'}).join('')+'</div>';
+ var now=Date.now();
+ return '<div class="mk-top"><small class="hint">ซื้อด้วยทอง · ของส่งเข้า 📬 จดหมาย · ผู้ขายได้เงิน 90% (ภาษี 10%) · มีทอง '+(s.gold|0).toLocaleString('th-TH')+'</small><button class="btn sm" data-a="mktref"'+(GB.busy?' disabled':'')+'>🔄</button></div>'+(GB.msg?'<p class="mk-msg">'+esc(GB.msg)+'</p>':'')+chips+
+  (rows.length?rows.map(function(x){var p=x.it;return '<div class="mk-r" style="--qc:'+gQc(p)+'">'+gIco(p,36)+'<div class="mk-i"><b style="color:'+gQc(p)+'">'+esc(pendName(p))+'</b><small>'+QT[p.t|0].th+' · '+gSlotName(gSlot(p))+(gopText(p.op).length?' · '+gopText(p.op).length+' ออปชัน':'')+'</small><small>ผู้ขาย '+esc(x.sn)+' · เหลือ '+mktLeft(x.exp-now)+'</small></div><div class="mk-p"><b>💰 '+(x.price|0).toLocaleString('th-TH')+'</b>'+
+   (x.mine?'<button class="btn sm" data-a="mktcancel" data-p="'+esc(x.id)+'"'+(GB.busy?' disabled':'')+'>ยกเลิก</button>':'<button class="btn sm primary" data-a="mktbuy" data-p="'+esc(x.id)+'"'+(GB.busy||(s.gold|0)<x.price?' disabled':'')+'>ซื้อ</button>')+'</div>'+
+   '<details class="mk-d"><summary>ดูค่า</summary><div class="st">'+pendDesc(p)+'</div>'+gopHtml(p)+pendCompareHtml(p)+'</details></div>'}).join(''):'<p class="hint">ยังไม่มีของในหมวดนี้</p>')}
 
 // ===== B101 กล่องจดหมาย (ของจากการเติมเงิน · ของชดเชยจากแอดมิน) =====
 var MAIL_MAX101=30,MAIL101={open:false};
@@ -2863,6 +2917,7 @@ function win(){
  var xp=Math.round(fieldRewardXp(e,s)*happyMul()*(b.tower?1:ptBonus()*cityMul())*(b.joint?0.5:1)*ttlXp());p.push('XP +'+xp+(b.joint?' (สู้ด้วยกัน ÷2)':''));s.kills++;if(!b.tower&&b.kind==='monster'){if(!b.joint)ptShare(xp,g);var md=matDrop(e);if(md)p.push(md)}
  if(!b.tower&&s.hp<s.maxhp){p.push('เลือดฟื้นเต็ม');s.hp=s.maxhp} // ล่าชนะ = เติมเลือดเต็ม (หอคอยไม่เติม)
  if(!b.tower&&!e.cls&&Math.random()<CARD_P){var cd0=rollCard(e.n);p.push('ได้การ์ด '+cardName(cd0)+' ('+CARDC[cd0.c].n+')')}
+ if(e.boss&&!b.tower&&!b.wb&&s.lvl>=UNS_LV&&s.unsWk!==pvpWk90()&&Math.random()<0.05){s.unsWk=pvpWk90();addItem('unseal',1);p.push('🔓 ได้หินปลดผนึก (สัปดาห์ละไม่เกิน 1)')}
  if(e.boss&&Math.random()<BOSS_DROP){
   var slotsB=['w','helm','armor','gloves','boots','ring','neck','brooch'],sb=pick(slotsB),zi=Math.max(0,Math.min(5,e.zi!==undefined?e.zi:s.zone));
   var drop=sb==='w'?{k:'w',i:zi+1,g:0,t:3,boss:true}:gopRoll({k:'x',i:sb,g:zi,t:3,boss:true});
@@ -3121,7 +3176,7 @@ function pendHtml(){if(!s.pend)return '';var p=s.pend,pi=pendIco(p),u=gearIcon(p
   '<h3 class="cpt">'+(p.sp?'🎁 ของจากแพ็กผู้สนับสนุน':p.boss?'👑 ดรอปจากบอส!':'✨ คราฟสำเร็จ!')+'</h3><div class="nm cpn">'+pendName(p)+'</div><div style="text-align:center;margin:4px 0 6px">'+qBadge(p.t)+(p.sp?sp100B():'')+'</div><div class="st">'+pendDesc(p)+'</div>'+gopHtml(p)+
   (p.k!=='a'&&cardLost(p)?'<div class="st" style="color:#ff7a7a">⚠ ถ้าสวมชิ้นนี้ การ์ดที่ใส่อยู่จะหายไป '+cardLost(p)+' ใบ (รูไม่พอ)</div>':'')+
   pendCompareHtml(p)+
-  '<div class="salvage-hint">ย่อยได้รับ: '+salvageText(p)+'<br><button class="btn" data-a="salvage">ย่อยเป็นวัตถุดิบ</button></div><div class="row2"><button class="btn primary" data-a="pe" style="flex:1">สวมใส่</button><button class="btn" data-a="ps" style="flex:1">ขาย '+pendPrice(p)+' ทอง</button></div></section></div>'}
+  '<div class="salvage-hint">ย่อยได้รับ: '+salvageText(p)+'<br><button class="btn" data-a="salvage">ย่อยเป็นวัตถุดิบ</button></div><div class="row2"><button class="btn primary" data-a="pe" style="flex:1">สวมใส่</button><button class="btn" data-a="gstore" style="flex:1"'+(gbag().length>=GBAG_MAX?' disabled':'')+'>🎒 เก็บ ('+gbag().length+'/'+GBAG_MAX+')</button><button class="btn" data-a="ps" style="flex:1">ขาย '+pendPrice(p)+' ทอง</button></div></section></div>'}
 function isDup(d){
  if(d.k==='w')return s.weapon===d.i&&(s.wq|0)>=d.t;
  var c=s.acc[d.i];return !!c&&(c.g|0)===(d.g|0)&&(c.t|0)>=d.t}
@@ -3206,7 +3261,7 @@ function pendResolve(eq){
  var p=s.pend;if(!p)return;
  if(p.fail){s.pend=null;return}
  if(eq){
-  var cn=p.k==='a'?[]:cardNew(p);if(p.k==='w'){s.weapon=p.i;s.wq=p.t;s.wSk=p.sk|0;s.wSp100=p.sp?1:0;s.wCards=cn;s.wBy=p.by||''}else if(p.k==='a'){s.armor=p.i;s.aq=p.t}else s.acc[p.i]={t:p.t,g:p.g|0,e:(s.acc[p.i]&&s.acc[p.i].e)|0,sk:p.sk|0,cd:cn,by:p.by||'',op:p.op||null,st:p.st||null,sp:p.sp?1:0}; // เปลี่ยนชิ้นใหม่ แต้มตีบวกไม่หาย
+  equipObj102(p); // เปลี่ยนชิ้นใหม่ แต้มตีบวกไม่หาย
   recalc();say('สวมใส่ '+pendName(p)+' ('+QT[p.t].en+') แล้ว');
  }else{var g=pendPrice(p);s.gold+=g;say('ขาย '+pendName(p)+' ได้ '+g+' ทอง')}
  s.pend=null;gqPump()}
@@ -3229,6 +3284,16 @@ var CL_LOCAL={setsprites:1,refshare:1,refcopy:1,seteco:1,rktog:1,rktab:1,ptfollo
 function act(a,p){
  if(!SV&&a==='newsopen75'){newsOpen75();return}
  if(!SV&&a==='sup100'){sup100Open();return}
+ if(!SV&&a==='gbtab'){GB.tab=p;GB.msg='';if(p==='mkt')mktLoad(true);render();return}
+ if(!SV&&a==='gbf'){GB.f=p;GB.sel=-1;render();return}
+ if(!SV&&a==='gbsel'){GB.sel=GB.sel===(p|0)?-1:(p|0);GB.cf='';render();return}
+ if(!SV&&a==='gbcf'){GB.cf=p;render();return}
+ if(!SV&&a==='mktf'){GB.mf=p;render();return}
+ if(!SV&&a==='mktref'){mktLoad(true);return}
+ if(!SV&&a==='mktbuy'){mktOp({op:'buy',id:p});return}
+ if(!SV&&a==='mktcancel'){mktOp({op:'cancel',id:p});return}
+ if(!SV&&a==='mktlist'){var pe=document.getElementById('gbprice');mktOp({op:'list',idx:p|0,price:Math.floor(+(pe&&pe.value)||0)});return}
+ if(!SV&&(a==='gbsell'||a==='gbsalv'||a==='gbbulk'||a==='gbeq')){GB.cf='';if(a!=='gbeq')GB.sel=-1}
  if(!SV&&(a==='mailget101'||a==='mailall101'))MAIL101.open=false;
  if(!SV&&a==='mail101'){MAIL101.open=!MAIL101.open;if(MAIL101.open&&s&&Array.isArray(s.mail)&&s.mail.some(function(m){return !m.rd&&!mailHasIt101(m)}))act('mailrd101');render();return}
  if(!SV&&a==='newsuser75'){newsUser75(p);return}
@@ -3409,6 +3474,15 @@ function act(a,p){
  else if(a==='chtabset'){if(['stat','pow','skill','job2','mastery'].indexOf(p)>=0)s.chtab=p}
  else if(a==='chtab'){s.chtab=(s.chtab===p)?'':p}
  else if(a==='clsch96'){clsChange96(p)}
+ else if(a==='gstore'){gStore()}
+ else if(a==='gbeq'){gEquip(p)}
+ else if(a==='gbsell'){gSell(p);GBsel102()}
+ else if(a==='gbsalv'){gSalvage(p);GBsel102()}
+ else if(a==='gblock'){gLock(p)}
+ else if(a==='gbbulk'){gBulk(p);GBsel102()}
+ else if(a==='gbuns'){gUnseal(p)}
+ else if(a==='unsbuy'){unsBuy()}
+ else if(a==='gbagopen'){s.tab='me';s.dtab='bag'}
  else if(a==='mailget101'){mailGet101(p)}
  else if(a==='mailall101'){mailGetAll101()}
  else if(a==='mailrd101'){mailList101().forEach(function(m){if(!mailHasIt101(m))m.rd=1})}
@@ -4933,7 +5007,7 @@ function viewDress(){if(s.dtab==='bestiary')return bookHtml70();if(s.dtab==='pet
   '<div class="grid2"><button class="btn primary" data-a="box"'+(s.boxes<1?' disabled':'')+'>เปิดกล่อง</button>'+
   '<button class="btn" data-a="buybox"'+(s.gold<BOX_PRICE?' disabled':'')+'>ซื้อ '+BOX_PRICE.toLocaleString()+' ทอง</button></div>'+boxCollection44()+'</section>';
  else if(od==='set')body=settingsHtml();
- else if(od==='bag')body=cloudCard()+'<section class="card"><h3>กระเป๋า</h3>'+bagHtml()+'</section>'+
+ else if(od==='bag')body=gbagHtml()+cloudCard()+'<section class="card"><h3>กระเป๋าวัตถุดิบและของใช้</h3>'+bagHtml()+'</section>'+
   guestCard()+'<section class="card"><div class="row"><span>ไอดี <b>'+esc(curUser||'')+'</b></span><button class="btn" data-a="logout">ออกจากระบบ</button></div></section>';
  return head+(s.boxMsg&&od!=='box'?'<section class="card">'+reveal+'</section>':'')+body;
 }
@@ -6685,7 +6759,7 @@ function menuPaint55(tn){
 function autoRunning(){var b=s&&s.battle;return !!(b&&noFlee(b)?b.auto:b&&b.tower?s.autoTower:s&&(s.autoHunt||s.autoTower||b&&jwOn(b)))}
 function autoChoice(key,on,label){return '<div class="auto-option"><b>'+label+'</b><div class="auto-choice">'+[1,0].map(function(v){return '<button class="btn" data-a="autoset" data-p="'+key+':'+v+'" aria-pressed="'+(!!on===!!v)+'">'+(v?'เปิด':'ปิด')+'</button>'}).join('')+'</div></div>'}
 function netOnline98(){sup100Ret();if(!CL||!NET.token||NET.onBusy98||Date.now()-(NET.onAt98||0)<60000)return;NET.onBusy98=true;NET.onAt98=Date.now();apiCall('GET','/api/online').then(function(j){if(j&&typeof j.n==='number'){NET.online98=j.n;document.querySelectorAll('.online98 b').forEach(function(e){e.textContent=j.n})}}).catch(function(){}).then(function(){NET.onBusy98=false})}
-function autoHud(){var duel=s.battle&&isDuel(s.battle),mul=duel?DUEL_HP:1;return '<div class="town-player auto-hud hud-compact"><b>'+esc(nick())+' <span>Lv '+s.lvl+'</span></b>'+(CL?'<div class="online98"><i></i>ออนไลน์ <b>'+(NET.online98==null?'…':NET.online98)+'</b> คน</div>':'')+(!s.battle?'<div class="hud101">'+mailBtn101()+(CL&&s.created&&!s.sup100?'<button class="sup100btn" data-a="sup100">🎁 ผู้สนับสนุน 35฿</button>':'')+'</div>':'')+'<div class="hud-resource"><small>HP</small><strong>'+Math.max(0,s.hp*mul)+' / '+s.maxhp*mul+'</strong></div><div class="town-meter"><i style="width:'+pct(s.hp,s.maxhp)+'%"></i></div><div class="hud-resource"><small>MP</small><strong>'+s.mp+' / '+s.maxmp+'</strong></div><div class="town-meter mp-meter"><i style="width:'+pct(s.mp,s.maxmp)+'%"></i></div><div class="hud-resource hud-energy"><small>⚡ พลัง</small><strong>'+Math.floor(s.energy)+' / '+Math.floor(s.maxEnergy)+'</strong></div><div class="town-meter energy-meter55"><i style="width:'+pct(s.energy,s.maxEnergy)+'%"></i></div><div class="hud-resource xp-line"><small>XP</small><strong>'+Math.floor(s.xp)+' / '+Math.floor(xpNeed(s.lvl))+'</strong></div><div class="town-meter xp-meter"><i style="width:'+pct(s.xp,xpNeed(s.lvl))+'%"></i></div>'+bonusHud55()+'</div>'}
+function autoHud(){var duel=s.battle&&isDuel(s.battle),mul=duel?DUEL_HP:1;return '<div class="town-player auto-hud hud-compact"><b>'+esc(nick())+' <span>Lv '+s.lvl+'</span></b>'+(CL?'<div class="online98"><i></i>ออนไลน์ <b>'+(NET.online98==null?'…':NET.online98)+'</b> คน</div>':'')+(!s.battle?'<div class="hud101">'+mailBtn101()+'<button class="mail101btn" data-a="gbagopen" aria-label="กระเป๋า">🎒</button>'+(CL&&s.created&&!s.sup100?'<button class="sup100btn" data-a="sup100">🎁 ผู้สนับสนุน 35฿</button>':'')+'</div>':'')+'<div class="hud-resource"><small>HP</small><strong>'+Math.max(0,s.hp*mul)+' / '+s.maxhp*mul+'</strong></div><div class="town-meter"><i style="width:'+pct(s.hp,s.maxhp)+'%"></i></div><div class="hud-resource"><small>MP</small><strong>'+s.mp+' / '+s.maxmp+'</strong></div><div class="town-meter mp-meter"><i style="width:'+pct(s.mp,s.maxmp)+'%"></i></div><div class="hud-resource hud-energy"><small>⚡ พลัง</small><strong>'+Math.floor(s.energy)+' / '+Math.floor(s.maxEnergy)+'</strong></div><div class="town-meter energy-meter55"><i style="width:'+pct(s.energy,s.maxEnergy)+'%"></i></div><div class="hud-resource xp-line"><small>XP</small><strong>'+Math.floor(s.xp)+' / '+Math.floor(xpNeed(s.lvl))+'</strong></div><div class="town-meter xp-meter"><i style="width:'+pct(s.xp,xpNeed(s.lvl))+'%"></i></div>'+bonusHud55()+'</div>'}
 
 function autoPopup(){
  if(!AUTO_UI.open||!s||!s.created)return '';
@@ -7409,6 +7483,7 @@ if(SV){
  fxScene=wrapFx('fxScene',fxScene);fxUlt131=wrapFx('fxUlt131',fxUlt131);fxApproach=wrapFx('fxApproach',fxApproach);fl=wrapFx('fl',fl);fxPlayerHit=wrapFx('fxPlayerHit',fxPlayerHit);fxSkill=wrapFx('fxSkill',fxSkill);fxBuff=wrapFx('fxBuff',fxBuff);fxEnemyHit=wrapFx('fxEnemyHit',fxEnemyHit);
  window.ENGINE={refGrant:function(role,nm){if(!s)return;if(role==='inviter'){s.pvp.c=(s.pvp.c|0)+REF_RW.coin;addItem('pot4',REF_RW.pot);s.refOk=(s.refOk|0)+1;say('🎉 เพื่อนที่คุณชวน ('+String(nm||'').slice(0,16)+') ถึง Lv'+REF_LV+' แล้ว! ได้เหรียญ PvP +'+REF_RW.coin+' · ยาฟื้นฟู 300 ×'+REF_RW.pot)}else{s.gold+=REF_RW.gold;addItem('pot4',REF_RW.pot);say('🎉 ถึง Lv'+REF_LV+' แล้ว! รางวัลเพื่อนชวนมา: ทอง +'+REF_RW.gold.toLocaleString()+' · ยาฟื้นฟู 300 ×'+REF_RW.pot)}save()},
  supGrant100:function(sid){if(!s)return;var first=!s.sup100;s.pay100=(Array.isArray(s.pay100)?s.pay100:[]).concat([String(sid||'').slice(0,80)]).slice(-10);if(!first){mailAdd101({id:'pay'+String(sid||'').slice(-24),t:'ได้รับการชำระเงินซ้ำ',from:'TheWarWhat',b:'บัญชีนี้เป็นผู้สนับสนุนอยู่แล้ว จึงมอบทองแทน\nถ้าต้องการขอคืนเงิน แจ้งผู้ดูแลพร้อมเลขอ้างอิงในใบเสร็จนี้',pay:{amt:35,how:'Stripe',ref:String(sid||'')},it:[{k:'gold',n:50000}]});return}s.sup100={at:Date.now()};s.title='t20';mailAdd101({id:'pay'+String(sid||'').slice(-24),t:'🎁 ขอบคุณที่สนับสนุน!',from:'TheWarWhat',b:'ได้รับการชำระเงินแพ็กผู้สนับสนุนแล้ว\nฉายา ✦ ผู้สนับสนุน ถูกสวมให้แล้ว (เปลี่ยนได้ที่หมวดฉายา)\nกดรับอุปกรณ์ด้านล่างได้เลย',pay:{amt:35,how:'Stripe',ref:String(sid||'')},it:[{k:'gear',v:{k:'w',i:2,g:0,t:1,sp:1}},{k:'gear',v:gopRoll({k:'x',i:'armor',g:1,t:1,sp:1})}]});recalc();say('🎁 ขอบคุณที่สนับสนุน! ของอยู่ในกล่องจดหมาย 📬')},
+ mktInfo103:function(it){return {min:mktMin(it),max:mktMax(it),name:pendName(it),ok:!it.by&&!it.sp}},
  mailAdd101:function(m){if(!s||!m)return;mailAdd101(m);if(m.bc)s.mailAll=Math.max(s.mailAll|0,m.bc|0)},
  pionGrant:function(rank){if(!s)return;s.pion=rank|0;addItem('potF',3);s.title='t12';recalc();say('🏆 ยินดีด้วย! คุณเป็นผู้บุกเบิกคนที่ '+rank+'/100 · ได้ฉายา "ผู้บุกเบิก" (XP +3%) และยาฟื้นเลือดเต็ม ×3');save()},ptJoin:function(J){if(!s||!s.created||s.battle||s.dup||s.res||s.energy<2||!J||!J.e)return false;if(!targetJoint49(J))return false;var cl=function(o){return JSON.parse(JSON.stringify(o))};s.energy-=2;
  startBattle(cl(J.e),'monster');var b=s.battle;if(J.grp&&J.grp.length){b.grp=cl(J.grp).map(function(g){g.ehp=g.e.hp;return g});b.gi=0;b.e=b.grp[0].e;b.ehp=b.grp[0].ehp}
