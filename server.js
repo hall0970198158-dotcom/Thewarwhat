@@ -1103,7 +1103,7 @@ const routes = {
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
     const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
-    send(res, 200, { server: 'B101.1', pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    send(res, 200, { server: 'B101.2', pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -1202,7 +1202,7 @@ const server = http.createServer(async (req, res) => {
     if(req.method==='GET'&&url.pathname==='/admin'){res.writeHead(200,Object.assign({'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'},SEC_HEADERS));return res.end(ADMIN_PAGE101)}
     if(req.method==='GET'&&url.pathname==='/terms'){res.writeHead(200,Object.assign({'Content-Type':'text/html; charset=utf-8','Cache-Control':'public, max-age=3600'},SEC_HEADERS));return res.end(TERMS100)}
     // เปิดลิงก์ /api/... หรือหน้าที่ไม่มีอยู่ตรงๆ ในเบราว์เซอร์ → พากลับหน้าเกม แทนการโชว์ข้อความ JSON
-    if (req.method === 'GET' && url.pathname !== '/' && /text\/html/.test(req.headers.accept || '') && url.pathname !== '/index.html') {
+    if (req.method === 'GET' && url.pathname !== '/' && url.pathname !== '/api/pop' && url.pathname !== '/api/health' && /text\/html/.test(req.headers.accept || '') && url.pathname !== '/index.html') {
       res.writeHead(302, { Location: '/' });
       return res.end();
     }
