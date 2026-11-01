@@ -665,8 +665,8 @@ function takeToken(p) { // ผู้เล่นส่งคำสั่งไ�
 // ใส่คีย์ใน Render → Environment เท่านั้น: STRIPE_SECRET_KEY (sk_...) และ STRIPE_WEBHOOK_SECRET (whsec_...)
 const PAY_SKU = { sup35: { amt: 3500, name: 'แพ็กผู้สนับสนุน · TheWarWhat', desc: 'อุปกรณ์ Lv20 สีส้ม + ป้าย ✦ ผู้สนับสนุน (ซื้อได้ครั้งเดียว)' } };
 const PAY_BUSY = new Set();
-const envKey = n => String(process.env[n] || '').trim();
-function payStatus101() { const k = envKey('STRIPE_SECRET_KEY'), raw = process.env.STRIPE_SECRET_KEY; return { key: !k ? 'missing' : /^sk_live_/.test(k) ? 'live' : /^sk_test_/.test(k) ? 'test' : /^pk_/.test(k) ? 'wrong:publishable-key' : /^rk_/.test(k) ? 'restricted-key' : 'wrong-format', space: !!raw && raw !== raw.trim(), webhook: /^whsec_/.test(envKey('STRIPE_WEBHOOK_SECRET')) ? 'ok' : envKey('STRIPE_WEBHOOK_SECRET') ? 'wrong-format' : 'missing', admin: envKey('ADMIN_KEY').length >= 16 ? 'ok' : 'missing' }; }
+const envKey = n => { let v = process.env[n]; if (v == null) { const k = Object.keys(process.env).find(x => x.trim().toUpperCase() === n); if (k) v = process.env[k]; } return String(v || '').trim(); }; // ชื่อมีช่องว่าง/ตัวพิมพ์เล็กก็ยังหาเจอ
+function payStatus101() { const k = envKey('STRIPE_SECRET_KEY'), raw = process.env.STRIPE_SECRET_KEY, odd = Object.keys(process.env).some(x => x !== x.trim().toUpperCase() && /^STRIPE_|^ADMIN_KEY$/.test(x.trim().toUpperCase())); return { nameFixed: odd, key: !k ? 'missing' : /^sk_live_/.test(k) ? 'live' : /^sk_test_/.test(k) ? 'test' : /^pk_/.test(k) ? 'wrong:publishable-key' : /^rk_/.test(k) ? 'restricted-key' : 'wrong-format', space: !!raw && raw !== raw.trim(), webhook: /^whsec_/.test(envKey('STRIPE_WEBHOOK_SECRET')) ? 'ok' : envKey('STRIPE_WEBHOOK_SECRET') ? 'wrong-format' : 'missing', admin: envKey('ADMIN_KEY').length >= 16 ? 'ok' : 'missing', names: Object.keys(process.env).filter(k => /stri|ipe|admin/i.test(k) && !/^(sk|pk|rk)_|^whsec_/i.test(k)).map(k => '[' + k + ']').slice(0, 10), swapped: Object.keys(process.env).some(k => /^(sk|pk|rk)_|^whsec_/i.test(k.trim())) }; }
 const STRIPE_BASE = process.env.STRIPE_API_BASE || 'https://api.stripe.com';
 function stripeForm(o, pre, out) { out = out || []; for (const k in o) { const v = o[k], key = pre ? pre + '[' + k + ']' : k; if (v && typeof v === 'object') stripeForm(v, key, out); else if (v != null) out.push(encodeURIComponent(key) + '=' + encodeURIComponent(String(v))); } return out.join('&'); }
 async function stripeApi(method, pathq, body) {
@@ -1103,7 +1103,7 @@ const routes = {
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
     const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
-    send(res, 200, { server: 'B101.2', pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    send(res, 200, { server: 'B101.3', pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
