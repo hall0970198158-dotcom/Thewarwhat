@@ -664,7 +664,11 @@ function takeToken(p) { // ผู้เล่นส่งคำสั่งไ�
 
 // ---------- B100 ระบบเติมเงิน Stripe (แพ็กผู้สนับสนุน 35 บาท) ----------
 // ใส่คีย์ใน Render → Environment เท่านั้น: STRIPE_SECRET_KEY (sk_...) และ STRIPE_WEBHOOK_SECRET (whsec_...)
-const PAY_SKU = { sup35: { amt: 3500, name: 'แพ็กผู้สนับสนุน · TheWarWhat', desc: 'อุปกรณ์ Lv20 สีส้ม + ป้าย ✦ ผู้สนับสนุน (ซื้อได้ครั้งเดียว)' } };
+const PAY_SKU = { sup35: { amt: 3500, name: 'แพ็กผู้สนับสนุน · TheWarWhat', desc: 'อุปกรณ์ Lv20 สีส้ม + ป้าย ✦ ผู้สนับสนุน (ซื้อได้ครั้งเดียว)' },
+  m99: { amt: 9900, name: 'บัตรรายเดือน 30 วัน · TheWarWhat', desc: 'ของรายวัน 30 วัน + ทอง/XP จากการล่า +10%' },
+  p299: { amt: 29900, name: 'บัตรถาวร · TheWarWhat', desc: 'กระเป๋า +20 ช่อง · ทองรายวัน · ฉายาผู้อุปถัมภ์ (ใช้ตลอดไป)' },
+  s149: { amt: 14900, name: 'พาสซีซั่น 1 · TheWarWhat', desc: 'ปลดรางวัลพรีเมียมซีซั่น 1 (ถึง 31 ธ.ค.)' } };
+const S105_END = Date.UTC(2026, 11, 31, 16, 59, 59);
 const PAY_BUSY = new Set();
 const envKey = n => { let v = process.env[n]; if (v == null) { const k = Object.keys(process.env).find(x => x.trim().toUpperCase() === n); if (k) v = process.env[k]; } return String(v || '').trim(); }; // ชื่อมีช่องว่าง/ตัวพิมพ์เล็กก็ยังหาเจอ
 function payStatus101() { const k = envKey('STRIPE_SECRET_KEY'), raw = process.env.STRIPE_SECRET_KEY, odd = Object.keys(process.env).some(x => x !== x.trim().toUpperCase() && /^STRIPE_|^ADMIN_KEY$/.test(x.trim().toUpperCase())); return { nameFixed: odd, key: !k ? 'missing' : /^sk_live_/.test(k) ? 'live' : /^sk_test_/.test(k) ? 'test' : /^pk_/.test(k) ? 'wrong:publishable-key' : /^rk_/.test(k) ? 'restricted-key' : 'wrong-format', space: !!raw && raw !== raw.trim(), webhook: /^whsec_/.test(envKey('STRIPE_WEBHOOK_SECRET')) ? 'ok' : envKey('STRIPE_WEBHOOK_SECRET') ? 'wrong-format' : 'missing', admin: envKey('ADMIN_KEY').length >= 16 ? 'ok' : 'missing', names: Object.keys(process.env).filter(k => /stri|ipe|admin/i.test(k) && !/^(sk|pk|rk)_|^whsec_/i.test(k)).map(k => '[' + k + ']').slice(0, 10), swapped: Object.keys(process.env).some(k => /^(sk|pk|rk)_|^whsec_/i.test(k.trim())) }; }
@@ -693,7 +697,7 @@ async function payGrant(sid, needUid) {
     if ((cs.amount_total | 0) !== it.amt || String(cs.currency).toLowerCase() !== 'thb') { console.error('pay amount mismatch', sid, cs.amount_total, cs.currency); return { error: 'ยอดเงินไม่ตรง', code: 400 }; }
     await (db.putMeta || db.setMeta).call(db, 'pay:' + sid, JSON.stringify({ uid, sku, amt: cs.amount_total, at: Date.now() }));
     const p = await session(uid);
-    const out = engine.run(p.s, p.ui, {}, E => { if (E.supGrant100) E.supGrant100(sid); });
+    const out = engine.run(p.s, p.ui, {}, E => { if (sku === 'sup35') { if (E.supGrant100) E.supGrant100(sid); } else if (E.payGrant105) E.payGrant105(sku, sid); });
     p.s = out.s; p.ui = out.ui; p.v++; await persist(uid, p); updateSnap(uid, p);
     db.audit(uid, 'pay', sku + ' ' + sid).catch(() => {});
     payLogAdd({ sid, uid, name: String(p.s.name || ''), sku, amt: cs.amount_total | 0, at: Date.now() }).catch(e => console.error('paylog', e.message));
@@ -708,7 +712,7 @@ function stripeSigOk(raw, header, secret) {
   const want = crypto.createHmac('sha256', secret).update(t + '.' + raw.toString('utf8')).digest('hex');
   return (parts.v1 || []).some(v => v.length === want.length && crypto.timingSafeEqual(Buffer.from(v), Buffer.from(want)));
 }
-const TERMS100 = '<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>เงื่อนไขการซื้อ · TheWarWhat</title><style>body{font-family:sans-serif;background:#0e1326;color:#e8eaf2;max-width:640px;margin:0 auto;padding:20px;line-height:1.7}h1{color:#ffd23c;font-size:22px}h2{font-size:17px;color:#ffb070}a{color:#8fd8ff}</style></head><body><h1>เงื่อนไขการซื้อและการคืนเงิน</h1><p>เกม ศึกชิงเมือง · TheWarWhat (https://thewarwhat-1.onrender.com)</p><h2>สินค้า</h2><p>สินค้าเป็นไอเทมดิจิทัลในเกม ผูกกับบัญชีผู้ซื้อ ไม่สามารถแลกเปลี่ยนเป็นเงินจริงได้ แพ็กผู้สนับสนุน 35 บาท ประกอบด้วยอุปกรณ์เลเวล 20 (อาวุธ 1 ชิ้น เกราะ 1 ชิ้น) และฉายา ✦ ผู้สนับสนุน ซื้อได้ 1 ครั้งต่อบัญชี</p><h2>การชำระเงิน</h2><p>ชำระผ่าน Stripe ด้วยพร้อมเพย์หรือบัตร เราไม่เก็บข้อมูลบัตรของผู้ซื้อ ของจะเข้าเกมอัตโนมัติหลังชำระสำเร็จ หากไม่ได้รับภายใน 30 นาที โปรดติดต่อผู้ดูแลเกมผ่านแชทในเกม</p><h2>การคืนเงิน</h2><p>ไอเทมดิจิทัลที่ได้รับเข้าเกมแล้วไม่สามารถคืนเงินได้ ยกเว้นกรณีชำระเงินแล้วแต่ไม่ได้รับของ หรือถูกเรียกเก็บเงินซ้ำ เราจะคืนเงินเต็มจำนวน</p><h2>ความเป็นธรรม</h2><p>สินค้าที่ขายไม่ทำให้ได้เปรียบเหนือผู้เล่นอื่นอย่างมีนัยสำคัญ และไม่มีระบบสุ่มเสี่ยงโชคด้วยเงินจริง</p><p><a href="/">กลับเข้าเกม</a></p></body></html>';
+const TERMS100 = '<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>เงื่อนไขการซื้อ · TheWarWhat</title><style>body{font-family:sans-serif;background:#0e1326;color:#e8eaf2;max-width:640px;margin:0 auto;padding:20px;line-height:1.7}h1{color:#ffd23c;font-size:22px}h2{font-size:17px;color:#ffb070}a{color:#8fd8ff}</style></head><body><h1>เงื่อนไขการซื้อและการคืนเงิน</h1><p>เกม ศึกชิงเมือง · TheWarWhat (https://thewarwhat-1.onrender.com)</p><h2>สินค้า</h2><p>สินค้าเป็นไอเทมดิจิทัลในเกม ผูกกับบัญชีผู้ซื้อ ไม่สามารถแลกเปลี่ยนเป็นเงินจริงได้ แพ็กผู้สนับสนุน 35 บาท ประกอบด้วยอุปกรณ์เลเวล 20 (อาวุธ 1 ชิ้น เกราะ 1 ชิ้น) และฉายา ✦ ผู้สนับสนุน ซื้อได้ 1 ครั้งต่อบัญชี</p><h2>สินค้าอื่น</h2><p>บัตรรายเดือน 99 บาท (30 วัน ไม่ต่ออายุอัตโนมัติ), บัตรถาวร 299 บาท, พาสซีซั่น 1 ราคา 149 บาท (ใช้ได้ถึง 31 ธ.ค. 2569) · ทุกรายการไม่มีการจ่ายเงินเพื่อข้ามเลเวลซีซั่น</p><h2>การชำระเงิน</h2><p>ชำระผ่าน Stripe ด้วยพร้อมเพย์หรือบัตร เราไม่เก็บข้อมูลบัตรของผู้ซื้อ ของจะเข้าเกมอัตโนมัติหลังชำระสำเร็จ หากไม่ได้รับภายใน 30 นาที โปรดติดต่อผู้ดูแลเกมผ่านแชทในเกม</p><h2>การคืนเงิน</h2><p>ไอเทมดิจิทัลที่ได้รับเข้าเกมแล้วไม่สามารถคืนเงินได้ ยกเว้นกรณีชำระเงินแล้วแต่ไม่ได้รับของ หรือถูกเรียกเก็บเงินซ้ำ เราจะคืนเงินเต็มจำนวน</p><h2>ความเป็นธรรม</h2><p>สินค้าที่ขายไม่ทำให้ได้เปรียบเหนือผู้เล่นอื่นอย่างมีนัยสำคัญ และไม่มีระบบสุ่มเสี่ยงโชคด้วยเงินจริง</p><p><a href="/">กลับเข้าเกม</a></p></body></html>';
 
 // ---------- B101 จดหมายจากแอดมิน (ชดเชย/แจกของ) · ตั้ง ADMIN_KEY ใน Render (ยาว 16 ตัวขึ้นไป) ----------
 const MAILALL = { loaded: false, list: [] }, ADMFAIL = new Map();
@@ -734,7 +738,7 @@ const ADMIN_PAGE101 = `<!doctype html><html lang="th"><head><meta charset="utf-8
 <div class="tabs"><button data-t="mail" class="on">📬 จดหมาย</button><button data-t="pl">🔍 ผู้เล่น</button><button data-t="nt">📢 ประกาศ</button><button data-t="pay">💳 เติมเงิน</button><button data-t="mk">🏪 ตลาด</button></div>
 <div class="pane on" id="p-mail"><label>ส่งถึง</label><select id="mode"><option value="all">ผู้เล่นทุกคน</option><option value="one">ผู้เล่นคนเดียว (ชื่อตัวละคร)</option></select><input id="to" placeholder="ชื่อตัวละคร (ถ้าส่งคนเดียว)" style="margin-top:6px"><label>หัวข้อ</label><input id="t" maxlength="60" value="ของชดเชยจากทีมงาน"><label>ข้อความ</label><textarea id="b" maxlength="600">ขออภัยในความไม่สะดวก</textarea><div class="row"><div><label>ทอง</label><input id="gold" type="number" min="0" value="0"></div><div><label>ยาเต็ม</label><input id="potF" type="number" min="0" value="0"></div><div><label>แร่ม่วง</label><input id="purple" type="number" min="0" value="0"></div></div><label>อายุจดหมาย (วัน · ส่งทุกคน)</label><input id="days" type="number" min="1" max="30" value="7"><button class="w" id="sendmail">ส่งจดหมาย</button></div>
 <div class="pane" id="p-pl"><label>ชื่อตัวละคร หรือ ไอดีล็อกอิน</label><div class="row"><input id="pq"><button id="pfind" style="flex:0 0 90px">ค้นหา</button></div><div id="pinfo"></div></div>
-<div class="pane" id="p-nt"><label>ข้อความประกาศ (ขึ้นในแชทช่องประกาศของทุกคน)</label><textarea id="nt" maxlength="160"></textarea><button class="w" id="ntgo">ประกาศ</button></div>
+<div class="pane" id="p-nt"><h3 style="margin:8px 0">🪧 ป้ายประกาศตอนเข้าเกม</h3><small>ขึ้นเป็นหน้าต่างให้ผู้เล่นอ่านตอนเข้าเกม กดรับทราบแล้วไม่ขึ้นซ้ำจนกว่าจะตั้งป้ายใหม่ · เว้นข้อความว่างแล้วกดบันทึก = ปิดป้าย</small><label>หัวข้อ</label><input id="bdt" maxlength="60" placeholder="เช่น อัปเดตใหม่ B104"><label>ข้อความ (ขึ้นบรรทัดใหม่ได้)</label><textarea id="bdb" maxlength="1000" style="height:140px"></textarea><div class="row" style="margin-top:10px"><button id="bdgo">บันทึกป้าย</button><button class="g" id="bdload">โหลดป้ายปัจจุบัน</button></div><h3 style="margin:18px 0 8px">💬 ข้อความสั้นในแชท</h3><label>ข้อความ (ขึ้นในแชทช่องประกาศ)</label><textarea id="nt" maxlength="160"></textarea><button class="w" id="ntgo">ประกาศในแชท</button></div>
 <div class="pane" id="p-pay"><button class="w g" id="payload">โหลดรายการเติมเงิน</button><div id="paylist"></div></div>
 <div class="pane" id="p-mk"><button class="w g" id="mkload">โหลดของในตลาด</button><div id="mklist"></div></div>
 <div class="box" id="out">พร้อมใช้งาน</div>
@@ -749,6 +753,7 @@ function showPl(j){var x=j.player;if(!x){$("pinfo").innerHTML="";return}$("pinfo
  var b1=$("ban"),b2=$("unban");if(b1)b1.onclick=function(){if(confirm("แบน "+x.name+" ?"))api("/api/admin/op",{op:"ban",uid:x.uid,reason:$("rs").value}).then(function(j){if(j.player)showPl(j)})};if(b2)b2.onclick=function(){api("/api/admin/op",{op:"unban",uid:x.uid}).then(function(j){if(j.player)showPl(j)})};
  $("mailone").onclick=function(){$("mode").value="one";$("to").value=x.name;document.querySelector('.tabs button[data-t="mail"]').click()}}
 $("pfind").onclick=function(){api("/api/admin/op",{op:"player",q:$("pq").value}).then(showPl)};
+$("bdgo").onclick=function(){api("/api/admin/op",{op:"board",title:$("bdt").value,text:$("bdb").value})};$("bdload").onclick=function(){api("/api/admin/op",{op:"boardget"}).then(function(j){if(j.board){$("bdt").value=j.board.t;$("bdb").value=j.board.b}})};
 $("ntgo").onclick=function(){if($("nt").value.trim())api("/api/admin/op",{op:"notice",text:$("nt").value})};
 $("payload").onclick=function(){api("/api/admin/op",{op:"pays"}).then(function(j){var L=j.pays||[],sum=L.reduce(function(a,x){return a+(x.amt||0)},0);$("paylist").innerHTML='<div class="box">ทั้งหมด '+L.length+' รายการ · รวม '+(sum/100).toLocaleString()+' บาท'+(j.mode?' · โหมด '+esc(j.mode):'')+'</div>'+L.map(function(x){return '<div class="it"><span>'+esc(x.name)+' <small>#'+x.uid+' · '+d(x.at)+'</small><br><small>'+esc(x.sid)+'</small></span><b>'+(x.amt/100)+' ฿</b></div>'}).join("")})};
 function mk(){api("/api/admin/op",{op:"mkt"}).then(function(j){var L=j.list||[];$("mklist").innerHTML='<div class="box">ของในตลาด '+L.length+' ชิ้น</div>'+L.map(function(x){return '<div class="it"><span>'+esc(x.name)+' <small>ราคา '+Number(x.price).toLocaleString()+'</small><br><small>ผู้ขาย '+esc(x.sn)+' #'+x.uid+' · หมด '+d(x.exp)+'</small></span><button class="r" data-id="'+esc(x.id)+'">ลบ</button></div>'}).join("");document.querySelectorAll("#mklist button[data-id]").forEach(function(b){b.onclick=function(){if(confirm("ลบรายการนี้? ของจะคืนผู้ขายทางจดหมาย"))api("/api/admin/op",{op:"mktdel",id:b.dataset.id}).then(mk)}})})}
@@ -777,7 +782,8 @@ function mktPub(x, uid) { return { id: x.id, sn: x.sn, it: x.it, price: x.price,
 function mktReply(uid, msg) { return { msg, list: MKT.list.map(x => mktPub(x, uid)).sort((a, b) => b.exp - a.exp), mine: MKT.list.filter(x => x.uid === uid).length, tax: MKT_TAX }; }
 
 // ---------- B104 เครื่องมือแอดมิน: แบน (เก็บใน meta) · ประวัติเติมเงิน ----------
-const BANS = { loaded: false, map: {} }, PAYLOG = { loaded: false, list: [] };
+const BOARD104 = { loaded: false, v: null }, BANS = { loaded: false, map: {} }, PAYLOG = { loaded: false, list: [] };
+async function boardLoad() { if (BOARD104.loaded) return; BOARD104.loaded = true; try { const v = await db.getMeta('board'); if (v) BOARD104.v = JSON.parse(v) || null; } catch (e) {} }
 async function bansLoad() { if (BANS.loaded) return; BANS.loaded = true; try { const v = await db.getMeta('bans'); if (v) BANS.map = JSON.parse(v) || {}; } catch (e) {} }
 async function bansSave() { await (db.putMeta || db.setMeta).call(db, 'bans', JSON.stringify(BANS.map)); }
 async function payLogLoad() { if (PAYLOG.loaded) return; PAYLOG.loaded = true; try { const v = await db.getMeta('paylog'); if (v) PAYLOG.list = JSON.parse(v) || []; } catch (e) {} }
@@ -820,7 +826,7 @@ async function playerId48(uid, name) {
   for (const [id, p] of live) if (p.s && p.s.created && p.s.name === name) return id;
   const row = await db.findByName(name); return row ? Number(row.user_id) : 0;
 }
-function chatDto48(m, uid) { return { id: m.id, ch: m.ch, uid: m.from, n: m.n, t: m.t, to: m.to, toUid: m.toId, mine: m.from === uid, sp: m.sp | 0 }; }
+function chatDto48(m, uid) { return { id: m.id, ch: m.ch, uid: m.from, n: m.n, t: m.t, to: m.to, toUid: m.toId, mine: m.from === uid, sp: m.sp | 0, cg: m.cg | 0 }; }
 function publicPlayer48(uid, p) {
   const o = p.s, acc = {}, sn = engine.snap(o) || {};
   for (const k of ['ring','neck','brooch','helm','armor','gloves','boots']) { const a = o.acc && o.acc[k]; acc[k] = a ? { t: a.t|0, g: a.g|0, e: a.e|0, sk: a.sk|0, cd: Array.isArray(a.cd) ? a.cd.slice(0, 5) : [] } : null; }
@@ -992,7 +998,7 @@ const routes = {
     if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
     if (now - (p.lastChat || 0) < 1200) return send(res, 429, { error: 'ส่งเร็วเกินไป รอสักครู่' });
     if(p.chatBusy48)return send(res,429,{error:'กำลังส่งข้อความ'});p.chatBusy48=true;try{
-    const m = { id: 0, ch, n: String(p.s.name || u.display).slice(0, 16), t, from: u.id, ts: now, sp: p.s.sup100 ? 1 : 0 };
+    const m = { id: 0, ch, n: String(p.s.name || u.display).slice(0, 16), t, from: u.id, ts: now, sp: p.s.sup100 ? 1 : 0, cg: p.s.s105 && p.s.s105.fx && p.s.s105.fx.chat ? 1 : 0 };
     if (ch === 'fac') { if (p.s.fac == null) return send(res, 400, { error: 'ยังไม่ได้เข้าฝ่าย' }); m.key = p.s.fac; }
     if (ch === 'team') { const team = await teamOf(u.id); if (!team) return send(res, 400, { error: 'ยังไม่มีทีม' }); m.key = team; }
     if (ch === 'dm') {
@@ -1133,14 +1139,14 @@ const routes = {
     if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
     const now = Date.now();
     if (b.leave) { TOWN.delete(u.id); return send(res, 200, { list: [] }); }
-    TOWN.set(u.id, { n: String(p.s.name || u.display).slice(0, 16), cls: p.s.cls, lvl: p.s.lvl | 0, look: playerLook52(p.s), tt: String(p.s.title || '').slice(0, 12), sp: p.s.sup100 ? 1 : 0, x: Math.max(0, Math.min(1440, Number(b.x) || 0)), y: Math.max(0, Math.min(1080, Number(b.y) || 0)), at: now });
+    TOWN.set(u.id, { n: String(p.s.name || u.display).slice(0, 16), cls: p.s.cls, lvl: p.s.lvl | 0, look: playerLook52(p.s), tt: String(p.s.title || '').slice(0, 12), sp: p.s.sup100 ? 1 : 0, sf: p.s.s105 && p.s.s105.fx && p.s.s105.fx.frame ? 1 : 0, sg: p.s.s105 && p.s.s105.fx && p.s.s105.fx.glow ? 1 : 0, x: Math.max(0, Math.min(1440, Number(b.x) || 0)), y: Math.max(0, Math.min(1080, Number(b.y) || 0)), at: now });
     for (const [id, t] of TOWN) if (now - t.at > TOWN_ON_MS * 5) TOWN.delete(id);
     for (const [id, t] of LASTSAY) if (now - t.at > 10000) LASTSAY.delete(id);
     const list = [];
     for (const [id, t] of TOWN) {
       if (id === u.id || now - t.at > TOWN_ON_MS) continue;
       const sy = LASTSAY.get(id);
-      list.push({ uid: id, n: t.n, cls: t.cls, lvl: t.lvl, look: t.look, tt: t.tt, sp: t.sp, x: t.x, y: t.y, say: sy && now - sy.at < 7000 ? sy.t : '', sayAge: sy ? now - sy.at : 0 });
+      list.push({ uid: id, n: t.n, cls: t.cls, lvl: t.lvl, look: t.look, tt: t.tt, sp: t.sp, sf: t.sf, sg: t.sg, x: t.x, y: t.y, say: sy && now - sy.at < 7000 ? sy.t : '', sayAge: sy ? now - sy.at : 0 });
       if (list.length >= TOWN_MAX) break;
     }
     for (const bt of botsActive(now)) { if (list.length >= TOWN_MAX) break; if (botWhere(bt, now) !== 'town') continue; list.push(Object.assign(botPub(bt, now), botTownPos(bt, now), { say: '', sayAge: 0 })); }
@@ -1155,7 +1161,7 @@ const routes = {
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
     const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
-    send(res, 200, { server: 'B104', pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    send(res, 200, { server: 'B105', pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -1175,14 +1181,18 @@ const routes = {
     send(res, 200, { top: all.slice(0, 10).map(x => ({ n: x.n, cls: x.cls, lvl: x.lvl, rating: x.rating, tt: x.tt, sp: x.sp | 0, me: x.id === u.id })), rank: idx >= 0 ? idx + 1 : 0, total: all.length });
   },
   'GET /api/top': async (req, res) => { if (Date.now() - TOPC.at > 60000) TOPC = { at: Date.now(), top: (await db.top()).map(r => ({ name: r.name, cls: r.cls, lvl: r.level })) }; send(res, 200, { top: TOPC.top }); },
-  'GET /api/online': async (req, res) => send(res, 200, { n: realOnline(Date.now()) }), // B98 จำนวนผู้เล่นจริงที่ออนไลน์ (ไม่นับบอท)
+  'GET /api/online': async (req, res) => { await boardLoad(); send(res, 200, { n: realOnline(Date.now()), board: BOARD104.v }); }, // B98 จำนวนผู้เล่นจริงที่ออนไลน์ (ไม่นับบอท)
   'POST /api/pay/checkout': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
     const b = await readBody(req); const sku = String(b.sku || 'sup35'), it = PAY_SKU[sku];
     if (!it) return send(res, 400, { error: 'ไม่พบสินค้า' });
     const p = await session(u.id); if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
     if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
-    if (p.s.sup100) return send(res, 409, { error: 'บัญชีนี้ซื้อแพ็กผู้สนับสนุนแล้ว' });
+    if (sku === 'sup35' && p.s.sup100) return send(res, 409, { error: 'บัญชีนี้ซื้อแพ็กผู้สนับสนุนแล้ว' });
+    if (sku === 'p299' && p.s.pc105) return send(res, 409, { error: 'บัญชีนี้มีบัตรถาวรแล้ว' });
+    if (sku === 's149' && p.s.s105 && p.s.s105.prem) return send(res, 409, { error: 'บัญชีนี้มีพาสซีซั่น 1 แล้ว' });
+    if (sku === 's149' && Date.now() > S105_END) return send(res, 409, { error: 'ซีซั่น 1 จบแล้ว' });
+    if (sku === 'm99' && (p.s.mc105 || 0) - Date.now() > 60 * 864e5) return send(res, 409, { error: 'บัตรรายเดือนสะสมได้ไม่เกิน 90 วัน' });
     if (!envKey('STRIPE_SECRET_KEY')) return send(res, 503, { error: 'ระบบเติมเงินยังไม่เปิด' });
     const o = payOrigin(req);
     const cs = await stripeApi('POST', '/checkout/sessions', { mode: 'payment', locale: 'th', client_reference_id: String(u.id),
@@ -1228,6 +1238,14 @@ const routes = {
       const text = String(b.text || '').replace(/\s+/g, ' ').trim().slice(0, 160); if (!text) return send(res, 400, { error: 'ใส่ข้อความ' });
       newsPush75('admin', 0, '📢 ทีมงาน', text); return send(res, 200, { msg: 'ประกาศแล้ว' });
     }
+    if (b.op === 'board') {
+      await boardLoad(); const text = String(b.text || '').trim().slice(0, 1000), title = String(b.title || '').trim().slice(0, 60) || 'ประกาศจากทีมงาน';
+      if (!text) { BOARD104.v = null; await (db.putMeta || db.setMeta).call(db, 'board', 'null'); return send(res, 200, { msg: 'ปิดป้ายประกาศแล้ว', board: null }); }
+      BOARD104.v = { id: Date.now().toString(36), t: title, b: text, at: Date.now() }; await (db.putMeta || db.setMeta).call(db, 'board', JSON.stringify(BOARD104.v));
+      newsPush75('admin', 0, '📢 ทีมงาน', title + ' · ' + text.replace(/\s+/g, ' ').slice(0, 120));
+      return send(res, 200, { msg: 'ตั้งป้ายประกาศแล้ว ผู้เล่นจะเห็นตอนเข้าเกม (และภายใน 1 นาทีสำหรับคนที่ออนไลน์อยู่)', board: BOARD104.v });
+    }
+    if (b.op === 'boardget') { await boardLoad(); return send(res, 200, { msg: BOARD104.v ? 'มีป้ายประกาศอยู่' : 'ยังไม่มีป้ายประกาศ', board: BOARD104.v }); }
     if (b.op === 'pays') { await payLogLoad(); return send(res, 200, { msg: 'โหลดแล้ว', pays: PAYLOG.list, mode: payStatus101().key }); }
     if (b.op === 'mkt') {
       await mktLoad(); await mktSweep(); const fs0 = engine.fresh(); fs0.cls = 'warrior';
@@ -1277,7 +1295,7 @@ const routes = {
       if (p.s.battle) return send(res, 409, { error: 'จบการต่อสู้ก่อน' });
       const idx = Number(b.idx), bag = Array.isArray(p.s.gbag) ? p.s.gbag : [];
       if (!Number.isInteger(idx) || !bag[idx]) return send(res, 400, { error: 'ไม่พบของในกระเป๋า' });
-      if (MKT.list.filter(x => x.uid === u.id).length >= MKT_MAXN) return send(res, 400, { error: 'วางขายได้พร้อมกันไม่เกิน ' + MKT_MAXN + ' ชิ้น' });
+      const maxN = p.s.pc105 ? 15 : MKT_MAXN; if (MKT.list.filter(x => x.uid === u.id).length >= maxN) return send(res, 400, { error: 'วางขายได้พร้อมกันไม่เกิน ' + maxN + ' ชิ้น' });
       if (MKT.list.length >= MKT_TOTAL) return send(res, 503, { error: 'ตลาดเต็ม ลองใหม่ภายหลัง' });
       const it = bag[idx]; if (it.lk) return send(res, 400, { error: 'ปลดล็อกของก่อนวางขาย' });
       const info = mktInfo(p, it); if (!info || !info.ok) return send(res, 400, { error: it.sp ? 'ของจากแพ็กผู้สนับสนุนขายไม่ได้' : 'ต้องปลดผนึกผู้คราฟก่อน' });
