@@ -1669,7 +1669,7 @@ function gopHtml(p){if(!p||p.fail)return '';var L=gopText(p.op),h='';
  if(p.st&&GSET[p.st])h+='<div class="gop87 set"><b>เซ็ต '+esc(GSET[p.st].n)+' ('+gsetCount(s,p.st)+'/4 ที่ใส่อยู่)</b><span>ใส่ครบ 4 ชิ้น (หมวก เกราะ ถุงมือ รองเท้า Lv60+): '+esc(GSET[p.st].d)+'</span></div>';
  else if(p.k==='x'&&(p.g|0)<5)h+='';
  return h}
-function gearIncoming(b,loss,l){if(loss<=0)return loss;if(b&&b.onWar106)loss=Math.max(1,Math.round(loss*WAR_DMG106/WAR_HPX106));if(b&&b.ulWard>0){b.ulWard--;loss=Math.max(1,Math.round(loss*0.5));if(l)l.push('ม่านแสงลดดาเมจ 50%')}var dr=gearStat('dr');if(dr>0)loss=Math.max(1,Math.round(loss*(1-dr/100)));if(b.gsh>0){var ab=Math.min(b.gsh,loss);b.gsh-=ab;loss-=ab;if(ab>0&&l)l.push('โล่วิญญาณดูดซับ '+ab)}return loss}
+function gearIncoming(b,loss,l){if(loss<=0)return loss;if(b&&b.onWar106)loss=Math.max(1,Math.round(loss*WAR_DMG106));if(b&&b.ulWard>0){b.ulWard--;loss=Math.max(1,Math.round(loss*0.5));if(l)l.push('ม่านแสงลดดาเมจ 50%')}var dr=gearStat('dr');if(dr>0)loss=Math.max(1,Math.round(loss*(1-dr/100)));if(b.gsh>0){var ab=Math.min(b.gsh,loss);b.gsh-=ab;loss-=ab;if(ab>0&&l)l.push('โล่วิญญาณดูดซับ '+ab)}return loss}
 function gsetGuard(b,l){if(gsetOf(s)!=='guard'||b.gshUsed||s.hp<=0||s.hp>=s.maxhp*.3)return;b.gshUsed=1;b.gsh=Math.round(s.maxhp*.15);if(l)l.push('เซ็ตโล่วิญญาณทำงาน! ได้โล่ '+b.gsh)}
 function gearLeech(b,actual,l){var ls=gearStat('ls');if(!(ls>0)||!(actual>0)||s.hp>=s.maxhp)return;var h=Math.min(Math.round(actual*ls/100/(isDuel(b)?DUEL_HP:1)),s.maxhp-s.hp);if(h>0){s.hp+=h;if(l)l.push('อุปกรณ์ดูดเลือด +'+h+' HP')}}
 function wPow(o){return Math.round(WEAPONS[o.weapon].p*QT[o.wq||0].m*enhMul(o.wEnh))}
@@ -2064,7 +2064,7 @@ var ASPD_BASE=1200,ASPD_MIN=500,ASPD_K=0.015,ASPD_CATCH=1200,ESPD={wolf:1.0,bat:
 function aspdOf(agi){return Math.max(ASPD_MIN,Math.round(ASPD_BASE/(1+softStat43(agi,80,.5)*ASPD_K)))}
 function aspdMs(){return Math.max(400,Math.round(aspdOf(sv(s,'agi'))*(s.battle&&s.battle.b2Slow>0?1.15:1)/(1+gearStat('spd')/100)))}
 function eSpd(e){if(e.field&&e.speed)return e.speed;if(e.pvp)return 1000/aspdOf(e.agi|0);if(e.cls)return 0.9;if(e.k==='hydra')return 0.8;var v=ESPD[MBASE[e.k]]||0.85;return e.boss?v*1.2:v}
-function eRatio(b){return Math.max(1/3,Math.min(1,eSpd(b.e)*aspdMs()/1000))}
+function eRatio(b){if(b&&b.onWar106)return 1;return Math.max(1/3,Math.min(1,eSpd(b.e)*aspdMs()/1000))}
 function dodgePct(){return Math.min(35,CLASSES[s.cls].dodge+softStat43(sv(s,'agi'),80,.5)*0.2+passive('dodge')+bb('dodge')+accVal(s,'dodge')+j4Dodge(s.battle)+m51Val(s,'dodge',s.battle))}
 function latePveWeight(){return s&&s.battle&&!isDuel(s.battle)&&!s.battle.e.cls?Math.max(0,Math.min(1,(s.lvl-50)/30)):0}
 function pveRoleBonus(){var w=latePveWeight();return 1+w*(s.cls==='warrior'?.25:s.cls==='paladin'?.60:0)}
@@ -2469,16 +2469,17 @@ function warGo106(on){if(on){if(!CL){say('ศึกชิงแดนเล่�
  if(on&&TOWN.on&&!TOWN.war)townGo(false);TOWN.war=!!on;WAR106.near=0;WAR106.nearKey='';townGo(on)}
 function warOpp106(snap,uid){WOPP106={snap:snap,uid:uid|0}}
 var RPS106={r:'✊ ค้อน',p:'✋ กระดาษ',s:'✌️ กรรไกร'},RPS_WIN106={r:'s',p:'r',s:'p'},WAR_HPX106=10,WAR_DMG106=0.6;
+var calcMax0106=calcMax;calcMax=function(o){var v=calcMax0106(o);return o&&o.battle&&o.battle.onWar106?v*WAR_HPX106:v};
 function warDuel106(arg){if(!WOPP106||s.battle||s.dup)return;var ch=String(arg||'').split(':')[1];if(!RPS106[ch])ch=pick(['r','p','s']);var ai=pick(['r','p','s']),res=ch===ai?0:RPS_WIN106[ch]===ai?1:-1;
  var sn=WOPP106.snap,e=oppFromSnap(sn);e.n=String(e.n||sn.n||'ศัตรู').slice(0,12)+(FAC[sn.fac]?' ['+FAC[sn.fac].n+']':'');e.rating=0;
- startBattle(e,'war',{onWar106:{uid:WOPP106.uid,n:String(sn.n||'')},rps106:{me:ch,ai:ai,res:res}});var b=s.battle;b.e=Object.assign({},b.e,{hp:Math.round(b.e.hp*WAR_HPX106/WAR_DMG106)});b.ehp=b.e.hp;b.eg=res>0?-0.75:res<0?0.95:0;
- b.lines=['เป่ายิ้งฉุบ: คุณ '+RPS106[ch]+' · ศัตรู '+RPS106[ai]+' → '+(res>0?'ชนะ! ได้ตีก่อน':res<0?'แพ้ · ศัตรูได้ตีก่อน':'เสมอ'),'⚔️ ศึกชิงแดน: ท้าดวล '+e.n+' ('+CLASSES[e.cls].n+' Lv'+e.lvl+') · เลือด ×10 · ดาเมจ −40%'];WOPP106=null}
+ startBattle(e,'war',{onWar106:{uid:WOPP106.uid,n:String(sn.n||'')},rps106:{me:ch,ai:ai,res:res}});var b=s.battle;b.e=Object.assign({},b.e,{hp:Math.round(b.e.hp*WAR_HPX106/WAR_DMG106)});b.ehp=b.e.hp;b.eg=res>0?-1.5:res<0?0:-0.5;var om=s.maxhp||1;s.maxhp=calcMax(s);s.hp=Math.max(1,Math.round(s.hp/om*s.maxhp));
+ b.lines=['เป่ายิ้งฉุบ: คุณ '+RPS106[ch]+' · ศัตรู '+RPS106[ai]+' → '+(res>0?'ชนะ! ตีก่อน 2 ครั้ง':res<0?'แพ้ · ศัตรูตอบโต้ทันที':'เสมอ · ตีก่อน 1 ครั้ง'),'⚔️ ศึกชิงแดน: ท้าดวล '+e.n+' ('+CLASSES[e.cls].n+' Lv'+e.lvl+') · เลือด ×10 · ดาเมจ −40% · ผลัดกันตี (ไม่มีตีไว)'];WOPP106=null}
 function rpsOpen106(uid){if(SV)return;var o=document.getElementById('rps106');if(o)o.remove();var d=document.createElement('div');d.id='rps106';d.className='sup100ov';var at0=Date.now();
- d.innerHTML='<div class="sup100card rps106"><button class="sup100x" aria-label="ยกเลิก">✕</button><h3>✊✋✌️ เป่ายิ้งฉุบ!</h3><p class="hint">ชนะได้ตีก่อน · แพ้ศัตรูได้ตีก่อน · เสมอเริ่มปกติ</p><div class="rps106c">'+['r','p','s'].map(function(k){return '<button class="btn" data-rps="'+k+'"><span>'+RPS106[k].split(' ')[0]+'</span><small>'+RPS106[k].split(' ')[1]+'</small></button>'}).join('')+'</div></div>';
+ d.innerHTML='<div class="sup100card rps106"><button class="sup100x" aria-label="ยกเลิก">✕</button><h3>✊✋✌️ เป่ายิ้งฉุบ!</h3><p class="hint">ผลัดกันตีทีละครั้ง · ชนะได้ตีก่อน 2 ครั้ง · เสมอตีก่อน 1 ครั้ง · แพ้ศัตรูตอบโต้ทันที</p><div class="rps106c">'+['r','p','s'].map(function(k){return '<button class="btn" data-rps="'+k+'"><span>'+RPS106[k].split(' ')[0]+'</span><small>'+RPS106[k].split(' ')[1]+'</small></button>'}).join('')+'</div></div>';
  document.body.appendChild(d);var G=function(fn){return function(e){if(Date.now()-at0<600)return;fn(e)}};d.querySelector('.sup100x').onclick=G(function(){d.remove()});d.onclick=G(function(e){if(e.target===d)d.remove()});d.querySelectorAll('[data-rps]').forEach(function(b){b.onclick=G(function(){d.remove();act('war106duel',uid+':'+b.getAttribute('data-rps'))})})}
 var RPS_SHOWN106='';
 function rpsReveal106(){if(SV||!s||!s.battle||!s.battle.rps106)return;var b=s.battle,key=String(b.key50||'')+'|'+b.rps106.me+b.rps106.ai;if(RPS_SHOWN106===key)return;RPS_SHOWN106=key;var R=b.rps106,o=document.getElementById('rpsr106');if(o)o.remove();var d=document.createElement('div');d.id='rpsr106';d.className='rpsr106';
- d.innerHTML='<div class="rr"><div class="h me">'+RPS106[R.me].split(' ')[0]+'<small>คุณ</small></div><b>VS</b><div class="h ai">'+RPS106[R.ai].split(' ')[0]+'<small>ศัตรู</small></div></div><div class="rt '+(R.res>0?'w':R.res<0?'l':'d')+'">'+(R.res>0?'ชนะ! ได้ตีก่อน':R.res<0?'แพ้ · ศัตรูได้ตีก่อน':'เสมอ · เริ่มปกติ')+'</div>';document.body.appendChild(d);setTimeout(function(){d.remove()},2600)}
+ d.innerHTML='<div class="rr"><div class="h me">'+RPS106[R.me].split(' ')[0]+'<small>คุณ</small></div><b>VS</b><div class="h ai">'+RPS106[R.ai].split(' ')[0]+'<small>ศัตรู</small></div></div><div class="rt '+(R.res>0?'w':R.res<0?'l':'d')+'">'+(R.res>0?'ชนะ! ตีก่อน 2 ครั้ง':R.res<0?'แพ้ · ศัตรูตอบโต้ทันที':'เสมอ · ตีก่อน 1 ครั้ง')+'</div>';document.body.appendChild(d);setTimeout(function(){d.remove()},2600)}
 function warLeft106(ms){ms=Math.max(0,ms|0);var m=Math.floor(ms/60000),sec=Math.floor(ms%60000/1000);return m>=60?Math.floor(m/60)+' ชม. '+(m%60)+' นาที':m+':'+(sec<10?'0':'')+sec}
 function warNextTxt106(ts){if(!ts)return 'เสาร์–อาทิตย์ 20:00–22:00 น.';var d=new Date(ts);try{return d.toLocaleString('th-TH',{timeZone:'Asia/Bangkok',weekday:'long',hour:'2-digit',minute:'2-digit'})+' น.'}catch(e){return 'เสาร์–อาทิตย์ 20:00'}}
 function warCard106(){var W=NET.war106||{},open=!!W.open,last=W.last,buff=W.buff&&W.buff.until>Date.now()?W.buff:null;
@@ -2766,7 +2767,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B107.1';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B107.2';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -3236,7 +3237,7 @@ function lose(){
 function duelEnd(won){if(won)sAdd105('pvp',30);var h0=s.battle&&s.battle.hp0;duelEnd0(won);if(s.lvl>=100){s.maxhp=calcMax(s);s.maxmp=calcMaxMp(s)}if(typeof h0==='number'){s.hp=Math.max(1,Math.min(s.maxhp,h0));save()}}
 function duelEnd0(won){
  var b=s.battle,e=b.e,p=[];s.battle=null;fightDone();
- if(b.onWar106){s.war106Res={uid:b.onWar106.uid|0,won:!!won};s.hp=s.maxhp;say(won?'⚔️ ศึกชิงแดน: ชนะ '+e.n+'!':'⚔️ ศึกชิงแดน: แพ้ '+e.n+' · ได้โล่ 5 นาที')}
+ if(b.onWar106){s.war106Res={uid:b.onWar106.uid|0,won:!!won};s.maxhp=calcMax(s);s.hp=s.maxhp;say(won?'⚔️ ศึกชิงแดน: ชนะ '+e.n+'!':'⚔️ ศึกชิงแดน: แพ้ '+e.n+' · ได้โล่ 5 นาที')}
  s.mp=Math.min(s.maxmp,s.mp+Math.round(s.maxmp*0.25));
  if(b.kind==='pvp'){
   pvpWeekCheck90();dqAdd('pvp');var P=s.pvp,d=eloDelta(P.r,e.rating,won);
