@@ -1495,7 +1495,7 @@ const routes = {
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
     const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
-    send(res, 200, { server: 'B107.2', client: CLV_SRV, pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    send(res, 200, { server: 'B107.3', client: CLV_SRV, pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -1528,6 +1528,7 @@ const routes = {
     if (sku === 's149' && Date.now() > S105_END) return send(res, 409, { error: 'ซีซั่น 1 จบแล้ว' });
     if (sku === 'm99' && (p.s.mc105 || 0) - Date.now() > 60 * 864e5) return send(res, 409, { error: 'บัตรรายเดือนสะสมได้ไม่เกิน 90 วัน' });
     if (!envKey('STRIPE_SECRET_KEY')) return send(res, 503, { error: 'ระบบเติมเงินยังไม่เปิด' });
+    if (/^sk_test_/.test(envKey('STRIPE_SECRET_KEY')) && !envKey('PAY_TEST_UIDS').split(/[ ,]+/).includes(String(u.id))) return send(res, 503, { error: 'ระบบเติมเงินกำลังทดสอบ · เปิดให้ซื้อจริงเร็ว ๆ นี้' }); // โหมดทดสอบ: เฉพาะไอดีที่อนุญาต
     const o = payOrigin(req);
     const cs = await stripeApi('POST', '/checkout/sessions', { mode: 'payment', locale: 'th', client_reference_id: String(u.id),
       payment_method_types: ['card', 'promptpay'], line_items: [{ quantity: 1, price_data: { currency: 'thb', unit_amount: it.amt, product_data: { name: it.name, description: it.desc } } }],
