@@ -660,6 +660,52 @@ function takeToken(p) { // ผู้เล่นส่งคำสั่งไ�
   p.bucket -= 1; return true;
 }
 
+
+// ---------- B100 ระบบเติมเงิน Stripe (แพ็กผู้สนับสนุน 35 บาท) ----------
+// ใส่คีย์ใน Render → Environment เท่านั้น: STRIPE_SECRET_KEY (sk_...) และ STRIPE_WEBHOOK_SECRET (whsec_...)
+const PAY_SKU = { sup35: { amt: 3500, name: 'แพ็กผู้สนับสนุน · TheWarWhat', desc: 'อุปกรณ์ Lv20 สีส้ม + ป้าย ✦ ผู้สนับสนุน (ซื้อได้ครั้งเดียว)' } };
+const PAY_BUSY = new Set();
+const STRIPE_BASE = process.env.STRIPE_API_BASE || 'https://api.stripe.com';
+function stripeForm(o, pre, out) { out = out || []; for (const k in o) { const v = o[k], key = pre ? pre + '[' + k + ']' : k; if (v && typeof v === 'object') stripeForm(v, key, out); else if (v != null) out.push(encodeURIComponent(key) + '=' + encodeURIComponent(String(v))); } return out.join('&'); }
+async function stripeApi(method, pathq, body) {
+  const key = process.env.STRIPE_SECRET_KEY; if (!key) throw Object.assign(new Error('ระบบเติมเงินยังไม่เปิด'), { code: 503 });
+  const r = await fetch(STRIPE_BASE + '/v1' + pathq, { method, headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/x-www-form-urlencoded', 'Stripe-Version': '2024-06-20' }, body: body ? stripeForm(body) : undefined });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { console.error('stripe', r.status, j && j.error && j.error.message); throw Object.assign(new Error('เชื่อมต่อระบบชำระเงินไม่สำเร็จ'), { code: 502 }); }
+  return j;
+}
+function payOrigin(req) { if (process.env.PUBLIC_URL) return process.env.PUBLIC_URL.replace(/\/+$/, ''); const h = String(req.headers['x-forwarded-host'] || req.headers.host || ''); const pr = String(req.headers['x-forwarded-proto'] || (/^(localhost|127\.)/.test(h) ? 'http' : 'https')).split(',')[0]; return pr + '://' + h; }
+// ตรวจกับ Stripe ทุกครั้งก่อนมอบของ · กันมอบซ้ำด้วย meta 'pay:<session id>'
+async function payGrant(sid, needUid) {
+  if (!/^cs_[A-Za-z0-9_]{8,200}$/.test(String(sid || ''))) return { error: 'รหัสการชำระเงินไม่ถูกต้อง', code: 400 };
+  if (PAY_BUSY.has(sid)) return { pending: true };
+  PAY_BUSY.add(sid);
+  try {
+    const done = await db.getMeta('pay:' + sid); if (done) { const d = JSON.parse(done); if (needUid && d.uid !== needUid) return { error: 'ไม่ใช่รายการของคุณ', code: 403 }; return { ok: true, already: true }; }
+    const cs = await stripeApi('GET', '/checkout/sessions/' + encodeURIComponent(sid));
+    const uid = Number(cs.metadata && cs.metadata.uid), sku = cs.metadata && cs.metadata.sku, it = PAY_SKU[sku];
+    if (!uid || !it) return { error: 'รายการไม่ถูกต้อง', code: 400 };
+    if (needUid && uid !== needUid) return { error: 'ไม่ใช่รายการของคุณ', code: 403 };
+    if (cs.payment_status !== 'paid') return { pending: true, status: cs.payment_status };
+    if ((cs.amount_total | 0) !== it.amt || String(cs.currency).toLowerCase() !== 'thb') { console.error('pay amount mismatch', sid, cs.amount_total, cs.currency); return { error: 'ยอดเงินไม่ตรง', code: 400 }; }
+    await (db.putMeta || db.setMeta).call(db, 'pay:' + sid, JSON.stringify({ uid, sku, amt: cs.amount_total, at: Date.now() }));
+    const p = await session(uid);
+    const out = engine.run(p.s, p.ui, {}, E => { if (E.supGrant100) E.supGrant100(sid); });
+    p.s = out.s; p.ui = out.ui; p.v++; await persist(uid, p); updateSnap(uid, p);
+    db.audit(uid, 'pay', sku + ' ' + sid).catch(() => {});
+    console.log('pay granted', uid, sku, sid);
+    return { ok: true };
+  } finally { PAY_BUSY.delete(sid); }
+}
+function readRaw(req, max) { return new Promise((resolve, reject) => { let n = 0; const ch = []; req.on('data', c => { n += c.length; if (n > max) { reject(Object.assign(new Error('ใหญ่เกินไป'), { code: 413 })); req.destroy(); } else ch.push(c); }); req.on('end', () => resolve(Buffer.concat(ch))); req.on('error', reject); }); }
+function stripeSigOk(raw, header, secret) {
+  const parts = {}; String(header || '').split(',').forEach(x => { const i = x.indexOf('='); if (i > 0) { const k = x.slice(0, i).trim(); (parts[k] = parts[k] || []).push(x.slice(i + 1).trim()); } });
+  const t = Number(parts.t && parts.t[0]); if (!t || Math.abs(Date.now() / 1000 - t) > 600) return false;
+  const want = crypto.createHmac('sha256', secret).update(t + '.' + raw.toString('utf8')).digest('hex');
+  return (parts.v1 || []).some(v => v.length === want.length && crypto.timingSafeEqual(Buffer.from(v), Buffer.from(want)));
+}
+const TERMS100 = '<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>เงื่อนไขการซื้อ · TheWarWhat</title><style>body{font-family:sans-serif;background:#0e1326;color:#e8eaf2;max-width:640px;margin:0 auto;padding:20px;line-height:1.7}h1{color:#ffd23c;font-size:22px}h2{font-size:17px;color:#ffb070}a{color:#8fd8ff}</style></head><body><h1>เงื่อนไขการซื้อและการคืนเงิน</h1><p>เกม ศึกชิงเมือง · TheWarWhat (https://thewarwhat-1.onrender.com)</p><h2>สินค้า</h2><p>สินค้าเป็นไอเทมดิจิทัลในเกม ผูกกับบัญชีผู้ซื้อ ไม่สามารถแลกเปลี่ยนเป็นเงินจริงได้ แพ็กผู้สนับสนุน 35 บาท ประกอบด้วยอุปกรณ์เลเวล 20 (อาวุธ 1 ชิ้น เกราะ 1 ชิ้น) และฉายา ✦ ผู้สนับสนุน ซื้อได้ 1 ครั้งต่อบัญชี</p><h2>การชำระเงิน</h2><p>ชำระผ่าน Stripe ด้วยพร้อมเพย์หรือบัตร เราไม่เก็บข้อมูลบัตรของผู้ซื้อ ของจะเข้าเกมอัตโนมัติหลังชำระสำเร็จ หากไม่ได้รับภายใน 30 นาที โปรดติดต่อผู้ดูแลเกมผ่านแชทในเกม</p><h2>การคืนเงิน</h2><p>ไอเทมดิจิทัลที่ได้รับเข้าเกมแล้วไม่สามารถคืนเงินได้ ยกเว้นกรณีชำระเงินแล้วแต่ไม่ได้รับของ หรือถูกเรียกเก็บเงินซ้ำ เราจะคืนเงินเต็มจำนวน</p><h2>ความเป็นธรรม</h2><p>สินค้าที่ขายไม่ทำให้ได้เปรียบเหนือผู้เล่นอื่นอย่างมีนัยสำคัญ และไม่มีระบบสุ่มเสี่ยงโชคด้วยเงินจริง</p><p><a href="/">กลับเข้าเกม</a></p></body></html>';
+
 // ---------- HTTP ----------
 const MAX_BODY = 16 * 1024;
 const SEC_HEADERS = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin', 'X-Frame-Options': 'SAMEORIGIN' };
@@ -693,7 +739,7 @@ async function playerId48(uid, name) {
   for (const [id, p] of live) if (p.s && p.s.created && p.s.name === name) return id;
   const row = await db.findByName(name); return row ? Number(row.user_id) : 0;
 }
-function chatDto48(m, uid) { return { id: m.id, ch: m.ch, uid: m.from, n: m.n, t: m.t, to: m.to, toUid: m.toId, mine: m.from === uid }; }
+function chatDto48(m, uid) { return { id: m.id, ch: m.ch, uid: m.from, n: m.n, t: m.t, to: m.to, toUid: m.toId, mine: m.from === uid, sp: m.sp | 0 }; }
 function publicPlayer48(uid, p) {
   const o = p.s, acc = {}, sn = engine.snap(o) || {};
   for (const k of ['ring','neck','brooch','helm','armor','gloves','boots']) { const a = o.acc && o.acc[k]; acc[k] = a ? { t: a.t|0, g: a.g|0, e: a.e|0, sk: a.sk|0, cd: Array.isArray(a.cd) ? a.cd.slice(0, 5) : [] } : null; }
@@ -863,7 +909,7 @@ const routes = {
     if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
     if (now - (p.lastChat || 0) < 1200) return send(res, 429, { error: 'ส่งเร็วเกินไป รอสักครู่' });
     if(p.chatBusy48)return send(res,429,{error:'กำลังส่งข้อความ'});p.chatBusy48=true;try{
-    const m = { id: 0, ch, n: String(p.s.name || u.display).slice(0, 16), t, from: u.id, ts: now };
+    const m = { id: 0, ch, n: String(p.s.name || u.display).slice(0, 16), t, from: u.id, ts: now, sp: p.s.sup100 ? 1 : 0 };
     if (ch === 'fac') { if (p.s.fac == null) return send(res, 400, { error: 'ยังไม่ได้เข้าฝ่าย' }); m.key = p.s.fac; }
     if (ch === 'team') { const team = await teamOf(u.id); if (!team) return send(res, 400, { error: 'ยังไม่มีทีม' }); m.key = team; }
     if (ch === 'dm') {
@@ -1004,14 +1050,14 @@ const routes = {
     if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
     const now = Date.now();
     if (b.leave) { TOWN.delete(u.id); return send(res, 200, { list: [] }); }
-    TOWN.set(u.id, { n: String(p.s.name || u.display).slice(0, 16), cls: p.s.cls, lvl: p.s.lvl | 0, look: playerLook52(p.s), x: Math.max(0, Math.min(1440, Number(b.x) || 0)), y: Math.max(0, Math.min(1080, Number(b.y) || 0)), at: now });
+    TOWN.set(u.id, { n: String(p.s.name || u.display).slice(0, 16), cls: p.s.cls, lvl: p.s.lvl | 0, look: playerLook52(p.s), tt: String(p.s.title || '').slice(0, 12), sp: p.s.sup100 ? 1 : 0, x: Math.max(0, Math.min(1440, Number(b.x) || 0)), y: Math.max(0, Math.min(1080, Number(b.y) || 0)), at: now });
     for (const [id, t] of TOWN) if (now - t.at > TOWN_ON_MS * 5) TOWN.delete(id);
     for (const [id, t] of LASTSAY) if (now - t.at > 10000) LASTSAY.delete(id);
     const list = [];
     for (const [id, t] of TOWN) {
       if (id === u.id || now - t.at > TOWN_ON_MS) continue;
       const sy = LASTSAY.get(id);
-      list.push({ uid: id, n: t.n, cls: t.cls, lvl: t.lvl, look: t.look, x: t.x, y: t.y, say: sy && now - sy.at < 7000 ? sy.t : '', sayAge: sy ? now - sy.at : 0 });
+      list.push({ uid: id, n: t.n, cls: t.cls, lvl: t.lvl, look: t.look, tt: t.tt, sp: t.sp, x: t.x, y: t.y, say: sy && now - sy.at < 7000 ? sy.t : '', sayAge: sy ? now - sy.at : 0 });
       if (list.length >= TOWN_MAX) break;
     }
     for (const bt of botsActive(now)) { if (list.length >= TOWN_MAX) break; if (botWhere(bt, now) !== 'town') continue; list.push(Object.assign(botPub(bt, now), botTownPos(bt, now), { say: '', sayAge: 0 })); }
@@ -1026,7 +1072,7 @@ const routes = {
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
     const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
-    send(res, 200, { server: 'B97', pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    send(res, 200, { server: 'B100', pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -1043,9 +1089,42 @@ const routes = {
     const wk90 = Math.floor((Math.floor((Date.now() + 7 * 3600000) / 864e5) + 3) / 7); // B90 อันดับ PvP รายสัปดาห์ รีเซ็ตทุกจันทร์ 00:00
     const all = board().filter(x => wk90 <= 2965 || x.pwk === wk90).sort((a, b) => (b.rating | 0) - (a.rating | 0));
     const idx = all.findIndex(x => x.id === u.id);
-    send(res, 200, { top: all.slice(0, 10).map(x => ({ n: x.n, cls: x.cls, lvl: x.lvl, rating: x.rating, tt: x.tt, me: x.id === u.id })), rank: idx >= 0 ? idx + 1 : 0, total: all.length });
+    send(res, 200, { top: all.slice(0, 10).map(x => ({ n: x.n, cls: x.cls, lvl: x.lvl, rating: x.rating, tt: x.tt, sp: x.sp | 0, me: x.id === u.id })), rank: idx >= 0 ? idx + 1 : 0, total: all.length });
   },
   'GET /api/top': async (req, res) => { if (Date.now() - TOPC.at > 60000) TOPC = { at: Date.now(), top: (await db.top()).map(r => ({ name: r.name, cls: r.cls, lvl: r.level })) }; send(res, 200, { top: TOPC.top }); },
+  'GET /api/online': async (req, res) => send(res, 200, { n: realOnline(Date.now()) }), // B98 จำนวนผู้เล่นจริงที่ออนไลน์ (ไม่นับบอท)
+  'POST /api/pay/checkout': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    const b = await readBody(req); const sku = String(b.sku || 'sup35'), it = PAY_SKU[sku];
+    if (!it) return send(res, 400, { error: 'ไม่พบสินค้า' });
+    const p = await session(u.id); if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
+    if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
+    if (p.s.sup100) return send(res, 409, { error: 'บัญชีนี้ซื้อแพ็กผู้สนับสนุนแล้ว' });
+    if (!process.env.STRIPE_SECRET_KEY) return send(res, 503, { error: 'ระบบเติมเงินยังไม่เปิด' });
+    const o = payOrigin(req);
+    const cs = await stripeApi('POST', '/checkout/sessions', { mode: 'payment', locale: 'th', client_reference_id: String(u.id),
+      payment_method_types: ['card', 'promptpay'], line_items: [{ quantity: 1, price_data: { currency: 'thb', unit_amount: it.amt, product_data: { name: it.name, description: it.desc } } }],
+      metadata: { uid: String(u.id), sku }, payment_intent_data: { metadata: { uid: String(u.id), sku } },
+      success_url: o + '/?paid={CHECKOUT_SESSION_ID}', cancel_url: o + '/?paycancel=1' });
+    send(res, 200, { url: cs.url, id: cs.id });
+  },
+  'GET /api/pay/verify': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    const p = await session(u.id); if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
+    const r2 = await payGrant(new URL(req.url, 'http://x').searchParams.get('sid'), u.id);
+    if (r2.error) return send(res, r2.code || 400, { error: r2.error });
+    send(res, 200, r2);
+  },
+  'POST /api/pay/webhook': async (req, res) => {
+    const sec = process.env.STRIPE_WEBHOOK_SECRET; if (!sec) return send(res, 503, { error: 'webhook off' });
+    const raw = await readRaw(req, 512 * 1024);
+    if (!stripeSigOk(raw, req.headers['stripe-signature'], sec)) return send(res, 400, { error: 'bad signature' });
+    let ev; try { ev = JSON.parse(raw.toString('utf8')); } catch (e) { return send(res, 400, { error: 'bad json' }); }
+    if ((ev.type === 'checkout.session.completed' || ev.type === 'checkout.session.async_payment_succeeded') && ev.data && ev.data.object && ev.data.object.id) {
+      try { const r2 = await payGrant(ev.data.object.id, 0); if (r2.error) console.error('webhook grant', r2.error); } catch (e) { console.error('webhook grant', e.message); return send(res, 500, { error: 'retry' }); }
+    }
+    send(res, 200, { received: true });
+  },
   'GET /api/health': async (req, res) => send(res, 200, { ok: true, players: live.size, db: db.kind.split(' ')[0] }),
 };
 
@@ -1070,6 +1149,7 @@ const server = http.createServer(async (req, res) => {
   const key = req.method + ' ' + url.pathname;
   try {
     if(await serveImage61(req,res,url.pathname))return;
+    if(req.method==='GET'&&url.pathname==='/terms'){res.writeHead(200,Object.assign({'Content-Type':'text/html; charset=utf-8','Cache-Control':'public, max-age=3600'},SEC_HEADERS));return res.end(TERMS100)}
     // เปิดลิงก์ /api/... หรือหน้าที่ไม่มีอยู่ตรงๆ ในเบราว์เซอร์ → พากลับหน้าเกม แทนการโชว์ข้อความ JSON
     if (req.method === 'GET' && url.pathname !== '/' && /text\/html/.test(req.headers.accept || '') && url.pathname !== '/index.html') {
       res.writeHead(302, { Location: '/' });
@@ -1087,7 +1167,7 @@ const server = http.createServer(async (req, res) => {
     }
     send(res, 404, { error: 'ไม่พบหน้า' });
   } catch (e) {
-    const code = e.code === 413 || e.code === 400 ? e.code : 500;
+    const code = e.code === 413 || e.code === 400 || e.code === 502 || e.code === 503 ? e.code : 500;
     if (code === 500) console.error(key, e);
     if (!res.headersSent) send(res, code, { error: code === 500 ? 'เซิร์ฟเวอร์ผิดพลาด ลองใหม่อีกครั้ง' : e.message });
   }
