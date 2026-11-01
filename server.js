@@ -18,6 +18,7 @@ const PUBLIC = path.join(__dirname, 'public');
 const db = createDb();
 
 // ---------- เครื่องยนต์เกม ----------
+const CLV_SRV = ((fs.readFileSync(path.join(PUBLIC, 'index.html'), 'utf8').match(/CLV106='([^']+)'/) || [])[1]) || '';
 const engine = loadEngine(path.join(PUBLIC, 'index.html'));
 // ไฟล์เกมจาก Artifact ไม่มีส่วนหัว HTML (Artifact เติมให้เอง) เซิร์ฟเวอร์จึงเติม doctype + viewport ให้มือถือแสดงเต็มจอ
 let gameHtml = fs.readFileSync(path.join(PUBLIC, 'index.html'), 'utf8')
@@ -1218,7 +1219,7 @@ const routes = {
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
     const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
-    send(res, 200, { server: 'B106.1', pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    send(res, 200, { server: 'B106.2', client: CLV_SRV, pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -1238,7 +1239,7 @@ const routes = {
     send(res, 200, { top: all.slice(0, 10).map(x => ({ n: x.n, cls: x.cls, lvl: x.lvl, rating: x.rating, tt: x.tt, sp: x.sp | 0, me: x.id === u.id })), rank: idx >= 0 ? idx + 1 : 0, total: all.length });
   },
   'GET /api/top': async (req, res) => { if (Date.now() - TOPC.at > 60000) TOPC = { at: Date.now(), top: (await db.top()).map(r => ({ name: r.name, cls: r.cls, lvl: r.level })) }; send(res, 200, { top: TOPC.top }); },
-  'GET /api/online': async (req, res) => { await boardLoad(); await warLoad(); await warRoll(); send(res, 200, { n: realOnline(Date.now()), board: BOARD104.v, war: warStatus() }); }, // B98 จำนวนผู้เล่นจริงที่ออนไลน์ (ไม่นับบอท)
+  'GET /api/online': async (req, res) => { await boardLoad(); await warLoad(); await warRoll(); send(res, 200, { n: realOnline(Date.now()), board: BOARD104.v, war: warStatus(), cv: CLV_SRV }); }, // B98 จำนวนผู้เล่นจริงที่ออนไลน์ (ไม่นับบอท)
   'POST /api/pay/checkout': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
     const b = await readBody(req); const sku = String(b.sku || 'sup35'), it = PAY_SKU[sku];
