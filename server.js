@@ -706,6 +706,33 @@ function stripeSigOk(raw, header, secret) {
 }
 const TERMS100 = '<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>เงื่อนไขการซื้อ · TheWarWhat</title><style>body{font-family:sans-serif;background:#0e1326;color:#e8eaf2;max-width:640px;margin:0 auto;padding:20px;line-height:1.7}h1{color:#ffd23c;font-size:22px}h2{font-size:17px;color:#ffb070}a{color:#8fd8ff}</style></head><body><h1>เงื่อนไขการซื้อและการคืนเงิน</h1><p>เกม ศึกชิงเมือง · TheWarWhat (https://thewarwhat-1.onrender.com)</p><h2>สินค้า</h2><p>สินค้าเป็นไอเทมดิจิทัลในเกม ผูกกับบัญชีผู้ซื้อ ไม่สามารถแลกเปลี่ยนเป็นเงินจริงได้ แพ็กผู้สนับสนุน 35 บาท ประกอบด้วยอุปกรณ์เลเวล 20 (อาวุธ 1 ชิ้น เกราะ 1 ชิ้น) และฉายา ✦ ผู้สนับสนุน ซื้อได้ 1 ครั้งต่อบัญชี</p><h2>การชำระเงิน</h2><p>ชำระผ่าน Stripe ด้วยพร้อมเพย์หรือบัตร เราไม่เก็บข้อมูลบัตรของผู้ซื้อ ของจะเข้าเกมอัตโนมัติหลังชำระสำเร็จ หากไม่ได้รับภายใน 30 นาที โปรดติดต่อผู้ดูแลเกมผ่านแชทในเกม</p><h2>การคืนเงิน</h2><p>ไอเทมดิจิทัลที่ได้รับเข้าเกมแล้วไม่สามารถคืนเงินได้ ยกเว้นกรณีชำระเงินแล้วแต่ไม่ได้รับของ หรือถูกเรียกเก็บเงินซ้ำ เราจะคืนเงินเต็มจำนวน</p><h2>ความเป็นธรรม</h2><p>สินค้าที่ขายไม่ทำให้ได้เปรียบเหนือผู้เล่นอื่นอย่างมีนัยสำคัญ และไม่มีระบบสุ่มเสี่ยงโชคด้วยเงินจริง</p><p><a href="/">กลับเข้าเกม</a></p></body></html>';
 
+// ---------- B101 จดหมายจากแอดมิน (ชดเชย/แจกของ) · ตั้ง ADMIN_KEY ใน Render (ยาว 16 ตัวขึ้นไป) ----------
+const MAILALL = { loaded: false, list: [] }, ADMFAIL = new Map();
+async function mailAllLoad() { if (MAILALL.loaded) return; MAILALL.loaded = true; try { const v = await db.getMeta('mailall'); if (v) MAILALL.list = JSON.parse(v) || []; } catch (e) {} }
+function mailSync101(p) {
+  if (!p.s || !p.s.created || !MAILALL.list.length) return false;
+  const last = p.s.mailAll | 0, now = Date.now(), todo = MAILALL.list.filter(m => m.id > last && m.exp > now);
+  if (!todo.length) return false;
+  const out = engine.run(p.s, p.ui, {}, E => { todo.forEach(m => { if (E.mailAdd101) E.mailAdd101({ id: 'b' + m.id, bc: m.id, t: m.t, b: m.b, from: m.from, it: m.it, at: m.id }); }); });
+  p.s = out.s; p.ui = out.ui; return true;
+}
+function admKeyOk(req, key) {
+  const want = String(process.env.ADMIN_KEY || ''), ip = clientIp(req), f = ADMFAIL.get(ip) || { n: 0, at: 0 };
+  if (want.length < 16) return { error: 'ยังไม่ได้ตั้ง ADMIN_KEY ใน Render (ต้องยาว 16 ตัวขึ้นไป)', code: 503 };
+  if (f.n >= 5 && Date.now() - f.at < 10 * 60000) return { error: 'ใส่รหัสผิดหลายครั้ง รอ 10 นาที', code: 429 };
+  const a = crypto.createHash('sha256').update(String(key || '')).digest(), b = crypto.createHash('sha256').update(want).digest();
+  if (!crypto.timingSafeEqual(a, b)) { ADMFAIL.set(ip, { n: f.n + 1, at: Date.now() }); return { error: 'รหัสแอดมินไม่ถูกต้อง', code: 403 }; }
+  ADMFAIL.delete(ip); return { ok: true };
+}
+const ADMIN_PAGE101 = '<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>ส่งจดหมาย · แอดมิน</title><style>body{font-family:sans-serif;background:#0e1326;color:#e8eaf2;max-width:520px;margin:0 auto;padding:16px}label{display:block;margin:10px 0 4px;font-size:14px}input,textarea,select{width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #445;background:#1a2140;color:#fff;font-size:16px}textarea{height:90px}button{margin-top:14px;width:100%;padding:12px;border:0;border-radius:10px;background:#ffb43c;font-size:17px;font-weight:700}.row{display:flex;gap:8px}.row>div{flex:1}#out{margin-top:12px;padding:10px;border-radius:8px;background:#1a2140;white-space:pre-wrap}</style></head><body><h2>📬 ส่งจดหมายในเกม</h2>'+
+ '<label>รหัสแอดมิน (ADMIN_KEY)</label><input id="k" type="password" autocomplete="current-password">'+
+ '<label>ส่งถึง</label><select id="mode"><option value="all">ผู้เล่นทุกคน</option><option value="one">ผู้เล่นคนเดียว (ใส่ชื่อตัวละคร)</option></select><input id="to" placeholder="ชื่อตัวละคร (ถ้าส่งคนเดียว)" style="margin-top:6px">'+
+ '<label>หัวข้อ</label><input id="t" maxlength="60" value="ของชดเชยจากทีมงาน">'+
+ '<label>ข้อความ</label><textarea id="b" maxlength="600">ขออภัยในความไม่สะดวก</textarea>'+
+ '<div class="row"><div><label>ทอง</label><input id="gold" type="number" min="0" max="10000000" value="0"></div><div><label>ยาฟื้นเต็ม</label><input id="potF" type="number" min="0" max="50" value="0"></div><div><label>แร่ม่วง</label><input id="purple" type="number" min="0" max="100" value="0"></div></div>'+
+ '<label>อายุจดหมาย (วัน · ใช้กับส่งทุกคน)</label><input id="days" type="number" min="1" max="30" value="7"><button id="go">ส่งจดหมาย</button><div id="out"></div>'+
+ '<script>document.getElementById("go").onclick=function(){var v=function(i){return document.getElementById(i).value};var o=document.getElementById("out");o.textContent="กำลังส่ง…";fetch("/api/admin/mail",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key:v("k"),mode:v("mode"),to:v("to"),t:v("t"),b:v("b"),gold:+v("gold"),potF:+v("potF"),purple:+v("purple"),days:+v("days")})}).then(function(r){return r.json()}).then(function(j){o.textContent=j.ok?"✅ ส่งแล้ว: "+j.msg:"⚠ "+(j.error||"ผิดพลาด")}).catch(function(){o.textContent="⚠ เน็ตหลุด"})}</script></body></html>';
+
 // ---------- HTTP ----------
 const MAX_BODY = 16 * 1024;
 const SEC_HEADERS = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin', 'X-Frame-Options': 'SAMEORIGIN' };
@@ -831,6 +858,7 @@ const routes = {
     const p = await session(u.id);
     await wbEnsure(); engine.setWB(wbCtx()); engine.setBoard(board(), u.id);
     await wbPrizes(u.id, p).catch(e => console.error('prize', e.message));
+    await mailAllLoad(); mailSync101(p);
     await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad(); await launchLoad();
     const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); E.enter(); });
     p.s = out.s; p.ui = out.ui;newsEnter75(u.id,p);await newsClock75(); p.v++; persist(u.id, p); updateSnap(u.id, p);
@@ -865,6 +893,7 @@ const routes = {
     p.lastTick = now;
     let changed = PRIZE_PENDING.has(u.id);
     await prizeCheck(u.id, p);
+    await mailAllLoad(); if (mailSync101(p)) changed = true;
     engine.setBoard(board(), u.id); engine.setWB(wbCtx());
     ptPrep(u.id, p);
     await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad(); await launchLoad();
@@ -1072,7 +1101,7 @@ const routes = {
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
     const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
-    send(res, 200, { server: 'B100', pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    send(res, 200, { server: 'B101', pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -1125,6 +1154,25 @@ const routes = {
     }
     send(res, 200, { received: true });
   },
+  'POST /api/admin/mail': async (req, res) => {
+    const b = await readBody(req), ok = admKeyOk(req, b.key); if (!ok.ok) return send(res, ok.code, { error: ok.error });
+    const t = String(b.t || '').trim().slice(0, 60), body = String(b.b || '').slice(0, 600); if (!t) return send(res, 400, { error: 'ใส่หัวข้อ' });
+    const it = []; const g = Math.max(0, Math.min(1e7, Math.floor(+b.gold || 0))), pf = Math.max(0, Math.min(50, Math.floor(+b.potF || 0))), pu = Math.max(0, Math.min(100, Math.floor(+b.purple || 0)));
+    if (g) it.push({ k: 'gold', n: g }); if (pf) it.push({ k: 'potF', n: pf }); if (pu) it.push({ k: 'purple', n: pu });
+    if (b.mode === 'one') {
+      const id = await playerId48(0, b.to); if (!id) return send(res, 404, { error: 'ไม่พบผู้เล่นชื่อ ' + String(b.to || '') });
+      const p = await session(id); if (!p.s.created) return send(res, 404, { error: 'ผู้เล่นยังไม่ได้สร้างตัวละคร' });
+      const out = engine.run(p.s, p.ui, {}, E => { if (E.mailAdd101) E.mailAdd101({ id: 'a' + Date.now().toString(36), t, b: body, from: 'ทีมงาน', it }); });
+      p.s = out.s; p.ui = out.ui; p.v++; persist(id, p); db.audit(id, 'admin_mail', t + ' ' + JSON.stringify(it)).catch(() => {});
+      return send(res, 200, { ok: true, msg: 'ถึง ' + String(p.s.name || '') });
+    }
+    await mailAllLoad(); const days = Math.max(1, Math.min(30, Math.floor(+b.days || 7))), now = Date.now();
+    const id = Math.max(now, ...MAILALL.list.map(m => m.id + 1));
+    MAILALL.list = MAILALL.list.filter(m => m.exp > now).concat([{ id, t, b: body, from: 'ทีมงาน', it, exp: now + days * 864e5 }]).slice(-20);
+    await (db.putMeta || db.setMeta).call(db, 'mailall', JSON.stringify(MAILALL.list));
+    for (const [uid, p] of live) if (mailSync101(p)) { p.v++; persist(uid, p); }
+    send(res, 200, { ok: true, msg: 'ถึงผู้เล่นทุกคน (หมดอายุใน ' + days + ' วัน)' });
+  },
   'GET /api/health': async (req, res) => send(res, 200, { ok: true, players: live.size, db: db.kind.split(' ')[0] }),
 };
 
@@ -1149,6 +1197,7 @@ const server = http.createServer(async (req, res) => {
   const key = req.method + ' ' + url.pathname;
   try {
     if(await serveImage61(req,res,url.pathname))return;
+    if(req.method==='GET'&&url.pathname==='/admin'){res.writeHead(200,Object.assign({'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'},SEC_HEADERS));return res.end(ADMIN_PAGE101)}
     if(req.method==='GET'&&url.pathname==='/terms'){res.writeHead(200,Object.assign({'Content-Type':'text/html; charset=utf-8','Cache-Control':'public, max-age=3600'},SEC_HEADERS));return res.end(TERMS100)}
     // เปิดลิงก์ /api/... หรือหน้าที่ไม่มีอยู่ตรงๆ ในเบราว์เซอร์ → พากลับหน้าเกม แทนการโชว์ข้อความ JSON
     if (req.method === 'GET' && url.pathname !== '/' && /text\/html/.test(req.headers.accept || '') && url.pathname !== '/index.html') {
