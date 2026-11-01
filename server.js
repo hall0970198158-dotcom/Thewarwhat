@@ -738,7 +738,7 @@ const ADMIN_PAGE101 = `<!doctype html><html lang="th"><head><meta charset="utf-8
 <div class="tabs"><button data-t="mail" class="on">📬 จดหมาย</button><button data-t="pl">🔍 ผู้เล่น</button><button data-t="nt">📢 ประกาศ</button><button data-t="pay">💳 เติมเงิน</button><button data-t="mk">🏪 ตลาด</button></div>
 <div class="pane on" id="p-mail"><label>ส่งถึง</label><select id="mode"><option value="all">ผู้เล่นทุกคน</option><option value="one">ผู้เล่นคนเดียว (ชื่อตัวละคร)</option></select><input id="to" placeholder="ชื่อตัวละคร (ถ้าส่งคนเดียว)" style="margin-top:6px"><label>หัวข้อ</label><input id="t" maxlength="60" value="ของชดเชยจากทีมงาน"><label>ข้อความ</label><textarea id="b" maxlength="600">ขออภัยในความไม่สะดวก</textarea><div class="row"><div><label>ทอง</label><input id="gold" type="number" min="0" value="0"></div><div><label>ยาเต็ม</label><input id="potF" type="number" min="0" value="0"></div><div><label>แร่ม่วง</label><input id="purple" type="number" min="0" value="0"></div></div><label>อายุจดหมาย (วัน · ส่งทุกคน)</label><input id="days" type="number" min="1" max="30" value="7"><button class="w" id="sendmail">ส่งจดหมาย</button></div>
 <div class="pane" id="p-pl"><label>ชื่อตัวละคร หรือ ไอดีล็อกอิน</label><div class="row"><input id="pq"><button id="pfind" style="flex:0 0 90px">ค้นหา</button></div><div id="pinfo"></div></div>
-<div class="pane" id="p-nt"><h3 style="margin:8px 0">🪧 ป้ายประกาศตอนเข้าเกม</h3><small>ขึ้นเป็นหน้าต่างให้ผู้เล่นอ่านตอนเข้าเกม กดรับทราบแล้วไม่ขึ้นซ้ำจนกว่าจะตั้งป้ายใหม่ · เว้นข้อความว่างแล้วกดบันทึก = ปิดป้าย</small><label>หัวข้อ</label><input id="bdt" maxlength="60" placeholder="เช่น อัปเดตใหม่ B104"><label>ข้อความ (ขึ้นบรรทัดใหม่ได้)</label><textarea id="bdb" maxlength="1000" style="height:140px"></textarea><div class="row" style="margin-top:10px"><button id="bdgo">บันทึกป้าย</button><button class="g" id="bdload">โหลดป้ายปัจจุบัน</button></div><h3 style="margin:18px 0 8px">💬 ข้อความสั้นในแชท</h3><label>ข้อความ (ขึ้นในแชทช่องประกาศ)</label><textarea id="nt" maxlength="160"></textarea><button class="w" id="ntgo">ประกาศในแชท</button></div>
+<div class="pane" id="p-nt"><h3 style="margin:8px 0">🪧 ป้ายประกาศตอนเข้าเกม</h3><small>ขึ้นเป็นหน้าต่างให้ผู้เล่นอ่านตอนเข้าเกม กดรับทราบแล้วไม่ขึ้นซ้ำจนกว่าจะตั้งป้ายใหม่ · เว้นข้อความว่างแล้วกดบันทึก = ปิดป้าย</small><label>หัวข้อ</label><input id="bdt" maxlength="60" placeholder="เช่น อัปเดตใหม่ B104"><label>ข้อความ (ขึ้นบรรทัดใหม่ได้)</label><textarea id="bdb" maxlength="1000" style="height:140px"></textarea><div class="row" style="margin-top:10px"><button id="bdgo">บันทึกป้าย</button><button class="g" id="bdload">โหลดป้ายปัจจุบัน</button></div><h3 style="margin:18px 0 8px">⚔️ ทดสอบศึกชิงแดน</h3><small>เปิดสมรภูมินอกเวลา (ปกติเปิดเสาร์–อาทิตย์ 20:00–22:00)</small><div class="row" style="margin-top:8px"><button id="wt30">เปิด 30 นาที</button><button class="g" id="wt0">ปิดทดสอบ</button></div><h3 style="margin:18px 0 8px">💬 ข้อความสั้นในแชท</h3><label>ข้อความ (ขึ้นในแชทช่องประกาศ)</label><textarea id="nt" maxlength="160"></textarea><button class="w" id="ntgo">ประกาศในแชท</button></div>
 <div class="pane" id="p-pay"><button class="w g" id="payload">โหลดรายการเติมเงิน</button><div id="paylist"></div></div>
 <div class="pane" id="p-mk"><button class="w g" id="mkload">โหลดของในตลาด</button><div id="mklist"></div></div>
 <div class="box" id="out">พร้อมใช้งาน</div>
@@ -754,6 +754,7 @@ function showPl(j){var x=j.player;if(!x){$("pinfo").innerHTML="";return}$("pinfo
  $("mailone").onclick=function(){$("mode").value="one";$("to").value=x.name;document.querySelector('.tabs button[data-t="mail"]').click()}}
 $("pfind").onclick=function(){api("/api/admin/op",{op:"player",q:$("pq").value}).then(showPl)};
 $("bdgo").onclick=function(){api("/api/admin/op",{op:"board",title:$("bdt").value,text:$("bdb").value})};$("bdload").onclick=function(){api("/api/admin/op",{op:"boardget"}).then(function(j){if(j.board){$("bdt").value=j.board.t;$("bdb").value=j.board.b}})};
+$("wt30").onclick=function(){api("/api/admin/op",{op:"wartest",min:30})};$("wt0").onclick=function(){api("/api/admin/op",{op:"wartest",min:0})};
 $("ntgo").onclick=function(){if($("nt").value.trim())api("/api/admin/op",{op:"notice",text:$("nt").value})};
 $("payload").onclick=function(){api("/api/admin/op",{op:"pays"}).then(function(j){var L=j.pays||[],sum=L.reduce(function(a,x){return a+(x.amt||0)},0);$("paylist").innerHTML='<div class="box">ทั้งหมด '+L.length+' รายการ · รวม '+(sum/100).toLocaleString()+' บาท'+(j.mode?' · โหมด '+esc(j.mode):'')+'</div>'+L.map(function(x){return '<div class="it"><span>'+esc(x.name)+' <small>#'+x.uid+' · '+d(x.at)+'</small><br><small>'+esc(x.sid)+'</small></span><b>'+(x.amt/100)+' ฿</b></div>'}).join("")})};
 function mk(){api("/api/admin/op",{op:"mkt"}).then(function(j){var L=j.list||[];$("mklist").innerHTML='<div class="box">ของในตลาด '+L.length+' ชิ้น</div>'+L.map(function(x){return '<div class="it"><span>'+esc(x.name)+' <small>ราคา '+Number(x.price).toLocaleString()+'</small><br><small>ผู้ขาย '+esc(x.sn)+' #'+x.uid+' · หมด '+d(x.exp)+'</small></span><button class="r" data-id="'+esc(x.id)+'">ลบ</button></div>'}).join("");document.querySelectorAll("#mklist button[data-id]").forEach(function(b){b.onclick=function(){if(confirm("ลบรายการนี้? ของจะคืนผู้ขายทางจดหมาย"))api("/api/admin/op",{op:"mktdel",id:b.dataset.id}).then(mk)}})})}
@@ -791,6 +792,59 @@ async function payLogAdd(x) { await payLogLoad(); PAYLOG.list.unshift(x); PAYLOG
 async function admPlayer(uid) {
   const u = await db.userById(uid); if (!u) return null; const p = await session(uid), o = p.s || {}; await bansLoad(); const bn = BANS.map[uid];
   return { uid, user: u.username, name: o.name || u.display, cls: o.cls, lvl: o.lvl | 0, gold: Math.floor(o.gold || 0), sup: !!o.sup100, title: o.title || '', bag: (o.gbag || []).length, mail: (o.mail || []).length, seen: p.touched || 0, online: !!(p.lastTick && Date.now() - p.lastTick < 60000), created: u.created_at, ip: LASTIP.get(uid) || '', banned: !!(bn || u.banned), reason: bn ? bn.reason : '' };
+}
+
+// ---------- B106 ศึกชิงแดน: สมรภูมิแยก · เสาร์–อาทิตย์ 20:00–22:00 น. (เวลาไทย) ----------
+const WAR = { loaded: false, wk: 0, fac: [0, 0, 0, 0], ppl: {}, last: null, buff: null, testUntil: 0, pair: {}, shield: {} }, WARMAP = new Map(), WAR_LV = 30, WAR_GAP = 15, WAR_CD = 10 * 60e3, WAR_SHIELD = 5 * 60e3;
+let WAR_DIRTY = false, WAR_SAVE_AT = 0;
+const thNow = () => new Date(Date.now() + 7 * 3600e3);
+function warOpenNow() { if (WAR.testUntil > Date.now()) return true; const d = thNow(), w = d.getUTCDay(), h = d.getUTCHours(); return (w === 6 || w === 0) && h >= 20 && h < 22; }
+function warEndAt() { if (WAR.testUntil > Date.now()) return WAR.testUntil; const d = thNow(); d.setUTCHours(22, 0, 0, 0); return d.getTime() - 7 * 3600e3; }
+function warNextAt() { const now = Date.now(), d0 = thNow(); d0.setUTCHours(0, 0, 0, 0); for (let k = 0; k < 8; k++) { const d = new Date(d0.getTime() + k * 864e5), w = d.getUTCDay(); if (w !== 6 && w !== 0) continue; const st = d.getTime() + 20 * 3600e3 - 7 * 3600e3; if (st + 2 * 3600e3 > now) return st; } return 0; }
+const warWk = () => Math.floor((Math.floor((Date.now() + 7 * 3600e3) / 864e5) + 3) / 7);
+async function warLoad() { if (WAR.loaded) return; WAR.loaded = true; try { const v = await db.getMeta('war106'); if (v) Object.assign(WAR, JSON.parse(v) || {}, { loaded: true }); } catch (e) { console.error('war load', e.message); } if (!WAR.wk) WAR.wk = warWk(); }
+async function warSave(force) { WAR_DIRTY = true; if (!force && Date.now() - WAR_SAVE_AT < 5000) return; WAR_DIRTY = false; WAR_SAVE_AT = Date.now(); const o = Object.assign({}, WAR); delete o.loaded; delete o.pair; await (db.putMeta || db.setMeta).call(db, 'war106', JSON.stringify(o)).catch(e => console.error('war save', e.message)); }
+setInterval(() => { if (WAR_DIRTY) warSave(true); }, 15000).unref();
+async function warRoll() {
+  const wk = warWk(); if (WAR.wk === wk) return; const fp = WAR.fac.slice(), tot = fp.reduce((a, b) => a + b, 0);
+  const top = Object.entries(WAR.ppl).filter(([, x]) => x.pts > 0).sort((a, b) => b[1].pts - a[1].pts).slice(0, 10).map(([uid, x]) => ({ uid: +uid, n: x.n, fac: x.fac, pts: x.pts }));
+  const win = tot > 0 ? fp.indexOf(Math.max(...fp)) : -1, members = Object.entries(WAR.ppl).filter(([, x]) => x.fac === win && (x.w + x.l) > 0).map(([uid]) => +uid);
+  WAR.last = { wk: WAR.wk, win, fac: fp, top }; WAR.buff = win >= 0 ? { fac: win, until: Date.now() + 7 * 864e5 } : null;
+  WAR.wk = wk; WAR.fac = [0, 0, 0, 0]; WAR.ppl = {}; WAR.pair = {}; WAR.shield = {}; await warSave(true);
+  const PR = [[300000, 3], [200000, 2], [200000, 2], [100000, 1], [100000, 1], [100000, 1], [100000, 1], [100000, 1], [100000, 1], [100000, 1]];
+  for (let i = 0; i < top.length; i++) await mailTo(top[i].uid, { id: 'wr' + wk + '_' + i, t: '🏆 รางวัลศึกชิงแดน อันดับ ' + (i + 1), from: 'ศึกชิงแดน', b: 'แต้มส่วนตัว ' + top[i].pts + ' แต้ม · ขอบคุณที่ร่วมรบ!', it: [{ k: 'gold', n: PR[i][0] }, { k: 'purple', n: PR[i][1] }] }).catch(() => {});
+  for (const uid of members) await mailTo(uid, { id: 'ww' + wk, t: '⚔️ ฝ่ายของคุณชนะศึกชิงแดน!', from: 'ศึกชิงแดน', b: 'สมาชิกได้ทองและ XP จากการล่า +5% ตลอดสัปดาห์ · รับฉายาผู้พิชิตแดน', it: [{ k: 'gold', n: 50000 }, { k: 'wt', n: 1 }] }).catch(() => {});
+  if (win >= 0) newsPush75('admin', 0, '⚔️ ศึกชิงแดน', 'ฝ่ายที่ชนะสัปดาห์นี้คือฝ่ายลำดับที่ ' + (win + 1) + ' ด้วย ' + fp[win] + ' แต้ม!');
+}
+function warPub(uid) { const now = Date.now(), x = WAR.ppl[uid]; return { pts: x ? x.pts : 0, w: x ? x.w : 0, l: x ? x.l : 0, sh: Math.max(0, (WAR.shield[uid] || 0) - now) }; }
+function warStatus() { const open = warOpenNow(), now = Date.now(); return { open, end: open ? warEndAt() : 0, next: warNextAt(), soon: open || warNextAt() - now < 15 * 60e3, last: WAR.last, buff: WAR.buff }; }
+async function warCheck(uid, p, tid, ip) {
+  if (!warOpenNow()) return { error: 'ศึกชิงแดนปิดอยู่' };
+  const me = WARMAP.get(uid), tg = WARMAP.get(tid), now = Date.now();
+  if (!me || now - me.at > 8000) return { error: 'เข้าสมรภูมิก่อน' };
+  if (!tg || now - tg.at > 8000) return { error: 'ผู้เล่นออกจากสมรภูมิแล้ว' };
+  if (p.s.battle) return { error: 'กำลังต่อสู้อยู่' };
+  if (me.fac === tg.fac) return { error: 'ฝ่ายเดียวกัน' };
+  if ((p.s.lvl | 0) < WAR_LV || tg.lvl < WAR_LV) return { error: 'ต้อง Lv' + WAR_LV + ' ขึ้นไป' };
+  if (Math.abs((p.s.lvl | 0) - tg.lvl) > WAR_GAP) return { error: 'เลเวลห่างกันเกิน ' + WAR_GAP };
+  if (Math.hypot(me.x - tg.x, me.y - tg.y) > 90) return { error: 'อยู่ไกลเกินไป เดินเข้าไปใกล้อีก' };
+  if ((WAR.shield[tid] || 0) > now) return { error: 'ผู้เล่นมีโล่กันดวลอยู่' };
+  const key = uid + ':' + tid; if (now - (WAR.pair[key] || 0) < WAR_CD) return { error: 'ท้าดวลคนนี้ได้อีกใน ' + Math.ceil((WAR_CD - (now - WAR.pair[key])) / 60000) + ' นาที' };
+  const q = await session(tid); if (!q.s.created) return { error: 'ไม่พบผู้เล่น' }; if (q.s.battle) return { error: 'ผู้เล่นกำลังต่อสู้อยู่' };
+  const snap = engine.snap(q.s); if (!snap) return { error: 'ไม่พบข้อมูลผู้เล่น' };
+  WAR.pair[key] = now; return { snap };
+}
+async function warResolve(uid, p) {
+  const r = p.s && p.s.war106Res; if (!r) return; delete p.s.war106Res; await warLoad();
+  const A = uid, D = Number(r.uid), now = Date.now(), q = await session(D);
+  const ent = (id, o) => WAR.ppl[id] || (WAR.ppl[id] = { n: String(o.name || '').slice(0, 16), fac: o.fac, pts: 0, w: 0, l: 0, st: 0 });
+  const pa = ent(A, p.s), pd = ent(D, q.s); pa.n = String(p.s.name || pa.n).slice(0, 16); pd.n = String(q.s.name || pd.n).slice(0, 16);
+  const rank = Object.entries(WAR.ppl).sort((a, b) => b[1].pts - a[1].pts).findIndex(([id]) => +id === D);
+  let msg;
+  if (r.won) { const gain = 10 + Math.min(5, pa.st) * 2 + (rank >= 0 && rank < 3 && pd.pts > 0 ? 5 : 0); pa.pts += gain; pa.w++; pa.st++; if (pa.fac != null) WAR.fac[pa.fac] += 10; pd.pts = Math.max(0, pd.pts - 3); pd.l++; pd.st = 0; WAR.shield[D] = now + WAR_SHIELD; msg = 'คุณแพ้ ' + pa.n + ' · เสีย 3 แต้ม · ได้โล่ 5 นาที'; }
+  else { pa.pts = Math.max(0, pa.pts - 3); pa.l++; pa.st = 0; pd.pts += 5; pd.w++; if (pd.fac != null) WAR.fac[pd.fac] += 5; WAR.shield[A] = now + WAR_SHIELD; msg = 'คุณป้องกันการท้าดวลจาก ' + pa.n + ' สำเร็จ! · ได้ 5 แต้ม'; }
+  mailTo(D, { id: 'wd' + A + '_' + Math.floor(now / 60000), t: '⚔️ ถูกท้าดวลในศึกชิงแดน', from: 'ศึกชิงแดน', b: msg + '\nกลับเข้าสมรภูมิเพื่อล้างแค้นได้!', it: [] }).catch(() => {});
+  await warSave();
 }
 
 // ---------- HTTP ----------
@@ -933,15 +987,17 @@ const routes = {
     if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
     if(/^m51(add|cap|reset)$/.test(a)||a==='petevolve70'||a==='ar73start'){const room=DGR.get(DGU.get(u.id));if(a==='ar73start'&&room)return send(res,409,{error:'ออกจากห้องดันเจี้ยนก่อนเข้าท้าประลอง'});if(room&&room.st==='fight')return send(res,409,{error:a==='ar73start'?'จบดันเจี้ยนทีมก่อนเข้าท้าประลอง':a==='petevolve70'?'จบดันเจี้ยนทีมก่อนวิวัฒนาการสัตว์เลี้ยง':'จบดันเจี้ยนทีมก่อนปรับความชำนาญ'});}
     if(a==='b'&&b.fight&&(!p.s.battle||p.s.battle.key50!==b.fight||(p.s.battle.gi||0)!==Number(b.target)))return reply(res,p,{fx:[],fxt:{}});
+    let warSnap = null, warTid = 0;
+    if (a === 'war106duel') { await warLoad(); warTid = parseInt(pr, 10); const chk = await warCheck(u.id, p, warTid); if (chk.error) return send(res, 409, { error: chk.error }); warSnap = chk.snap; }
     await prizeCheck(u.id, p);
     const before = p.s.gold;
     engine.setBoard(board(), u.id); await wbEnsure(); engine.setWB(wbCtx());
     ptPrep(u.id, p);
     await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad(); await launchLoad();
     const js0 = jSnap(p.s), newsBefore=newsSnap75(p.s);
-    const out = engine.run(p.s, p.ui, cleanInputs(b.inp), E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); E.act(a, pr); });
+    const out = engine.run(p.s, p.ui, cleanInputs(b.inp), E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); if (warSnap && E.warOpp106) E.warOpp106(warSnap, warTid); E.act(a, pr); });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; newsAfter75(u.id,p,newsBefore);partyAfter50(u.id,p,js0,out);ptAfter(u.id, p); cityAfter(p); funMark(p); await launchCheck(u.id, p); p.v++; persist(u.id, p); updateSnap(u.id, p);
+    p.s = out.s; p.ui = out.ui; newsAfter75(u.id,p,newsBefore);partyAfter50(u.id,p,js0,out);ptAfter(u.id, p); cityAfter(p); funMark(p); await launchCheck(u.id, p); if (p.s.war106Res) await warResolve(u.id, p).catch(e => console.error('war resolve', e.message)); p.v++; persist(u.id, p); updateSnap(u.id, p);
     if (out.s.gold - before > 200000) db.audit(u.id, 'gold_jump', a + ' +' + (out.s.gold - before)).catch(() => {});
     reply(res, p, out);
   },
@@ -954,6 +1010,7 @@ const routes = {
     let changed = PRIZE_PENDING.has(u.id);
     await prizeCheck(u.id, p);
     await mailAllLoad(); if (mailSync101(p)) changed = true;
+    await warLoad(); { const wb = WAR.buff && WAR.buff.fac === p.s.fac && WAR.buff.until > Date.now() ? WAR.buff.until : 0; if ((p.s.wb106 || 0) !== wb) { p.s.wb106 = wb; changed = true; } }
     engine.setBoard(board(), u.id); engine.setWB(wbCtx());
     ptPrep(u.id, p);
     await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad(); await launchLoad();
@@ -1161,7 +1218,7 @@ const routes = {
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
     const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
-    send(res, 200, { server: 'B105', pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    send(res, 200, { server: 'B106.1', pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -1181,7 +1238,7 @@ const routes = {
     send(res, 200, { top: all.slice(0, 10).map(x => ({ n: x.n, cls: x.cls, lvl: x.lvl, rating: x.rating, tt: x.tt, sp: x.sp | 0, me: x.id === u.id })), rank: idx >= 0 ? idx + 1 : 0, total: all.length });
   },
   'GET /api/top': async (req, res) => { if (Date.now() - TOPC.at > 60000) TOPC = { at: Date.now(), top: (await db.top()).map(r => ({ name: r.name, cls: r.cls, lvl: r.level })) }; send(res, 200, { top: TOPC.top }); },
-  'GET /api/online': async (req, res) => { await boardLoad(); send(res, 200, { n: realOnline(Date.now()), board: BOARD104.v }); }, // B98 จำนวนผู้เล่นจริงที่ออนไลน์ (ไม่นับบอท)
+  'GET /api/online': async (req, res) => { await boardLoad(); await warLoad(); await warRoll(); send(res, 200, { n: realOnline(Date.now()), board: BOARD104.v, war: warStatus() }); }, // B98 จำนวนผู้เล่นจริงที่ออนไลน์ (ไม่นับบอท)
   'POST /api/pay/checkout': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
     const b = await readBody(req); const sku = String(b.sku || 'sup35'), it = PAY_SKU[sku];
@@ -1245,6 +1302,7 @@ const routes = {
       newsPush75('admin', 0, '📢 ทีมงาน', title + ' · ' + text.replace(/\s+/g, ' ').slice(0, 120));
       return send(res, 200, { msg: 'ตั้งป้ายประกาศแล้ว ผู้เล่นจะเห็นตอนเข้าเกม (และภายใน 1 นาทีสำหรับคนที่ออนไลน์อยู่)', board: BOARD104.v });
     }
+    if (b.op === 'wartest') { await warLoad(); const m = Math.max(0, Math.min(180, Math.floor(+b.min || 0))); WAR.testUntil = m ? Date.now() + m * 60000 : 0; await warSave(true); return send(res, 200, { msg: m ? 'เปิดศึกชิงแดนทดสอบ ' + m + ' นาที' : 'ปิดศึกชิงแดนทดสอบแล้ว' }); }
     if (b.op === 'boardget') { await boardLoad(); return send(res, 200, { msg: BOARD104.v ? 'มีป้ายประกาศอยู่' : 'ยังไม่มีป้ายประกาศ', board: BOARD104.v }); }
     if (b.op === 'pays') { await payLogLoad(); return send(res, 200, { msg: 'โหลดแล้ว', pays: PAYLOG.list, mode: payStatus101().key }); }
     if (b.op === 'mkt') {
@@ -1332,6 +1390,21 @@ const routes = {
       return send(res, 200, mktReply(u.id, '✅ ซื้อแล้ว ของอยู่ใน 📬 จดหมาย'));
     }
     send(res, 400, { error: 'คำสั่งไม่ถูกต้อง' });
+  },
+  'POST /api/war': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    const b = await readBody(req), p = await session(u.id); if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
+    await warLoad(); await warRoll(); const now = Date.now();
+    if (b.leave) { WARMAP.delete(u.id); return send(res, 200, { ok: true }); }
+    if (!warOpenNow()) { WARMAP.delete(u.id); return send(res, 200, Object.assign({ list: [] }, warStatus())); }
+    if (!p.s.created || p.s.fac == null || (p.s.lvl | 0) < WAR_LV) return send(res, 400, { error: 'ต้องมีฝ่ายและ Lv' + WAR_LV + ' ขึ้นไป' });
+    const fx = p.s.s105 && p.s.s105.fx || {};
+    WARMAP.set(u.id, { n: String(p.s.name || u.display).slice(0, 16), cls: p.s.cls, lvl: p.s.lvl | 0, look: playerLook52(p.s), fac: p.s.fac, x: Math.max(0, Math.min(1440, Number(b.x) || 0)), y: Math.max(0, Math.min(1080, Number(b.y) || 0)), at: now, tt: String(p.s.title || '').slice(0, 12), sp: p.s.sup100 ? 1 : 0 });
+    for (const [id, t] of WARMAP) if (now - t.at > 20000) WARMAP.delete(id);
+    const me = WARMAP.get(u.id), list = [];
+    for (const [id, t] of WARMAP) { if (id === u.id || now - t.at > 8000) continue; const sh = (WAR.shield[id] || 0) > now, cd = now - (WAR.pair[u.id + ':' + id] || 0) < WAR_CD;
+      list.push({ uid: id, n: t.n, cls: t.cls, lvl: t.lvl, look: t.look, fac: t.fac, x: t.x, y: t.y, tt: t.tt, sp: t.sp, sh: sh ? 1 : 0, ok: t.fac !== me.fac && !sh && !cd && Math.abs(t.lvl - me.lvl) <= WAR_GAP && t.lvl >= WAR_LV ? 1 : 0 }); if (list.length >= 60) break; }
+    send(res, 200, Object.assign(warStatus(), { list, fac: WAR.fac, me: warPub(u.id) }));
   },
   'GET /api/health': async (req, res) => send(res, 200, { ok: true, players: live.size, db: db.kind.split(' ')[0] }),
 };
