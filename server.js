@@ -640,6 +640,7 @@ async function verify(tok) {
   if (!p || typeof p.uid !== 'number' || !(p.exp > Date.now())) return null;
   const u = await userById(p.uid);
   if (!u || u.banned || u.token_ver !== p.tv) return null;
+  await bansLoad(); if (BANS.map[u.id]) return null;
   return u;
 }
 const issue = u => sign({ uid: u.id, tv: u.token_ver, exp: Date.now() + TOKEN_DAYS * 864e5 });
@@ -695,6 +696,7 @@ async function payGrant(sid, needUid) {
     const out = engine.run(p.s, p.ui, {}, E => { if (E.supGrant100) E.supGrant100(sid); });
     p.s = out.s; p.ui = out.ui; p.v++; await persist(uid, p); updateSnap(uid, p);
     db.audit(uid, 'pay', sku + ' ' + sid).catch(() => {});
+    payLogAdd({ sid, uid, name: String(p.s.name || ''), sku, amt: cs.amount_total | 0, at: Date.now() }).catch(e => console.error('paylog', e.message));
     console.log('pay granted', uid, sku, sid);
     return { ok: true };
   } finally { PAY_BUSY.delete(sid); }
@@ -726,7 +728,32 @@ function admKeyOk(req, key) {
   if (!crypto.timingSafeEqual(a, b)) { ADMFAIL.set(ip, { n: f.n + 1, at: Date.now() }); return { error: 'รหัสแอดมินไม่ถูกต้อง', code: 403 }; }
   ADMFAIL.delete(ip); return { ok: true };
 }
-const ADMIN_PAGE101 = '<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>ส่งจดหมาย · แอดมิน</title><style>body{font-family:sans-serif;background:#0e1326;color:#e8eaf2;max-width:520px;margin:0 auto;padding:16px}label{display:block;margin:10px 0 4px;font-size:14px}input,textarea,select{width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #445;background:#1a2140;color:#fff;font-size:16px}textarea{height:90px}button{margin-top:14px;width:100%;padding:12px;border:0;border-radius:10px;background:#ffb43c;font-size:17px;font-weight:700}.row{display:flex;gap:8px}.row>div{flex:1}#out{margin-top:12px;padding:10px;border-radius:8px;background:#1a2140;white-space:pre-wrap}</style></head><body><h2>📬 ส่งจดหมายในเกม</h2>'+
+const ADMIN_PAGE101 = `<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>แอดมิน · TheWarWhat</title>
+<style>body{font-family:sans-serif;background:#0e1326;color:#e8eaf2;max-width:560px;margin:0 auto;padding:12px}h2{margin:6px 0 10px}label{display:block;margin:10px 0 4px;font-size:14px}input,textarea,select{width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #445;background:#1a2140;color:#fff;font-size:16px}textarea{height:80px}button{padding:11px;border:0;border-radius:10px;background:#ffb43c;font-size:16px;font-weight:700;color:#201000}button.w{width:100%;margin-top:12px}button.g{background:#2a3256;color:#fff}button.r{background:#ff5a5a;color:#fff}.tabs{display:flex;gap:4px;flex-wrap:wrap;margin:10px 0}.tabs button{flex:1;min-width:30%;background:#2a3256;color:#fff;font-size:14px;padding:9px 4px}.tabs button.on{background:#ffb43c;color:#201000}.row{display:flex;gap:8px}.row>*{flex:1}.box{margin-top:12px;padding:10px;border-radius:8px;background:#1a2140;white-space:pre-wrap;font-size:14px;line-height:1.55}.it{border-bottom:1px solid #334;padding:6px 0;display:flex;justify-content:space-between;gap:8px;align-items:center}.pane{display:none}.pane.on{display:block}small{color:#9aa7bd}</style></head><body>
+<h2>🛠️ แอดมิน · ศึกชิงเมือง</h2><label>รหัสแอดมิน (ADMIN_KEY)</label><input id="k" type="password" autocomplete="current-password">
+<div class="tabs"><button data-t="mail" class="on">📬 จดหมาย</button><button data-t="pl">🔍 ผู้เล่น</button><button data-t="nt">📢 ประกาศ</button><button data-t="pay">💳 เติมเงิน</button><button data-t="mk">🏪 ตลาด</button></div>
+<div class="pane on" id="p-mail"><label>ส่งถึง</label><select id="mode"><option value="all">ผู้เล่นทุกคน</option><option value="one">ผู้เล่นคนเดียว (ชื่อตัวละคร)</option></select><input id="to" placeholder="ชื่อตัวละคร (ถ้าส่งคนเดียว)" style="margin-top:6px"><label>หัวข้อ</label><input id="t" maxlength="60" value="ของชดเชยจากทีมงาน"><label>ข้อความ</label><textarea id="b" maxlength="600">ขออภัยในความไม่สะดวก</textarea><div class="row"><div><label>ทอง</label><input id="gold" type="number" min="0" value="0"></div><div><label>ยาเต็ม</label><input id="potF" type="number" min="0" value="0"></div><div><label>แร่ม่วง</label><input id="purple" type="number" min="0" value="0"></div></div><label>อายุจดหมาย (วัน · ส่งทุกคน)</label><input id="days" type="number" min="1" max="30" value="7"><button class="w" id="sendmail">ส่งจดหมาย</button></div>
+<div class="pane" id="p-pl"><label>ชื่อตัวละคร หรือ ไอดีล็อกอิน</label><div class="row"><input id="pq"><button id="pfind" style="flex:0 0 90px">ค้นหา</button></div><div id="pinfo"></div></div>
+<div class="pane" id="p-nt"><label>ข้อความประกาศ (ขึ้นในแชทช่องประกาศของทุกคน)</label><textarea id="nt" maxlength="160"></textarea><button class="w" id="ntgo">ประกาศ</button></div>
+<div class="pane" id="p-pay"><button class="w g" id="payload">โหลดรายการเติมเงิน</button><div id="paylist"></div></div>
+<div class="pane" id="p-mk"><button class="w g" id="mkload">โหลดของในตลาด</button><div id="mklist"></div></div>
+<div class="box" id="out">พร้อมใช้งาน</div>
+<script>
+var $=function(i){return document.getElementById(i)},out=$("out");try{$("k").value=sessionStorage.getItem("ak")||""}catch(e){}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function api(path,body){try{sessionStorage.setItem("ak",$("k").value)}catch(e){}body=body||{};body.key=$("k").value;out.textContent="กำลังทำงาน…";return fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json()}).then(function(j){out.textContent=j.error?"⚠ "+j.error:(j.msg?"✅ "+j.msg:"✅ เรียบร้อย");return j}).catch(function(){out.textContent="⚠ เน็ตหลุด";return{}})}
+document.querySelectorAll(".tabs button").forEach(function(b){b.onclick=function(){document.querySelectorAll(".tabs button").forEach(function(x){x.classList.toggle("on",x===b)});document.querySelectorAll(".pane").forEach(function(x){x.classList.toggle("on",x.id==="p-"+b.dataset.t)})}});
+$("sendmail").onclick=function(){var v=function(i){return $(i).value};api("/api/admin/mail",{mode:v("mode"),to:v("to"),t:v("t"),b:v("b"),gold:+v("gold"),potF:+v("potF"),purple:+v("purple"),days:+v("days")})};
+function d(t){return t?new Date(t).toLocaleString("th-TH",{timeZone:"Asia/Bangkok"}):"-"}
+function showPl(j){var x=j.player;if(!x){$("pinfo").innerHTML="";return}$("pinfo").innerHTML='<div class="box"><b>'+esc(x.name)+'</b> · ไอดี '+esc(x.user)+' (#'+x.uid+')<br>'+esc(x.cls)+' Lv'+x.lvl+' · ทอง '+Number(x.gold).toLocaleString()+'<br>ผู้สนับสนุน: '+(x.sup?"✅":"-")+' · ฉายา '+esc(x.title||"-")+'<br>กระเป๋า '+x.bag+' ชิ้น · จดหมาย '+x.mail+' ฉบับ<br>ออนไลน์ล่าสุด: '+d(x.seen)+(x.online?" 🟢":"")+'<br>สมัคร: '+d(x.created)+'<br>IP ล่าสุด: '+esc(x.ip||"-")+'<br>สถานะ: '+(x.banned?'<b style="color:#ff6a6a">ถูกแบน</b> '+esc(x.reason||""):"ปกติ")+'</div><label>เหตุผล (ถ้าแบน)</label><input id="rs" maxlength="80"><div class="row" style="margin-top:8px">'+(x.banned?'<button class="g" id="unban">ปลดแบน</button>':'<button class="r" id="ban">แบนบัญชีนี้</button>')+'<button class="g" id="mailone">ส่งจดหมายหาคนนี้</button></div>';
+ var b1=$("ban"),b2=$("unban");if(b1)b1.onclick=function(){if(confirm("แบน "+x.name+" ?"))api("/api/admin/op",{op:"ban",uid:x.uid,reason:$("rs").value}).then(function(j){if(j.player)showPl(j)})};if(b2)b2.onclick=function(){api("/api/admin/op",{op:"unban",uid:x.uid}).then(function(j){if(j.player)showPl(j)})};
+ $("mailone").onclick=function(){$("mode").value="one";$("to").value=x.name;document.querySelector('.tabs button[data-t="mail"]').click()}}
+$("pfind").onclick=function(){api("/api/admin/op",{op:"player",q:$("pq").value}).then(showPl)};
+$("ntgo").onclick=function(){if($("nt").value.trim())api("/api/admin/op",{op:"notice",text:$("nt").value})};
+$("payload").onclick=function(){api("/api/admin/op",{op:"pays"}).then(function(j){var L=j.pays||[],sum=L.reduce(function(a,x){return a+(x.amt||0)},0);$("paylist").innerHTML='<div class="box">ทั้งหมด '+L.length+' รายการ · รวม '+(sum/100).toLocaleString()+' บาท'+(j.mode?' · โหมด '+esc(j.mode):'')+'</div>'+L.map(function(x){return '<div class="it"><span>'+esc(x.name)+' <small>#'+x.uid+' · '+d(x.at)+'</small><br><small>'+esc(x.sid)+'</small></span><b>'+(x.amt/100)+' ฿</b></div>'}).join("")})};
+function mk(){api("/api/admin/op",{op:"mkt"}).then(function(j){var L=j.list||[];$("mklist").innerHTML='<div class="box">ของในตลาด '+L.length+' ชิ้น</div>'+L.map(function(x){return '<div class="it"><span>'+esc(x.name)+' <small>ราคา '+Number(x.price).toLocaleString()+'</small><br><small>ผู้ขาย '+esc(x.sn)+' #'+x.uid+' · หมด '+d(x.exp)+'</small></span><button class="r" data-id="'+esc(x.id)+'">ลบ</button></div>'}).join("");document.querySelectorAll("#mklist button[data-id]").forEach(function(b){b.onclick=function(){if(confirm("ลบรายการนี้? ของจะคืนผู้ขายทางจดหมาย"))api("/api/admin/op",{op:"mktdel",id:b.dataset.id}).then(mk)}})})}
+$("mkload").onclick=mk;
+</script></body></html>`;
  '<label>รหัสแอดมิน (ADMIN_KEY)</label><input id="k" type="password" autocomplete="current-password">'+
  '<label>ส่งถึง</label><select id="mode"><option value="all">ผู้เล่นทุกคน</option><option value="one">ผู้เล่นคนเดียว (ใส่ชื่อตัวละคร)</option></select><input id="to" placeholder="ชื่อตัวละคร (ถ้าส่งคนเดียว)" style="margin-top:6px">'+
  '<label>หัวข้อ</label><input id="t" maxlength="60" value="ของชดเชยจากทีมงาน">'+
@@ -734,6 +761,31 @@ const ADMIN_PAGE101 = '<!doctype html><html lang="th"><head><meta charset="utf-8
  '<div class="row"><div><label>ทอง</label><input id="gold" type="number" min="0" max="10000000" value="0"></div><div><label>ยาฟื้นเต็ม</label><input id="potF" type="number" min="0" max="50" value="0"></div><div><label>แร่ม่วง</label><input id="purple" type="number" min="0" max="100" value="0"></div></div>'+
  '<label>อายุจดหมาย (วัน · ใช้กับส่งทุกคน)</label><input id="days" type="number" min="1" max="30" value="7"><button id="go">ส่งจดหมาย</button><div id="out"></div>'+
  '<script>document.getElementById("go").onclick=function(){var v=function(i){return document.getElementById(i).value};var o=document.getElementById("out");o.textContent="กำลังส่ง…";fetch("/api/admin/mail",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key:v("k"),mode:v("mode"),to:v("to"),t:v("t"),b:v("b"),gold:+v("gold"),potF:+v("potF"),purple:+v("purple"),days:+v("days")})}).then(function(r){return r.json()}).then(function(j){o.textContent=j.ok?"✅ ส่งแล้ว: "+j.msg:"⚠ "+(j.error||"ผิดพลาด")}).catch(function(){o.textContent="⚠ เน็ตหลุด"})}</script></body></html>';
+
+// ---------- B103 ตลาดผู้เล่น (ของฝากไว้ที่เซิร์ฟเวอร์ · ส่งของ/เงินผ่านจดหมาย) ----------
+const MKT = { loaded: false, list: [], seq: 0 }, MKT_TAX = 0.10, MKT_LV = 30, MKT_MAXN = 10, MKT_TOTAL = 600, MKT_MS = 48 * 3600e3, LASTIP = new Map();
+async function mktLoad() { if (MKT.loaded) return; MKT.loaded = true; try { const v = await db.getMeta('mkt'); if (v) { const o = JSON.parse(v); MKT.list = Array.isArray(o.list) ? o.list : []; MKT.seq = o.seq | 0; } } catch (e) { console.error('mkt load', e.message); } }
+async function mktSave() { await (db.putMeta || db.setMeta).call(db, 'mkt', JSON.stringify({ list: MKT.list, seq: MKT.seq })); }
+async function mailTo(uid, m) { const q = await session(uid); const out = engine.run(q.s, q.ui, {}, E => { if (E.mailAdd101) E.mailAdd101(m); }); q.s = out.s; q.ui = out.ui; q.v++; persist(uid, q); }
+async function mktSweep() {
+  const now = Date.now(), gone = MKT.list.filter(x => x.exp <= now); if (!gone.length) return;
+  MKT.list = MKT.list.filter(x => x.exp > now); await mktSave();
+  for (const x of gone) await mailTo(x.uid, { id: 'mx' + x.id, t: 'ของในตลาดหมดเวลาขาย', from: 'ตลาด', b: 'ไม่มีผู้ซื้อภายใน 48 ชั่วโมง คืนของให้แล้ว', it: [{ k: 'gear', v: x.it }] }).catch(e => console.error('mkt return', e.message));
+}
+function mktInfo(p, it) { let info = null; engine.run(p.s, p.ui, {}, E => { info = E.mktInfo103 ? E.mktInfo103(it) : null; }); return info; }
+function mktPub(x, uid) { return { id: x.id, sn: x.sn, it: x.it, price: x.price, exp: x.exp, mine: x.uid === uid }; }
+function mktReply(uid, msg) { return { msg, list: MKT.list.map(x => mktPub(x, uid)).sort((a, b) => b.exp - a.exp), mine: MKT.list.filter(x => x.uid === uid).length, tax: MKT_TAX }; }
+
+// ---------- B104 เครื่องมือแอดมิน: แบน (เก็บใน meta) · ประวัติเติมเงิน ----------
+const BANS = { loaded: false, map: {} }, PAYLOG = { loaded: false, list: [] };
+async function bansLoad() { if (BANS.loaded) return; BANS.loaded = true; try { const v = await db.getMeta('bans'); if (v) BANS.map = JSON.parse(v) || {}; } catch (e) {} }
+async function bansSave() { await (db.putMeta || db.setMeta).call(db, 'bans', JSON.stringify(BANS.map)); }
+async function payLogLoad() { if (PAYLOG.loaded) return; PAYLOG.loaded = true; try { const v = await db.getMeta('paylog'); if (v) PAYLOG.list = JSON.parse(v) || []; } catch (e) {} }
+async function payLogAdd(x) { await payLogLoad(); PAYLOG.list.unshift(x); PAYLOG.list = PAYLOG.list.slice(0, 300); await (db.putMeta || db.setMeta).call(db, 'paylog', JSON.stringify(PAYLOG.list)); }
+async function admPlayer(uid) {
+  const u = await db.userById(uid); if (!u) return null; const p = await session(uid), o = p.s || {}; await bansLoad(); const bn = BANS.map[uid];
+  return { uid, user: u.username, name: o.name || u.display, cls: o.cls, lvl: o.lvl | 0, gold: Math.floor(o.gold || 0), sup: !!o.sup100, title: o.title || '', bag: (o.gbag || []).length, mail: (o.mail || []).length, seen: p.touched || 0, online: !!(p.lastTick && Date.now() - p.lastTick < 60000), created: u.created_at, ip: LASTIP.get(uid) || '', banned: !!(bn || u.banned), reason: bn ? bn.reason : '' };
+}
 
 // ---------- HTTP ----------
 const MAX_BODY = 16 * 1024;
@@ -847,7 +899,7 @@ const routes = {
     const b = await readBody(req);
     const u = await db.userByName(String(b.username || '').trim().toLowerCase());
     if (!u || (await hashPw(String(b.password || ''), u.pass_salt)) !== u.pass_hash) return send(res, 401, { error: 'ไอดีหรือรหัสผ่านไม่ถูกต้อง' });
-    if (u.banned) return send(res, 403, { error: 'บัญชีนี้ถูกระงับ' });
+    await bansLoad(); if (u.banned || BANS.map[u.id]) return send(res, 403, { error: 'บัญชีนี้ถูกระงับ' + (BANS.map[u.id] && BANS.map[u.id].reason ? ' (' + BANS.map[u.id].reason + ')' : '') });
     send(res, 200, { token: issue(u) });
   },
   'POST /api/logout': async (req, res) => {
@@ -1103,7 +1155,7 @@ const routes = {
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
     const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
-    send(res, 200, { server: 'B101.3', pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    send(res, 200, { server: 'B104', pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -1118,7 +1170,7 @@ const routes = {
   'GET /api/ladder': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
     const wk90 = Math.floor((Math.floor((Date.now() + 7 * 3600000) / 864e5) + 3) / 7); // B90 อันดับ PvP รายสัปดาห์ รีเซ็ตทุกจันทร์ 00:00
-    const all = board().filter(x => wk90 <= 2965 || x.pwk === wk90).sort((a, b) => (b.rating | 0) - (a.rating | 0));
+    const all = board().filter(x => !BANS.map[x.id] && (wk90 <= 2965 || x.pwk === wk90)).sort((a, b) => (b.rating | 0) - (a.rating | 0));
     const idx = all.findIndex(x => x.id === u.id);
     send(res, 200, { top: all.slice(0, 10).map(x => ({ n: x.n, cls: x.cls, lvl: x.lvl, rating: x.rating, tt: x.tt, sp: x.sp | 0, me: x.id === u.id })), rank: idx >= 0 ? idx + 1 : 0, total: all.length });
   },
@@ -1156,6 +1208,40 @@ const routes = {
     }
     send(res, 200, { received: true });
   },
+  'POST /api/admin/op': async (req, res) => {
+    const b = await readBody(req), ok = admKeyOk(req, b.key); if (!ok.ok) return send(res, ok.code, { error: ok.error });
+    if (b.op === 'player') {
+      const q = String(b.q || '').trim().slice(0, 32); if (!q) return send(res, 400, { error: 'ใส่ชื่อ' });
+      let id = await playerId48(0, q); if (!id) { const u = await db.userByName(q.toLowerCase()); if (u) id = Number(u.id); }
+      if (!id) return send(res, 404, { error: 'ไม่พบผู้เล่น ' + q });
+      return send(res, 200, { msg: 'พบผู้เล่น', player: await admPlayer(id) });
+    }
+    if (b.op === 'ban' || b.op === 'unban') {
+      const uid = Number(b.uid); if (!Number.isSafeInteger(uid) || !(await db.userById(uid))) return send(res, 404, { error: 'ไม่พบผู้เล่น' });
+      await bansLoad();
+      if (b.op === 'ban') { BANS.map[uid] = { at: Date.now(), reason: String(b.reason || '').slice(0, 80) }; await db.bumpTok(uid); userCache.delete(uid); TOWN.delete(uid); boardDirty = true; }
+      else delete BANS.map[uid];
+      await bansSave(); db.audit(uid, 'admin_' + b.op, String(b.reason || '')).catch(() => {});
+      return send(res, 200, { msg: b.op === 'ban' ? 'แบนแล้ว (หลุดจากเกมทันที)' : 'ปลดแบนแล้ว', player: await admPlayer(uid) });
+    }
+    if (b.op === 'notice') {
+      const text = String(b.text || '').replace(/\s+/g, ' ').trim().slice(0, 160); if (!text) return send(res, 400, { error: 'ใส่ข้อความ' });
+      newsPush75('admin', 0, '📢 ทีมงาน', text); return send(res, 200, { msg: 'ประกาศแล้ว' });
+    }
+    if (b.op === 'pays') { await payLogLoad(); return send(res, 200, { msg: 'โหลดแล้ว', pays: PAYLOG.list, mode: payStatus101().key }); }
+    if (b.op === 'mkt') {
+      await mktLoad(); await mktSweep(); const fs0 = engine.fresh(); fs0.cls = 'warrior';
+      const nm = it => { let n = ''; try { engine.run(fs0, {}, {}, E => { n = E.mktInfo103 ? E.mktInfo103(it).name : ''; }); } catch (e) {} return (n || '?') + ' · ระดับ ' + (it.t | 0); };
+      return send(res, 200, { msg: 'โหลดแล้ว', list: MKT.list.map(x => ({ id: x.id, uid: x.uid, sn: x.sn, price: x.price, exp: x.exp, name: nm(x.it) })) });
+    }
+    if (b.op === 'mktdel') {
+      await mktLoad(); const i = MKT.list.findIndex(x => x.id === String(b.id || '')); if (i < 0) return send(res, 404, { error: 'ไม่พบรายการ' });
+      const x = MKT.list.splice(i, 1)[0]; await mktSave();
+      await mailTo(x.uid, { id: 'ma' + x.id, t: 'ทีมงานนำของออกจากตลาด', from: 'ทีมงาน', b: 'ของที่วางขายถูกนำออกจากตลาด คืนของให้แล้ว', it: [{ k: 'gear', v: x.it }] });
+      return send(res, 200, { msg: 'ลบแล้ว คืนของให้ผู้ขาย' });
+    }
+    send(res, 400, { error: 'คำสั่งไม่ถูกต้อง' });
+  },
   'POST /api/admin/mail': async (req, res) => {
     const b = await readBody(req), ok = admKeyOk(req, b.key); if (!ok.ok) return send(res, ok.code, { error: ok.error });
     const t = String(b.t || '').trim().slice(0, 60), body = String(b.b || '').slice(0, 600); if (!t) return send(res, 400, { error: 'ใส่หัวข้อ' });
@@ -1174,6 +1260,60 @@ const routes = {
     await (db.putMeta || db.setMeta).call(db, 'mailall', JSON.stringify(MAILALL.list));
     for (const [uid, p] of live) if (mailSync101(p)) { p.v++; persist(uid, p); }
     send(res, 200, { ok: true, msg: 'ถึงผู้เล่นทุกคน (หมดอายุใน ' + days + ' วัน)' });
+  },
+  'GET /api/mkt': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    const p = await session(u.id); if (!takeToken(p)) return send(res, 429, { error: 'โหลดเร็วเกินไป' });
+    LASTIP.set(u.id, clientIp(req)); await mktLoad(); await mktSweep();
+    send(res, 200, mktReply(u.id, ''));
+  },
+  'POST /api/mkt': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    const b = await readBody(req), p = await session(u.id); if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
+    if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
+    const ip = clientIp(req); LASTIP.set(u.id, ip); await mktLoad(); await mktSweep();
+    if (b.op === 'list') {
+      if ((p.s.lvl | 0) < MKT_LV) return send(res, 400, { error: 'ต้องเลเวล ' + MKT_LV + ' ขึ้นไปจึงจะขายในตลาดได้' });
+      if (p.s.battle) return send(res, 409, { error: 'จบการต่อสู้ก่อน' });
+      const idx = Number(b.idx), bag = Array.isArray(p.s.gbag) ? p.s.gbag : [];
+      if (!Number.isInteger(idx) || !bag[idx]) return send(res, 400, { error: 'ไม่พบของในกระเป๋า' });
+      if (MKT.list.filter(x => x.uid === u.id).length >= MKT_MAXN) return send(res, 400, { error: 'วางขายได้พร้อมกันไม่เกิน ' + MKT_MAXN + ' ชิ้น' });
+      if (MKT.list.length >= MKT_TOTAL) return send(res, 503, { error: 'ตลาดเต็ม ลองใหม่ภายหลัง' });
+      const it = bag[idx]; if (it.lk) return send(res, 400, { error: 'ปลดล็อกของก่อนวางขาย' });
+      const info = mktInfo(p, it); if (!info || !info.ok) return send(res, 400, { error: it.sp ? 'ของจากแพ็กผู้สนับสนุนขายไม่ได้' : 'ต้องปลดผนึกผู้คราฟก่อน' });
+      const price = Math.floor(Number(b.price) || 0); if (price < info.min || price > info.max) return send(res, 400, { error: 'ราคาต้องอยู่ระหว่าง ' + info.min.toLocaleString() + ' – ' + info.max.toLocaleString() + ' ทอง' });
+      const item = JSON.parse(JSON.stringify(it)); delete item.lk; delete item.fail;
+      p.s.gbag.splice(idx, 1); p.v++; persist(u.id, p);
+      const x = { id: (++MKT.seq).toString(36) + crypto.randomBytes(3).toString('hex'), uid: u.id, sn: String(p.s.name || u.display).slice(0, 16), it: item, price, at: Date.now(), exp: Date.now() + MKT_MS, ip };
+      MKT.list.push(x); await mktSave(); db.audit(u.id, 'mkt_list', info.name + ' ' + price).catch(() => {});
+      return send(res, 200, mktReply(u.id, '✅ วางขาย ' + info.name + ' ราคา ' + price.toLocaleString() + ' ทองแล้ว'));
+    }
+    const id = String(b.id || ''), i = MKT.list.findIndex(x => x.id === id);
+    if (i < 0) return send(res, 404, Object.assign(mktReply(u.id, ''), { error: 'ของชิ้นนี้ถูกซื้อหรือยกเลิกไปแล้ว' }));
+    const x = MKT.list[i];
+    if (b.op === 'cancel') {
+      if (x.uid !== u.id) return send(res, 403, { error: 'ไม่ใช่ของคุณ' });
+      MKT.list.splice(i, 1); await mktSave();
+      await mailTo(u.id, { id: 'mc' + x.id, t: 'ยกเลิกการขายในตลาด', from: 'ตลาด', b: 'คืนของที่ยกเลิกการขายแล้ว', it: [{ k: 'gear', v: x.it }] });
+      return send(res, 200, mktReply(u.id, '✅ ยกเลิกแล้ว ของคืนเข้า 📬 จดหมาย'));
+    }
+    if (b.op === 'buy') {
+      if (x.uid === u.id) return send(res, 400, { error: 'ซื้อของตัวเองไม่ได้' });
+      if (x.ip === ip || LASTIP.get(x.uid) === ip) return send(res, 403, { error: 'ซื้อจากผู้ขายที่ใช้อินเทอร์เน็ตเดียวกันไม่ได้ (กันปั้มหลายไอดี)' });
+      if ((p.s.gold || 0) < x.price) return send(res, 400, { error: 'ทองไม่พอ' });
+      if (p.s.battle) return send(res, 409, { error: 'จบการต่อสู้ก่อน' });
+      MKT.list.splice(i, 1); p.s.gold -= x.price; p.v++; persist(u.id, p);
+      try {
+        await mktSave();
+        const out = engine.run(p.s, p.ui, {}, E => { if (E.mailAdd101) E.mailAdd101({ id: 'mb' + x.id, t: 'ซื้อของจากตลาดสำเร็จ', from: 'ตลาด', b: 'ซื้อจาก ' + x.sn + ' ราคา ' + x.price.toLocaleString() + ' ทอง', it: [{ k: 'gear', v: x.it }] }); });
+        p.s = out.s; p.ui = out.ui; p.v++; persist(u.id, p);
+        const net = Math.floor(x.price * (1 - MKT_TAX));
+        await mailTo(x.uid, { id: 'ms' + x.id, t: 'ขายของในตลาดได้แล้ว!', from: 'ตลาด', b: 'มีผู้ซื้อของของคุณ ราคา ' + x.price.toLocaleString() + ' ทอง\nหักภาษีตลาด 10% เหลือ ' + net.toLocaleString() + ' ทอง', it: [{ k: 'gold', n: net }] });
+        db.audit(u.id, 'mkt_buy', x.id + ' ' + x.price + ' from ' + x.uid).catch(() => {});
+      } catch (e) { console.error('mkt buy', e.message); }
+      return send(res, 200, mktReply(u.id, '✅ ซื้อแล้ว ของอยู่ใน 📬 จดหมาย'));
+    }
+    send(res, 400, { error: 'คำสั่งไม่ถูกต้อง' });
   },
   'GET /api/health': async (req, res) => send(res, 200, { ok: true, players: live.size, db: db.kind.split(' ')[0] }),
 };
