@@ -665,10 +665,12 @@ function takeToken(p) { // ผู้เล่นส่งคำสั่งไ�
 // ใส่คีย์ใน Render → Environment เท่านั้น: STRIPE_SECRET_KEY (sk_...) และ STRIPE_WEBHOOK_SECRET (whsec_...)
 const PAY_SKU = { sup35: { amt: 3500, name: 'แพ็กผู้สนับสนุน · TheWarWhat', desc: 'อุปกรณ์ Lv20 สีส้ม + ป้าย ✦ ผู้สนับสนุน (ซื้อได้ครั้งเดียว)' } };
 const PAY_BUSY = new Set();
+const envKey = n => String(process.env[n] || '').trim();
+function payStatus101() { const k = envKey('STRIPE_SECRET_KEY'), raw = process.env.STRIPE_SECRET_KEY; return { key: !k ? 'missing' : /^sk_live_/.test(k) ? 'live' : /^sk_test_/.test(k) ? 'test' : /^pk_/.test(k) ? 'wrong:publishable-key' : /^rk_/.test(k) ? 'restricted-key' : 'wrong-format', space: !!raw && raw !== raw.trim(), webhook: /^whsec_/.test(envKey('STRIPE_WEBHOOK_SECRET')) ? 'ok' : envKey('STRIPE_WEBHOOK_SECRET') ? 'wrong-format' : 'missing', admin: envKey('ADMIN_KEY').length >= 16 ? 'ok' : 'missing' }; }
 const STRIPE_BASE = process.env.STRIPE_API_BASE || 'https://api.stripe.com';
 function stripeForm(o, pre, out) { out = out || []; for (const k in o) { const v = o[k], key = pre ? pre + '[' + k + ']' : k; if (v && typeof v === 'object') stripeForm(v, key, out); else if (v != null) out.push(encodeURIComponent(key) + '=' + encodeURIComponent(String(v))); } return out.join('&'); }
 async function stripeApi(method, pathq, body) {
-  const key = process.env.STRIPE_SECRET_KEY; if (!key) throw Object.assign(new Error('ระบบเติมเงินยังไม่เปิด'), { code: 503 });
+  const key = envKey('STRIPE_SECRET_KEY'); if (!key) throw Object.assign(new Error('ระบบเติมเงินยังไม่เปิด'), { code: 503 });
   const r = await fetch(STRIPE_BASE + '/v1' + pathq, { method, headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/x-www-form-urlencoded', 'Stripe-Version': '2024-06-20' }, body: body ? stripeForm(body) : undefined });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) { console.error('stripe', r.status, j && j.error && j.error.message); throw Object.assign(new Error('เชื่อมต่อระบบชำระเงินไม่สำเร็จ'), { code: 502 }); }
@@ -717,7 +719,7 @@ function mailSync101(p) {
   p.s = out.s; p.ui = out.ui; return true;
 }
 function admKeyOk(req, key) {
-  const want = String(process.env.ADMIN_KEY || ''), ip = clientIp(req), f = ADMFAIL.get(ip) || { n: 0, at: 0 };
+  const want = envKey('ADMIN_KEY'), ip = clientIp(req), f = ADMFAIL.get(ip) || { n: 0, at: 0 };
   if (want.length < 16) return { error: 'ยังไม่ได้ตั้ง ADMIN_KEY ใน Render (ต้องยาว 16 ตัวขึ้นไป)', code: 503 };
   if (f.n >= 5 && Date.now() - f.at < 10 * 60000) return { error: 'ใส่รหัสผิดหลายครั้ง รอ 10 นาที', code: 429 };
   const a = crypto.createHash('sha256').update(String(key || '')).digest(), b = crypto.createHash('sha256').update(want).digest();
@@ -1101,7 +1103,7 @@ const routes = {
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
     const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
-    send(res, 200, { server: 'B101', pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    send(res, 200, { server: 'B101.1', pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
@@ -1129,7 +1131,7 @@ const routes = {
     const p = await session(u.id); if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
     if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
     if (p.s.sup100) return send(res, 409, { error: 'บัญชีนี้ซื้อแพ็กผู้สนับสนุนแล้ว' });
-    if (!process.env.STRIPE_SECRET_KEY) return send(res, 503, { error: 'ระบบเติมเงินยังไม่เปิด' });
+    if (!envKey('STRIPE_SECRET_KEY')) return send(res, 503, { error: 'ระบบเติมเงินยังไม่เปิด' });
     const o = payOrigin(req);
     const cs = await stripeApi('POST', '/checkout/sessions', { mode: 'payment', locale: 'th', client_reference_id: String(u.id),
       payment_method_types: ['card', 'promptpay'], line_items: [{ quantity: 1, price_data: { currency: 'thb', unit_amount: it.amt, product_data: { name: it.name, description: it.desc } } }],
@@ -1145,7 +1147,7 @@ const routes = {
     send(res, 200, r2);
   },
   'POST /api/pay/webhook': async (req, res) => {
-    const sec = process.env.STRIPE_WEBHOOK_SECRET; if (!sec) return send(res, 503, { error: 'webhook off' });
+    const sec = envKey('STRIPE_WEBHOOK_SECRET'); if (!sec) return send(res, 503, { error: 'webhook off' });
     const raw = await readRaw(req, 512 * 1024);
     if (!stripeSigOk(raw, req.headers['stripe-signature'], sec)) return send(res, 400, { error: 'bad signature' });
     let ev; try { ev = JSON.parse(raw.toString('utf8')); } catch (e) { return send(res, 400, { error: 'bad json' }); }
