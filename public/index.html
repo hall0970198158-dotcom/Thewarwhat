@@ -755,8 +755,9 @@ body.rotate91::after{content:'📱\A กรุณาหมุนมือถื�
 #nav113 .n113 .ic{font-size:21px;line-height:1.1;filter:saturate(.75)}#nav113 .n113 .tx{font-size:11px;font-weight:600}
 #nav113 .n113.on{background:linear-gradient(180deg,#e8c77a,#b8863a);color:#2a1606;border-color:#ffe0a0}#nav113 .n113.on .ic{filter:none}
 #nav113 .dot113{position:absolute;top:4px;right:calc(50% - 18px);width:9px;height:9px;border-radius:50%;background:#ff4a3a;border:1.5px solid #2a1606}
-body:has(#nav113) #gameWrap #menuStage{grid-template-columns:minmax(0,1fr)!important}
-body:has(#nav113) #gameWrap #menuStage .menu-header{grid-column:1/-1}
+#gameWrap #menuStage,#menuStage{grid-template-columns:minmax(0,1fr)!important}
+#gameWrap #menuStage .menu-header,#menuStage .menu-header{grid-column:1/-1}
+#menuStage .menu-content{grid-column:1/-1}
 body:has(#nav113) #landscapeMenuContent{padding-bottom:78px!important}
 body:has(#nav113) #townStage .town-bottom,body:has(#nav113) .field-bottom55,body:has(#nav113) #fieldStage .town-bottom{bottom:calc(64px + env(safe-area-inset-bottom))!important}
 .sub113{position:sticky;top:0;z-index:5;display:flex;gap:6px;overflow-x:auto;padding:8px 2px 8px;margin:-4px 0 6px;background:linear-gradient(180deg,#132036 85%,rgba(19,32,54,0));scrollbar-width:none}.sub113::-webkit-scrollbar{display:none}
@@ -2762,7 +2763,7 @@ function navGo113(g,sub){NAV113L[g]=sub;MENU_UI.jump=null;
  if(g==='fac'){act('tab','guild');return}}
 function navAct113(p){var a=String(p||'').split(':'),g=a[0],sub=a[1];var G=NAV113.filter(function(x){return x.g===g})[0];if(g!=='set'&&!G)return;if(!sub){if(g==='adv')sub=landscapeMenuActive()&&navCur113()[0]!=='adv'?'wild':(navCur113()[1]==='wild'?(NAV113L.advm||'goals'):'wild');else sub=NAV113L[g]||G.subs[0][0]}if(g==='adv'&&sub!=='wild')NAV113L.advm=sub;navGo113(g,sub)}
 function navDot113(g){try{if(g==='char')return s.sp>0||s.skp>0||m51Budget(s)>m51Spent(s)||(j4Eligible(s)&&!job4Of(s));if(g==='adv')return dqClaimable();if(g==='event')return typeof s105Can==='function'&&false}catch(e){}return false}
-function navShow113(){if(SV||!s||!s.created||battlePresentationActive())return false;if(s.battle&&!BAWAY)return false;var r=dgRoom();if(r&&r.st==='fight')return false;if(typeof wdOn108==='function'&&wdOn108()&&TOWN.war)return false;if(s.res&&!BAWAY)return false;return true}
+function navShow113(){if(SV||!s||!s.created||(battlePresentationActive()&&!BAWAY))return false;if(s.battle&&!BAWAY)return false;var r=dgRoom();if(r&&r.st==='fight')return false;if(typeof wdOn108==='function'&&wdOn108()&&TOWN.war)return false;if(s.res&&!BAWAY)return false;return true}
 function navBar113(){if(!navShow113())return '';var c=navCur113()[0];return '<nav id="nav113" aria-label="เมนูหลัก">'+NAV113.map(function(G){return '<button class="n113'+(c===G.g?' on':'')+'" data-a="nav113" data-p="'+G.g+'"'+(c===G.g?' aria-current="page"':'')+'><span class="ic">'+G.ic+'</span><span class="tx">'+G.n+'</span>'+(navDot113(G.g)?'<i class="dot113"></i>':'')+'</button>'}).join('')+'</nav>'}
 function navSub113(){var cs=navCur113(),G=NAV113.filter(function(x){return x.g===cs[0]})[0];if(cs[0]==='set')return '<div class="sub113"><b class="sub113t">⚙️ ตั้งค่า</b></div>';if(!G||G.subs.length<2)return G?'<div class="sub113"><b class="sub113t">'+G.ic+' '+G.n+'</b></div>':'';
  return '<div class="sub113" role="tablist">'+G.subs.map(function(x){return '<button class="chip113'+(cs[1]===x[0]?' on':'')+'" role="tab" aria-selected="'+(cs[1]===x[0])+'" data-a="nav113" data-p="'+G.g+':'+x[0]+'">'+x[1]+'</button>'}).join('')+'</div>'}
@@ -2888,7 +2889,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B113';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B113.1';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -5680,7 +5681,7 @@ function cityHtml(){
  var hist=(C.hist||[]).slice(0,5).map(function(h){var ct=CITIES[h.c];return '<li>'+(h.to>=0?'<b style="color:'+FAC[h.to].c+'">ฝ่าย'+FAC[h.to].n+'</b>':'')+' ยึด '+(ct?ct.n:'')+(h.from>=0?' จากฝ่าย'+FAC[h.from].n:'')+'</li>'}).join('');
  return head+st+rows+(hist?'<h4 class="st" style="margin-top:10px">ประวัติการยึดเมือง</h4><ol class="hint" style="margin:0;padding-left:18px">'+hist+'</ol>':'')+'</section>'}
 
-function viewGuild(){return warCard106()+cityHtml()+viewGuild0()}
+function viewGuild(){if(CL)netFac();var cnt=facCount();if(s.fac==null)return '<section class="card"><p class="eyebrow">ฝ่าย</p><h2>เลือกฝ่ายของคุณ</h2><p class="hint">เลือกได้ 1 ฝ่ายต่อตัวละคร และเปลี่ยนภายหลังไม่ได้ · มีฝ่ายแล้วถึงจะร่วม ⚔️ ศึกชิงแดน ได้ (Lv'+WAR_LV106+'+)</p>'+FAC.map(function(f,i){return '<div class="item"><div><div class="nm" style="color:'+f.c+'">ฝ่าย'+f.n+'</div><div class="st">สมาชิก '+cnt[i]+' คน</div></div><button class="btn primary" data-a="facjoin" data-p="'+i+'">สมัครเข้าฝ่าย</button></div>'}).join('')+'</section>';var F=FAC[s.fac];return '<section class="card fac113"><p class="eyebrow">ฝ่ายของคุณ</p><h2 style="color:'+F.c+'">ฝ่าย'+F.n+'</h2><p class="hint">สมาชิกในฝ่าย '+(cnt[s.fac]|0)+' คน</p></section>'+warCard106()}
 function viewGuild0(){
  if(CL)netFac();else facSettle();
  var cnt=facCount(),nx=facNext(),now=Date.now(),sch='<p class="hint">ระบบจัดสงครามสี่ฝ่ายเองวันเว้นวัน ทุกวันที่ตรงรอบ เวลา '+FW_START+':00–'+FW_END+':00 น. (เวลาไทย) ผู้เล่นแต่ละคนสู้ได้ '+FW_TRIES+' ครั้งต่อสงคราม กดสู้แล้วระบบสุ่มฝ่ายตรงข้ามจากอีก 3 ฝ่าย ชนะ = +1 แต้มให้ฝ่ายตัวเอง</p>';
