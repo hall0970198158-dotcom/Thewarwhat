@@ -1154,6 +1154,15 @@ setInterval(() => { // หมดเวลา: เลือกท่าให้ 
   }
 }, 300).unref();
 
+// ---------- B111 แก้แค้น PvP: ผู้ชนะร่างจำลองถูกบันทึกในรายชื่อของเจ้าของร่าง ----------
+async function pvpAfter110(uid, p) {
+  const r = p.s.pvpRes110; delete p.s.pvpRes110; if (!r || !r.won) return;
+  const D = Number(r.uid) | 0; if (!D || D === uid) return;
+  const q = await session(D); if (!q.s.created) return;
+  const now = Date.now(), L = (Array.isArray(q.s.rev110) ? q.s.rev110 : []).filter(x => x && now - (x.at || 0) < 48 * 3600e3 && !(x.uid === uid && !x.done));
+  L.unshift({ uid, n: String(p.s.name || '').slice(0, 16), cls: p.s.cls, lvl: p.s.lvl | 0, at: now, done: 0 }); q.s.rev110 = L.slice(0, 8); q.v++; persist(D, q);
+  mailTo(D, { id: 'pv' + uid + '_' + Math.floor(now / 36e5), t: '⚔️ ร่างจำลองของคุณถูกโค่นใน PvP', from: 'ลานประลอง', b: String(p.s.name || '') + ' (Lv' + (p.s.lvl | 0) + ') ชนะร่างจำลองของคุณ' + (r.rev ? ' (เขาแก้แค้นคุณ!)' : '') + '\nไปที่หน้า PvP → ระบบแก้แค้น ภายใน 48 ชม. ชนะได้รางวัล ×2', it: [] }).catch(() => {});
+}
 // ---------- B106 ศึกชิงแดน: สมรภูมิแยก · เสาร์–อาทิตย์ 20:00–22:00 น. (เวลาไทย) ----------
 const WAR = { loaded: false, wk: 0, fac: [0, 0, 0, 0], ppl: {}, last: null, buff: null, testUntil: 0, pair: {}, shield: {} }, WARMAP = new Map(), WAR_LV = 30, WAR_GAP = 15, WAR_CD = 10 * 60e3, WAR_SHIELD = 5 * 60e3;
 let WAR_DIRTY = false, WAR_SAVE_AT = 0;
@@ -1339,7 +1348,8 @@ const routes = {
     if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
     if(/^m51(add|cap|reset)$/.test(a)||a==='petevolve70'||a==='ar73start'){const room=DGR.get(DGU.get(u.id));if(a==='ar73start'&&room)return send(res,409,{error:'ออกจากห้องดันเจี้ยนก่อนเข้าท้าประลอง'});if(room&&room.st==='fight')return send(res,409,{error:a==='ar73start'?'จบดันเจี้ยนทีมก่อนเข้าท้าประลอง':a==='petevolve70'?'จบดันเจี้ยนทีมก่อนวิวัฒนาการสัตว์เลี้ยง':'จบดันเจี้ยนทีมก่อนปรับความชำนาญ'});}
     if(a==='b'&&b.fight&&(!p.s.battle||p.s.battle.key50!==b.fight||(p.s.battle.gi||0)!==Number(b.target)))return reply(res,p,{fx:[],fxt:{}});
-    let warSnap = null, warTid = 0;
+    let warSnap = null, warTid = 0, revSnap = null, revTid = 0;
+    if (a === 'pvprev') { revTid = parseInt(pr, 10) || 0; const L = Array.isArray(p.s.rev110) ? p.s.rev110 : []; if (!L.some(x => x && x.uid === revTid && !x.done && Date.now() - (x.at || 0) < 48 * 3600e3)) return send(res, 409, { error: 'แก้แค้นคนนี้ไม่ได้แล้ว' }); const q = await session(revTid); if (!q.s.created) return send(res, 409, { error: 'ไม่พบผู้เล่น' }); revSnap = engine.snap(q.s); if (!revSnap) return send(res, 409, { error: 'ไม่พบข้อมูลผู้เล่น' }); }
     if (a === 'war106duel') { await warLoad(); warTid = parseInt(pr, 10); const chk = await warCheck(u.id, p, warTid); if (chk.error) return send(res, 409, { error: chk.error }); warSnap = chk.snap; }
     await prizeCheck(u.id, p);
     const before = p.s.gold;
@@ -1347,9 +1357,9 @@ const routes = {
     ptPrep(u.id, p);
     await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad(); await launchLoad();
     const js0 = jSnap(p.s), newsBefore=newsSnap75(p.s);
-    const out = engine.run(p.s, p.ui, cleanInputs(b.inp), E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); if (warSnap && E.warOpp106) E.warOpp106(warSnap, warTid); E.act(a, pr); });
+    const out = engine.run(p.s, p.ui, cleanInputs(b.inp), E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); if (warSnap && E.warOpp106) E.warOpp106(warSnap, warTid); if (revSnap && E.pvpRevOpp110) E.pvpRevOpp110(revSnap, revTid); E.act(a, pr); });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; newsAfter75(u.id,p,newsBefore);partyAfter50(u.id,p,js0,out);ptAfter(u.id, p); cityAfter(p); funMark(p); await launchCheck(u.id, p); if (p.s.war106Res) await warResolve(u.id, p).catch(e => console.error('war resolve', e.message)); p.v++; persist(u.id, p); updateSnap(u.id, p);
+    p.s = out.s; p.ui = out.ui; newsAfter75(u.id,p,newsBefore);partyAfter50(u.id,p,js0,out);ptAfter(u.id, p); cityAfter(p); funMark(p); await launchCheck(u.id, p); if (p.s.war106Res) await warResolve(u.id, p).catch(e => console.error('war resolve', e.message)); if (p.s.pvpRes110) await pvpAfter110(u.id, p).catch(e => console.error('pvp rev', e.message));; p.v++; persist(u.id, p); updateSnap(u.id, p);
     if (out.s.gold - before > 200000) db.audit(u.id, 'gold_jump', a + ' +' + (out.s.gold - before)).catch(() => {});
     reply(res, p, out);
   },
@@ -1369,7 +1379,7 @@ const routes = {
     const twn = TOWN.get(u.id), inTown = !!(twn && now - twn.at < 6000), js0 = jSnap(p.s),newsBefore=newsSnap75(p.s);newsTouch75(p);
     const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); const tg = E.townEn ? E.townEn(inTown) : false; changed = E.tick() || tg || changed; });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; newsAfter75(u.id,p,newsBefore);partyAfter50(u.id,p,js0,out);ptAfter(u.id, p); funMark(p); if (await launchCheck(u.id, p)) changed = true; if (p.s.cityRes) { cityAfter(p); changed = true; }
+    p.s = out.s; p.ui = out.ui; newsAfter75(u.id,p,newsBefore);partyAfter50(u.id,p,js0,out);ptAfter(u.id, p); funMark(p); if (await launchCheck(u.id, p)) changed = true; if (p.s.cityRes) { cityAfter(p); changed = true; } if (p.s.pvpRes110) { await pvpAfter110(u.id, p).catch(e => console.error('pvp rev', e.message)); changed = true; }
     if (changed || out.fx.length) { p.v++; persist(u.id, p); updateSnap(u.id, p); }
     if (!changed && !out.fx.length && Number(b.v) === p.v) return send(res, 200, { same: true, v: p.v });
     reply(res, p, out);
@@ -1577,7 +1587,7 @@ const routes = {
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
     const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
-    send(res, 200, { server: 'B109', client: CLV_SRV, pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
+    send(res, 200, { server: 'B111', client: CLV_SRV, pay: payStatus101(), pioneers: LAUNCH.pion.length + '/' + PION_MAX, funnel: funReport(), speedMs: PERF.last || cur, mem: Math.round(process.memoryUsage().rss / 1048576) + 'MB', online: realOnline(now), offline: off.length, offlineByMap: zs, bots: botsActive(now).length });
   },
   'GET /api/bots': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
