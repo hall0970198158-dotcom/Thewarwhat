@@ -748,7 +748,23 @@ body.rotate91::after{content:'📱\A กรุณาหมุนมือถื�
 .dgc107{display:flex;flex-direction:column;align-items:center;min-width:46px;max-width:64px;padding:3px 4px;border:2px solid #6a8ad0;border-radius:8px;background:rgba(20,30,60,.85);font-size:10px;line-height:1.15;color:#e8eeff;white-space:nowrap;overflow:hidden}.dgc107 i{font-style:normal;font-size:10px;color:#ffd48a}
 .dgc107.me{border-color:#ffd25a}.dgc107.ok i{color:#7fe08a}.dgc107.down{opacity:.5}.dgc107.en{border-color:#e0584c;background:rgba(60,16,16,.85);min-width:60px}
 .dgint107{border-color:#d0604a!important;background:rgba(42,16,18,.9)!important}.dgint107 b{color:#ff9a7a}
-.rev110{border-color:#c0442a!important;background:linear-gradient(180deg,rgba(120,30,20,.25),rgba(10,10,30,.2))}</style>
+.rev110{border-color:#c0442a!important;background:linear-gradient(180deg,rgba(120,30,20,.25),rgba(10,10,30,.2))}
+#nav{display:none!important}
+#nav113{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(6,1fr);gap:2px;padding:4px 4px calc(4px + env(safe-area-inset-bottom));background:linear-gradient(180deg,#2a2016,#140f0a);border-top:2px solid #b8924a;box-shadow:0 -4px 14px rgba(0,0,0,.5)}
+#nav113 .n113{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:50px;border:1px solid transparent;border-radius:10px;background:transparent;color:#d8ccb0;font-family:Kanit,sans-serif;padding:3px 0}
+#nav113 .n113 .ic{font-size:21px;line-height:1.1;filter:saturate(.75)}#nav113 .n113 .tx{font-size:11px;font-weight:600}
+#nav113 .n113.on{background:linear-gradient(180deg,#e8c77a,#b8863a);color:#2a1606;border-color:#ffe0a0}#nav113 .n113.on .ic{filter:none}
+#nav113 .dot113{position:absolute;top:4px;right:calc(50% - 18px);width:9px;height:9px;border-radius:50%;background:#ff4a3a;border:1.5px solid #2a1606}
+body:has(#nav113) #gameWrap #menuStage{grid-template-columns:minmax(0,1fr)!important}
+body:has(#nav113) #gameWrap #menuStage .menu-header{grid-column:1/-1}
+body:has(#nav113) #landscapeMenuContent{padding-bottom:78px!important}
+body:has(#nav113) #townStage .town-bottom,body:has(#nav113) .field-bottom55,body:has(#nav113) #fieldStage .town-bottom{bottom:calc(64px + env(safe-area-inset-bottom))!important}
+.sub113{position:sticky;top:0;z-index:5;display:flex;gap:6px;overflow-x:auto;padding:8px 2px 8px;margin:-4px 0 6px;background:linear-gradient(180deg,#132036 85%,rgba(19,32,54,0));scrollbar-width:none}.sub113::-webkit-scrollbar{display:none}
+.chip113{flex:0 0 auto;border:1px solid #4a5a78;border-radius:999px;background:#1a2640;color:#d8dff0;font-family:Kanit,sans-serif;font-size:12.5px;padding:6px 12px;white-space:nowrap}
+.chip113.on{background:linear-gradient(180deg,#f0d080,#c0903e);color:#2a1606;border-color:#ffe0a0;font-weight:700}
+.sub113t{font-size:15px;color:#ffd88a;padding:2px 4px}
+.set113{margin-left:auto;margin-right:6px;font-size:16px!important;padding:4px 10px!important}
+body:has(#nav113) .navdup113{display:none!important}</style>
 
 <section id="login" class="login">
  <div class="auth-shell">
@@ -2390,7 +2406,7 @@ function viewWB(){
   '<p class="hint">รางวัลอันดับดาเมจของวัน: 🥇 ทอง '+WB_PRIZE[0].g.toLocaleString()+' + ยาฟื้นเลือดเต็ม ×'+WB_PRIZE[0].f+' · 🥈 ทอง '+WB_PRIZE[1].g.toLocaleString()+' + ×'+WB_PRIZE[1].f+' · 🥉 ทอง '+WB_PRIZE[2].g.toLocaleString()+' + ×'+WB_PRIZE[2].f+' (ส่งให้อัตโนมัติหลังเที่ยงคืน)</p><p class="hint">🎁 รางวัลพิเศษ: ถ้าทั้งเซิร์ฟเวอร์ช่วยกันโค่นไฮดราได้ ทุกคนที่ร่วมรบวันนั้นได้อุปกรณ์สุ่ม 1 ชิ้น (อาวุธ ชุด หรือเครื่องประดับ) ตามเลเวลตัวเอง · <span class="q2">ฟ้า 60%</span> · <span class="q3">ม่วง 35%</span> · <span class="q4">ส้ม 5%</span></p></section>'}
 function viewEvents(){
  var et=s.etab||'tower';if(et==='dg'&&dgRoom()&&dgRoom().st!=='lobby')return pendHtml()+viewDgFight();
- var head='<section class="card"><h3>กิจกรรม</h3><div class="cat"><button class="btn" data-a="etab" data-p="challenge">◆ ท้าประลองรายวัน</button><button class="btn" data-a="etab" data-p="dg" aria-pressed="'+(et==='dg')+'">ดันเจี้ยน</button><button class="btn'+(et==='tower'?' primary':'')+'" data-a="etab" data-p="tower">หอคอยไม่รู้จบ</button><button class="btn'+(et==='wb'?' primary':'')+'" data-a="etab" data-p="wb">บอสโลก ไฮดรา</button><button class="btn'+(et==='launch'?' primary':'')+'" data-a="etab" data-p="launch" style="grid-column:1/-1">🎉 ผู้บุกเบิก & ชวนเพื่อน</button></div></section>';
+ var head='<section class="card navdup113"><h3>กิจกรรม</h3><div class="cat"><button class="btn" data-a="etab" data-p="challenge">◆ ท้าประลองรายวัน</button><button class="btn" data-a="etab" data-p="dg" aria-pressed="'+(et==='dg')+'">ดันเจี้ยน</button><button class="btn'+(et==='tower'?' primary':'')+'" data-a="etab" data-p="tower">หอคอยไม่รู้จบ</button><button class="btn'+(et==='wb'?' primary':'')+'" data-a="etab" data-p="wb">บอสโลก ไฮดรา</button><button class="btn'+(et==='launch'?' primary':'')+'" data-a="etab" data-p="launch" style="grid-column:1/-1">🎉 ผู้บุกเบิก & ชวนเพื่อน</button></div></section>';
  if(CL&&et==='wb')netWB();
  return head+(et==='dg'?dgSection():et==='wb'?viewWB():et==='launch'?launchHtml():et==='challenge'?ar73Html():viewTower())}
 var REF_LV=10,REF_RW={coin:30,pot:5,gold:1000};
@@ -2723,6 +2739,33 @@ function pvpRev110(uid){uid=parseInt(uid,10)||0;if(!REVOPP110||REVOPP110.uid!==u
 function revHtml110(){var L=revList110();if(!L.length)return '';var now=Date.now();
  return '<section class="card rev110"><p class="eyebrow">ระบบแก้แค้น</p><h3>⚔️ ใครโค่นร่างจำลองของคุณ</h3><p class="hint">แก้แค้นได้คนละ 1 ครั้งภายใน 48 ชม. · ไม่ใช้สิทธิ์ PvP รายวัน · ชนะได้ทองและเหรียญ PvP ×2</p>'+
   L.map(function(x){var h=Math.floor((now-x.at)/36e5),m=Math.floor((now-x.at)%36e5/6e4);return '<div class="item"><div><div class="nm">'+esc(String(x.n||'').slice(0,16))+' · '+(CLASSES[x.cls]?CLASSES[x.cls].n:'')+' Lv'+(x.lvl|0)+'</div><div class="st">ชนะคุณเมื่อ '+(h?h+' ชม. ':'')+m+' นาทีที่แล้ว'+(x.res?' · '+(x.res==='w'?'✅ แก้แค้นสำเร็จ':'❌ แก้แค้นไม่สำเร็จ'):'')+'</div></div>'+(x.done?'<button class="btn" disabled>'+(x.res==='w'?'สำเร็จแล้ว':'ใช้สิทธิ์แล้ว')+'</button>':'<button class="btn primary" data-a="pvprev" data-p="'+(x.uid|0)+'"'+(s.battle||cdLeft()>0?' disabled':'')+'>⚔️ แก้แค้น</button>')+'</div>'}).join('')+'</section>'}
+// ===== B113 เมนูใหม่: 6 หมวดหลัก (แถบล่าง) + แท็บย่อยด้านบนแบบเดียวกันทุกหน้า =====
+var NAV113=[
+ {g:'adv',ic:'⚔️',n:'ผจญภัย',subs:[['wild','🗺️ แผนที่ล่า'],['goals','🎯 ภารกิจ & เป้าหมาย'],['farm','📊 สรุปฟาร์ม'],['bestiary','📖 สมุดมอนสเตอร์']]},
+ {g:'char',ic:'🧙',n:'ตัวละคร',subs:[['stat','สเตตัส'],['pow','ค่าพลัง'],['skill','สกิล'],['mastery','ความชำนาญ'],['ult','ไม้ตาย'],['job2','เลื่อนขั้นอาชีพ'],['clsch','เปลี่ยนอาชีพ']]},
+ {g:'bag',ic:'🎒',n:'กระเป๋า',subs:[['craft','⚒️ สวมใส่ & ตีของ'],['gbag','🎒 อุปกรณ์ในกระเป๋า'],['mat','🪵 วัตถุดิบ & เก็บ'],['mkt','🏪 ตลาดผู้เล่น'],['acct','👤 บัญชี']]},
+ {g:'look',ic:'👗',n:'แต่งตัว',subs:[['look','ชุด ปีก ออร่า'],['pets','สัตว์เลี้ยง'],['title','ฉายา'],['collect','ของสะสม'],['book','สมุดการ์ด'],['box','กล่องสุ่ม']]},
+ {g:'event',ic:'🏆',n:'กิจกรรม',subs:[['pvp','⚔️ PvP'],['dg','🗝️ ดันเจี้ยน/วงกต'],['tower','🗼 หอคอย'],['challenge','◆ ท้าประลอง'],['wb','🐉 บอสโลก'],['launch','🎉 กิจกรรมพิเศษ']]},
+ {g:'fac',ic:'🚩',n:'ฝ่าย',subs:[['guild','🚩 ฝ่าย & ศึกชิงแดน']]}],NAV113L={};
+function navCur113(){var cur=BAWAY||s.tab||'wild',d=s.dtab||'',onMenu=landscapeMenuActive();
+ if(!onMenu||cur==='wild')return ['adv','wild'];
+ if(cur==='me'){if(d==='goals'||d==='farm'||d==='bestiary')return ['adv',d];if(d==='bag')return ['bag','acct'];if(d==='set')return ['set','set'];return ['look',['pets','title','collect','book','box'].indexOf(d)>=0?d:'look']}
+ if(cur==='char')return ['char',s.chtab||'stat'];if(cur==='craft')return ['bag','craft'];if(cur==='mat')return ['bag','mat'];
+ if(cur==='pvp')return ['event','pvp'];if(cur==='tower')return ['event',s.etab||'tower'];if(cur==='guild')return ['fac','guild'];return ['adv','wild']}
+function navGo113(g,sub){NAV113L[g]=sub;MENU_UI.jump=null;
+ if(g==='set'){menuOpen('settings');return}
+ if(g==='adv'){if(sub==='wild'){returnWorld66();return}menuOpen(sub);return}
+ if(g==='char'){act('tab','char');act('chtabset',sub);return}
+ if(g==='bag'){if(sub==='gbag'||sub==='mkt'){GB.open=true;MAIL101.open=false;GB.sel=-1;GB.tab=sub==='mkt'?'mkt':'bag';if(sub==='mkt')mktLoad(true);render();return}if(sub==='acct'){menuOpen('bag');return}act('tab',sub);return}
+ if(g==='look'){if(sub==='collect')COL_UI59.show=false;act('tab','me');act('dtabset',sub);return}
+ if(g==='event'){if(sub==='pvp'){act('tab','pvp');return}act('tab','tower');act('etab',sub);return}
+ if(g==='fac'){act('tab','guild');return}}
+function navAct113(p){var a=String(p||'').split(':'),g=a[0],sub=a[1];var G=NAV113.filter(function(x){return x.g===g})[0];if(g!=='set'&&!G)return;if(!sub){if(g==='adv')sub=landscapeMenuActive()&&navCur113()[0]!=='adv'?'wild':(navCur113()[1]==='wild'?(NAV113L.advm||'goals'):'wild');else sub=NAV113L[g]||G.subs[0][0]}if(g==='adv'&&sub!=='wild')NAV113L.advm=sub;navGo113(g,sub)}
+function navDot113(g){try{if(g==='char')return s.sp>0||s.skp>0||m51Budget(s)>m51Spent(s)||(j4Eligible(s)&&!job4Of(s));if(g==='adv')return dqClaimable();if(g==='event')return typeof s105Can==='function'&&false}catch(e){}return false}
+function navShow113(){if(SV||!s||!s.created||battlePresentationActive())return false;if(s.battle&&!BAWAY)return false;var r=dgRoom();if(r&&r.st==='fight')return false;if(typeof wdOn108==='function'&&wdOn108()&&TOWN.war)return false;if(s.res&&!BAWAY)return false;return true}
+function navBar113(){if(!navShow113())return '';var c=navCur113()[0];return '<nav id="nav113" aria-label="เมนูหลัก">'+NAV113.map(function(G){return '<button class="n113'+(c===G.g?' on':'')+'" data-a="nav113" data-p="'+G.g+'"'+(c===G.g?' aria-current="page"':'')+'><span class="ic">'+G.ic+'</span><span class="tx">'+G.n+'</span>'+(navDot113(G.g)?'<i class="dot113"></i>':'')+'</button>'}).join('')+'</nav>'}
+function navSub113(){var cs=navCur113(),G=NAV113.filter(function(x){return x.g===cs[0]})[0];if(cs[0]==='set')return '<div class="sub113"><b class="sub113t">⚙️ ตั้งค่า</b></div>';if(!G||G.subs.length<2)return G?'<div class="sub113"><b class="sub113t">'+G.ic+' '+G.n+'</b></div>':'';
+ return '<div class="sub113" role="tablist">'+G.subs.map(function(x){return '<button class="chip113'+(cs[1]===x[0]?' on':'')+'" role="tab" aria-selected="'+(cs[1]===x[0])+'" data-a="nav113" data-p="'+G.g+':'+x[0]+'">'+x[1]+'</button>'}).join('')+'</div>'}
 
 // ===== B105 บัตรรายเดือน · บัตรถาวร · ซีซั่น 1 (จบ 31 ธ.ค. 23:59 น. เวลาไทย) =====
 var S105_START=Date.UTC(2026,9,31,17,0,0),S105_END=Date.UTC(2026,11,31,16,59,59),S105_RUSH=Date.UTC(2026,11,21,17,0,0),S105_CLAIM=S105_END+7*864e5,S105_MAX=50,S105_PER=1000,S105_KILLCAP=600;
@@ -2845,7 +2888,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B112';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B113';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -3648,7 +3691,7 @@ function openBox(){
  s.boxMsg='ได้ '+ch.it.n+' ('+RAR_N[ch.it.r]+') สวมใส่ให้แล้ว';s.boxIt={sl:ch.sl,id:ch.it.id};
  say('เปิดกล่อง ได้ '+ch.it.n);
 }
-var CL_LOCAL={setsprites:1,refshare:1,refcopy:1,seteco:1,rktog:1,rktab:1,ptfollow:1,gopen:1,gclaim:1,gathergo:1,towngo:1,townleave:1,setbul:1,setfs:1,fstog:1,appinst:1,ptfind:1,ptcreate:1,ptjoin:1,ptleave:1,ptkick:1,ftarget:1,fieldtog:1,tutreplay:1,setsfx:1,setmus:1,setlang:1,sndtest:1,bset:1,bback:1,dgcreate:1,dgjoin:1,dgleave:1,dgready:1,dgstart:1,dgpick:1,dgagain:1,wd108rps:1,wd108act:1,wd108close:1,rg107solo:1,rg107team:1,rg107go:1,rg107buff:1,rg107buy:1,rg107next:1,rg107auto:1,rg107tab:1,rg107giveup:1,logout:1,chatopen:1,chatclose:1,chatsend:1,chattab:1,chatdm:1,teamjoin:1,teamleave:1,clouddn:1,cloudup:1,dqclose:1};
+var CL_LOCAL={setsprites:1,refshare:1,refcopy:1,seteco:1,rktog:1,rktab:1,ptfollow:1,gopen:1,gclaim:1,gathergo:1,towngo:1,townleave:1,setbul:1,setfs:1,fstog:1,appinst:1,ptfind:1,ptcreate:1,ptjoin:1,ptleave:1,ptkick:1,ftarget:1,fieldtog:1,tutreplay:1,setsfx:1,setmus:1,setlang:1,sndtest:1,bset:1,bback:1,dgcreate:1,dgjoin:1,dgleave:1,dgready:1,dgstart:1,dgpick:1,dgagain:1,nav113:1,wd108rps:1,wd108act:1,wd108close:1,rg107solo:1,rg107team:1,rg107go:1,rg107buff:1,rg107buy:1,rg107next:1,rg107auto:1,rg107tab:1,rg107giveup:1,logout:1,chatopen:1,chatclose:1,chatsend:1,chattab:1,chatdm:1,teamjoin:1,teamleave:1,clouddn:1,cloudup:1,dqclose:1};
 function act(a,p){
  if(!SV&&a==='newsopen75'){newsOpen75();return}
  if(!SV&&a==='sup100'){sup100Open();return}
@@ -3751,6 +3794,7 @@ function act(a,p){
  if(!SV&&a==='dqtab47'){dqTab47(p);return}
  if(!SV&&a==='menudaily'){s.dqOpen=!s.dqOpen;dqUI();return}
  if(!SV&&a==='menuopen'){menuOpen(p);return}
+ if(!SV&&a==='nav113'){navAct113(p);return}
  if(!SV&&a==='menuback'){menuBack();return}
  if(!SV&&a==='bmenu54'){battleMenu54();return}
  if(!SV&&a==='b'&&(battlePresentationActive()||scene53Busy()))return;
@@ -3851,7 +3895,7 @@ function act(a,p){
    if(a==='bagsell'){bagTake(bk,bq);s.gold+=bq*bi[2];say('ขาย '+bi[1]+' ×'+bq+' ได้ '+(bq*bi[2])+' ทอง');s.bagCf=''}
    else if(s.bagCf===p){bagTake(bk,bq);say('ทิ้ง '+bi[1]+' ×'+bq);s.bagCf=''}
    else s.bagCf=p}}
- else if(a==='chtabset'){if(['stat','pow','skill','job2','mastery'].indexOf(p)>=0)s.chtab=p}
+ else if(a==='chtabset'){if(['stat','pow','skill','job2','mastery','ult','clsch'].indexOf(p)>=0)s.chtab=p}
  else if(a==='chtab'){s.chtab=(s.chtab===p)?'':p}
  else if(a==='clsch96'){clsChange96(p)}
  else if(a==='war106duel'){warDuel106(p)}
@@ -5382,7 +5426,7 @@ function viewDress(){if(s.dtab==='bestiary')return bookHtml70();if(s.dtab==='pet
   '<div class="stats"><div class="stat"><span>พลังโจมตี</span><b>'+pAtk()+'</b></div><div class="stat"><span>ป้องกัน</span><b>'+pDef()+'</b></div></div>'+
   '<p class="hint">อาวุธ '+wName(s.weapon)+' ('+QT[s.wq].en+') · ฆ่าไปแล้ว '+s.kills+'</p></section>'+
   '<section class="card"><h3>ตัวละคร</h3>'+(CL?'<button class="btn sm sup100cb" data-a="sup100">🎁 ร้านเติมเงิน · บัตรรายเดือน / บัตรถาวร / พาสซีซั่น</button>':'')+'<p>'+(titleOf(s.title)?'<span style="color:'+titleOf(s.title).c+'">['+esc(titleOf(s.title).n)+']</span> ':'')+'<b>'+esc(nick())+'</b> · '+clsName(s)+'</p></section>'+
-  '<section class="card"><h3>เลือกหมวด</h3><div class="cat">'+DT.map(function(c){return '<button class="btn'+(od===c[0]?' primary':'')+'" data-a="dtab" data-p="'+c[0]+'" aria-pressed="'+(od===c[0])+'">'+c[1]+(c[0]==='box'&&s.boxes>0?' ('+s.boxes+')':'')+'</button>'}).join('')+'</div></section>';
+  '<section class="card navdup113"><h3>เลือกหมวด</h3><div class="cat">'+DT.map(function(c){return '<button class="btn'+(od===c[0]?' primary':'')+'" data-a="dtab" data-p="'+c[0]+'" aria-pressed="'+(od===c[0])+'">'+c[1]+(c[0]==='box'&&s.boxes>0?' ('+s.boxes+')':'')+'</button>'}).join('')+'</div></section>';
  var body='';
  if(od==='look')body='<section class="card"><p class="hint">เลือกทรงผม สีผม ปีก ออร่า และสัตว์เลี้ยงของคุณ</p>'+hairPicker()+slotPick('wing')+slotPick('pet')+slotPick('aura')+'</section>';
  else if(od==='collect')body=colView59();
@@ -5496,7 +5540,7 @@ function viewChar(){
   '<p class="hint">ออโต้สกิลใช้ในตีออโต้และล่าออโต้ ลงบัพก่อนแล้วใช้สกิลโจมตีแรงที่สุดที่พร้อม ปิดรายสกิลได้ที่ปุ่มของแต่ละสกิล ได้แต้มสกิล 1 แต้มทุกเลเวล</p>'+
   '<div>'+skills+'</div>'+(job4Of(s)?'<h3>สกิลติดตัวขั้น 4 · ทำงานอัตโนมัติ</h3>'+j4SkillHtml(s.job2):'')+'</section>';
  var CH=[['stat','สเตตัส',s.sp>0],['pow','ค่าพลัง',false],['skill','สกิล',s.skp>0],['mastery','ความชำนาญ Lv100',m51Budget(s)>m51Spent(s)],['clsch','เปลี่ยนอาชีพ',false],['ult','ไม้ตาย Lv130',s.lvl>=ULT_LV&&!s.ult],['job2','เลื่อนขั้นอาชีพ',(!s.job2&&j2Req().every(function(x){return x.ok}))||(!!s.job2&&!s.job3&&j3Req().every(function(x){return x.ok}))||(j4Eligible(s)&&!job4Of(s))]],oc=s.chtab||'';
- var head='<section class="card"><h3>เลือกหมวด</h3><div class="cat">'+CH.map(function(c){return '<button class="btn'+(oc===c[0]?' primary':'')+'" data-a="chtab" data-p="'+c[0]+'" aria-expanded="'+(oc===c[0])+'">'+c[1]+(c[2]?' <span style="color:#ff6a5a">●</span>':'')+' '+(oc===c[0]?'▲':'▼')+'</button>'}).join('')+'</div><p class="hint">กดหมวดเพื่อเปิด กดอีกครั้งเพื่อเก็บ · จุดแดง = มีแต้มให้ลงหรือพร้อมเปลี่ยนอาชีพ</p></section>';
+ var head='<section class="card navdup113"><h3>เลือกหมวด</h3><div class="cat">'+CH.map(function(c){return '<button class="btn'+(oc===c[0]?' primary':'')+'" data-a="chtab" data-p="'+c[0]+'" aria-expanded="'+(oc===c[0])+'">'+c[1]+(c[2]?' <span style="color:#ff6a5a">●</span>':'')+' '+(oc===c[0]?'▲':'▼')+'</button>'}).join('')+'</div><p class="hint">กดหมวดเพื่อเปิด กดอีกครั้งเพื่อเก็บ · จุดแดง = มีแต้มให้ลงหรือพร้อมเปลี่ยนอาชีพ</p></section>';
  return head+({stat:secStat,pow:secPow,skill:secSk,job2:job2Html(),mastery:m51Html(),clsch:clsChHtml96(),ult:oc==='ult'?ultHtml131():''}[oc]||'');
 }
 var FAC=[{n:'มังกรเพลิง',c:'#e0523a'},{n:'หงส์เหมันต์',c:'#4aa3ff'},{n:'พยัคฆ์พงไพร',c:'#5fbf6a'},{n:'เต่าทมิฬ',c:'#a77be0'}];
@@ -5735,7 +5779,7 @@ function render(){
  else v=(BAWAY?miniBattle():'')+({wild:viewWild,char:viewChar,craft:viewCraft,mat:viewMat,pvp:viewPvp,tower:viewEvents,guild:viewGuild,me:viewDress}[BAWAY||s.tab]||viewWild)();
  if(landscapeMenuActive())v=menuWrap(v);
  var oldScene56=document.getElementById('menuScene55');
- document.getElementById('view').innerHTML=(battlePresentationActive()?'':offHtml()+sockHtml()+noPotHtml()+dupHtml())+v+ar73Popup()+autoPopup()+colPopup59()+partyPopup()+shopPopup()+gearPopup()+mailPopup101()+bagPopup104()+s105Popup();try{rpsReveal106()}catch(e){}
+ document.getElementById('view').innerHTML=(battlePresentationActive()?'':offHtml()+sockHtml()+noPotHtml()+dupHtml())+v+navBar113()+ar73Popup()+autoPopup()+colPopup59()+partyPopup()+shopPopup()+gearPopup()+mailPopup101()+bagPopup104()+s105Popup();try{rpsReveal106()}catch(e){}
  var newScene56=document.getElementById('menuScene55');if(oldScene56&&newScene56&&newScene56!==oldScene56&&newScene56.parentNode&&newScene56.parentNode.replaceChild)newScene56.parentNode.replaceChild(oldScene56,newScene56);
  try{restoreDraft()}catch(e){}
  colScroll59(true);menuRestoreScroll();autoRestore();shopUpdate();scrollRestore();
@@ -7107,7 +7151,7 @@ function menuWrap(content){
  var unread=0;CHAT_TABS.forEach(function(t){unread+=chatUnread(t[0])});
  var links=tabs.map(function(t){return '<button class="menu-link" data-a="menuopen" data-p="'+t[0]+'"'+(selected===t[0]?' aria-current="page"':'')+'>'+(TABI[t[2]]||'')+'<span>'+t[1]+'</span>'+((t[0]==='char'||t[0]==='skills')&&(s.sp>0||s.skp>0)?'<i class="menu-dot"></i>':'')+'</button>'}).join('')+'<button class="menu-link" data-a="chatopen"><span>💬 แชท'+(unread?' ('+Math.min(99,unread)+')':'')+'</span></button><button class="menu-link" data-a="menudaily"><span>📜 ภารกิจ</span>'+(dqClaimable()?'<i class="menu-dot"></i>':'')+'</button>';
  var log=s.log&&s.log.length?'<details class="menu-log"><summary>บันทึกล่าสุด</summary><ol>'+s.log.slice(0,5).map(function(line){return '<li>'+line+'</li>'}).join('')+'</ol></details>':'';
- return (menuLive55()?menuScene55():'')+'<section id="menuStage" class="'+(menuLive55()?'live-menu55':'')+'" aria-label="เมนูเกมแนวนอน"><header class="menu-header"><button class="btn sm" data-a="menuback">← '+(battleLive54()?'กลับไปสู้':'กลับแผนที่')+'</button><div><b>'+esc(names[selected]||'เมนู')+'</b><small>'+esc(nick())+' · Lv '+s.lvl+'</small></div><div class="menu-wallet">💰 '+Math.floor(s.gold).toLocaleString()+'<small>HP '+s.hp+'/'+s.maxhp+' · MP '+s.mp+'/'+s.maxmp+'</small></div></header><nav class="menu-sidebar" aria-label="หมวดเมนู">'+links+'</nav><div id="landscapeMenuContent" class="menu-content" data-menu-key="'+esc(key)+'">'+content+log+'</div></section>';
+ return (menuLive55()?menuScene55():'')+'<section id="menuStage" class="'+(menuLive55()?'live-menu55':'')+'" aria-label="เมนูเกมแนวนอน"><header class="menu-header"><button class="btn sm" data-a="menuback">← '+(battleLive54()?'กลับไปสู้':'กลับแผนที่')+'</button><div><b>'+esc(names[selected]||'เมนู')+'</b><small>'+esc(nick())+' · Lv '+s.lvl+'</small></div><button class="btn sm set113" data-a="nav113" data-p="set" aria-label="ตั้งค่า">⚙️</button><div class="menu-wallet">💰 '+Math.floor(s.gold).toLocaleString()+'<small>HP '+s.hp+'/'+s.maxhp+' · MP '+s.mp+'/'+s.maxmp+'</small></div></header><div id="landscapeMenuContent" class="menu-content" data-menu-key="'+esc(key)+'">'+navSub113()+content+log+'</div></section>';
 }
 
 var AUTO_UI={open:false,scroll:0};
