@@ -748,7 +748,7 @@ body.rotate91::after{content:'📱\A กรุณาหมุนมือถื�
 .dgc107{display:flex;flex-direction:column;align-items:center;min-width:46px;max-width:64px;padding:3px 4px;border:2px solid #6a8ad0;border-radius:8px;background:rgba(20,30,60,.85);font-size:10px;line-height:1.15;color:#e8eeff;white-space:nowrap;overflow:hidden}.dgc107 i{font-style:normal;font-size:10px;color:#ffd48a}
 .dgc107.me{border-color:#ffd25a}.dgc107.ok i{color:#7fe08a}.dgc107.down{opacity:.5}.dgc107.en{border-color:#e0584c;background:rgba(60,16,16,.85);min-width:60px}
 .dgint107{border-color:#d0604a!important;background:rgba(42,16,18,.9)!important}.dgint107 b{color:#ff9a7a}
-</style>
+.rev110{border-color:#c0442a!important;background:linear-gradient(180deg,rgba(120,30,20,.25),rgba(10,10,30,.2))}</style>
 
 <section id="login" class="login">
  <div class="auth-shell">
@@ -1748,7 +1748,7 @@ function cleanLook(l){
  if(Number.isInteger(l.petStage70))o.petStage70=Math.max(1,Math.min(3,l.petStage70));
  if(l.tier!=null)o.tier=Math.max(0,Math.min(3,l.tier|0));if(l.br&&Object.prototype.hasOwnProperty.call(CHARACTER_BRANCHES,l.br))o.br=l.br;return o}
 function mySnap(){var D5=nameDeco105(s),out={tt:s.title||'',sp:s.sup100?1:0,sf:D5.sf,sg:D5.sg,n:nick().slice(0,16),cls:s.cls,lvl:s.lvl,rating:s.pvp.r,pwk:s.pvp.wk,w:s.pvp.w,l:s.pvp.l,
- hp:s.maxhp,atk:pAtk(),def:pDef(),crit:Math.round(critPct()),dodge:Math.round(dodgePct()*10)/10,agi:sv(s,'agi'),look:cleanLook(Object.assign({},s.look,{tier:characterVisualTier(s),br:s.job2||null,collect59:colColor59(s),petStage70:petForm70(s,s.look.pet)}))};if(m51Spent(s)>0){var mb=s.battle;s.battle={kind:'pvp'};try{out.duel51={hp:calcMax(s),atk:pAtk(),def:pDef(),crit:Math.round(critPct()),dodge:Math.round(dodgePct()*10)/10}}finally{s.battle=mb}}return out}
+ hp:s.maxhp,atk:pAtk(),def:pDef(),crit:Math.round(critPct()),dodge:Math.round(dodgePct()*10)/10,agi:sv(s,'agi'),ul:s.ult?1:0,look:cleanLook(Object.assign({},s.look,{tier:characterVisualTier(s),br:s.job2||null,collect59:colColor59(s),petStage70:petForm70(s,s.look.pet)}))};if(m51Spent(s)>0){var mb=s.battle;s.battle={kind:'pvp'};try{out.duel51={hp:calcMax(s),atk:pAtk(),def:pDef(),crit:Math.round(critPct()),dodge:Math.round(dodgePct()*10)/10}}finally{s.battle=mb}}return out}
 function onlineSync(){
  if(!ON.ok||!ON.canWrite||!s||!s.created||s.battle)return;
  var snap=mySnap(),k=JSON.stringify(snap);if(k===ON.last)return;
@@ -2032,13 +2032,14 @@ function realOpp(){
  var board=SV?SVB.board:(ON.ok?ON.board:null),myId=SV?SVB.uid:ON.uid;
  if(!board)return null;var now=Date.now(),me=s.pvp.r;
  var wk90=pvpWk90(),pool=board.filter(function(x){return x.id!==myId&&(wk90<=PVP_WK0||x.pwk===wk90)&&Math.abs((x.rating|0)-me)<=PVP_RANGE&&now-(x.upd||0)<30*86400000});
- if(!pool.length||Math.random()<0.25)return null;
- return oppFromSnap(pick(pool))}
+ var near=pool.filter(function(x){return Math.abs((x.lvl|0)-(s.lvl|0))<=20});if(near.length)pool=near;else return null;
+ if(Math.random()<0.25)return null;
+ var x0=pick(pool),e0=oppFromSnap(x0);e0.uid=x0.id|0;return e0}
 function oppFromSnap(x){if(x.duel51)x=Object.assign({},x,x.duel51);
- var L=Math.max(1,Math.min(99,x.lvl|0));
+ var L=Math.max(1,Math.min(LV_MAX100||150,x.lvl|0)),num=function(v,lo){v=Number(v);return isFinite(v)?Math.max(lo,Math.round(v)):lo};
  var e={n:String(x.n).slice(0,16),cls:x.cls,lvl:L,rating:Math.max(0,x.rating|0),look:cleanLook(x.look),gold:[0,0],xp:0,drops:{},real:true,
-  hp:Math.max(30,Math.min(150+L*40,x.hp|0)),atk:Math.max(1,Math.min(60+L*14,x.atk|0)),def:Math.max(0,Math.min(30+L*6,x.def|0)),
-  agi:Math.max(0,Math.min(400,x.agi|0)),pvp:{crit:Math.max(0,Math.min(40,x.crit|0)),dodge:Math.max(0,Math.min(30,+x.dodge||0)),spec:SPEC[x.cls],mult:1.9}};
+  hp:num(x.hp,30),atk:num(x.atk,1),def:num(x.def,0),
+  agi:num(x.agi,0),pvp:{crit:Math.max(0,Math.min(75,x.crit|0)),dodge:Math.max(0,Math.min(35,+x.dodge||0)),spec:SPEC[x.cls],mult:1.9,ul:x.ul?1:0}};
  return e}
 function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1))}
 function pick(a){return a[Math.floor(Math.random()*a.length)]}
@@ -2701,7 +2702,7 @@ var Z109=1.32,FX109={sp:[],last:{},shake:{t:-9999,a:0}};
 function zChar109(c,look,cls,x,y,tn,flip,al){c.save();c.translate(Math.round(x),Math.round(y));c.scale(Z109,Z109);c.shadowColor='rgba(6,4,18,.9)';c.shadowBlur=3;drawChar(c,look,cls,-24,0,2,tn,flip,al);c.restore()}
 function zMob109(c,k,x,y,sc,tn,flip,boss,rare,flash){c.save();c.translate(Math.round(x),Math.round(y));c.scale(Z109,Z109);c.shadowColor='rgba(6,4,18,.9)';c.shadowBlur=3;fMob(c,k,0,0,sc,tn,flip,0,boss,rare);if(flash>0.02){c.shadowBlur=0;c.globalCompositeOperation='lighter';c.globalAlpha=Math.min(1,flash);fMob(c,k,0,0,sc,tn,flip,0,boss,rare)}c.restore()}
 function flash109(t,tn){var a=tn-(t||-9999);return a>=0&&a<160?(1-a/160)*.75:0}
-function glow109(c,W,H,tn){var g=c.createRadialGradient(W*.5,H*.5,8,W*.5,H*.5,W*.62);g.addColorStop(0,'rgba(120,230,255,'+(.13+.05*Math.sin(tn/600))+')');g.addColorStop(.6,'rgba(90,170,255,.04)');g.addColorStop(1,'rgba(90,170,255,0)');c.save();c.globalCompositeOperation='lighter';c.fillStyle=g;c.fillRect(0,0,W,H);c.restore()}
+function glow109(c,W,H,tn){var g=c.createRadialGradient(W*.5,H*.49,8,W*.5,H*.49,Math.max(W*.62,H*.36));g.addColorStop(0,'rgba(120,230,255,'+(.13+.05*Math.sin(tn/600))+')');g.addColorStop(.6,'rgba(90,170,255,.04)');g.addColorStop(1,'rgba(90,170,255,0)');c.save();c.globalCompositeOperation='lighter';c.fillStyle=g;c.fillRect(0,0,W,H);c.restore()}
 function vig109(c,W,H){var g=c.createRadialGradient(W*.5,H*.5,Math.min(W,H)*.32,W*.5,H*.5,Math.hypot(W,H)*.6);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(4,2,14,.6)');c.save();c.fillStyle=g;c.fillRect(0,0,W,H);c.restore()}
 function shake109(a){FX109.shake={t:nowMs(),a:a}}
 function shakeOff109(tn){var o=[0,0],S=FX109.shake,a=tn-S.t;if(a>=0&&a<280){var k=S.a*(1-a/280);o=[(Math.random()-.5)*2*k,(Math.random()-.5)*2*k]}if(typeof fx!=='undefined'&&fx.shake){var b=tn-fx.shake.t;if(b>=0&&b<260){var k2=Math.min(9,fx.shake.a)*(1-b/260);o[0]+=(Math.random()-.5)*2*k2;o[1]+=(Math.random()-.5)*2*k2}}return o}
@@ -2712,6 +2713,16 @@ function spDraw109(c,tn){if(!FX109.sp.length)return;c.save();c.globalCompositeOp
  if(p.ring){c.globalAlpha=(1-k)*.8;c.strokeStyle=p.col;c.lineWidth=3*(1-k)+1;c.beginPath();c.ellipse(p.x,p.y,8+k*46,5+k*26,0,0,7);c.stroke();return true}
  var f=a/16;c.globalAlpha=1-k;c.fillStyle=p.col;c.fillRect(Math.round(p.x+p.vx*f),Math.round(p.y+p.vy*f+.04*f*f),p.sz,p.sz);return true});c.restore()}
 function pop109(c,txt,x,y,age,col,big){var k=age<130?1.7-0.7*(age/130):1;c.save();c.translate(x,y);c.scale(k,k);c.font=(big?'900 30px':'800 19px')+' Kanit,sans-serif';c.textAlign='center';c.lineJoin='round';c.lineWidth=big?6:4;c.strokeStyle='#0b0f1e';c.strokeText(txt,0,0);if(big){var g=c.createLinearGradient(0,-24,0,4);g.addColorStop(0,'#fff6c0');g.addColorStop(1,col||'#ffb43c');c.fillStyle=g}else c.fillStyle=col;c.fillText(txt,0,0);c.restore()}
+
+// ===== B111 ระบบแก้แค้น PvP: ใครชนะร่างจำลองของเรา จะขึ้นในรายชื่อ กดแก้แค้นได้ 1 ครั้ง (ภายใน 48 ชม.) =====
+var REVOPP110=null,REV_MS110=48*3600e3;
+function revList110(){var now=Date.now();return (Array.isArray(s.rev110)?s.rev110:[]).filter(function(x){return x&&now-(x.at||0)<REV_MS110})}
+function revNew110(){return revList110().filter(function(x){return !x.done}).length}
+function pvpRev110(uid){uid=parseInt(uid,10)||0;if(!REVOPP110||REVOPP110.uid!==uid||s.battle||s.dup||cdLeft()>0){REVOPP110=null;return}var it=revList110().filter(function(x){return x.uid===uid&&!x.done})[0];if(!it){REVOPP110=null;return}
+ it.done=1;var e=oppFromSnap(REVOPP110.snap);e.uid=uid;e.n=String(e.n||it.n).slice(0,16);REVOPP110=null;startBattle(e,'pvp',{rev110:uid});s.battle.lines=['⚔️ แก้แค้น! ท้าดวล '+e.n+' ('+CLASSES[e.cls].n+' Lv'+e.lvl+') · ชนะได้รางวัล ×2']}
+function revHtml110(){var L=revList110();if(!L.length)return '';var now=Date.now();
+ return '<section class="card rev110"><p class="eyebrow">ระบบแก้แค้น</p><h3>⚔️ ใครโค่นร่างจำลองของคุณ</h3><p class="hint">แก้แค้นได้คนละ 1 ครั้งภายใน 48 ชม. · ไม่ใช้สิทธิ์ PvP รายวัน · ชนะได้ทองและเหรียญ PvP ×2</p>'+
+  L.map(function(x){var h=Math.floor((now-x.at)/36e5),m=Math.floor((now-x.at)%36e5/6e4);return '<div class="item"><div><div class="nm">'+esc(String(x.n||'').slice(0,16))+' · '+(CLASSES[x.cls]?CLASSES[x.cls].n:'')+' Lv'+(x.lvl|0)+'</div><div class="st">ชนะคุณเมื่อ '+(h?h+' ชม. ':'')+m+' นาทีที่แล้ว'+(x.res?' · '+(x.res==='w'?'✅ แก้แค้นสำเร็จ':'❌ แก้แค้นไม่สำเร็จ'):'')+'</div></div>'+(x.done?'<button class="btn" disabled>'+(x.res==='w'?'สำเร็จแล้ว':'ใช้สิทธิ์แล้ว')+'</button>':'<button class="btn primary" data-a="pvprev" data-p="'+(x.uid|0)+'"'+(s.battle||cdLeft()>0?' disabled':'')+'>⚔️ แก้แค้น</button>')+'</div>'}).join('')+'</section>'}
 
 // ===== B105 บัตรรายเดือน · บัตรถาวร · ซีซั่น 1 (จบ 31 ธ.ค. 23:59 น. เวลาไทย) =====
 var S105_START=Date.UTC(2026,9,31,17,0,0),S105_END=Date.UTC(2026,11,31,16,59,59),S105_RUSH=Date.UTC(2026,11,21,17,0,0),S105_CLAIM=S105_END+7*864e5,S105_MAX=50,S105_PER=1000,S105_KILLCAP=600;
@@ -2834,7 +2845,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B109';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B111';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -2967,6 +2978,7 @@ var SPEC={warrior:'ทุบพสุธา',rogue:'ฆ่าเงียบ',ma
 var ENEMY_GUILDS=['หมาป่าราตรี','ราชันย์เพลิงนิล','ปีกเหล็กแห่งขุนเขา','นักล่าเงา','จอมเวทสายหมอก','เขี้ยวมังกรดำ','พิทักษ์ตะวันแดง'];
 function noFlee(b){return !!b.challenge73||b.kind==='pvp'||b.kind==='war'||!!b.wb}
 function eloDelta(my,op,won){var ex=1/(1+Math.pow(10,(op-my)/400));return Math.max(1,Math.round(24*(won?1-ex:ex)))}
+function mirrorOpp110(name,cls,lvl,pw,rating){var me=mySnap(),K=CLASSES[cls];return {n:name,cls:cls,lvl:lvl,rating:rating,look:randLook(),gold:[0,0],xp:0,drops:{},hp:Math.round(me.hp*pw),atk:Math.round(me.atk*pw),def:Math.round(me.def*pw),agi:me.agi|0,pvp:{crit:Math.min(75,Math.max(5,me.crit|0)),dodge:Math.min(35,me.dodge||0),spec:SPEC[cls],mult:1.9}}}
 function buildOpp(name,cls,lvl,pw,rating){
  var K=CLASSES[cls],st={str:0,vit:0,agi:0,int:0},keys=['str','vit','agi','int'],i;
  var bias={warrior:['str','vit'],rogue:['agi','str'],mage:['int','vit'],paladin:['vit','str'],archer:['agi','str']}[cls];
@@ -2989,8 +3001,8 @@ function pvpFind(){
  var re=realOpp();
  if(re){startBattle(re,'pvp');s.battle.lines=['จับคู่กับผู้เล่นจริง: '+re.n+' ('+CLASSES[re.cls].n+' Lv'+re.lvl+' · เรทติ้ง '+re.rating+')'];return}
  var op=Math.max(0,s.pvp.r+rnd(-80,80));
- var lvl=Math.max(1,Math.min(60,s.lvl+Math.round((op-1000)/150)+rnd(-1,1)));
- var e=buildOpp(pick(NPC_NAMES)+rnd(10,99),pick(CLS_ORDER),lvl,1.1+Math.max(0,op-1000)/2000+Math.random()*0.2,op);
+ var lvl=Math.max(1,Math.min(LV_MAX100||150,s.lvl+rnd(-3,3)));
+ var e=mirrorOpp110(pick(NPC_NAMES)+rnd(10,99),pick(CLS_ORDER),lvl,0.9+Math.max(0,op-1000)/4000+Math.random()*0.15,op);
  startBattle(e,'pvp');
  s.battle.lines=['จับคู่ได้แล้ว: '+e.n+' ('+CLASSES[e.cls].n+' Lv'+lvl+' · เรทติ้ง '+op+')'];
 }
@@ -3200,6 +3212,7 @@ function battleActBase73(a){if(s.battle&&s.battle.jw&&Date.now()<s.battle.jw)s.b
    var mul=1,tag='';
    if(e.pvp){
     if(b.turn%3===0){mul=e.pvp.mult;tag=' ('+e.pvp.spec+')'}
+    if(e.pvp.ul&&b.turn%7===0){mul=2.6;tag=' (ไม้ตาย!)'}
     if(Math.random()*100<e.pvp.crit){mul*=2;tag+=' คริติคอล!'}
    }
    var msk=null;
@@ -3307,7 +3320,8 @@ function duelEnd0(won){
  if(b.onWar106){s.war106Res={uid:b.onWar106.uid|0,won:!!won};s.maxhp=calcMax(s);s.hp=s.maxhp;say(won?'⚔️ ศึกชิงแดน: ชนะ '+e.n+'!':'⚔️ ศึกชิงแดน: แพ้ '+e.n+' · ได้โล่ 5 นาที')}
  s.mp=Math.min(s.maxmp,s.mp+Math.round(s.maxmp*0.25));
  if(b.kind==='pvp'){
-  pvpWeekCheck90();dqAdd('pvp');var P=s.pvp,d=eloDelta(P.r,e.rating,won);
+  pvpWeekCheck90();dqAdd('pvp');var P=s.pvp,d=eloDelta(P.r,e.rating,won);if(e.uid)s.pvpRes110={uid:e.uid|0,won:!!won,rev:!!b.rev110};
+  if(b.rev110){var ri=revList110().filter(function(x){return x.uid===b.rev110})[0];if(ri)ri.res=won?'w':'l';if(won){var rg=Math.round(15+s.lvl*3);s.gold+=rg;P.c=(P.c|0)+PVP_COIN_W;say('⚔️ แก้แค้นสำเร็จ! โบนัส ทอง +'+rg+' · เหรียญ PvP +'+PVP_COIN_W)}}
   if(won){
    P.r+=d;P.w++;P.streak++;P.best=Math.max(P.best,P.r);
    var g=Math.round((15+s.lvl*3)*(1+Math.min(5,P.streak-1)*0.1));
@@ -3819,6 +3833,7 @@ function act(a,p){
  else if(a==='bp'){var pq=POTS[parseInt(p,10)||0];if(pq&&s.lvl>=pq.lv&&s.gold>=pq.price&&bagFree(pq.key)<1)say('ยาชนิดนี้เต็มแล้ว ('+BAG_MAX+')');else if(pq&&s.lvl>=pq.lv&&s.gold>=pq.price){s.gold-=pq.price;s[pq.key]=(s[pq.key]|0)+1;say(pq.full?'ซื้อยาฟื้นเลือดเต็ม 1 ขวด':'ซื้อยาฟื้นฟู '+pq.h+' 1 ขวด')}}
  else if(a==='drinkf'){if((s.potF|0)>0&&s.hp<s.maxhp){var hf=s.maxhp-s.hp;s.potF--;s.hp=s.maxhp;say('ดื่มยาฟื้นเลือดเต็ม ฟื้น '+hf+' HP')}}
  else if(a==='pvpfind')pvpFind();
+ else if(a==='pvprev')pvpRev110(p);
  else if(a==='pvpday')pvpDayClaim90();
  else if(a==='pvpwk')pvpWeekClaim90();
  else if(a==='pshop')pshopBuy(Number(p));
@@ -4856,11 +4871,11 @@ function drawScene(cv,tn){
  var b=s.battle;
  if(mode==='equip'){
   var gq=c.createLinearGradient(0,0,0,H);gq.addColorStop(0,'#3a3358');gq.addColorStop(1,'#1c1a30');c.fillStyle=gq;c.fillRect(0,0,W,H);c.fillStyle='rgba(255,255,255,.08)';c.beginPath();c.ellipse(W/2,H-13,34,7,0,0,7);c.fill();
-  CPOSE={pose:'idle',dir:0};drawChar(c,s.look,s.cls,Math.round(W/2-42),H-14,3.5,tn,false,1);return; // B88 ย่อให้เห็นทั้งตัว
+  CPOSE={pose:'idle',dir:0};drawChar(c,s.look,s.cls,Math.round(W/2-12*1.85),H-16,1.85,tn,false,1);return; // B88 ย่อให้เห็นทั้งตัว
  }
  if(mode==='preview'){
   bgScene(c,W,H,0,tn);timeTint(c,W,H);
-  CPOSE={pose:'idle',dir:0};drawChar(c,s.look,s.cls,Math.round(W/2-60),gy,5,tn,false,1);
+  CPOSE={pose:'idle',dir:0};drawChar(c,s.look,s.cls,Math.round(W/2-12*3.7),gy-4,3.7,tn,false,1);
 
   return;
  }
@@ -5231,7 +5246,7 @@ function viewPvp(){
   '<div class="stats"><div class="stat"><span>ชนะ / แพ้</span><b>'+P.w+' / '+P.l+'</b></div><div class="stat"><span>ชนะติดต่อกัน</span><b>'+P.streak+'</b></div>'+
   '<div class="stat"><span>อัตราชนะ</span><b>'+(tot?Math.round(P.w/tot*100)+'%':'-')+'</b></div><div class="stat"><span>เรทติ้งสูงสุด</span><b>'+P.best+'</b></div></div>'+
   '<button id="pvpFind85" class="btn primary" data-a="pvpfind"'+(match85.disabled?' disabled':'')+'>'+match85.text+'</button>'+
-  '<p class="hint">ฟรี '+PVP_FREE+' ครั้งต่อวัน หลังจากนั้นครั้งละ '+PVP_PRICE+' ทอง · รางวัลเป็นทองอย่างเดียว · เลือดทั้งสองฝ่าย ×3 · ใช้ยาได้ไม่เกิน 3 ขวดต่อแมตช์ · สู้จบ HP เต็ม</p></section>';
+  '<p class="hint">ฟรี '+PVP_FREE+' ครั้งต่อวัน หลังจากนั้นครั้งละ '+PVP_PRICE+' ทอง · รางวัลเป็นทองอย่างเดียว · เลือดทั้งสองฝ่าย ×3 · ใช้ยาได้ไม่เกิน 3 ขวดต่อแมตช์ · สู้จบ HP เต็ม</p></section>'+revHtml110();
  var g=s.guild,war='';
  if(g&&g.gid){war=warCardOn()}
  else if(!g){
@@ -6813,9 +6828,9 @@ function ts169Env(W,H,z,d){
  pillar(sx-sw/2-16,wy+wh+5,60,0);crystal(sx-sw/2-16,wy+wh-62);pillar(sx+sw/2+16,wy+wh+5,60,0);crystal(sx+sw/2+16,wy+wh-62);
  pillar(W*.94,H*.30,46,1);pillar(W*.05,H*.60,40,1);
  // ลานหินกลางวงเวท
- var cx=W*.5,cy=H*.50,rx=W*.70,ry=rx*.56;
+ var G1=ts169Geo(W,H,1),cx=G1.cx,cy=G1.cy,rx=G1.rx,ry=G1.ry;
  c.save();c.beginPath();c.ellipse(cx,cy,rx+9,ry+7,0,0,7);c.fillStyle='#5a564e';c.fill();c.beginPath();c.ellipse(cx,cy,rx,ry,0,0,7);c.clip();
- var tw=30,th=15,j;for(j=-30;j<30;j++)for(i=-30;i<30;i++){x=cx+(i-j)*tw/2;y=cy+(i+j)*th/2;if(Math.abs(x-cx)>rx+tw||Math.abs(y-cy)>ry+th)continue;var sh=R();c.fillStyle=sh<.33?'#918c80':sh<.66?'#9e998c':'#878276';c.beginPath();c.moveTo(x,y-th/2+1);c.lineTo(x+tw/2-1,y);c.lineTo(x,y+th/2-1);c.lineTo(x-tw/2+1,y);c.closePath();c.fill();c.strokeStyle='rgba(255,255,255,.10)';c.beginPath();c.moveTo(x-tw/2+1,y);c.lineTo(x,y-th/2+1);c.lineTo(x+tw/2-1,y);c.stroke();if(R()<.06){c.strokeStyle='rgba(40,35,30,.5)';c.beginPath();c.moveTo(x-5,y-2);c.lineTo(x,y+1);c.lineTo(x+4,y-1);c.stroke()}}
+ var tw=30,th=15,j;for(j=-60;j<60;j++)for(i=-60;i<60;i++){x=cx+(i-j)*tw/2;y=cy+(i+j)*th/2;if(Math.abs(x-cx)>rx+tw||Math.abs(y-cy)>ry+th)continue;var sh=R();c.fillStyle=sh<.33?'#918c80':sh<.66?'#9e998c':'#878276';c.beginPath();c.moveTo(x,y-th/2+1);c.lineTo(x+tw/2-1,y);c.lineTo(x,y+th/2-1);c.lineTo(x-tw/2+1,y);c.closePath();c.fill();c.strokeStyle='rgba(255,255,255,.10)';c.beginPath();c.moveTo(x-tw/2+1,y);c.lineTo(x,y-th/2+1);c.lineTo(x+tw/2-1,y);c.stroke();if(R()<.06){c.strokeStyle='rgba(40,35,30,.5)';c.beginPath();c.moveTo(x-5,y-2);c.lineTo(x,y+1);c.lineTo(x+4,y-1);c.stroke()}}
  var ed=c.createRadialGradient(cx,cy,rx*.55,cx,cy,rx);ed.addColorStop(0,'rgba(0,0,0,0)');ed.addColorStop(1,'rgba(30,45,20,.5)');c.fillStyle=ed;c.fillRect(0,0,W,H);c.restore();
  c.strokeStyle='#4a463f';c.lineWidth=3;c.beginPath();c.ellipse(cx,cy,rx+4,ry+4,0,0,7);c.stroke();
  [[W*.04,H*.88],[W*.97,H*.86],[W*.99,H*.22]].forEach(function(q){for(k=0;k<5;k++){c.fillStyle=k%2?G[3]:G[2];c.beginPath();c.arc(q[0]+(R()-.5)*44,q[1]+(R()-.5)*20,14+R()*10,0,7);c.fill()}});
@@ -6824,7 +6839,7 @@ function ts169Env(W,H,z,d){
 }
 function ts169CircleBase(W,H,d){
  var cv=document.createElement('canvas');cv.width=Math.ceil(W*d);cv.height=Math.ceil(H*d);var c=cv.getContext('2d');c.scale(cv.width/W,cv.height/H);
- var cx=W*.5,cy=H*.50,rx=W*.60,ry=rx*.56,j,t,a;
+ var G0=ts169Geo(W,H,.86),cx=G0.cx,cy=G0.cy,rx=G0.rx,ry=G0.ry,j,t,a;
  var fg=c.createRadialGradient(cx,cy,0,cx,cy,rx);fg.addColorStop(0,'rgba(60,200,255,.08)');fg.addColorStop(.85,'rgba(60,200,255,.14)');fg.addColorStop(1,'rgba(60,200,255,0)');c.fillStyle=fg;c.beginPath();c.ellipse(cx,cy,rx,ry,0,0,7);c.fill();
  c.shadowColor='#4ff0ff';c.shadowBlur=12;c.strokeStyle='rgba(130,245,255,.9)';
  [[1,2.6],[.88,1.6],[.58,1.8],[.5,1.1],[.16,1.3]].forEach(function(q){c.lineWidth=q[1];c.beginPath();c.ellipse(cx,cy,rx*q[0],ry*q[0],0,0,7);c.stroke()});
@@ -6833,7 +6848,7 @@ function ts169CircleBase(W,H,d){
  return cv;
 }
 function ts169Circle(c,W,H,tn){
- var cx=W*.5,cy=H*.50,rx=W*.60,ry=rx*.56,p=.8+.2*Math.sin(tn/600),j,a,d=battleDensity76(c,W,H),key=W+'|'+H+'|'+d;
+ var G0=ts169Geo(W,H,.86),cx=G0.cx,cy=G0.cy,rx=G0.rx,ry=G0.ry,p=.8+.2*Math.sin(tn/600),j,a,d=battleDensity76(c,W,H),key=W+'|'+H+'|'+d;
  if(TS169.ckey!==key){TS169.circle=ts169CircleBase(W,H,d);TS169.ckey=key}
  c.save();c.globalCompositeOperation='lighter';c.globalAlpha=p;c.drawImage(TS169.circle,0,0,W,H);c.globalAlpha=1;
  c.fillStyle='rgba(170,250,255,'+p+')';c.font='bold 10px serif';c.textAlign='center';c.textBaseline='middle';var RN='ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ';
@@ -6856,7 +6871,8 @@ function ts169Plate(c,name,lv,x,y,hp,mhp,mp,mmp,side,mine){
  c.textBaseline='alphabetic';c.restore();
 }
 function ts169Ring(c,x,y,col,tn,dash){c.save();c.strokeStyle=col;c.lineWidth=2;if(dash){c.setLineDash([5,4]);c.lineDashOffset=-tn/40}c.beginPath();c.ellipse(x,y+2,dash?28:24,dash?11:10,0,0,7);c.stroke();c.restore()}
-function ts169Layout(W,H){return {px:W*.77,py:H*.65,ex:W*.23,ey:H*.43,slots:[[W*.47,H*.34],[W*.14,H*.60],[W*.42,H*.24]],mates:[[W*.66,H*.74],[W*.90,H*.80]]}}
+function ts169Geo(W,H,k){var ry=H*.27,rx=Math.max(W*.70,ry/.56);k=k||1;return {cx:W*.5,cy:H*.49,rx:rx*k,ry:ry*k}}
+function ts169Layout(W,H){return {px:W*.83,py:H*.73,ex:W*.30,ey:H*.335,slots:[[W*.58,H*.31],[W*.13,H*.47],[W*.50,H*.24]],mates:[[W*.60,H*.75],[W*.68,H*.62]]}}
 function drawBattleTS169(c,W,H,tn,visual){var so109=shakeOff109(tn);c.save();c.translate(so109[0],so109[1]);try{drawBattleTS169z(c,W,H,tn,visual)}finally{c.restore()}if(H>W)vig109(c,W,H)}
 function drawBattleTS169z(c,W,H,tn,visual){
  var b=visual?visual.battle:s.battle,actor=visual?visual.player:s;if(!b)return;var L=ts169Layout(W,H),px=L.px,py=L.py,activeX=L.ex,activeY=L.ey;
@@ -7855,6 +7871,7 @@ if(SV){
  window.ENGINE={refGrant:function(role,nm){if(!s)return;if(role==='inviter'){s.pvp.c=(s.pvp.c|0)+REF_RW.coin;addItem('pot4',REF_RW.pot);s.refOk=(s.refOk|0)+1;say('🎉 เพื่อนที่คุณชวน ('+String(nm||'').slice(0,16)+') ถึง Lv'+REF_LV+' แล้ว! ได้เหรียญ PvP +'+REF_RW.coin+' · ยาฟื้นฟู 300 ×'+REF_RW.pot)}else{s.gold+=REF_RW.gold;addItem('pot4',REF_RW.pot);say('🎉 ถึง Lv'+REF_LV+' แล้ว! รางวัลเพื่อนชวนมา: ทอง +'+REF_RW.gold.toLocaleString()+' · ยาฟื้นฟู 300 ×'+REF_RW.pot)}save()},
  supGrant100:function(sid){if(!s)return;var first=!s.sup100;s.pay100=(Array.isArray(s.pay100)?s.pay100:[]).concat([String(sid||'').slice(0,80)]).slice(-10);if(!first){mailAdd101({id:'pay'+String(sid||'').slice(-24),t:'ได้รับการชำระเงินซ้ำ',from:'TheWarWhat',b:'บัญชีนี้เป็นผู้สนับสนุนอยู่แล้ว จึงมอบทองแทน\nถ้าต้องการขอคืนเงิน แจ้งผู้ดูแลพร้อมเลขอ้างอิงในใบเสร็จนี้',pay:{amt:35,how:'Stripe',ref:String(sid||'')},it:[{k:'gold',n:50000}]});return}s.sup100={at:Date.now()};s.title='t20';mailAdd101({id:'pay'+String(sid||'').slice(-24),t:'🎁 ขอบคุณที่สนับสนุน!',from:'TheWarWhat',b:'ได้รับการชำระเงินแพ็กผู้สนับสนุนแล้ว\nฉายา ✦ ผู้สนับสนุน ถูกสวมให้แล้ว (เปลี่ยนได้ที่หมวดฉายา)\nกดรับอุปกรณ์ด้านล่างได้เลย',pay:{amt:35,how:'Stripe',ref:String(sid||'')},it:[{k:'gear',v:{k:'w',i:2,g:0,t:1,sp:1}},{k:'gear',v:gopRoll({k:'x',i:'armor',g:1,t:1,sp:1})}]});recalc();say('🎁 ขอบคุณที่สนับสนุน! ของอยู่ในกล่องจดหมาย 📬')},
  warOpp106:function(snap,uid){warOpp106(snap,uid)},
+ pvpRevOpp110:function(snap,uid){REVOPP110={snap:snap,uid:uid|0}},
  payGrant105:function(sku,sid){if(!s)return;payGrant105(sku,sid)},
  mktInfo103:function(it){return {min:mktMin(it),max:mktMax(it),name:pendName(it),ok:!it.by&&!it.sp}},
  mailAdd101:function(m){if(!s||!m)return;mailAdd101(m);if(m.bc)s.mailAll=Math.max(s.mailAll|0,m.bc|0)},
