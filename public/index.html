@@ -2775,11 +2775,11 @@ function charHdTile114(key,look,frame,row){var H=CHAR_HD114[key],r=charHdImg114(
  var fs=H.fs,cv=document.createElement('canvas');cv.width=fs;cv.height=fs;var cx=cv.getContext('2d');cx.drawImage(r.im,frame*fs,row*fs,fs,fs,0,0,fs,fs);
  try{var img=cx.getImageData(0,0,fs,fs),d=img.data,pal=characterHairPalette(hc),lim=Math.round(H.feet-H.body*0.5);
   var hx=HAIR[hc]||HAIR[0],base=[1,3,5].map(function(j){return parseInt(hx.slice(j,j+2),16)});lim=Math.round(H.feet-H.body*0.56);
-  if(hc!==0){var hairish=function(i){if(d[i+3]<40)return false;var mx=Math.max(d[i],d[i+1],d[i+2]),mn=Math.min(d[i],d[i+1],d[i+2]);return mx>=108&&mx-mn<=30};
+  if(hc!==0){var hairish=function(i){if(d[i+3]<40)return false;var mx=Math.max(d[i],d[i+1],d[i+2]),mn=Math.min(d[i],d[i+1],d[i+2]);return mx>=120&&mx-mn<=16&&d[i]-d[i+2]<=10};
    var top=-1;for(var yy=0;yy<lim&&top<0;yy++)for(var xx=0;xx<fs;xx++)if(d[(yy*fs+xx)*4+3]>40){top=yy;break}
    var vis=new Uint8Array(fs*fs),q=[];if(top>=0)for(var sy=top;sy<Math.min(lim,top+8);sy++)for(var sx=0;sx<fs;sx++){var si=sy*fs+sx;if(hairish(si*4)){vis[si]=1;q.push(si)}}
    while(q.length){var cur=q.pop(),px=cur%fs,py=(cur/fs)|0,nb=[px>0?cur-1:-1,px<fs-1?cur+1:-1,py>0?cur-fs:-1,py<lim-1?cur+fs:-1];for(var ni=0;ni<4;ni++){var n=nb[ni];if(n>=0&&!vis[n]&&hairish(n*4)){vis[n]=1;q.push(n)}}}
-   for(var k=0;k<fs*lim;k++){if(!vis[k])continue;var i=k*4,mx=Math.max(d[i],d[i+1],d[i+2]),l=mx/255,f=0.30+0.85*l,w=Math.max(0,Math.min(1,(l-0.9)*3.5))*0.55,fade=mx<140?(mx-108)/32:1;for(var ch=0;ch<3;ch++){var v=Math.min(255,base[ch]*f);v=v+(255-v)*w;d[i+ch]=Math.round(d[i+ch]*(1-fade)+v*fade)}}}
+   for(var k=0;k<fs*lim;k++){if(!vis[k])continue;var i=k*4,mx=Math.max(d[i],d[i+1],d[i+2]),l=mx/255,f=0.30+0.85*l,w=Math.max(0,Math.min(1,(l-0.9)*3.5))*0.55,fade=mx<150?(mx-120)/30:1;for(var ch=0;ch<3;ch++){var v=Math.min(255,base[ch]*f);v=v+(255-v)*w;d[i+ch]=Math.round(d[i+ch]*(1-fade)+v*fade)}}}
   cx.putImageData(img,0,0)}catch(e){}
  CHAR_HD_TINT114.set(ck,cv);if(CHAR_HD_TINT114.size>400)CHAR_HD_TINT114.delete(CHAR_HD_TINT114.keys().next().value);return cv}
 
@@ -2904,7 +2904,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B123';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B124';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -5386,7 +5386,7 @@ function classPicker(){
 function hairPicker(){
  var st=HAIR_S.map(function(n,i){return '<button class="btn" data-a="hair" data-p="s:'+i+'" aria-pressed="'+(s.look.hair===i)+'">'+n+'</button>'}).join('');
  var co=HAIR.map(function(col,i){return '<button class="btn sw" data-a="hair" data-p="c:'+i+'" aria-label="สีผม'+HAIR_N[i]+'" aria-pressed="'+(s.look.hc===i)+'" style="background:'+col+'"></button>'}).join('');
- return '<div><h3>ทรงผม</h3><div class="pick">'+st+'</div></div><div><h3>สีผม</h3><div class="pick">'+co+'</div></div>';
+ var sprite=typeof SET==='undefined'||!SET||SET.spriteChars!==false;return (sprite?'':'<div><h3>ทรงผม</h3><div class="pick">'+st+'</div></div>')+'<div><h3>สีผม</h3><div class="pick">'+co+'</div></div>';
 }
 var COS_IC={};
 function cosIcon(slot,id,locked){
@@ -5453,7 +5453,7 @@ function viewDress(){if(s.dtab==='bestiary')return bookHtml70();if(s.dtab==='pet
   '<section class="card"><h3>ตัวละคร</h3>'+(CL?'<button class="btn sm sup100cb" data-a="sup100">🎁 ร้านเติมเงิน · บัตรรายเดือน / บัตรถาวร / พาสซีซั่น</button>':'')+'<p>'+(titleOf(s.title)?'<span style="color:'+titleOf(s.title).c+'">['+esc(titleOf(s.title).n)+']</span> ':'')+'<b>'+esc(nick())+'</b> · '+clsName(s)+'</p></section>'+
   '<section class="card navdup113"><h3>เลือกหมวด</h3><div class="cat">'+DT.map(function(c){return '<button class="btn'+(od===c[0]?' primary':'')+'" data-a="dtab" data-p="'+c[0]+'" aria-pressed="'+(od===c[0])+'">'+c[1]+(c[0]==='box'&&s.boxes>0?' ('+s.boxes+')':'')+'</button>'}).join('')+'</div></section>';
  var body='';
- if(od==='look')body='<section class="card"><p class="hint">เลือกทรงผม สีผม ปีก ออร่า และสัตว์เลี้ยงของคุณ</p>'+hairPicker()+slotPick('wing')+slotPick('pet')+slotPick('aura')+'</section>';
+ if(od==='look')body='<section class="card"><p class="hint">เลือกสีผม ปีก ออร่า และสัตว์เลี้ยงของคุณ</p>'+hairPicker()+slotPick('wing')+slotPick('pet')+slotPick('aura')+'</section>';
  else if(od==='collect')body=colView59();
  else if(od==='title')body=titleHtml();
  else if(od==='book')body=bookHtml();
