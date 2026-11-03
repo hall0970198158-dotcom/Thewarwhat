@@ -750,6 +750,20 @@ body.rotate91::after{content:'📱\A กรุณาหมุนมือถื�
 .dgint107{border-color:#d0604a!important;background:rgba(42,16,18,.9)!important}.dgint107 b{color:#ff9a7a}
 .rev110{border-color:#c0442a!important;background:linear-gradient(180deg,rgba(120,30,20,.25),rgba(10,10,30,.2))}
 #nav{display:none!important}
+.pet131s{display:inline-block;background-repeat:no-repeat;image-rendering:auto;vertical-align:middle}
+#chest131b{position:fixed;right:10px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:41;width:62px;height:58px;padding:4px;border-radius:14px;border:2px solid #f2c14e;background:radial-gradient(circle at 50% 35%,#5a3a1c,#24160b);box-shadow:0 4px 14px rgba(0,0,0,.55),0 0 14px rgba(242,193,78,.45);animation:ch131glow 2.4s ease-in-out infinite}
+#chest131b svg{width:100%;height:100%}#chest131b i{position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;border-radius:10px;background:#e8483a;color:#fff;font:700 12px/20px Kanit,sans-serif;font-style:normal;text-align:center;padding:0 4px}
+@keyframes ch131glow{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.ch131ov{position:fixed;inset:0;z-index:80;background:rgba(5,8,16,.78);display:flex;align-items:center;justify-content:center;padding:16px}
+.ch131card{width:min(360px,100%);background:linear-gradient(180deg,#2a2016,#140f0a);border:2px solid #b8924a;border-radius:16px;padding:18px 16px;text-align:center;color:#f3e7cf;font-family:Kanit,sans-serif;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+.ch131big svg{width:130px;height:114px}.ch131n{font-size:20px;font-weight:700;color:#ffe08a;margin:8px 0 4px}.ch131t{margin:4px 0 10px;color:#d9ccb3;font-size:14px}
+.ch131r{list-style:none;padding:0;margin:0 0 12px;font-size:13px;color:#cbbfa6}.ch131r li{padding:2px 0}
+.ch131a{display:grid;gap:8px}.egg131{width:120px;height:150px;margin:10px auto}.egg131 svg{width:100%;height:100%}
+.egg131.shake{animation:egg131s .45s ease-in-out infinite;transform-origin:50% 90%}.egg131 .crk{stroke-dasharray:90;stroke-dashoffset:90;animation:egg131c 1.6s forwards}
+@keyframes egg131s{0%,100%{transform:rotate(0)}25%{transform:rotate(-9deg)}75%{transform:rotate(9deg)}}@keyframes egg131c{to{stroke-dashoffset:0}}
+.egg131res{width:170px;height:170px;margin:6px auto;display:flex;align-items:center;justify-content:center;border-radius:50%;background:radial-gradient(circle,rgba(255,240,200,.35),transparent 70%);animation:egg131p .5s ease-out}
+.egg131res.gold{background:radial-gradient(circle,rgba(255,215,90,.75),rgba(255,120,220,.25) 55%,transparent 72%)}.egg131res.junk{font-size:72px}
+@keyframes egg131p{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
 #nav113{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(6,1fr);gap:2px;padding:4px 4px calc(4px + env(safe-area-inset-bottom));background:linear-gradient(180deg,#2a2016,#140f0a);border-top:2px solid #b8924a;box-shadow:0 -4px 14px rgba(0,0,0,.5)}
 #nav113 .n113{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:50px;border:1px solid transparent;border-radius:10px;background:transparent;color:#d8ccb0;font-family:Kanit,sans-serif;padding:3px 0}
 #nav113 .n113 .ic{font-size:21px;line-height:1.1;filter:saturate(.75)}#nav113 .n113 .tx{font-size:11px;font-weight:600}
@@ -1192,13 +1206,13 @@ var COS={
  hat:[{id:'none',n:'ไม่สวม',r:0},{id:'wiz',n:'หมวกพ่อมด',r:1},{id:'cap',n:'หมวกแก๊ป',r:1},{id:'pump',n:'หัวฟักทอง',r:2},{id:'ears',n:'ฮู้ดหูแมว',r:2}],
  face:[{id:'none',n:'ไม่ใส่',r:0},{id:'gog',n:'แว่นกอกเกิล',r:1},{id:'gls',n:'แว่นตา',r:1},{id:'mask',n:'หน้ากากแมว',r:2}],
  wing:[{id:'none',n:'ไม่มีปีก',r:0},{id:'blue',n:'ปีกฟ้า',r:2},{id:'pink',n:'ปีกชมพู',r:2},{id:'dark',n:'ปีกดำ',r:3},{id:'gold',n:'ปีกทอง',r:3},{id:'phoenix',n:'ปีกหงส์เพลิง',r:4},{id:'frost',n:'ปีกเทพหิมะ',r:4},{id:'seraph',n:'ปีกเทวาทอง',r:4},{id:'arcane',n:'ปีกผลึกเวท',r:4},{id:'azure',n:'ปีกกลไกฟ้าคราม',r:4},{id:'abyss',n:'ปีกมารรัตติกาล',r:4},{id:'arena',n:'ปีกดาบสังเวียน',r:4,x:1,bound:true}],
- pet:[{id:'none',n:'ไม่มีสัตว์เลี้ยง',r:0},{id:'cat',n:'แมวขาว',r:1},{id:'pcat',n:'แมวชมพู',r:1},{id:'slime',n:'สไลม์ฟ้า',r:2},{id:'peng',n:'เพนกวิน',r:2},{id:'fox',n:'จิ้งจอกแดง',r:1},{id:'bunny',n:'กระต่ายขาว',r:1},{id:'owl',n:'นกฮูก',r:2},{id:'dragon',n:'ลูกมังกร',r:3}],
+ pet:[{id:'none',n:'ไม่มีสัตว์เลี้ยง',r:0},{id:'wolf',n:'หมาป่าน้อย',r:3},{id:'phoenix',n:'นกเพลิง',r:3},{id:'icedrg',n:'มังกรน้ำแข็ง',r:3},{id:'bat',n:'ค้างคาวน้อย',r:3},{id:'tiger',n:'เสือขาวน้อย',r:3},{id:'griffon',n:'กริฟฟอนน้อย',r:3},{id:'golem',n:'โกเล็มหินน้อย',r:3},{id:'dragon',n:'มังกรน้อย',r:3},{id:'fox',n:'จิ้งจอกน้อย',r:3}],
  aura:[{id:'none',n:'ไม่มีออร่า',r:0},{id:'white',n:'ออร่าขาว',r:1},{id:'fire',n:'ออร่าเพลิง',r:2},{id:'ice',n:'ออร่าน้ำแข็ง',r:2},{id:'holy',n:'ออร่าศักดิ์สิทธิ์',r:3},{id:'void',n:'ออร่ามายา',r:3}],
  dye:[{id:'def',n:'สีประจำอาชีพ',r:0},{id:'red',n:'ย้อมแดง',r:1},{id:'blue',n:'ย้อมน้ำเงิน',r:1},{id:'green',n:'ย้อมเขียว',r:1},{id:'gold',n:'ย้อมทอง',r:2},{id:'purple',n:'ย้อมม่วง',r:2}]
 };
 var SLOT_N={hat:'หมวก',face:'แว่น / หน้ากาก',wing:'ปีก',pet:'สัตว์เลี้ยง',aura:'ออร่า',dye:'สีชุด'};
 var RAR_N={1:'ธรรมดา',2:'หายาก',3:'ตำนาน',4:'เทพ'};
-var BOX_PRICE=200000,BOX_REAL=0.2;
+var BOX_PRICE=1000000,BOX_REAL=0.1;
 var JUNK=['รองเท้าเก่า','กระป๋องสนิม','ถุงเท้าขาด','ก้างปลา','ก้อนหินธรรมดา','เศษผ้าขาด','ขวดแตก','กิ่งไม้ผุ'];
 /* B80: a hollow energy cocoon with depth-sorted orbiting flame streams. */
 var AURA_ART76=new Map();
@@ -1375,7 +1389,7 @@ function colPreview69(tn){
 
 
 // B70: authoritative bestiary, rare variants and cosmetic companion evolution.
-var PET_IDS70=['cat','pcat','slime','peng','fox','bunny','owl','dragon'];
+var PET_IDS70=['wolf','phoenix','icedrg','bat','tiger','griffon','golem','dragon','fox'];
 var BOOK_UI70={z:0,i:0,rare:false,pet:'dragon',form:0};
 var BOOK_ART70=new Map(),RARE_ART70=new Map(),PET_ART70=new Map();
 function count70(n,max){return Number.isFinite(n)?Math.max(0,Math.min(max,Math.floor(n))):0}
@@ -1412,7 +1426,7 @@ function bookHtml70(){
 }
 function petHtml70(){
  var id=PET_IDS70.indexOf(BOOK_UI70.pet)>=0?BOOK_UI70.pet:'dragon',meta=COS.pet.find(function(x){return x.id===id}),owned=petOwned70(s,id),p=bookState70().pets[id],form=BOOK_UI70.form||p.form,next=p.stage===1?100:500,busy=!!s.battle||!!s.res||s.autoHunt||s.autoTower,r=dgRoom();busy=busy||r&&r.st==='fight';
- return '<section class="card bio70-hero"><small>เติบโตไปกับนักผจญภัย</small><h2>สัตว์เลี้ยงวิวัฒนาการ</h2><p>พาสัตว์เลี้ยงที่สวมใส่ออกล่า เพื่อสะสมความผูกพัน</p><p class="hint">ชนะมอนที่เลเวลต่ำกว่าคุณไม่เกิน 15 ระดับ +1 · บอสสนาม +3 · นับทุกตัวที่ล้มจริง ไม่รวมรางวัลออฟไลน์และโหมดกิจกรรม</p></section><section class="card"><div class="bio70-pets">'+PET_IDS70.map(function(k){var a=COS.pet.find(function(x){return x.id===k});return '<button class="btn" data-a="petpick70" data-p="'+k+'" aria-pressed="'+(id===k)+'">'+esc(a.n)+(petOwned70(s,k)?'':' 🔒')+'</button>'}).join('')+'</div><h3>'+esc(meta.n)+(owned?' · ปลดล็อกขั้น '+p.stage:' · ยังไม่มีสัตว์เลี้ยงนี้')+'</h3><canvas id="petPreview70" width="540" height="200" aria-label="ตัวอย่างวิวัฒนาการสามขั้น"></canvas><div class="pet70-forms">'+[1,2,3].map(function(n){return '<button class="btn" data-a="petpreview70" data-p="'+n+'" aria-pressed="'+(form===n)+'">ขั้น '+n+' · '+(owned&&n<=p.stage?'ปลดล็อกแล้ว':'ตัวอย่าง')+'</button>'}).join('')+'</div><p class="hint">ภาพทั้ง 3 ขั้นเป็นตัวอย่าง ดูก่อนได้ทุกตัว การใส่จริงต้องเป็นเจ้าของและปลดล็อกขั้นนั้นก่อน</p><div class="bio70-bond"><span>♥ ความผูกพัน</span><b>'+p.bond+' / '+(p.stage===3?500:next)+'</b></div>'+goalMeter69(Math.min(p.bond,p.stage===3?500:next),p.stage===3?500:next,'ความผูกพันสัตว์เลี้ยง')+'<div class="grid2"><button class="btn primary" data-a="petevolve70" data-p="'+id+':'+p.stage+'"'+(!owned||busy||p.stage>=3||p.bond<next?' disabled':'')+'>'+(p.stage>=3?'วิวัฒนาการครบแล้ว':'วิวัฒนาการขั้น '+(p.stage+1))+'</button><button class="btn" data-a="petform70" data-p="'+id+':'+form+'"'+(!owned||form>p.stage?' disabled':'')+'>ใช้รูปลักษณ์ขั้น '+form+'</button></div>'+(owned?'<button class="btn" data-a="eq" data-p="pet:'+id+'">'+(s.look.pet===id?'สัตว์เลี้ยงนี้กำลังติดตามคุณ':'พาสัตว์เลี้ยงนี้ออกล่า')+'</button>':'<p class="hint">หาได้จากกล่องสุ่มของแต่งตัวเดิม ไม่มีการแจกหรือซื้อขั้นวิวัฒนาการ</p>')+(busy?'<p class="hint">จบการต่อสู้และปิดออโต้ก่อนวิวัฒนาการ</p>':'')+'<p class="hint">ขั้น 2 ใช้ความผูกพันสะสม 100 · ขั้น 3 ใช้ 500 · ไม่หักความผูกพัน ไม่มีค่าใช้จ่ายหรือโบนัสค่าสเตตัส ความคืบหน้าแยกตามสัตว์เลี้ยง</p></section>';
+ return '<section class="card bio70-hero"><small>เติบโตไปกับนักผจญภัย</small><h2>สัตว์เลี้ยงวิวัฒนาการ</h2><p>พาสัตว์เลี้ยงที่สวมใส่ออกล่า เพื่อสะสมความผูกพัน</p><p class="hint">ชนะมอนที่เลเวลต่ำกว่าคุณไม่เกิน 15 ระดับ +1 · บอสสนาม +3 · นับทุกตัวที่ล้มจริง ไม่รวมรางวัลออฟไลน์และโหมดกิจกรรม</p></section><section class="card"><div class="bio70-pets">'+PET_IDS70.map(function(k){var a=COS.pet.find(function(x){return x.id===k});return '<button class="btn" data-a="petpick70" data-p="'+k+'" aria-pressed="'+(id===k)+'">'+esc(a.n)+(petOwned70(s,k)?'':' 🔒')+'</button>'}).join('')+'</div><h3>'+esc(meta.n)+(owned?' · ปลดล็อกขั้น '+p.stage:' · ยังไม่มีสัตว์เลี้ยงนี้')+'</h3><canvas id="petPreview70" width="540" height="200" aria-label="ตัวอย่างวิวัฒนาการสามขั้น"></canvas><div class="pet70-forms">'+[1,2,3].map(function(n){return '<button class="btn" data-a="petpreview70" data-p="'+n+'" aria-pressed="'+(form===n)+'">ขั้น '+n+' · '+esc(petN131(id,n))+'<br><small>'+(owned&&n<=p.stage?'ปลดล็อกแล้ว':'ตัวอย่าง')+'</small></button>'}).join('')+'</div><p class="hint">ภาพทั้ง 3 ขั้นเป็นตัวอย่าง ดูก่อนได้ทุกตัว การใส่จริงต้องเป็นเจ้าของและปลดล็อกขั้นนั้นก่อน</p><div class="bio70-bond"><span>♥ ความผูกพัน</span><b>'+p.bond+' / '+(p.stage===3?500:next)+'</b></div>'+goalMeter69(Math.min(p.bond,p.stage===3?500:next),p.stage===3?500:next,'ความผูกพันสัตว์เลี้ยง')+'<div class="grid2"><button class="btn primary" data-a="petevolve70" data-p="'+id+':'+p.stage+'"'+(!owned||busy||p.stage>=3||p.bond<next?' disabled':'')+'>'+(p.stage>=3?'วิวัฒนาการครบแล้ว':'วิวัฒนาการขั้น '+(p.stage+1))+'</button><button class="btn" data-a="petform70" data-p="'+id+':'+form+'"'+(!owned||form>p.stage?' disabled':'')+'>ใช้รูปลักษณ์ขั้น '+form+'</button></div>'+(owned?'<button class="btn" data-a="eq" data-p="pet:'+id+'">'+(s.look.pet===id?'สัตว์เลี้ยงนี้กำลังติดตามคุณ':'พาสัตว์เลี้ยงนี้ออกล่า')+'</button>':'<p class="hint">หาได้จากกล่องสุ่มของแต่งตัวเดิม ไม่มีการแจกหรือซื้อขั้นวิวัฒนาการ</p>')+(busy?'<p class="hint">จบการต่อสู้และปิดออโต้ก่อนวิวัฒนาการ</p>':'')+'<p class="hint">ขั้น 2 ใช้ความผูกพันสะสม 100 · ขั้น 3 ใช้ 500 · ไม่หักความผูกพัน ไม่มีค่าใช้จ่ายหรือโบนัสค่าสเตตัส ความคืบหน้าแยกตามสัตว์เลี้ยง</p></section>';
 }
 // Variant tile cache: at most 18 species × 4 poses, independent of frame time.
 function rareArt70(k,fr){if(!MONS[k])return null;fr=((fr|0)%4+4)%4;var key=k+':'+fr;if(RARE_ART70.has(key))return RARE_ART70.get(key);var original=monsterArt37(k,fr,false),cv=document.createElement('canvas');cv.width=cv.height=64;var c=cv.getContext('2d');c.drawImage(original,0,0);var im=c.getImageData(0,0,64,64),d=im.data;for(var y=0;y<64;y++)for(var x=0;x<64;x++){var j=(y*64+x)*4;if(!d[j+3])continue;var l=(d[j]+d[j+1]+d[j+2])/3;if(l<38)continue;var gold=(x*3+y*5)%29<3&&y>18&&y<48;d[j]=gold?235:Math.min(175,l*.4+16);d[j+1]=gold?193:Math.min(210,l*.7+34);d[j+2]=gold?98:Math.min(255,l*1.05+55)}c.putImageData(im,0,0);c.fillStyle='#ffdb83';[[23,25],[39,31],[29,42]].forEach(function(p){if(im.data[(p[1]*64+p[0])*4+3]){c.fillRect(p[0],p[1],2,3);c.fillStyle='#fff1c2';c.fillRect(p[0],p[1],1,1);c.fillStyle='#ffdb83'}});RARE_ART70.set(key,cv);return cv}
@@ -1443,7 +1457,7 @@ function petArt70(id,stage,fr){
  if(stage>=2){var cy=id==='dragon'?15:id==='bunny'?(stage===3?15:21):id==='slime'?(stage===3?27:31):id==='peng'?(stage===3?25:30):id==='owl'?(stage===3?21:26):(stage===3?22:27);poly([[24,cy+4],[24,cy-2],[29,cy+1],[32,cy-5],[35,cy+1],[40,cy-2],[39,cy+5]],stage===3?'#e2b75e':'#94cbdc');R(25,cy+4,13,2,stage===3?'#ffe6a2':'#d8f7ff');R(31,cy,2,3,stage===3?'#a274e8':'#5c9ee6');if(stage===3){R(7,24+step,2,2,'#d6bdff');R(53,37-step,2,2,'#ffe2a5')}}
  PET_ART70.set(key,cv);return cv;
 }
-function drawPet70(c,id,ox,gy,u,t,stage){if(MOTION69&&MOTION69.matches)t=900;var fr=Math.floor(Math.max(0,t)/180)%4,im=petArt70(id,stage,fr);if(!im)return;var z=u*(id==='dragon'||id==='icedrg105'?.7:.9);c.save();try{c.imageSmoothingEnabled=false;if(stage===3){var alpha=c.globalAlpha;c.globalAlpha*=.45;c.strokeStyle='#c6a1fa';c.lineWidth=Math.max(.6,u*.35);c.beginPath();c.ellipse(ox+5*u,gy+u,17*z,4*z,0,0,Math.PI*2);c.stroke();c.globalAlpha=alpha}c.drawImage(im,Math.round(ox+5*u-32*z),Math.round(gy-59*z),64*z,64*z)}finally{c.restore()}}
+function drawPet70(c,id,ox,gy,u,t,stage){if(petHd131(c,id,ox,gy,u,t,stage))return;if(MOTION69&&MOTION69.matches)t=900;var fr=Math.floor(Math.max(0,t)/180)%4,im=petArt70(id,stage,fr);if(!im)return;var z=u*(id==='dragon'||id==='icedrg105'?.7:.9);c.save();try{c.imageSmoothingEnabled=false;if(stage===3){var alpha=c.globalAlpha;c.globalAlpha*=.45;c.strokeStyle='#c6a1fa';c.lineWidth=Math.max(.6,u*.35);c.beginPath();c.ellipse(ox+5*u,gy+u,17*z,4*z,0,0,Math.PI*2);c.stroke();c.globalAlpha=alpha}c.drawImage(im,Math.round(ox+5*u-32*z),Math.round(gy-59*z),64*z,64*z)}finally{c.restore()}}
 var PREVIEW_AT70=0;
 function bioPreview70(tn){
  if(SV||!s||document.hidden||ECO.on||tn-PREVIEW_AT70<1000/20)return;PREVIEW_AT70=tn;var cv=document.getElementById('bioPreview70'),pet=document.getElementById('petPreview70');if(!cv&&!pet)return;var motion=MOTION69&&MOTION69.matches?900:tn;
@@ -1454,7 +1468,7 @@ function bioPreview70(tn){
 
 // B73: daily manual challenge. This wallet never reads or writes s.pvp.c.
 var AR73_UI={open:false,item:'title',confirm:false,buff:'drain',scroll:0};
-var AR73_REWARDS=[{id:'title',n:'ฉายา ผู้ไม่ยอมแพ้',price:450,days:15,slot:'title',cos:'ar73champ',d:'ฉายาสีทองแห่งสนามท้าประลอง ไม่มีโบนัสค่าสเตตัส'},{id:'aura',n:'ออร่าตราผู้กล้า',price:900,days:30,slot:'aura',cos:'valor73',d:'วงแสงสีม่วงทองซ้อนชั้นและประกายลอยรอบตัว'},{id:'pet',n:'วิหคอรุณ',price:1800,days:60,slot:'pet',cos:'dawnbird73',d:'สัตว์เลี้ยงวิหคสีทองส้มเฉพาะสนาม รองรับความผูกพันและวิวัฒนาการ'},{id:'wing',n:'ปีกมงกุฎอรุณ',price:2700,days:90,slot:'wing',cos:'valor73',d:'ปีกผลึกทองม่วงเฉพาะสนาม แยกจากปีกดาบร้าน PvP'}];
+var AR73_REWARDS=[{id:'title',n:'ฉายา ผู้ไม่ยอมแพ้',price:450,days:15,slot:'title',cos:'ar73champ',d:'ฉายาสีทองแห่งสนามท้าประลอง ไม่มีโบนัสค่าสเตตัส'},{id:'aura',n:'ออร่าตราผู้กล้า',price:900,days:30,slot:'aura',cos:'valor73',d:'วงแสงสีม่วงทองซ้อนชั้นและประกายลอยรอบตัว'},{id:'pet',n:'นกเพลิง',price:1800,days:60,slot:'pet',cos:'phoenix',d:'สัตว์เลี้ยงนกเพลิง รองรับความผูกพันและวิวัฒนาการ 3 ขั้น'},{id:'wing',n:'ปีกมงกุฎอรุณ',price:2700,days:90,slot:'wing',cos:'valor73',d:'ปีกผลึกทองม่วงเฉพาะสนาม แยกจากปีกดาบร้าน PvP'}];
 var AR73_RULES=[['สนามเพลิง','แรงกดดันทุก 5 วินาที สูญเสีย 3% HP สูงสุด'],['ผนึกมานา','แรงกดดันทุก 5 วินาที 3% HP และทุก 3 คำสั่งสูญเสีย 10% MP'],['ล่าเงา','แรงกดดันทุก 5 วินาที 4% HP สูงสุด · ใช้ป้องกันให้ตรงจังหวะ']];
 var AR73_BUFFS={drain:['ดูดพลัง','เมื่อโจมตีโดน ฟื้น 2% HP สูงสุด'],storm:['คลื่นพลัง','โจมตีโดนเพิ่มความเสียหาย 25%'],blood:['แลกเลือด','โจมตีโดนเพิ่มความเสียหาย 40% แต่เสีย 1.5% HP สูงสุด']};
 function ar73Int(v,max){return Number.isFinite(v)?Math.max(0,Math.min(max,Math.floor(v))):0}
@@ -1480,7 +1494,7 @@ function ar73Html(){var a=ar73State(),goal=ar73Item(a.goal),busy=ar73Busy();retu
 function ar73Popup(){if(!AR73_UI.open||!s)return '';var a=ar73State(),it=ar73Item(AR73_UI.item)||AR73_REWARDS[0],have=a.owned[it.id],short=Math.max(0,it.price-a.coins);return '<div class="ar73-modal" role="dialog" aria-modal="true" aria-labelledby="ar73shopTitle"><section class="ar73-panel"><header><h3 id="ar73shopTitle">ร้านแลกรางวัล</h3><button class="btn" data-a="ar73close">ปิด ✕</button></header><div class="ar73-body"><div class="ar73-balance">'+ar73Coin()+' <b>'+a.coins.toLocaleString()+'</b></div><p class="hint">ร้านถาวร · เหรียญแยกจาก PvP</p><div class="ar73-items">'+AR73_REWARDS.map(function(r){return '<button class="btn" data-a="ar73detail" data-p="'+r.id+'" aria-pressed="'+(it.id===r.id)+'"><b>'+esc(r.n)+'</b><small>'+r.price.toLocaleString()+' เหรียญ'+(a.owned[r.id]?' · แลกแล้ว':'')+'</small></button>'}).join('')+'</div><canvas id="ar73Preview" width="300" height="170" aria-label="ตัวอย่างรางวัลท้าประลอง"></canvas><h3>'+esc(it.n)+'</h3><p class="hint">'+esc(it.d)+'</p><div class="ar73-cost"><span>ราคา <b>'+it.price.toLocaleString()+'</b></span><span>มี <b>'+a.coins.toLocaleString()+'</b></span><span>ขาด <b>'+short.toLocaleString()+'</b></span></div><p class="hint">ประมาณ '+it.days+' วันเมื่อชนะครบ 3 รอบทุกวัน · แลกได้อย่างละ 1 ครั้งต่อไอดี<br>ผูกไอดี ซื้อขาย/โอนไม่ได้ ไม่มีโบนัสค่าสเตตัส · แลกแล้วไปเลือกสวมในหน้าแต่งตัว</p>'+(AR73_UI.confirm?'<div class="ar73-confirm">ยืนยันแลก '+esc(it.n)+' โดยหัก '+it.price.toLocaleString()+' เหรียญท้าประลอง?</div>':'')+'</div><footer>'+(AR73_UI.confirm?'<button class="btn" data-a="ar73cancel">ย้อนกลับ</button><button class="btn primary" data-a="ar73confirm"'+(have||short||s.battle?' disabled':'')+'>ยืนยันแลก</button>':'<button class="btn" data-a="ar73goal" data-p="'+it.id+'"'+(have?' disabled':'')+'>'+(a.goal===it.id?'เป็นเป้าหมายอยู่':'ตั้งเป็นเป้าหมาย')+'</button><button class="btn primary" data-a="ar73ask"'+(have||short||s.battle?' disabled':'')+'>'+(have?'แลกแล้ว':short?'เหรียญยังไม่พอ':'แลกรางวัล')+'</button>')+'</footer></section></div>'}
 var AR73_FRAME=0;
 function ar73Live(tn){if(SV||!s||tn-AR73_FRAME<100)return;AR73_FRAME=tn;var status=document.getElementById('ar73Status');if(status)status.textContent=ar73Status();var guard=document.getElementById('ar73guardBtn');if(guard&&s.battle)guard.disabled=Date.now()<(s.battle.nextAt||0)-60;var cv=document.getElementById('ar73Preview');if(!cv||ECO.on||document.hidden)return;var it=ar73Item(AR73_UI.item)||AR73_REWARDS[0],c=cv.getContext('2d');c.clearRect(0,0,300,170);c.fillStyle='#102239';c.fillRect(0,0,300,170);shadowAt(c,150,143,55);if(it.slot==='title'){c.fillStyle='#ffe1a1';c.font='bold 18px sans-serif';c.textAlign='center';c.fillText('ผู้ไม่ยอมแพ้',150,85);c.fillStyle='#b9cfe2';c.font='12px sans-serif';c.fillText('ฉายาประจำสนาม',150,110)}else if(it.slot==='pet')drawPet70(c,it.cos,135,140,3,tn,1);else if(it.slot==='wing')wingDraw(c,it.cos,150,86,2,tn,0,{pose:'idle'});else{var look={aura:it.cos,wing:'none'};fashionBack(c,look,150,132,4,tn,0,null)}}
-function arenaAssets73(){COS.wing.push({id:'valor73',n:'ปีกมงกุฎอรุณ',r:4,x:1,bound:true});COS.aura.push({id:'valor73',n:'ออร่าตราผู้กล้า',r:4,x:1,bound:true});COS.pet.push({id:'dawnbird73',n:'วิหคอรุณ',r:4,x:1,bound:true});AURA.valor73=['#c8a0ff','#ffe299'];WINGS.valor73=['#a77be4','#ffe2a5'];WING2.valor73={k:'shard',c:['#3c2464','#8e66c7','#f2c566','#fff0b4','#ffffff'],fx:'rune',n:8,sp:[154,268]};PET_IDS70.push('dawnbird73');TITLES.push({id:'ar73champ',n:'ผู้ไม่ยอมแพ้',d:'แลกด้วย 450 เหรียญท้าประลอง · ไม่มีค่าสเตตัส',c:'#ffe09a',cur:function(){return ar73State().owned.title?1:0},need:1})}
+function arenaAssets73(){COS.wing.push({id:'valor73',n:'ปีกมงกุฎอรุณ',r:4,x:1,bound:true});COS.aura.push({id:'valor73',n:'ออร่าตราผู้กล้า',r:4,x:1,bound:true});AURA.valor73=['#c8a0ff','#ffe299'];WINGS.valor73=['#a77be4','#ffe2a5'];WING2.valor73={k:'shard',c:['#3c2464','#8e66c7','#f2c566','#fff0b4','#ffffff'],fx:'rune',n:8,sp:[154,268]};TITLES.push({id:'ar73champ',n:'ผู้ไม่ยอมแพ้',d:'แลกด้วย 450 เหรียญท้าประลอง · ไม่มีค่าสเตตัส',c:'#ffe09a',cur:function(){return ar73State().owned.title?1:0},need:1})}
 
 var AR73_BIRDS=new Map();
 function ar73Bird(stage,frame){stage=Math.max(1,Math.min(3,stage|0));frame=((frame|0)%4+4)%4;var key=stage+':'+frame;if(AR73_BIRDS.has(key))return AR73_BIRDS.get(key);var cv=document.createElement('canvas');cv.width=cv.height=64;var c=cv.getContext('2d'),step=[0,2,0,-2][frame],sz=stage===1?30:stage===2?37:43;c.imageSmoothingEnabled=false;function poly(p,col){c.fillStyle=col;c.beginPath();p.forEach(function(v,i){i?c.lineTo(v[0],v[1]):c.moveTo(v[0],v[1])});c.closePath();c.fill()}var span=stage===1?21:stage===2?26:29;for(var side=-1;side<=1;side+=2){poly([[32+side*8,44],[32+side*span,23+step],[32+side*(span-2),42],[32+side*(span-7),39],[32+side*(span-8),51],[32+side*10,54]],'#aa4e28');poly([[32+side*11,45],[32+side*(span-2),27+step],[32+side*(span-5),43],[32+side*(span-10),47]],'#efa240');poly([[32+side*13,44],[32+side*(span-4),30+step],[32+side*(span-7),42]],'#fff0ac')}poly([[27,48],[22,61],[31,56],[39,61],[37,49]],'#ffc968');var imcv=document.createElement('canvas');imcv.width=imcv.height=64;var cc=imcv.getContext('2d');cc.imageSmoothingEnabled=false;cc.drawImage(petArt46('owl',frame),32-sz/2,59-sz*.94,sz,sz);var im=cc.getImageData(0,0,64,64),d=im.data;for(var j=0;j<d.length;j+=4){if(!d[j+3])continue;var lum=(d[j]+d[j+1]+d[j+2])/3;if(lum>35){d[j]=Math.min(255,lum*1.4+28);d[j+1]=Math.min(232,lum*.95+14);d[j+2]=Math.max(30,lum*.45)}}cc.putImageData(im,0,0);c.drawImage(imcv,0,0);var crown=Math.round(59-sz*.94+7*sz/32);poly([[25,crown],[24,crown-7],[29,crown-4],[32,crown-11],[35,crown-4],[40,crown-7],[39,crown+1]],stage===3?'#fff0b1':'#f2c366');c.fillStyle='#bda3ec';c.fillRect(31,crown-5,3,4);if(stage===3){c.fillStyle='#fff3bd';c.fillRect(5,15+step,2,2);c.fillRect(55,22-step,2,2)}AR73_BIRDS.set(key,cv);return cv}
@@ -1734,7 +1748,7 @@ function normalize(o){
  if(o.created===undefined)o.created=(o.day>1||o.kills>0);
  if(!o.st){o.st={str:0,vit:0,agi:0,int:0};o.sp=3+(o.lvl-1)*3;o.skp=o.lvl}
  o.st.dex=o.st.dex|0;o.st.luk=o.st.luk|0;
- o.gr=o.gr||{};growSync117(o);
+ o.gr=o.gr||{};growSync117(o);petMig131(o);
  o.sk=o.sk||{};Object.keys(o.sk).forEach(function(k){if(!SKMAP[k]){o.skp=(o.skp|0)+(o.sk[k]|0);delete o.sk[k]}});o.skAuto=o.skAuto||{};o.autoSkill=(o.autoSkill===undefined)?true:!!o.autoSkill;
  o.sp=o.sp||0;o.skp=o.skp||0;o.skp=Math.max(0,Math.min(o.skp,skTotal(o)-skSpent(o)));o.guild=o.guild||null;if(o.guild)delete o.guild.pend;o.guildMsg='';
  var nw=Date.now();
@@ -2783,6 +2797,50 @@ function charHdTile114(key,look,frame,row){var H=CHAR_HD114[key],r=charHdImg114(
   cx.putImageData(img,0,0)}catch(e){}
  CHAR_HD_TINT114.set(ck,cv);if(CHAR_HD_TINT114.size>400)CHAR_HD_TINT114.delete(CHAR_HD_TINT114.keys().next().value);return cv}
 
+// ===== B132 สัตว์เลี้ยงชุดใหม่ (ภาพ HD 3 ขั้น) · กล่องสุ่มไข่สัตว์เลี้ยง =====
+var PET131={wolf:['หมาป่าน้อย','หมาป่าจันทรา','หมาป่าเทพจันทรา'],phoenix:['นกเพลิง','นกเพลิงโลหิต','นกเพลิงอมตะ'],icedrg:['มังกรน้ำแข็ง','มังกรน้ำแข็งผลึก','มังกรน้ำแข็งราชันย์'],bat:['ค้างคาวน้อย','ค้างคาวอสูร','ค้างคาวจักรพรรดิ'],tiger:['เสือขาวน้อย','เสือขาวศักดิ์สิทธิ์','ราชาเสือสวรรค์'],griffon:['กริฟฟอนน้อย','กริฟฟอนศักดิ์สิทธิ์','กริฟฟอนราชันย์'],golem:['โกเล็มหินน้อย','โกเล็มคริสตัล','โกเล็มไททัน'],dragon:['มังกรน้อย','มังกรเพลิง','มังกรเพลิงจักรพรรดิ'],fox:['จิ้งจอกน้อย','จิ้งจอกเก้าหาง','จิ้งจอกเทพเก้าหาง'],icedrg105:['หมาป่าอัคคี (ซีซั่น 1)','หมาป่านรกโลหิต (ซีซั่น 1)','จ้าวหมาป่าอมตะ (ซีซั่น 1)']};
+var PET_BOX131=['wolf','phoenix','icedrg','bat','tiger','griffon','golem','dragon','fox'];
+var PET_MAP131={cat:'tiger',pcat:'bat',slime:'golem',peng:'icedrg',bunny:'wolf',owl:'griffon',dawnbird73:'phoenix'};
+var PET_ROW131=null,PET_IMG131={},PET_ICO131={};
+var BOX_JUNK131=0.90,BOX_BOUND131=0.99,PET_TRADE_MIN131=200000,PET_TRADE_MAX131=20000000,PET_SELL131=100000,PET_DUP131=100;
+function petN131(id,st){var a=PET131[id];if(!a){var c=COS.pet.find(function(x){return x.id===id});return c?c.n:String(id)}return a[Math.max(1,Math.min(3,st|0||1))-1]}
+function petMig131(o){if(!o||!o.owned)return;var L=Array.isArray(o.owned.pet)?o.owned.pet:['none'],out=[];
+ L.forEach(function(id){var n=PET_MAP131[id]||id;if((n==='none'||PET131[n])&&out.indexOf(n)<0)out.push(n)});if(out.indexOf('none')<0)out.unshift('none');o.owned.pet=out;
+ if(o.look){var lp=PET_MAP131[o.look.pet]||o.look.pet;o.look.pet=out.indexOf(lp)>=0?lp:'none'}
+ var b=o.book70;if(b&&b.pets&&typeof b.pets==='object'){Object.keys(PET_MAP131).forEach(function(k){var v=b.pets[k];if(!v)return;var n=PET_MAP131[k],w=b.pets[n];if(!w||(w.bond|0)<(v.bond|0))b.pets[n]=v;delete b.pets[k]})}}
+function petHdImg131(id){if(SV||typeof Image==='undefined'||!PET131[id])return null;var r=PET_IMG131[id];if(!r){r=PET_IMG131[id]={im:new Image(),ok:false};r.im.onload=function(){r.ok=true;COS_IC={};try{render()}catch(e){}};r.im.src='assets/images/pet_'+id+'.webp?v=132'}return r.ok?r.im:null}
+function petHd131(c,id,ox,gy,u,t,stage){if(!PET131[id])return false;var im=petHdImg131(id);if(!im)return true;var st=Math.max(1,Math.min(3,stage|0||1)),row=PET_ROW131,v=row===0||row===7?0:row===4?2:1,f=Math.floor(Math.max(0,t)/320)%2,C=96,D=40*u;
+ c.save();try{c.imageSmoothingEnabled=true;c.drawImage(im,(v*2+f)*C,(st-1)*C,C,C,Math.round(ox+5*u-D/2),Math.round(gy-D*90/96),D,D)}finally{c.restore()}return true}
+function petHdIcon131(id,st){var im=petHdImg131(id);if(!im)return null;var k=id+':'+(st|0||1);if(PET_ICO131[k])return PET_ICO131[k];var cv=document.createElement('canvas');cv.width=cv.height=72;var c=cv.getContext('2d');c.drawImage(im,0,((st|0||1)-1)*96,96,96,0,0,72,72);return PET_ICO131[k]=cv.toDataURL()}
+function petSprite131(id,st,sz,view){var v=view==null?1:view;return '<span class="pet131s" style="width:'+sz+'px;height:'+sz+'px;background-image:url(assets/images/pet_'+id+'.webp?v=132);background-size:'+(sz*6)+'px '+(sz*3)+'px;background-position:-'+(v*2*sz)+'px -'+(((st|0||1)-1)*sz)+'px"></span>'}
+function openBox(){
+ if(s.boxes<1)return;s.boxes--;s.boxSeq=(s.boxSeq|0)+1;var r=Math.random();
+ if(r<BOX_JUNK131){var j=pick(JUNK),g=rnd(1,30);s.gold+=g;s.boxMsg='ได้ขยะ: '+j+' (ขายได้ '+g+' ทอง)';s.boxIt={k:'junk',n:j,g:g};say('เปิดไข่ ได้ขยะ '+j);return}
+ var id=pick(PET_BOX131),nm=petN131(id,1);
+ if(r<BOX_BOUND131){
+  if(s.owned.pet.indexOf(id)<0){s.owned.pet.push(id);s.look.pet=id;s.boxMsg='ได้สัตว์เลี้ยง '+nm+' (ผูกกับตัวละคร · ขายไม่ได้) สวมให้แล้ว';s.boxIt={k:'pet',id:id,tr:0}}
+  else{var bp=bookState70().pets[id];if(bp)bp.bond=Math.min(500,(bp.bond|0)+PET_DUP131);s.boxMsg='ได้ '+nm+' ซ้ำ · ความผูกพัน +'+PET_DUP131;s.boxIt={k:'pet',id:id,tr:0,dup:1}}
+  recalc();say('🥚 เปิดไข่ได้ '+nm);return}
+ gbag().push({k:'pet',i:id,t:4});s.boxMsg='✨ โชคดีมาก! ได้ '+nm+' แบบขายได้ · เก็บไว้ใน 🎒 กระเป๋าอุปกรณ์ (วางขายในตลาด หรือกด "รับเลี้ยง")';s.boxIt={k:'pet',id:id,tr:1};say('✨ เปิดไข่ได้ '+nm+' แบบขายได้!');recalc()}
+function petAdopt131(i){var L=gbag(),p=L[i|0];if(!p||p.k!=='pet'||!PET131[p.i])return false;L.splice(i|0,1);if(s.owned.pet.indexOf(p.i)<0){s.owned.pet.push(p.i);s.look.pet=p.i;say('🐾 รับเลี้ยง '+petN131(p.i,1)+' แล้ว (ผูกกับตัวละคร)')}else{var bp=bookState70().pets[p.i];if(bp)bp.bond=Math.min(500,(bp.bond|0)+PET_DUP131);say('🐾 มี '+petN131(p.i,1)+' อยู่แล้ว · ความผูกพัน +'+PET_DUP131)}recalc();return true}
+// ---- ปุ่มกล่องสมบัติหน้าหลัก + ป๊อปอัปไข่ ----
+var CH131={open:false,ph:'menu',at:0,seq:0};
+var CHEST_SVG131='<svg viewBox="0 0 64 56" aria-hidden="true"><path d="M6 24h52v26a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4z" fill="#8a4a1e" stroke="#2a1608" stroke-width="2.5"/><path d="M6 24c0-12 8-18 26-18s26 6 26 18z" fill="#b2642a" stroke="#2a1608" stroke-width="2.5"/><path d="M6 24h52v6H6z" fill="#f2c14e" stroke="#2a1608" stroke-width="2"/><path d="M14 8v46M50 8v46" stroke="#f2c14e" stroke-width="4"/><rect x="26" y="22" width="12" height="14" rx="2" fill="#ffe08a" stroke="#2a1608" stroke-width="2"/><circle cx="32" cy="28" r="2.2" fill="#2a1608"/></svg>';
+var EGG_SVG131='<svg viewBox="0 0 80 100" aria-hidden="true"><ellipse cx="40" cy="58" rx="32" ry="40" fill="#fff4dc" stroke="#3a2a1a" stroke-width="3"/><circle cx="26" cy="44" r="7" fill="#7fd0ff"/><circle cx="52" cy="66" r="9" fill="#ffb3d9"/><circle cx="50" cy="34" r="5" fill="#b9f28a"/><circle cx="28" cy="76" r="6" fill="#ffd36b"/><path class="crk" d="M14 56l10-6 8 8 9-9 9 8 9-7 8 6" fill="none" stroke="#3a2a1a" stroke-width="3" stroke-linejoin="round"/></svg>';
+function chest131Btn(){try{if(!s||!s.created||SV||!navShow113()||navCur113()[1]!=='wild'||s.battle)return ''}catch(e){return ''}return '<button id="chest131b" data-a="chest131" aria-label="กล่องสุ่มไข่สัตว์เลี้ยง">'+CHEST_SVG131+(s.boxes>0?'<i>'+Math.min(99,s.boxes)+'</i>':'')+'</button>'}
+function chest131Draw(){if(SV||typeof document==='undefined')return;var d=document.getElementById('chest131m');if(!CH131.open){if(d)d.remove();return}if(!d){d=document.createElement('div');d.id='chest131m';d.className='ch131ov';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.addEventListener('click',function(ev){var b=ev.target.closest('[data-c]');if(!b||b.disabled)return;ch131Do(b.getAttribute('data-c'))});document.body.appendChild(d)}
+ var body='',it=s.boxIt||{};
+ if(CH131.ph==='egg')body='<div class="egg131 shake">'+EGG_SVG131+'</div><p class="ch131t">กำลังฟักไข่…</p>';
+ else if(CH131.ph==='res'){if(CH131.err)body='<p class="ch131t">'+esc(CH131.err)+'</p>';else if(it.k==='pet')body='<div class="egg131res'+(it.tr?' gold':'')+'">'+petSprite131(it.id,1,150,0)+'</div><p class="ch131n">'+esc(petN131(it.id,1))+'</p><p class="ch131t">'+(it.tr?'✨ แบบขายได้ · อยู่ใน 🎒 กระเป๋าอุปกรณ์':it.dup?'ซ้ำ · ความผูกพัน +'+PET_DUP131:'ผูกกับตัวละคร · สวมให้แล้ว')+'</p>';
+  else body='<div class="egg131res junk">🗑️</div><p class="ch131n">'+esc(it.n||'ขยะ')+'</p><p class="ch131t">'+esc(s.boxMsg||'')+'</p>'}
+ else body='<div class="ch131big">'+CHEST_SVG131+'</div><p class="ch131n">กล่องสุ่มไข่สัตว์เลี้ยง</p><p class="ch131t">มีอยู่ <b>'+(s.boxes|0)+'</b> กล่อง · ทอง '+(s.gold|0).toLocaleString('th-TH')+'</p><ul class="ch131r"><li>90% ขยะ</li><li>9% สัตว์เลี้ยง (ผูกกับตัวละคร ขายไม่ได้)</li><li>1% สัตว์เลี้ยงแบบขายได้ในตลาด</li></ul>';
+ var busy=CH131.ph==='egg',btn=busy?'':'<div class="ch131a">'+((s.boxes|0)>0?'<button class="btn primary" data-c="open">🥚 เปิดกล่อง</button>':'')+'<button class="btn" data-c="buy"'+((s.gold|0)<BOX_PRICE?' disabled':'')+'>ซื้อ 1 กล่อง · '+BOX_PRICE.toLocaleString('th-TH')+' ทอง</button><button class="btn" data-c="close">ปิด</button></div>';
+ d.innerHTML='<div class="ch131card">'+body+btn+'</div>'}
+function ch131Do(c){if(c==='close'){CH131.open=false;CH131.ph='menu';chest131Draw();return}
+ if(c==='buy'){act('buybox');CH131.ph='menu';setTimeout(chest131Draw,350);chest131Draw();return}
+ if(c==='open'){if((s.boxes|0)<1)return;CH131.ph='egg';CH131.err='';CH131.at=Date.now();CH131.seq=s.boxSeq|0;chest131Draw();act('box');var wait=function(){if(!CH131.open)return;var el=Date.now()-CH131.at;if((s.boxSeq|0)!==CH131.seq&&el>=1700){CH131.ph='res';chest131Draw();return}if(el>9000){CH131.ph='res';CH131.err='เชื่อมต่อช้า · ลองเช็กผลในหน้า แต่งตัว → กล่องสุ่ม';chest131Draw();return}setTimeout(wait,200)};setTimeout(wait,200)}}
+function chest131Open(){CH131.open=true;CH131.ph='menu';chest131Draw()}
+
 // ===== B105 บัตรรายเดือน · บัตรถาวร · ซีซั่น 1 (จบ 31 ธ.ค. 23:59 น. เวลาไทย) =====
 var S105_START=Date.UTC(2026,9,31,17,0,0),S105_END=Date.UTC(2026,11,31,16,59,59),S105_RUSH=Date.UTC(2026,11,21,17,0,0),S105_CLAIM=S105_END+7*864e5,S105_MAX=50,S105_PER=1000,S105_KILLCAP=600;
 var SHOP105=[{sku:'sup35',ic:'🎁',n:'แพ็กผู้สนับสนุน',p:35,d:'อุปกรณ์ Lv20 สีส้ม + ป้าย ✦ ผู้สนับสนุน · ซื้อได้ครั้งเดียว'},
@@ -2791,7 +2849,7 @@ var SHOP105=[{sku:'sup35',ic:'🎁',n:'แพ็กผู้สนับสน�
  {sku:'s149',ic:'👑',n:'พาสซีซั่น 1',p:149,d:'ปลดแถวรางวัลพรีเมียม 50 เลเวล (ได้ย้อนหลังทันที) · ปีก ออร่า สัตว์เลี้ยง กรอบชื่อ ฉายาเฉพาะซีซั่น 1'}];
 function s105Assets(){rg107Assets();(function(){COS.wing.push({id:'meteor105',n:'ปีกดาวตก (ซีซั่น 1)',r:4,x:1,bound:true});WINGS.meteor105=['#5a8aff','#e8f2ff'];WING2.meteor105={k:'shard',c:['#0a1438','#2a4ab0','#7ab0ff','#dcecff','#ffffff'],fx:'mote',n:8,sp:[150,270]};
  COS.aura.push({id:'snow105',n:'ออร่าหิมะปีใหม่ (ซีซั่น 1)',r:4,x:1,bound:true});AURA.snow105=['#bfe8ff','#ffffff'];
- COS.pet.push({id:'icedrg105',n:'มังกรน้ำแข็ง (ซีซั่น 1)',r:4,x:1,bound:true});PET_IDS70.push('icedrg105');
+ COS.pet.push({id:'icedrg105',n:'หมาป่าอัคคี (ซีซั่น 1)',r:4,x:1,bound:true});PET_IDS70.push('icedrg105');
  TITLES.push({id:'s1adv',n:'นักผจญภัยซีซั่น 1',d:'รางวัลซีซั่น 1 เลเวล 25',c:'#8fd8ff',cur:function(){return s.s105&&s.s105.t1?1:0},need:1},
   {id:'s1leg',n:'👑 ตำนานซีซั่น 1',d:'รางวัลพรีเมียมซีซั่น 1 เลเวล 50',c:'#ffd23c',cur:function(){return s.s105&&s.s105.t2?1:0},need:1},
   {id:'patron',n:'💎 ผู้อุปถัมภ์',d:'มีบัตรถาวร',c:'#7fe0ff',cur:function(){return s.pc105?1:0},need:1})})()}
@@ -2850,24 +2908,24 @@ var MKT_TAX=0.10,MKT_LV=30,MKT_MAXN=10,UNS_LV=50,UNS_GOLD=30000,UNS_PUR=2;
 function equipObj102(p){var cn=p.k==='a'?[]:cardNew(p);if(p.k==='w'){s.weapon=p.i;s.wq=p.t;s.wSk=p.sk|0;s.wSp100=p.sp?1:0;s.wCards=cn;s.wBy=p.by||''}else if(p.k==='a'){s.armor=p.i;s.aq=p.t}else s.acc[p.i]={t:p.t,g:p.g|0,e:(s.acc[p.i]&&s.acc[p.i].e)|0,sk:p.sk|0,cd:cn,by:p.by||'',op:p.op||null,st:p.st||null,sp:p.sp?1:0}}
 function GBsel102(){if(!SV){GB.sel=-1;GB.cf=''}}
 function gbag(){if(!Array.isArray(s.gbag))s.gbag=[];return s.gbag}
-function gSlot(p){return p.k==='w'?'w':p.k==='a'?'armor0':p.i}
-function gSlotName(k){return k==='w'?'อาวุธ':k==='armor0'?'เกราะ (เก่า)':ACC[k]?ACC[k].n:String(k)}
+function gSlot(p){return p.k==='pet'?'pet':p.k==='w'?'w':p.k==='a'?'armor0':p.i}
+function gSlotName(k){return k==='pet'?'สัตว์เลี้ยง':k==='w'?'อาวุธ':k==='armor0'?'เกราะ (เก่า)':ACC[k]?ACC[k].n:String(k)}
 function gClean(p){var o=JSON.parse(JSON.stringify(p));delete o.fail;delete o.lk;return o}
 function gStore(){var p=s.pend;if(!p||p.fail)return;if(gbag().length>=gbagMax()){say('กระเป๋าอุปกรณ์เต็ม ('+gbagMax()+' ช่อง)');return}var o=gClean(p);gbag().push(o);s.pend=null;say('🎒 เก็บ '+pendName(o)+' เข้ากระเป๋า');gqPump()}
 function gSlotItem(p){if(p.k==='w')return (s.weapon|0)>0||(s.wq|0)>0?{k:'w',i:s.weapon|0,g:0,t:s.wq|0,sk:s.wSk|0,by:s.wBy||'',sp:s.wSp100?1:0}:null;if(p.k==='a')return (s.armor|0)>0?{k:'a',i:s.armor|0,g:0,t:s.aq|0}:null;var c=s.acc&&s.acc[p.i];return c&&c.t!=null?{k:'x',i:p.i,g:c.g|0,t:c.t|0,sk:c.sk|0,by:c.by||'',op:c.op||null,st:c.st||null,sp:c.sp?1:0}:null}
-function gEquip(i){var L=gbag(),p=L[i|0];if(!p||s.battle)return;var old=gSlotItem(p);L.splice(i|0,1);equipObj102(p);if(old)L.push(old);recalc();say('สวมใส่ '+pendName(p)+(old?' · ชิ้นเดิมเก็บเข้ากระเป๋า':''))}
+function gEquip(i){var L=gbag(),p=L[i|0];if(!p||s.battle)return;if(p.k==='pet'){petAdopt131(i);return}var old=gSlotItem(p);L.splice(i|0,1);equipObj102(p);if(old)L.push(old);recalc();say('สวมใส่ '+pendName(p)+(old?' · ชิ้นเดิมเก็บเข้ากระเป๋า':''))}
 function gSell(i){var L=gbag(),p=L[i|0];if(!p||p.lk)return;var g=pendPrice(p);s.gold+=g;L.splice(i|0,1);say('ขาย '+pendName(p)+' ได้ '+g+' ทอง')}
-function gSalvage(i){var L=gbag(),p=L[i|0];if(!p||p.lk)return;var out=salvageYield(p);if(!out)return;if(Object.keys(out).some(function(k){return bagFree(k)<out[k]})){say('พื้นที่วัตถุดิบไม่พอ');return}L.splice(i|0,1);Object.keys(out).forEach(function(k){addItem(k,out[k])});say('ย่อย '+pendName(p)+' ได้ '+Object.keys(out).map(function(k){return RES[k]+' +'+out[k]}).join(', '))}
+function gSalvage(i){var L=gbag(),p=L[i|0];if(!p||p.lk||p.k==='pet')return;var out=salvageYield(p);if(!out)return;if(Object.keys(out).some(function(k){return bagFree(k)<out[k]})){say('พื้นที่วัตถุดิบไม่พอ');return}L.splice(i|0,1);Object.keys(out).forEach(function(k){addItem(k,out[k])});say('ย่อย '+pendName(p)+' ได้ '+Object.keys(out).map(function(k){return RES[k]+' +'+out[k]}).join(', '))}
 function gLock(i){var p=gbag()[i|0];if(p)p.lk=p.lk?0:1}
 function gBulk(q){var L=gbag(),n=0,g=0;for(var j=L.length-1;j>=0;j--){var p=L[j];if(!p.lk&&!p.sp&&(p.t|0)<=(q|0)){g+=pendPrice(p);L.splice(j,1);n++}}if(n){s.gold+=g;say('ขายอุปกรณ์ '+n+' ชิ้น ได้ '+g+' ทอง (ข้ามชิ้นที่ล็อก)')}}
 function gUnseal(i){var p=gbag()[i|0];s.inv=s.inv||{};if(!p||!p.by||(s.inv.unseal|0)<1)return;s.inv.unseal--;var who=p.by;p.by='';say('🔓 ปลดผนึก '+pendName(p)+' (เดิมผูกกับ '+who+') · วางขายในตลาดได้แล้ว')}
 function unsBuy(){s.inv=s.inv||{};var d=dqDay();if(s.lvl<UNS_LV||s.unsDay===d||(s.gold|0)<UNS_GOLD||(s.inv.purple|0)<UNS_PUR)return;s.gold-=UNS_GOLD;s.inv.purple-=UNS_PUR;s.unsDay=d;addItem('unseal',1);say('ได้หินปลดผนึก 🔓 ×1 (แลกได้วันละ 1 ก้อน)')}
-function mktMin(p){return Math.max(100,pendPrice(p))}
-function mktMax(p){return Math.min(10000000,Math.max(200000,pendPrice(p)*200))}
+function mktMin(p){if(p&&p.k==='pet')return PET_TRADE_MIN131;return Math.max(100,pendPrice(p))}
+function mktMax(p){if(p&&p.k==='pet')return PET_TRADE_MAX131;return Math.min(10000000,Math.max(200000,pendPrice(p)*200))}
 function mktCan(p){return p&&!p.by&&!p.sp&&s.lvl>=MKT_LV}
-function gIco(p,sz){var pi=pendIco(p),u=gearIcon(pi[0],s.cls,pi[1]);return u?'<img alt="" src="'+u+'" width="'+sz+'" height="'+sz+'" style="image-rendering:pixelated">':'⚔️'}
-function gQc(p){return p.sp?'#ff9a3c':QCOL[p.t|0]}
-var GB_F=[['all','ทั้งหมด'],['w','อาวุธ'],['helm','หมวก'],['armor','เกราะ'],['gloves','ถุงมือ'],['boots','รองเท้า'],['brooch','เข็มขัด'],['neck','สร้อย'],['ring','แหวน']];
+function gIco(p,sz){if(p&&p.k==='pet')return petSprite131(p.i,1,sz,1);var pi=pendIco(p),u=gearIcon(pi[0],s.cls,pi[1]);return u?'<img alt="" src="'+u+'" width="'+sz+'" height="'+sz+'" style="image-rendering:pixelated">':'⚔️'}
+function gQc(p){return p.k==='pet'?'#ff6ad5':p.sp?'#ff9a3c':QCOL[p.t|0]}
+var GB_F=[['all','ทั้งหมด'],['pet','🐾 สัตว์เลี้ยง'],['w','อาวุธ'],['helm','หมวก'],['armor','เกราะ'],['gloves','ถุงมือ'],['boots','รองเท้า'],['brooch','เข็มขัด'],['neck','สร้อย'],['ring','แหวน']];
 function gbagHtml(){
  var L=gbag(),tabs=GB.page&&!GB.open?'':'<div class="gb-tabs"><button class="btn'+(GB.tab==='bag'?' primary':'')+'" data-a="gbtab" data-p="bag">🎒 อุปกรณ์ '+L.length+'/'+gbagMax()+'</button><button class="btn'+(GB.tab==='mkt'?' primary':'')+'" data-a="gbtab" data-p="mkt">🏪 ตลาดผู้เล่น</button></div>';
  if(GB.tab==='mkt')return '<section class="card gb">'+tabs+mktHtml()+'</section>';
@@ -2875,8 +2933,8 @@ function gbagHtml(){
  var grid='<div class="gb-grid">'+L.map(function(p,i){if(f!=='all'&&gSlot(p)!==f&&!(f==='armor'&&gSlot(p)==='armor0'))return '';return '<button class="gb-c'+(GB.sel===i?' on':'')+'" style="--qc:'+gQc(p)+'" data-a="gbsel" data-p="'+i+'">'+gIco(p,34)+(p.lk?'<i class="lk">🔒</i>':'')+(p.sp?'<i class="sp">✦</i>':'')+(p.by?'<i class="by">⛓</i>':'')+'</button>'}).join('')+(L.length<gbagMax()?Array(Math.min(8,gbagMax()-L.length)+1).join('<span class="gb-c empty"></span>'):'')+'</div>';
  var p=L[GB.sel],det='';
  if(p){var i=GB.sel,cf=GB.cf;det='<div class="gb-det" style="--qc:'+gQc(p)+'"><div class="gb-dh">'+gIco(p,48)+'<div><b style="color:'+gQc(p)+'">'+esc(pendName(p))+'</b><br>'+qBadge(p.t|0)+(p.sp?sp100B():'')+' <small>'+gSlotName(gSlot(p))+'</small></div></div><div class="st">'+pendDesc(p)+'</div>'+gopHtml(p)+pendCompareHtml(p)+
-  '<div class="gb-act"><button class="btn primary" data-a="gbeq" data-p="'+i+'"'+(s.battle?' disabled':'')+'>สวมใส่</button><button class="btn" data-a="gblock" data-p="'+i+'">'+(p.lk?'🔓 ปลดล็อก':'🔒 ล็อก')+'</button>'+
-  (p.lk?'':'<button class="btn" data-a="'+(cf==='s'+i||(p.t|0)<3?'gbsell':'gbcf')+'" data-p="'+(cf==='s'+i||(p.t|0)<3?i:'s'+i)+'">'+(cf==='s'+i?'ยืนยันขาย':'ขาย')+' '+pendPrice(p)+' ทอง</button><button class="btn" data-a="gbsalv" data-p="'+i+'">ย่อย</button>')+'</div>'+
+  '<div class="gb-act"><button class="btn primary" data-a="gbeq" data-p="'+i+'"'+(s.battle?' disabled':'')+'>'+(p.k==='pet'?'🐾 รับเลี้ยง':'สวมใส่')+'</button><button class="btn" data-a="gblock" data-p="'+i+'">'+(p.lk?'🔓 ปลดล็อก':'🔒 ล็อก')+'</button>'+
+  (p.lk?'':'<button class="btn" data-a="'+(cf==='s'+i||(p.t|0)<3?'gbsell':'gbcf')+'" data-p="'+(cf==='s'+i||(p.t|0)<3?i:'s'+i)+'">'+(cf==='s'+i?'ยืนยันขาย':'ขาย')+' '+pendPrice(p)+' ทอง</button>'+(p.k==='pet'?'':'<button class="btn" data-a="gbsalv" data-p="'+i+'">ย่อย</button>')+'')+'</div>'+
   (p.by?'<p class="hint">⛓ ผูกกับผู้คราฟ '+esc(p.by)+' · ใช้หินปลดผนึกเพื่อขายในตลาด</p><button class="btn" data-a="gbuns" data-p="'+i+'"'+((s.inv.unseal|0)<1?' disabled':'')+'>🔓 ใช้หินปลดผนึก (มี '+(s.inv.unseal|0)+')</button>':'')+
   (CL&&!p.lk?(mktCan(p)?'<div class="gb-sell"><b>🏪 วางขายในตลาด</b><div class="row2"><input id="gbprice" type="number" inputmode="numeric" min="'+mktMin(p)+'" max="'+mktMax(p)+'" value="'+mktMin(p)*3+'"><button class="btn primary" data-a="mktlist" data-p="'+i+'"'+(GB.busy?' disabled':'')+'>วางขาย</button></div><small class="hint">ราคา '+mktMin(p).toLocaleString('th-TH')+' – '+mktMax(p).toLocaleString('th-TH')+' ทอง · ภาษี 10% · ขายได้ 48 ชม. ขายไม่ออกคืนทางจดหมาย</small></div>':
    '<p class="hint">วางตลาดไม่ได้: '+(s.lvl<MKT_LV?'ต้อง Lv'+MKT_LV+' ขึ้นไป':p.sp?'ของจากแพ็กผู้สนับสนุน':'ต้องปลดผนึกผู้คราฟก่อน')+'</p>'):'')+'</div>'}
@@ -2904,13 +2962,14 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B131';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B132';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
  if(x.k==='gold'){n=Math.min(n,1e7);s.gold+=n;out.push('ทอง +'+n.toLocaleString('th-TH'))}
  else if(x.k==='potF'){n=Math.min(n,50);s.potF=(s.potF|0)+n;out.push('ยาฟื้นเต็ม ×'+n)}
  else if(x.k==='purple'){n=Math.min(n,100);s.inv=s.inv||{};s.inv.purple=(s.inv.purple|0)+n;out.push('แร่ม่วง ×'+n)}
+ else if(x.k==='gear'&&x.v&&x.v.k==='pet'){gbag().push(JSON.parse(JSON.stringify(x.v)));out.push(pendName(x.v))}
  else if(x.k==='gear'&&x.v){var g=JSON.parse(JSON.stringify(x.v));if(!Array.isArray(s.gq))s.gq=[];s.gq.push(g);out.push(pendName(g))}}
 function mailGet101(id){var m=mailList101().filter(function(x){return x.id===id})[0];if(!m)return;m.rd=1;if(m.got||!mailHasIt101(m))return;if(mailEnBlock106(m)){say('⚡ พลังงานเต็มอยู่ · ใช้พลังก่อนแล้วค่อยรับจดหมายนี้');return}var out=[];m.it.forEach(function(x){mailGive101(x,out)});m.got=1;gqPump();recalc();say('📬 รับของจากจดหมาย: '+out.join(', '))}
 function mailGetAll101(){mailList101().slice().forEach(function(m){if(!m.got&&mailHasIt101(m)&&!mailEnBlock106(m))mailGet101(m.id)})}
@@ -3650,9 +3709,9 @@ function dupHtml(){
  return '<div class="modal" role="dialog" aria-modal="true" aria-label="ของซ้ำ"><section class="card pend"><h3>ได้ของซ้ำแล้ว!</h3><div class="nm">'+esc(s.dup.n)+' '+qBadge(3)+'</div><div class="st">ซ้ำกับที่ใส่อยู่ กรุณากดย่อย ได้ '+RES.purple+' ×'+s.dup.amt+'</div><div class="row2"><button class="btn primary" data-a="dup">ย่อย ('+left+')</button></div></section></div>'}
 function resolveDup(){if(!s.dup)return;var d=s.dup;addItem('purple',d.amt);say('ย่อย '+d.n+' ได้ '+RES.purple+' +'+d.amt);s.dup=null;gqPump();save()}
 function pendName(p){return (p&&p.sp?'✦ ':'')+pendName0(p)}
-function pendName0(p){return p.k==='w'?wName(p.i):p.k==='a'?ARMORS[p.i].n:ACC[p.i].n+' Lv'+LV_REQ[p.g|0]}
-function pendDesc(p){var m=QT[p.t].m;return (p.by?'<span style="color:#e8c26a">🔒 คราฟโดย '+esc(p.by)+' (ผูกกับผู้คราฟ)</span><br>':'')+(p.sk?'<b style="color:#7ad7ff">มีรู '+p.sk+' ช่อง '+skTxt(p.sk)+'</b><br>':'')+(p.k==='w'?'พลังโจมตี +'+Math.round(WEAPONS[p.i].p*m):p.k==='a'?'ป้องกัน +'+Math.round(ARMORS[p.i].d*m):ACC[p.i].d(m*ACCG[p.g|0]))}
-function pendCompareHtml(p){
+function pendName0(p){if(p&&p.k==='pet')return '🐾 '+petN131(p.i,1)+' (ขายได้)';return p.k==='w'?wName(p.i):p.k==='a'?ARMORS[p.i].n:ACC[p.i].n+' Lv'+LV_REQ[p.g|0]}
+function pendDesc(p){if(p&&p.k==='pet')return 'สัตว์เลี้ยงแบบขายได้ · วางขายในตลาดได้ หรือกด "รับเลี้ยง" เพื่อเพิ่มเข้าสัตว์เลี้ยงของคุณ (รับเลี้ยงแล้วจะผูกกับตัวละคร ขายไม่ได้อีก)';var m=QT[p.t].m;return (p.by?'<span style="color:#e8c26a">🔒 คราฟโดย '+esc(p.by)+' (ผูกกับผู้คราฟ)</span><br>':'')+(p.sk?'<b style="color:#7ad7ff">มีรู '+p.sk+' ช่อง '+skTxt(p.sk)+'</b><br>':'')+(p.k==='w'?'พลังโจมตี +'+Math.round(WEAPONS[p.i].p*m):p.k==='a'?'ป้องกัน +'+Math.round(ARMORS[p.i].d*m):ACC[p.i].d(m*ACCG[p.g|0]))}
+function pendCompareHtml(p){if(p&&p.k==='pet')return '';
  if(!p||p.fail)return '';
  var m=QT[p.t|0].m, enh=0, old=[], neu=[], title='', slot='', cur=null;
  function line(label,a,b){
@@ -3683,7 +3742,7 @@ function pendCompareHtml(p){
   '<div class="pcrow pchead"><span>ค่าสถานะ</span><span>เดิม</span><span>เปลี่ยน</span><strong>ใหม่</strong></div>'+rows+
   '<p class="hint">คำนวณตามระดับของไอเทมและค่าตีบวกที่มีอยู่ · ยังไม่สวมใส่จนกว่าจะกดยืนยัน</p></section>';
 }
-function pendPrice(p){var c=craftCost(p.k,p.i,p.g|0),n=0;for(var k in c)n+=c[k];return Math.round(n*6*QT[p.t].m)}
+function pendPrice(p){if(p&&p.k==='pet')return PET_SELL131;var c=craftCost(p.k,p.i,p.g|0),n=0;for(var k in c)n+=c[k];return Math.round(n*6*QT[p.t].m)}
 function pendResolve(eq){
  var p=s.pend;if(!p)return;
  if(p.fail){s.pend=null;return}
@@ -3692,7 +3751,7 @@ function pendResolve(eq){
   recalc();say('สวมใส่ '+pendName(p)+' ('+QT[p.t].en+') แล้ว');
  }else{var g=pendPrice(p);s.gold+=g;say('ขาย '+pendName(p)+' ได้ '+g+' ทอง')}
  s.pend=null;gqPump()}
-function openBox(){
+function openBox0(){
  if(s.boxes<1)return;s.boxes--;
  if(Math.random()>=BOX_REAL){
   var j=pick(JUNK),g=rnd(1,30);s.gold+=g;
@@ -3811,6 +3870,7 @@ function act(a,p){
  if(!SV&&a==='menudaily'){s.dqOpen=!s.dqOpen;dqUI();return}
  if(!SV&&a==='menuopen'){menuOpen(p);return}
  if(!SV&&a==='tab')GB.page=false;
+ if(!SV&&a==='chest131'){chest131Open();return}
  if(!SV&&a==='nav113'){navAct113(p);return}
  if(!SV&&a==='menuback'){menuBack();return}
  if(!SV&&a==='bmenu54'){battleMenu54();return}
@@ -5389,7 +5449,7 @@ function hairPicker(){
  var sprite=typeof SET==='undefined'||!SET||SET.spriteChars!==false;return (sprite?'':'<div><h3>ทรงผม</h3><div class="pick">'+st+'</div></div>')+'<div><h3>สีผม</h3><div class="pick">'+co+'</div></div>';
 }
 var COS_IC={};
-function cosIcon(slot,id,locked){
+function cosIcon(slot,id,locked){if(slot==='pet'&&PET131[id]){var hu=petHdIcon131(id,1);return hu||'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='}
  var key=slot+':'+id+':'+(locked?1:0);if(COS_IC[key])return COS_IC[key];
  var S=24,cv=document.createElement('canvas');cv.width=S;cv.height=S;var o=cv.getContext('2d');
  function r(x,y,w,h,col){o.fillStyle=col;o.fillRect(x,y,w,h)}
@@ -5445,7 +5505,7 @@ function viewCreate(){
 }
 function viewDress(){if(s.dtab==='bestiary')return bookHtml70();if(s.dtab==='pets')return petHtml70();if(s.dtab==='goals')return goalsHtml69();if(s.dtab==='farm')return farmHtml63();
  var inv=Object.keys(RES).map(function(k){return '<span class="chip">'+RES[k]+' '+s.inv[k]+'</span>'}).join('');
- var reveal=s.boxMsg?'<div class="reveal" style="display:flex;gap:10px;align-items:center">'+(s.boxIt&&COS[s.boxIt.sl]?'<img src="'+cosIcon(s.boxIt.sl,s.boxIt.id,false)+'" alt="" width="56" height="56" style="image-rendering:pixelated;flex:none">':'')+'<b>'+s.boxMsg+'</b></div>':'';
+ var reveal=s.boxMsg?'<div class="reveal" style="display:flex;gap:10px;align-items:center">'+(s.boxIt&&s.boxIt.k==='pet'?petSprite131(s.boxIt.id,1,56,0):s.boxIt&&COS[s.boxIt.sl]?'<img src="'+cosIcon(s.boxIt.sl,s.boxIt.id,false)+'" alt="" width="56" height="56" style="image-rendering:pixelated;flex:none">':'')+'<b>'+s.boxMsg+'</b></div>':'';
  var DT=[['goals','เป้าหมายถัดไป'],['bestiary','สมุดมอนสเตอร์'],['pets','สัตว์เลี้ยง'],['look','แต่งตัว'],['title','ฉายา'],['collect','ของสะสม'],['farm','สรุปฟาร์ม'],['book','สมุดการ์ด'],['box','กล่องสุ่ม'],['bag','กระเป๋าและบัญชี'],['set','⚙️ ตั้งค่า']],od=s.dtab||'';
  var head='<section class="card"><canvas id="scene" class="scene" data-mode="preview" width="320" height="220" aria-label="ตัวอย่างตัวละคร"></canvas>'+
   '<div class="stats"><div class="stat"><span>พลังโจมตี</span><b>'+pAtk()+'</b></div><div class="stat"><span>ป้องกัน</span><b>'+pDef()+'</b></div></div>'+
@@ -5457,9 +5517,9 @@ function viewDress(){if(s.dtab==='bestiary')return bookHtml70();if(s.dtab==='pet
  else if(od==='collect')body=colView59();
  else if(od==='title')body=titleHtml();
  else if(od==='book')body=bookHtml();
- else if(od==='box')body='<section class="card"><h3>กล่องสุ่มของแต่งตัว</h3>'+reveal+
-  '<p class="hint">มีอยู่ '+s.boxes+' กล่อง · ได้ของจริง 20% อีก 80% เป็นขยะ</p>'+
-  '<div class="grid2"><button class="btn primary" data-a="box"'+(s.boxes<1?' disabled':'')+'>เปิดกล่อง</button>'+
+ else if(od==='box')body='<section class="card"><h3>🥚 กล่องสุ่มไข่สัตว์เลี้ยง</h3>'+reveal+
+  '<p class="hint">มีอยู่ '+s.boxes+' กล่อง · 90% ขยะ · 9% สัตว์เลี้ยงผูกตัวละคร · 1% สัตว์เลี้ยงขายได้ในตลาด</p>'+
+  '<div class="grid2"><button class="btn primary" data-a="chest131"'+(s.boxes<1?' disabled':'')+'>เปิดกล่อง</button>'+
   '<button class="btn" data-a="buybox"'+(s.gold<BOX_PRICE?' disabled':'')+'>ซื้อ '+BOX_PRICE.toLocaleString()+' ทอง</button></div>'+boxCollection44()+'</section>';
  else if(od==='set')body=settingsHtml();
  else if(od==='bag')body=gbagHtml()+cloudCard()+'<section class="card"><h3>กระเป๋าวัตถุดิบและของใช้</h3>'+bagHtml()+'</section>'+
@@ -5804,7 +5864,7 @@ function render(){
  else v=(BAWAY?miniBattle():'')+({wild:viewWild,char:viewChar,craft:function(){return GB.page&&!GB.open?gbagHtml():viewCraft()},mat:viewMat,pvp:viewPvp,tower:viewEvents,guild:viewGuild,me:viewDress}[BAWAY||s.tab]||viewWild)();
  if(landscapeMenuActive())v=menuWrap(v);
  var oldScene56=document.getElementById('menuScene55');
- document.getElementById('view').innerHTML=(battlePresentationActive()?'':offHtml()+sockHtml()+noPotHtml()+dupHtml())+v+navBar113()+ar73Popup()+autoPopup()+colPopup59()+partyPopup()+shopPopup()+gearPopup()+mailPopup101()+bagPopup104()+s105Popup();try{rpsReveal106()}catch(e){}
+ document.getElementById('view').innerHTML=(battlePresentationActive()?'':offHtml()+sockHtml()+noPotHtml()+dupHtml())+v+chest131Btn()+navBar113()+ar73Popup()+autoPopup()+colPopup59()+partyPopup()+shopPopup()+gearPopup()+mailPopup101()+bagPopup104()+s105Popup();try{rpsReveal106()}catch(e){}
  var newScene56=document.getElementById('menuScene55');if(oldScene56&&newScene56&&newScene56!==oldScene56&&newScene56.parentNode&&newScene56.parentNode.replaceChild)newScene56.parentNode.replaceChild(oldScene56,newScene56);
  try{restoreDraft()}catch(e){}
  colScroll59(true);menuRestoreScroll();autoRestore();shopUpdate();scrollRestore();
@@ -7707,7 +7767,7 @@ function petArt46(id,frame){
  c.putImageData(im,0,0);PET_ART46.set(key,cv);return cv;
 }
 function drawPet(c,id,ox,gy,u,t){drawPet70(c,id,ox,gy,u,t,1)}
-function fashionPet(c,look,cx,gy,u,t,row,alpha){if(!look.pet||look.pet==='none')return;var p=Math.max(.8,u*.78),left=row===1||row===2||row===3,side=left?-1:1,x=cx+side*29*u,y=gy+2*u;c.save();try{c.globalAlpha*=alpha==null?1:alpha;shadowAt(c,x,y,8*p);c.translate(x,y);if(left)c.scale(-1,1);drawPet70(c,look.pet,-5*p,0,p,t,Math.max(1,Math.min(3,look.petStage70|0||1)))}finally{c.restore()}}
+function fashionPet(c,look,cx,gy,u,t,row,alpha){if(!look.pet||look.pet==='none')return;PET_ROW131=row;var p=Math.max(.8,u*.78),left=row===1||row===2||row===3,side=left?-1:1,x=cx+side*29*u,y=gy+2*u;c.save();try{c.globalAlpha*=alpha==null?1:alpha;shadowAt(c,x,y,8*p);c.translate(x,y);if(left)c.scale(-1,1);drawPet70(c,look.pet,-5*p,0,p,t,Math.max(1,Math.min(3,look.petStage70|0||1)))}finally{c.restore();PET_ROW131=null}}
 // B83: keep the attachment on the torso, not on the moving hair/head anchor.
 var WING_RIG83=new Map();
 function wingRig(key,frame,row,x,y,size,tile){
