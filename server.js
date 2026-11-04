@@ -187,8 +187,20 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 const pickA = a => a[Math.floor(Math.random() * a.length)];
 function dgStats(p) {
   const sn = engine.snap(p.s); if (!sn) return null;
-  return { n: sn.n, cls: sn.cls, lvl: sn.lvl | 0, look: sn.look, mhp: Math.max(1, sn.hp | 0), atk: Math.max(1, sn.atk | 0), def: Math.max(0, sn.def | 0), crit: Math.min(60, sn.crit || 0), dodge: Math.min(25, sn.dodge || 0) };
+  return { n: sn.n, cls: sn.cls, lvl: sn.lvl | 0, look: sn.look, mhp: Math.max(1, sn.hp | 0), atk: Math.max(1, sn.atk | 0), def: Math.max(0, sn.def | 0), crit: Math.min(60, sn.crit || 0), dodge: Math.min(25, sn.dodge || 0), gemTier140: Math.max(0,Math.min(4,sn.gemTier140|0)) };
 }
+
+// B140: shared combat semantics for dungeon, labyrinth and live duels (these modes have no MP).
+function gemTurnServer140(m, duel, log, ev, idx) {
+ const q=m.gemState140||(m.gemState140={n:0,left:0,shield:0});q.n++;if(q.left>0&&!--q.left)q.shield=0;
+ const t=m.gemTier140|0;if(t<1||t>4||q.n%5||m.hp<=0)return;
+ const scale=duel?.5:1,h=Math.min(m.mhp-m.hp,Math.floor(m.mhp*[.01,.015,.02,.03][t-1]*scale));m.hp+=h;
+ q.shield=Math.floor(m.mhp*[.02,.03,.04,.05][t-1]*scale);q.left=2;
+ if(log)log.push(m.n+' ใช้พรแห่งผลึก Lv'+t+' · HP +'+h+' · โล่ '+q.shield);
+ if(ev&&h)ev.push({t:'h',i:idx(m),v:h});
+}
+function gemHitServer140(m,d){const q=m.gemState140;if(!q||!q.left||!q.shield||d<=0)return d;const n=Math.min(d,q.shield);q.shield-=n;return d-n}
+
 function dgMember(uid, p) { const st = dgStats(p); if (!st) return null; return Object.assign(st, { uid, ready: false, seen: Date.now(), hp: st.mhp, down: false, cd: { sk: 0, heal: 0 }, pick: null, guard: false }); }
 function dgAlive(r) { return r.mem.filter(m => !m.down); }
 function dgIntent(r) {
@@ -205,6 +217,7 @@ function dgIntent(r) {
 }
 function dgStage(r) {
   const S = DG_STAGES[r.stage], n = r.mem.length;
+  for(const m of r.mem)m.gemState140={n:0,left:0,shield:0};
   const dps = r.mem.reduce((a, m) => a + m.atk * (1 + m.crit / 100), 0);
   const mhp = Math.max(30, Math.round(dps * S.R * (n === 1 ? 0.9 : n === 2 ? 1.1 : 1.2)));
   const avg = r.mem.reduce((a, m) => a + m.mhp, 0) / n;
@@ -227,6 +240,7 @@ function dgResolve(r) {
   const en = r.en, ev = [], log = [], idx = m => r.mem.indexOf(m);
   const picks = dgAlive(r).map(m => { let a = m.pick || 'atk'; if ((a === 'sk' && m.cd.sk > 0) || (a === 'heal' && m.cd.heal > 0)) a = 'atk'; return [m, a]; });
   const nAtk = picks.filter(([, a]) => a === 'atk' || a === 'sk').length, combo = nAtk >= 2 ? 1 + 0.15 * (nAtk - 1) : 1;
+  for(const [m] of picks)gemTurnServer140(m,false,log,ev,idx);
   for (const [m, a] of picks) if (a === 'grd') { m.guard = true; ev.push({ t: 'g', i: idx(m) }); log.push(m.n + ' ตั้งท่าป้องกัน'); }
   for (const [m, a] of picks) if (a === 'heal') {
     const C = DG_CLS[m.cls] || DG_CLS.warrior; m.cd.heal = 3; let tot = 0, rv = [];
@@ -264,7 +278,7 @@ function dgResolve(r) {
     }
   } else {
     const it = en.intent, al = dgAlive(r), A = en.A, hits = [];
-    const hitOne = (m, raw) => { const d = dgHitP(m, raw); m.hp -= d; hits.push([idx(m), d]); if (m.hp <= 0) { m.hp = 0; m.down = true; log.push(m.n + ' สลบ!'); } return d; };
+    const hitOne = (m, raw) => { const d = gemHitServer140(m,dgHitP(m, raw)); m.hp -= d; hits.push([idx(m), d]); if (m.hp <= 0) { m.hp = 0; m.down = true; log.push(m.n + ' สลบ!'); } return d; };
     if (it.t === 'slam' || it.t === 'shell') {
       const guard = al.filter(m => m.guard).sort((a, b) => (DG_CLS[a.cls] || {}).grd - (DG_CLS[b.cls] || {}).grd)[0];
       let tg = it.t === 'slam' ? al.find(m => m.uid === it.tg) || pickA(al) : pickA(al);
@@ -878,6 +892,7 @@ function rgStart(r) {
 }
 function rgEnemy(r, type) {
   const g = r.rg, n = r.mem.length, fl = g.fl;
+  for(const m of r.mem)m.gemState140={n:0,left:0,shield:0};
   const dps = r.mem.reduce((a, m) => a + (m.b0 ? m.b0.atk : m.atk) * (1 + (m.b0 ? m.b0.crit : m.crit) / 100), 0);
   const avg = r.mem.reduce((a, m) => a + (m.b0 ? m.b0.mhp : m.mhp), 0) / n;
   const R = { f: 2.6, e: 4.2, b: 6.5 }[type] * Math.pow(RG_GR, fl - 1), A = { f: 0.06, e: 0.10, b: 0.13 }[type] * Math.pow(RG_GA, fl - 1);
@@ -994,6 +1009,7 @@ function rgResolve(r) { // เหมือน dgResolve + ผลของบั�
   const en = r.en, ev = [], log = [], idx = m => r.mem.indexOf(m), B = m => m.bx || {};
   const picks = dgAlive(r).map(m => { let a = m.pick || (m.auto ? rgAutoPick(r, m) : 'atk'); if ((a === 'sk' && m.cd.sk > 0) || (a === 'heal' && m.cd.heal > 0)) a = 'atk'; return [m, a]; });
   const nAtk = picks.filter(([, a]) => a === 'atk' || a === 'sk').length, combo = nAtk >= 2 ? 1 + 0.15 * (nAtk - 1) : 1;
+  for(const [m] of picks)gemTurnServer140(m,false,log,ev,idx);
   for (const [m, a] of picks) if (a === 'grd') { m.guard = true; ev.push({ t: 'g', i: idx(m) }); log.push(m.n + ' ตั้งท่าป้องกัน'); }
   for (const [m, a] of picks) if (a === 'heal') {
     const C = DG_CLS[m.cls] || DG_CLS.warrior, hp = C.heal * (1 + (B(m).heal || 0)); m.cd.heal = 3; let tot = 0, rv = [];
@@ -1023,7 +1039,7 @@ function rgResolve(r) { // เหมือน dgResolve + ผลของบั�
   if (combo > 1) log.push('โจมตีประสาน ' + nAtk + ' คน! ดาเมจ +' + Math.round((combo - 1) * 100) + '%');
   if (en.hp <= 0) { en.hp = 0; for (const m of r.mem) { m.guard = false; m.pick = null; } r.ev = ev; r.log = log.reverse().concat(r.log || []).slice(0, 10); rgWin(r); return; }
   const it = en.intent, al = dgAlive(r), A = en.A, hits = [];
-  const hitOne = (m, raw) => { let d = dgHitP(m, raw); if (d > 0) d = Math.max(1, Math.round(d * (1 - Math.min(0.5, B(m).red || 0)))); m.hp -= d; hits.push([idx(m), d]); if (d > 0 && B(m).thorn) en.hp = Math.max(1, en.hp - Math.round(d * B(m).thorn)); if (m.hp <= 0) { m.hp = 0; m.down = true; log.push(m.n + ' สลบ!'); } return d; };
+  const hitOne = (m, raw) => { let d = dgHitP(m, raw); if (d > 0) d = Math.max(1, Math.round(d * (1 - Math.min(0.5, B(m).red || 0)))); d=gemHitServer140(m,d);m.hp -= d; hits.push([idx(m), d]); if (d > 0 && B(m).thorn) en.hp = Math.max(1, en.hp - Math.round(d * B(m).thorn)); if (m.hp <= 0) { m.hp = 0; m.down = true; log.push(m.n + ' สลบ!'); } return d; };
   if (it.t === 'slam' || it.t === 'shell') {
     const guard = al.filter(m => m.guard).sort((a, b) => (DG_CLS[a.cls] || {}).grd - (DG_CLS[b.cls] || {}).grd)[0];
     let tg = it.t === 'slam' ? al.find(m => m.uid === it.tg) || pickA(al) : pickA(al);
@@ -1090,7 +1106,7 @@ function wdHit(m, o, mult) { // คืน {d, crit, miss}
   let d = m.atk * rnd(0.9, 1.1) * mult, crit = false;
   if (Math.random() * 100 < Math.min(60, m.crit || 0)) { d *= 1.8; crit = true; }
   const red = Math.min(0.4, o.def / (o.def + 60 + o.lvl * 8)); d *= 1 - red; if (o.guard) d *= WD_GUARD;
-  return { d: Math.max(1, Math.round(d)), crit };
+  return { d: gemHitServer140(o,Math.max(1, Math.round(d))), crit };
 }
 function wdAct(d, i, a) {
   if (d.ph !== 'fight' || d.turn !== i) return 'ยังไม่ถึงตาคุณ';
@@ -1099,7 +1115,7 @@ function wdAct(d, i, a) {
   if (a === 'ult' && m.ug < 100) return 'ไม้ตายยังไม่เต็ม';
   if (a === 'pot' && m.pots <= 0) return 'ยาหมดแล้ว';
   if (!['atk', 'sk', 'grd', 'pot', 'ult'].includes(a)) return 'คำสั่งไม่ถูกต้อง';
-  m.guard = false;
+  m.guard = false;const gemLog140=[];gemTurnServer140(m,true,gemLog140);
   if (a === 'grd') { m.guard = true; m.ug = Math.min(100, m.ug + 15); txt = m.n + ' ตั้งท่าป้องกัน (ดาเมจตาถัดไป −50%)'; }
   else if (a === 'pot') { const v = Math.min(m.mhp - m.hp, Math.round(m.mhp * 0.25)); m.hp += v; m.pots--; ev.h = v; txt = m.n + ' ดื่มยา +' + v.toLocaleString() + ' HP (เหลือ ' + m.pots + ')'; }
   else {
@@ -1111,7 +1127,7 @@ function wdAct(d, i, a) {
     o.guard = false;
   }
   if (m.cd > 0 && a !== 'sk') m.cd--;
-  d.ev = [ev]; d.log = [txt].concat(d.log).slice(0, 8); d.seq++; d.ver++;
+  d.ev = [ev]; d.log = [txt].concat(gemLog140,d.log).slice(0, 8); d.seq++; d.ver++;
   if (o.hp <= 0) { wdEnd(d, i, o.n + ' หมดแรง!'); return null; }
   d.turn = 1 - i; if (d.turn === 0) d.round++; d.deadline = Date.now() + WD_TURN; return null;
 }
@@ -1347,6 +1363,7 @@ const routes = {
     const p = await session(u.id);
     if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
     if(/^m51(add|cap|reset)$/.test(a)||a==='petevolve70'||a==='ar73start'){const room=DGR.get(DGU.get(u.id));if(a==='ar73start'&&room)return send(res,409,{error:'ออกจากห้องดันเจี้ยนก่อนเข้าท้าประลอง'});if(room&&room.st==='fight')return send(res,409,{error:a==='ar73start'?'จบดันเจี้ยนทีมก่อนเข้าท้าประลอง':a==='petevolve70'?'จบดันเจี้ยนทีมก่อนวิวัฒนาการสัตว์เลี้ยง':'จบดันเจี้ยนทีมก่อนปรับความชำนาญ'});}
+    if(a==='gemdo140'&&(DGU.has(u.id)||wdOf(u.id)))return send(res,409,{error:'ออกจากห้องดันเจี้ยนหรือจบการดวลก่อนเปลี่ยนหรือคราฟ Gem'});
     if(['reroll135','job2','job3','job4','clsch96'].includes(a)){const room=DGR.get(DGU.get(u.id));if(room&&room.st==='fight')return send(res,409,{error:'จบดันเจี้ยนทีมก่อนรีออฟหรือเปลี่ยนอาชีพ'});}
     if(a==='b'&&b.fight&&(!p.s.battle||p.s.battle.key50!==b.fight||(p.s.battle.gi||0)!==Number(b.target)))return reply(res,p,{fx:[],fxt:{}});
     let warSnap = null, warTid = 0, revSnap = null, revTid = 0;
