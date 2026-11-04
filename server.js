@@ -1246,7 +1246,7 @@ function publicPlayer48(uid, p) {
   const o = p.s, acc = {}, sn = engine.snap(o) || {};
   for (const k of ['ring','neck','brooch','helm','armor','gloves','boots']) { const a = o.acc && o.acc[k]; acc[k] = a ? { t: a.t|0, g: a.g|0, e: a.e|0, sk: a.sk|0, cd: Array.isArray(a.cd) ? a.cd.slice(0, 5) : [] } : null; }
   return { uid, n: String(o.name || '').slice(0,16), cls: o.cls, lvl: o.lvl|0, look: sn.look || o.look, hp: sn.hp, atk: sn.atk, def: sn.def,
-    gear: { cls: o.cls, weapon: o.weapon|0, wq: o.wq|0, wEnh: o.wEnh|0, wSk: o.wSk|0, wCards: Array.isArray(o.wCards) ? o.wCards.slice(0,5) : [], armor: o.armor|0, aq: o.aq|0, aEnh: o.aEnh|0, acc } };
+    gear: { cls: o.cls, weapon: o.weapon|0, wq: o.wq|0, wEnh: o.wEnh|0, wOp: Array.isArray(o.wOp) ? o.wOp.map(x => [x[0],x[1]]) : [], wSk: o.wSk|0, wCards: Array.isArray(o.wCards) ? o.wCards.slice(0,5) : [], armor: o.armor|0, aq: o.aq|0, aEnh: o.aEnh|0, acc } };
 }
 function ptInvites48(uid) {
   const now = Date.now(), out = [];
@@ -1347,6 +1347,7 @@ const routes = {
     const p = await session(u.id);
     if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
     if(/^m51(add|cap|reset)$/.test(a)||a==='petevolve70'||a==='ar73start'){const room=DGR.get(DGU.get(u.id));if(a==='ar73start'&&room)return send(res,409,{error:'ออกจากห้องดันเจี้ยนก่อนเข้าท้าประลอง'});if(room&&room.st==='fight')return send(res,409,{error:a==='ar73start'?'จบดันเจี้ยนทีมก่อนเข้าท้าประลอง':a==='petevolve70'?'จบดันเจี้ยนทีมก่อนวิวัฒนาการสัตว์เลี้ยง':'จบดันเจี้ยนทีมก่อนปรับความชำนาญ'});}
+    if(['reroll135','job2','job3','job4','clsch96'].includes(a)){const room=DGR.get(DGU.get(u.id));if(room&&room.st==='fight')return send(res,409,{error:'จบดันเจี้ยนทีมก่อนรีออฟหรือเปลี่ยนอาชีพ'});}
     if(a==='b'&&b.fight&&(!p.s.battle||p.s.battle.key50!==b.fight||(p.s.battle.gi||0)!==Number(b.target)))return reply(res,p,{fx:[],fxt:{}});
     let warSnap = null, warTid = 0, revSnap = null, revTid = 0;
     if (a === 'pvprev') { revTid = parseInt(pr, 10) || 0; const L = Array.isArray(p.s.rev110) ? p.s.rev110 : []; if (!L.some(x => x && x.uid === revTid && !x.done && Date.now() - (x.at || 0) < 48 * 3600e3)) return send(res, 409, { error: 'แก้แค้นคนนี้ไม่ได้แล้ว' }); const q = await session(revTid); if (!q.s.created) return send(res, 409, { error: 'ไม่พบผู้เล่น' }); revSnap = engine.snap(q.s); if (!revSnap) return send(res, 409, { error: 'ไม่พบข้อมูลผู้เล่น' }); }
