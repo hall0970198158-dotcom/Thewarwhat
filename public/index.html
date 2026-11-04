@@ -494,7 +494,7 @@ body.creating-character #status,body.creating-character #nav,body.creating-chara
 #menuStage .equipped-compact{max-width:440px;margin-left:0;padding:12px}#menuStage .equipped-compact .doll{grid-template-columns:56px 100px 56px;gap:10px;justify-content:center}#menuStage .equipped-compact .dcol{gap:5px}#menuStage .equipped-compact .slot{width:52px;height:52px;min-height:52px;padding:2px;border-radius:7px}#menuStage .equipped-compact .slot .sgi{width:34px;height:34px}#menuStage .equipped-compact .dollc{width:100px;height:117px}#menuStage .equipped-compact .hint{font-size:10px}#menuStage .equipped-compact .slot .lv{font-size:8px}#craftWait{font-size:12px;color:#e2c58c;margin:8px 0}
 .shop-modal{position:absolute;inset:0;z-index:100;display:grid;place-items:center;padding:12px;background:#050b168c;touch-action:pan-y}.shop-panel{width:min(390px,100%);max-height:95%;overflow:auto;background:#17253a;border:1px solid #cfb17c;border-radius:13px;padding:16px;box-sizing:border-box}.shop-panel>header{display:flex;align-items:center;justify-content:space-between;gap:10px}.shop-panel h3{font-size:16px;margin:0}.shop-panel p,.shop-panel label{font-size:12px;line-height:1.7}.shop-presets{display:flex;gap:8px;margin:12px 0}.shop-presets .btn{flex:1}.shop-panel .txt{width:100%;font-size:16px;min-height:48px;box-sizing:border-box}.shop-panel #buyConfirm{width:100%}
 
-.confirm135{z-index:180!important}.reroll135{margin:12px 0;padding:10px;border:1px solid #7960aa;border-radius:10px;background:#211c36}.reroll135 h4{margin:0 0 6px}.reroll135>.btn{width:100%}.gear-modal{position:absolute;inset:0;z-index:100;display:grid;place-items:center;padding:12px;background:#050b168c;touch-action:pan-y}.gear-panel{width:min(420px,100%);max-height:94%;overflow:auto;background:#17253a;border:1px solid #c7ac77;border-radius:13px;padding:16px;box-sizing:border-box}.gear-panel header,.gear-title{display:flex;align-items:center;gap:12px;justify-content:space-between}.gear-panel h3{font-size:15px}.gear-title{justify-content:flex-start}.gear-title img{image-rendering:pixelated}.gear-panel p{font-size:12px;line-height:1.6}.gear-title b{font-size:15px}
+.confirm135{z-index:180!important}.reroll135{margin:12px 0;padding:10px;border:1px solid #7960aa;border-radius:10px;background:#211c36}.rr137row{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:7px;margin:5px 0;border:1px solid #565072;border-radius:7px;font-size:12px}.rr137row span{flex:1;min-width:0}.rr137row.locked{border-color:#d8b252;background:#443719}.rr137row .btn{flex:none;min-width:76px;min-height:36px}.reroll135 h4{margin:0 0 6px}.reroll135>.btn{width:100%}.gear-modal{position:absolute;inset:0;z-index:100;display:grid;place-items:center;padding:12px;background:#050b168c;touch-action:pan-y}.gear-panel{width:min(420px,100%);max-height:94%;overflow:auto;background:#17253a;border:1px solid #c7ac77;border-radius:13px;padding:16px;box-sizing:border-box}.gear-panel header,.gear-title{display:flex;align-items:center;gap:12px;justify-content:space-between}.gear-panel h3{font-size:15px}.gear-title{justify-content:flex-start}.gear-title img{image-rendering:pixelated}.gear-panel p{font-size:12px;line-height:1.6}.gear-title b{font-size:15px}
 .mat-picker{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}.mat-picker .btn small{display:block;font-size:11px;margin-top:4px}.mat-progress{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;margin:12px 0;background:#101d31;border:1px solid #5c7390;border-radius:9px;font-size:12px}.mat-find{margin-left:5px}.mat-field{position:absolute;bottom:82px;right:14px;max-width:310px;display:flex;align-items:center;gap:8px;padding:7px 10px;background:#101a2ded;border:1px solid #b59a60;border-radius:9px;pointer-events:auto}.mat-field span{font-size:11px;color:#ffe3a0}.mat-field .btn{font-size:11px!important;min-height:40px!important;padding:5px 9px!important}.salvage-hint{margin:10px 0;border-top:1px solid #67758a55;padding-top:10px;font-size:11px;line-height:1.6}.chip .mat-find{display:inline-block;min-height:36px;padding:6px 8px;background:#273f5d;border:1px solid #a0b7d1;border-radius:6px;color:#e9f1ff;font:inherit;cursor:pointer}
 
 /* Rotated game stages need pointer deltas in their local coordinate space. */
@@ -1666,7 +1666,7 @@ var ACC={
  neck:{n:'สร้อย',cost:{hide:3,ore:3},v:{def:1,mdef:4},pref:['cdr','mpr','mp']},
  brooch:{n:'เข็มขัด',cost:{ore:3,herb:3,wood:2},v:{def:2,mdef:2},pref:['hp','dodge']}
 };
-var LBL={atk:['โจมตี +',''],def:['ป้องกันกายภาพ +',''],mdef:['ป้องกันเวท +',''],hp:['HP +',''],mp:['MP +',''],crit:['คริ +','%'],dodge:['หลบ +','%'],cdmg:['คริดาเมจ +','%'],acc:['แม่นยำ +','%'],spd:['ความเร็ว +','%'],res:['ต้านสถานะ +','%'],dr:['ลดดาเมจ +','%'],cdr:['ลดคูลดาวน์ +','%'],mpr:['MP ฟื้น +','/ตา'],ls:['ดูดเลือด +','%'],pen:['เจาะเกราะ +','%'],cdt:['สกิลลดเทิร์น +','%']};
+var LBL={atk:['โจมตี +',''],def:['ป้องกันกายภาพ +',''],mdef:['ป้องกันเวท +',''],hp:['HP +',''],mp:['MP +',''],crit:['คริ +','%'],dodge:['หลบ +','%'],cdmg:['คริดาเมจ +','%'],acc:['แม่นยำ +','%'],spd:['ความเร็ว +','%'],res:['ต้านสถานะ +','%'],dr:['ลดดาเมจ +','%'],cdr:['โอกาสลดคูลดาวน์ทุกสกิลเพิ่ม 1 เทิร์น +','%'],mpr:['MP ฟื้น +','/ตา'],ls:['ดูดเลือด +','%'],pen:['เจาะเกราะ +','%'],cdt:['โอกาสลดคูลดาวน์สกิลที่ใช้ 1 เทิร์น +','%']};
 ['str','agi','vit','int','dex','luk'].forEach(function(k){LBL[k]=[k.toUpperCase()+' +','']});
 var GEAR_PCT={crit:1,dodge:1,cdmg:1,acc:1,spd:1,res:1,dr:1,cdr:1,mpr:1,ls:1,pen:1,cdt:1};
 function accD(v){return function(m){return Object.keys(v).map(function(k){var x=v[k]*m;x=GEAR_PCT[k]?Math.round(x*10)/10:Math.round(x);return LBL[k][0]+x+LBL[k][1]}).join(' · ')}}
@@ -1681,7 +1681,7 @@ function enhRate(n){return n<5?{ok:1,down:0,brk:0}:n<10?{ok:0.7,down:0.3,brk:0}:
 function enhCost(n){return Math.round(250*Math.pow(1.4,n))} // ค่าตีบวก ×5 จากเดิม (50 เริ่มต้น)
 var ENH_STEP=0.1; // ความแรงต่อขั้นตีบวก +10%
 function enhMul(e){return 1+ENH_STEP*(e|0)}
-function accVal(o,key){var n=0;if(!o||!o.acc)return 0;ACCK.forEach(function(k){var a=o.acc[k];if(!a)return;if(ACC[k].v[key])n+=ACC[k].v[key]*QT[a.t].m*ACCG[a.g|0]*enhMul(a.e);if(Array.isArray(a.op))a.op.forEach(function(x){if(x&&x[0]===key)n+=+x[1]||0})});return n}
+function accVal(o,key){var n=0;if(!o||!o.acc)return 0;ACCK.forEach(function(k){var a=o.acc[k];if(!a)return;if(ACC[k].v[key])n+=ACC[k].v[key]*QT[a.t].m*ACCG[a.g|0]*enhMul(a.e);if(Array.isArray(a.op))a.op.forEach(function(x){if(x&&x[0]===key)n+=affixValue137(x[0],x[1])})});return n}
 // B87 ค่าพิเศษจากอุปกรณ์ (มีเพดาน) · ออปชันสุ่ม Lv60+ · เซ็ต 4 ชิ้น
 var GCAP={res:60,dr:30,cdr:40,cdmg:100,spd:50,ls:15,pen:15,cdt:40,mpr:40,acc:30};
 function gearStat(key,o){o=o||s;var v=accVal(o,key);return GCAP[key]?Math.min(GCAP[key],v):v}
@@ -1689,15 +1689,43 @@ var GOPT={atk:3,hp:18,mp:10,crit:1,cdmg:3,dodge:.8,acc:1,spd:1,res:1.5,dr:.6,mpr
 var GSET={fort:{n:'ปราการเหล็ก',d:'DEF +10%'},guard:{n:'โล่วิญญาณ',d:'HP ต่ำกว่า 30% ได้โล่ 15% ของ HP สูงสุด (1 ครั้ง/การต่อสู้)'},hunt:{n:'นักล่า',d:'คริ +10% · คริดาเมจ +20%'}};
 // B135: weapon attributes and rerolling equipped items. Prices are shared by
 // client and authoritative server engine, which runs this same file.
-var WSTAT135=['str','agi','vit','int','dex','luk'],REROLL_GOLD135=10000;
+// B137: fixed roll ranges and safe partial rerolls. Existing lower values stay;
+// legacy values above the new ceiling are capped without rerolling the item.
+var AFFIX_RANGE137={crit:[6,10],cdmg:[20,30],cdt:[5,15]},REROLL_LOCK137=200000;
+function affixValue137(key,value){var v=Number(value)||0,r=AFFIX_RANGE137[key];return r?Math.min(r[1],v):v}
+function affixRollValue137(key,fallback){var r=AFFIX_RANGE137[key];return r?r[0]+Math.floor(Math.random()*(r[1]-r[0]+1)):fallback}
+function affixItem137(p){if(p&&Array.isArray(p.op))p.op=p.op.map(function(x){return Array.isArray(x)?[x[0],affixValue137(x[0],x[1])]:x});return p}
+function affixNormalize137(o){if(!o)return;o.acc=o.acc||{};Object.keys(o.acc).forEach(function(k){affixItem137(o.acc[k])});[o.pend,o.dup].forEach(affixItem137);['gbag','gq'].forEach(function(k){if(Array.isArray(o[k]))o[k].forEach(affixItem137)});
+ (Array.isArray(o.mail)?o.mail:[]).forEach(function(m){if(Array.isArray(m.it))m.it.forEach(function(x){if(x&&x.k==='gear')affixItem137(x.v)})});}
+function rerollPrice137(n){return REROLL_GOLD135+REROLL_LOCK137*n}
+function rerollLocks137(p,raw){
+ if(raw===undefined||raw==='')return [];
+ if(typeof raw!=='string'||raw.length>7||!/^\d(?:,\d)?$/.test(raw))return null;
+ var a=raw.split(',').map(Number),op=p&&p.op||[];if(a.length>2||new Set(a).size!==a.length||a.length>=op.length)return null;
+ if(a.some(function(i){return !Number.isInteger(i)||i<0||i>=op.length||!Array.isArray(op[i])}))return null;
+ return a.sort(function(a,b){return a-b});
+}
+function rerollSelected137(slot,p){
+ var q=GEAR_UI.lock137;if(!q||q.slot!==slot)return [];
+ var op=p.op||[],present=op.map(function(x){return x[0]}),keys=(q.keys||[]).filter(function(k,i,a){return present.indexOf(k)>=0&&a.indexOf(k)===i}).slice(0,Math.min(2,Math.max(0,op.length-1)));
+ q.keys=keys;return keys;
+}
+function rerollIndices137(slot,p){var selected=rerollSelected137(slot,p),a=[];(p.op||[]).forEach(function(x,i){if(selected.indexOf(x[0])>=0)a.push(i)});return a}
+function rerollToggle137(index){var slot=GEAR_UI.slot,p=equippedRollItem135(slot),i=Number(index);if(!p||s.battle||!Number.isInteger(i)||!p.op||!p.op[i])return;
+ var keys=rerollSelected137(slot,p).slice(),key=p.op[i][0],at=keys.indexOf(key),limit=Math.min(2,Math.max(0,p.op.length-1));
+ if(at>=0)keys.splice(at,1);else if(keys.length<limit)keys.push(key);else{say('ล็อกได้สูงสุด 2 ออฟ และต้องเหลืออย่างน้อย 1 ออฟให้สุ่ม');return}
+ GEAR_UI.lock137={slot:slot,keys:keys};GEAR_UI.ask135=null;
+}
+
+var WSTAT135=['str','agi','vit','int','dex','luk'],REROLL_GOLD135=100000;
 function weaponEligible135(p){return !!(p&&p.k==='w'&&!p.fail&&Number.isInteger(p.i)&&p.i>0&&p.i<WEAPONS.length&&LV_REQ[p.i-1]>=60)}
 function weaponOpClean135(op,q){var out=[],seen={},limit=(q|0)>=3?3:2;
  if(!Array.isArray(op))return out;
  op.forEach(function(x){if(out.length>=limit||!Array.isArray(x)||WSTAT135.indexOf(x[0])<0||seen[x[0]])return;var v=Number(x[1]);if(!Number.isInteger(v)||v<1||v>15)return;seen[x[0]]=1;out.push([x[0],v])});return out}
-function weaponRoll135(p){if(!p||p.k!=='w'||p.fail)return p;
+function weaponRoll135(p,keep){if(!p||p.k!=='w'||p.fail)return p;
  if(!weaponEligible135(p)){p.op=[];return p}
  if(Array.isArray(p.op)){p.op=weaponOpClean135(p.op,p.t);return p}
- var pool=WSTAT135.slice(),n=1+Math.floor(Math.random()*((p.t|0)>=3?3:2));p.op=[];
+ var held=Array.isArray(keep)?keep.map(function(x){return x.slice()}):[],pool=WSTAT135.filter(function(k){return !held.some(function(x){return x[0]===k})}),n=Math.max(held.length+1,1+Math.floor(Math.random()*((p.t|0)>=3?3:2)));p.op=held;
  while(p.op.length<n){var k=pool.splice(Math.floor(Math.random()*pool.length),1)[0];p.op.push([k,1+Math.floor(Math.random()*15)])}return p}
 function weaponStat135(o,k){if(!o||WSTAT135.indexOf(k)<0||!weaponEligible135({k:'w',i:o.weapon}))return 0;
  return weaponOpClean135(o.wOp,o.wq).reduce(function(n,x){return n+(x[0]===k?x[1]:0)},0)}
@@ -1709,19 +1737,23 @@ function weaponMigrate135(o){if(!o)return;
  o.gearRev135=Number.isSafeInteger(o.gearRev135)&&o.gearRev135>=0?o.gearRev135:0;
 }
 function equippedRollItem135(slot){if(!s)return null;if(slot==='w')return s.weapon>0?{k:'w',i:s.weapon|0,t:s.wq|0,op:s.wOp||[],sk:s.wSk|0,cd:s.wCards||[],e:s.wEnh|0,by:s.wBy||''}:null;
- if(ACCK.indexOf(slot)<0||!s.acc||!s.acc[slot])return null;return Object.assign({k:'x',i:slot},s.acc[slot])}
+ if(ACCK.indexOf(slot)<0||!s.acc||!s.acc[slot])return null;return affixItem137(Object.assign({k:'x',i:slot},s.acc[slot]))}
 function rerollEligible135(p){return !!(p&&!p.fail&&(p.k==='w'?weaponEligible135(p):p.k==='x'&&!!ACC[p.i]))}
 function rerollToken135(slot){var p=equippedRollItem135(slot);if(!p)return '';var str=JSON.stringify(p),hash=2166136261;for(var i=0;i<str.length;i++){hash^=str.charCodeAt(i);hash=Math.imul(hash,16777619)}return slot+':'+(s.gearRev135||0)+':'+(hash>>>0).toString(36)}
-function rerollGear135(token){
+function rerollGear135(payload){
  if(!s||!s.created||s.battle){if(s)say('รีออฟไม่ได้ระหว่างต่อสู้');return false}
- var fields=String(token||'').split(':'),slot=fields[0],p=equippedRollItem135(slot);
+ var parts=String(payload||'').split('|');if(parts.length!==2){say('กรุณารีเฟรชเกมเป็น B137 แล้วเปิดหน้ารีออฟใหม่');return false;}
+ var token=parts[0],fields=token.split(':'),slot=fields[0],p=equippedRollItem135(slot);
  if(fields.length!==3||!rerollEligible135(p)||token!==rerollToken135(slot)){say('อุปกรณ์เปลี่ยนไปแล้ว กรุณาเปิดรายละเอียดและยืนยันใหม่');return false}
- if(!Number.isFinite(s.gold)||s.gold<REROLL_GOLD135){say('ทองไม่พอ · รีออฟใช้ '+REROLL_GOLD135.toLocaleString('th-TH')+' ทอง');return false}
- var next;if(p.k==='w'){next=weaponRoll135({k:'w',i:p.i,t:p.t}).op}else{next=gopRoll({k:'x',i:slot,g:p.g|0,t:p.t|0}).op}
+ var locks=rerollLocks137(p,parts[1]);if(!locks){say('ล็อกได้สูงสุด 2 ออฟ และต้องเหลืออย่างน้อย 1 ออฟให้สุ่ม');return false}
+ var cost=rerollPrice137(locks.length);if(!Number.isFinite(s.gold)||s.gold<cost){say('ทองไม่พอ · รีออฟครั้งนี้ใช้ '+cost.toLocaleString('th-TH')+' ทอง');return false}
+ var kept=locks.map(function(i){return [p.op[i][0],p.op[i][1]]}),next;
+ if(p.k==='w')next=weaponRoll135({k:'w',i:p.i,t:p.t},kept).op;else next=gopRoll({k:'x',i:slot,g:p.g|0,t:p.t|0},kept).op;
  if(!Array.isArray(next)||!next.length)return false;
- s.gold-=REROLL_GOLD135;if(slot==='w')s.wOp=next;else s.acc[slot].op=next;
- s.gearRev135=(s.gearRev135||0)+1;recalc();say('รีออฟ '+(slot==='w'?wName(s.weapon):ACC[slot].n)+' สำเร็จ · '+gopText(next).join(' · ')+' (−'+REROLL_GOLD135.toLocaleString('th-TH')+' ทอง)');return true;
+ s.gold-=cost;if(slot==='w')s.wOp=next;else s.acc[slot].op=next;
+ s.gearRev135=(s.gearRev135||0)+1;recalc();say('รีออฟ '+(slot==='w'?wName(s.weapon):ACC[slot].n)+' สำเร็จ · ล็อก '+locks.length+' ออฟ · '+gopText(next).join(' · ')+' (−'+cost.toLocaleString('th-TH')+' ทอง)');return true;
 }
+
 var JOB_CONFIRM135=null;
 function jobQuote135(action,param){if(!s||!s.created||s.battle)return null;var name,cost;
  if(action==='clsch96'){if(!CLASSES[param]||param===s.cls||clsChLeft96()>0)return null;name=CLASSES[param].n;cost=clsChCost96()}
@@ -1733,20 +1765,23 @@ function jobQuote135(action,param){if(!s||!s.created||s.battle)return null;var n
 function jobConfirmPopup135(){var q=JOB_CONFIRM135;if(SV||!q||!s)return '';
  return '<div class="gear-modal confirm135" role="dialog" aria-modal="true" aria-labelledby="jobConfirmTitle135"><section class="gear-panel"><h3 id="jobConfirmTitle135">ยืนยันเปลี่ยนอาชีพ</h3><p>คุณยืนยันที่จะเปลี่ยนอาชีพเป็น <b style="color:var(--brass)">'+esc(q.name)+'</b> ใช่หรือไม่?</p><p class="hint">'+(q.cost?'ใช้ '+q.cost.toLocaleString('th-TH')+' ทอง':'ครั้งนี้ฟรี')+(q.action==='clsch96'?' · เปลี่ยนครั้งถัดไปได้หลัง 3 วัน':'')+'</p><div class="grid2"><button class="btn primary" data-a="jobyes135">ใช่</button><button class="btn" data-a="jobno135">ไม่</button></div></section></div>';
 }
-function rerollControls135(slot){var p=equippedRollItem135(slot);if(!p)return '';var eligible=rerollEligible135(p),busy=!!s.battle,can=eligible&&!busy&&s.gold>=REROLL_GOLD135;
- var rules=p.k==='w'?'อาวุธ Lv60 ขึ้นไป · STR / AGI / VIT / INT / DEX / LUK +1–15 ไม่ซ้ำ · ขาว–ฟ้า 1–2 ออฟ · ม่วงขึ้นไป 1–3 ออฟ':'สุ่มออฟใหม่ตามกติกาเดิมของอุปกรณ์ · คงเซ็ตและค่าตีบวกเดิม';
+function rerollControls135(slot){var p=equippedRollItem135(slot);if(!p)return '';var eligible=rerollEligible135(p),busy=!!s.battle,op=p.op||[],selected=rerollSelected137(slot,p),limit=Math.min(2,Math.max(0,op.length-1)),cost=rerollPrice137(selected.length),can=eligible&&!busy&&s.gold>=cost;
+ var rules=p.k==='w'?'อาวุธ Lv60 ขึ้นไป · STR / AGI / VIT / INT / DEX / LUK +1–15 ไม่ซ้ำ · ขาว–ฟ้า 1–2 ออฟ · ม่วงขึ้นไป 1–3 ออฟ':'คริสุ่ม 6–10% · คริดาเมจ 20–30% · โอกาสลดคูลดาวน์สกิลที่ใช้ 1 เทิร์น 5–15% (ของ Lv100+)';
+ var rows=op.map(function(x,i){var locked=selected.indexOf(x[0])>=0;return '<div class="rr137row'+(locked?' locked':'')+'"><span>'+esc(gopText([x])[0]||'')+'</span><button class="btn sm" data-a="rrlock137" data-p="'+i+'" aria-pressed="'+locked+'"'+(!eligible||busy||!locked&&selected.length>=limit?' disabled':'')+'>'+(locked?'🔒 ปลดล็อก':'🔓 ล็อก')+'</button></div>'}).join('');
  var ask=GEAR_UI.ask135&&GEAR_UI.ask135.slot===slot;
- return '<div class="reroll135"><h4>รีออฟ</h4><p class="hint">'+rules+'</p><p>ครั้งละ <b>'+REROLL_GOLD135.toLocaleString('th-TH')+' ทอง</b> · มี '+Math.floor(s.gold).toLocaleString('th-TH')+' ทอง</p>'+(ask?'<p>ยืนยันสุ่มออฟใหม่? ออฟเดิมจะถูกแทนที่ทั้งหมด</p><div class="grid2"><button class="btn primary" data-a="rryes135"'+(can?'':' disabled')+'>ใช่ · รีออฟ</button><button class="btn" data-a="rrno135">ไม่</button></div>':'<button class="btn primary" data-a="rrask135" data-p="'+slot+'"'+(can?'':' disabled')+'>รีออฟ</button>')+(busy?'<p class="hint">จบการต่อสู้ก่อนรีออฟ</p>':!eligible?'<p class="hint">อาวุธชิ้นนี้ยังไม่ถึง Lv60</p>':!can?'<p class="hint">ทองไม่พอ</p>':'')+'</div>';
+ return '<div class="reroll135"><h4>รีออฟ · ล็อกแล้ว '+selected.length+'/2</h4><p class="hint">'+rules+'</p>'+rows+'<p class="hint">ล็อกสูงสุด 2 ออฟ และต้องเหลืออย่างน้อย 1 ออฟให้สุ่ม · ออฟที่ล็อกคงชนิดและค่าเดิม</p><p>พื้นฐาน 100,000 + ล็อก '+selected.length+' × 200,000 = <b>'+cost.toLocaleString('th-TH')+' ทอง</b><br>มี '+Math.floor(s.gold).toLocaleString('th-TH')+' ทอง</p>'+(ask?'<p>ยืนยันรีออฟ '+GEAR_UI.ask135.cost.toLocaleString('th-TH')+' ทอง? ออฟที่ไม่ล็อกจะถูกสุ่มใหม่</p><div class="grid2"><button class="btn primary" data-a="rryes135"'+(can?'':' disabled')+'>ใช่ · รีออฟ</button><button class="btn" data-a="rrno135">ไม่</button></div>':'<button class="btn primary" data-a="rrask135" data-p="'+slot+'"'+(can?'':' disabled')+'>รีออฟ '+cost.toLocaleString('th-TH')+' ทอง</button>')+(busy?'<p class="hint">จบการต่อสู้ก่อนรีออฟ</p>':!eligible?'<p class="hint">อาวุธชิ้นนี้ยังไม่ถึง Lv60</p>':!can?'<p class="hint">ทองไม่พอ</p>':'')+'<p class="hint">ค่าตีบวก การ์ด และเซ็ตยังอยู่ · ราคาคิดตามจำนวนออฟที่ล็อกในครั้งนี้</p></div>';
 }
 
-function gopRoll(p){
- if(p&&p.k==='w')return weaponRoll135(p);
+function gopRoll(p,keep){
+ if(p&&p.k==='w')return weaponRoll135(p,keep);
+ affixItem137(p);
  if(!p||p.k!=='x'||p.fail||p.op||!ACC[p.i])return p;
  var g=p.g|0,hi=g>=7,n=hi?(Math.random()<.4?4:3):g>=5?(Math.random()<.4?3:2):(Math.random()<.4?2:1),pref=ACC[p.i].pref||[],used={},op=[],keys=Object.keys(GOPT),hk=Object.keys(GOPT_HI),qm=Math.sqrt(QT[p.t|0].m),guard=0;
+ if(Array.isArray(keep)){op=keep.map(function(x){used[x[0]]=1;return x.slice()});n=Math.max(n,op.length+1)}
  while(op.length<n&&guard++<60){var adv=hi&&Math.random()<.3,pool=adv?hk:keys.concat(pref,pref),k=pool[Math.floor(Math.random()*pool.length)];if(used[k])continue;used[k]=1;
-  var v=(adv?GOPT_HI[k]:GOPT[k])*ACCG[g]*(.5+.5*Math.random())*qm;v=GEAR_PCT[k]?Math.max(.1,Math.round(v*10)/10):Math.max(1,Math.round(v));op.push([k,v])}
+  var v=(adv?GOPT_HI[k]:GOPT[k])*ACCG[g]*(.5+.5*Math.random())*qm;v=GEAR_PCT[k]?Math.max(.1,Math.round(v*10)/10):Math.max(1,Math.round(v));v=affixRollValue137(k,v);op.push([k,v])}
  p.op=op;if(ACCW.indexOf(p.i)>=0&&g>=5)p.st=['fort','guard','hunt'][Math.floor(Math.random()*3)];return p}
-function gopText(op){return (op||[]).map(function(x){var L=LBL[x[0]];return L?L[0]+x[1]+L[1]:''}).filter(Boolean)}
+function gopText(op){return (op||[]).map(function(x){var L=LBL[x[0]];return L?L[0]+affixValue137(x[0],x[1])+L[1]:''}).filter(Boolean)}
 function gsetOf(o){o=o||s;if(!o||!o.acc)return null;var id=null;for(var i=0;i<ACCW.length;i++){var a=o.acc[ACCW[i]];if(!a||!a.st||(a.g|0)<5)return null;if(id&&id!==a.st)return null;id=a.st}return id}
 function gsetCount(o,id){var n=0;ACCW.forEach(function(k){var a=o.acc&&o.acc[k];if(a&&a.st===id&&(a.g|0)>=5)n++});return n}
 function gopHtml(p){if(!p||p.fail)return '';var L=gopText(p.op),h='';
@@ -1811,7 +1846,7 @@ function normalize(o){
  if(typeof o.eAt!=='number')o.eAt=nw;if(typeof o.rAt!=='number')o.rAt=nw;if(typeof o.pAt!=='number')o.pAt=periodId(nw);
  if(o.war&&o.war.daysLeft!==undefined){o.war.left=Math.max(1,o.war.daysLeft);o.war.tryP=0;delete o.war.daysLeft;delete o.war.tryDay}
  o.pvp=o.pvp||{r:1000,w:0,l:0,streak:0,best:1000};o.war=o.war||null;o.warLast=o.warLast||null;delete o.cities;if(o.tab==='map')o.tab='pvp';
- weaponMigrate135(o);
+ weaponMigrate135(o);affixNormalize137(o);
  o.maxhp=calcMax(o);o.maxmp=calcMaxMp(o);
  if(typeof o.mp!=='number'||o.mp>o.maxmp)o.mp=o.maxmp;
  if(o.hp>o.maxhp)o.hp=o.maxhp;
@@ -2960,7 +2995,7 @@ function boardShow104(bd,force){if(SV||!bd||!bd.id||(!force&&boardSeen104()===St
 // ===== B102 กระเป๋าอุปกรณ์ 40 ช่อง · B103 ตลาดผู้เล่น + หินปลดผนึก =====
 var GBAG_MAX=40,GB={tab:'bag',f:'all',sel:-1,cf:'',mkt:null,busy:false,mf:'all',msg:'',at:0};
 var MKT_TAX=0.10,MKT_LV=30,MKT_MAXN=10,UNS_LV=50,UNS_GOLD=30000,UNS_PUR=2;
-function equipObj102(p){weaponRoll135(p);s.gearRev135=(s.gearRev135||0)+1;var cn=p.k==='a'?[]:cardNew(p);if(p.k==='w'){s.weapon=p.i;s.wq=p.t;s.wSk=p.sk|0;s.wSp100=p.sp?1:0;s.wCards=cn;s.wBy=p.by||'';s.wOp=(p.op||[]).map(function(x){return x.slice()})}else if(p.k==='a'){s.armor=p.i;s.aq=p.t}else s.acc[p.i]={t:p.t,g:p.g|0,e:(s.acc[p.i]&&s.acc[p.i].e)|0,sk:p.sk|0,cd:cn,by:p.by||'',op:p.op||null,st:p.st||null,sp:p.sp?1:0}}
+function equipObj102(p){affixItem137(p);weaponRoll135(p);s.gearRev135=(s.gearRev135||0)+1;var cn=p.k==='a'?[]:cardNew(p);if(p.k==='w'){s.weapon=p.i;s.wq=p.t;s.wSk=p.sk|0;s.wSp100=p.sp?1:0;s.wCards=cn;s.wBy=p.by||'';s.wOp=(p.op||[]).map(function(x){return x.slice()})}else if(p.k==='a'){s.armor=p.i;s.aq=p.t}else s.acc[p.i]={t:p.t,g:p.g|0,e:(s.acc[p.i]&&s.acc[p.i].e)|0,sk:p.sk|0,cd:cn,by:p.by||'',op:p.op||null,st:p.st||null,sp:p.sp?1:0}}
 function GBsel102(){if(!SV){GB.sel=-1;GB.cf=''}}
 function gbag(){if(!Array.isArray(s.gbag))s.gbag=[];return s.gbag}
 function gSlot(p){return p.k==='pet'?'pet':p.k==='w'?'w':p.k==='a'?'armor0':p.i}
@@ -3017,7 +3052,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B136';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B137';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -3827,9 +3862,10 @@ function act(a,p){
  if(!SV&&a==='jobask135'){var fields=String(p||'').split(':');JOB_CONFIRM135=fields.length===2?jobQuote135(fields[0],fields[1]):null;render();return}
  if(!SV&&a==='jobno135'){JOB_CONFIRM135=null;render();return}
  if(!SV&&a==='jobyes135'){var q=JOB_CONFIRM135;JOB_CONFIRM135=null;if(q){var freshQuote=jobQuote135(q.action,q.param);if(freshQuote&&freshQuote.from===q.from&&freshQuote.cost===q.cost)act(q.action,q.param||null)}render();return}
- if(!SV&&a==='rrask135'){var item=equippedRollItem135(p);if(rerollEligible135(item)&&!s.battle&&s.gold>=REROLL_GOLD135)GEAR_UI.ask135={slot:p,token:rerollToken135(p)};render();return}
+ if(!SV&&a==='rrask135'){var item=equippedRollItem135(p);if(item){var locks=rerollIndices137(p,item),price=rerollPrice137(locks.length);if(rerollEligible135(item)&&!s.battle&&s.gold>=price)GEAR_UI.ask135={slot:p,cost:price,payload:rerollToken135(p)+'|'+locks.join(',')}}render();return}
+ if(!SV&&a==='rrlock137'){rerollToggle137(p);render();return}
  if(!SV&&a==='rrno135'){GEAR_UI.ask135=null;render();return}
- if(!SV&&a==='rryes135'){var q=GEAR_UI.ask135;GEAR_UI.ask135=null;if(q)act('reroll135',q.token);render();return}
+ if(!SV&&a==='rryes135'){var q=GEAR_UI.ask135;GEAR_UI.ask135=null;if(q)act('reroll135',q.payload);render();return}
 
  if(!SV&&a==='newsopen75'){newsOpen75();return}
  if(!SV&&a==='sup100'){sup100Open();return}
@@ -3900,8 +3936,8 @@ function act(a,p){
  if(!SV&&a==='matactivities'){act('tab','tower');act('etab','tower');return}
 
  if(!SV&&a==='enhqty'){enhBoostAdjust42(p);render();return}
- if(!SV&&a==='gearinfo'){if(p==='w'||ACCK.indexOf(p)>=0){GEAR_UI.slot=p;GEAR_UI.ask135=null;}render();return}
- if(!SV&&a==='gearclose'){GEAR_UI.slot=null;GEAR_UI.ask135=null;render();return}
+ if(!SV&&a==='gearinfo'){if(p==='w'||ACCK.indexOf(p)>=0){GEAR_UI.slot=p;GEAR_UI.ask135=null;GEAR_UI.lock137=null;}render();return}
+ if(!SV&&a==='gearclose'){GEAR_UI.slot=null;GEAR_UI.ask135=null;GEAR_UI.lock137=null;render();return}
  if(!SV&&a==='gearsocket'){GEAR_UI.slot=null;act('sock',p);return}
  if(!SV&&a==='gearcraft'){GEAR_UI.slot=null;act('ctabset',p);return}
 
@@ -4721,7 +4757,7 @@ var GEAR_SLOTS=['w'].concat(ACCK);
 function gearTier(){var t=0;for(var i=0;i<LV_REQ.length;i++)if(s.lvl>=LV_REQ[i])t=i;return t}
 function gearRoll(w){var r=Math.random()*(w[0]+w[1]+w[2]);return r<w[0]?2:r<w[0]+w[1]?3:4}
 function gearGive(q){var sl=pick(GEAR_SLOTS),t=gearTier(),it=sl==='w'?gopRoll({k:'w',i:t+1,g:0,t:q}):gopRoll({k:'x',i:sl,g:t,t:q});if(!Array.isArray(s.gq))s.gq=[];s.gq.push(it);gqPump();return it}
-function gqPump(){if(!s||s.pend||s.dup||!Array.isArray(s.gq)||!s.gq.length)return;s.pend=weaponRoll135(s.gq.shift())}
+function gqPump(){if(!s||s.pend||s.dup||!Array.isArray(s.gq)||!s.gq.length)return;s.pend=affixItem137(weaponRoll135(s.gq.shift()))}
 var WB_KILLW=[60,35,5];
 function wbKillGear(){var q=gearRoll(WB_KILLW),it=gearGive(q);say('รางวัลพิเศษ! ทั้งเซิร์ฟเวอร์โค่น'+WB_NAME+'สำเร็จ ได้ '+pendName(it)+' ระดับ '+QT[q].th+' (ไปหน้าล่าเพื่อสวมหรือขาย)');save()}
 var DG_RUNS=3,DG_W=[90,9,1];
@@ -5742,7 +5778,7 @@ function viewChar(){
    '<button class="btn" data-a="st" data-p="'+r[0]+':5" aria-label="เพิ่ม '+r[1]+' 5 แต้ม"'+(s.sp<5||v>115?' disabled':'')+'>+5</button></div></div>';
  }).join('');
  var gl=gLvOf(s);
- var ds=[['โจมตี',pAtk()],['ป้องกันกายภาพ',pDef()],['ป้องกันเวท',pMdef()],['เกราะกันดาเมจที่ Lv เดียวกัน',(armorDR43(pDef(),s.lvl)*100).toFixed(1)+'%'],['เจาะเกราะ',(statPierce43()*100).toFixed(1)+'%'],['HP สูงสุด',s.maxhp],['MP สูงสุด',s.maxmp],['คริติคอล',r1(critPct())+'%'],['คริดาเมจ','×'+critMul().toFixed(2)],['แม่นยำ',r1(hitPct())+'%'],['หลบ',r1(dodgePct())+'%'],['ความเร็วโจมตี',(1000/aspdMs()).toFixed(2)+'/วิ'],['ลดดาเมจ (อุปกรณ์)',r1(gearStat('dr'))+'%'],['ต้านสถานะ',r1(gearStat('res'))+'%'],['ลดคูลดาวน์',r1(gearStat('cdr'))+'%'],['MP ฟื้น/ตา','+'+Math.round(gearStat('mpr'))],['ดูดเลือด',r1(gearStat('ls'))+'%'],['เซ็ตอุปกรณ์',gsetOf(s)?GSET[gsetOf(s)].n:'-'],
+ var ds=[['โจมตี',pAtk()],['ป้องกันกายภาพ',pDef()],['ป้องกันเวท',pMdef()],['เกราะกันดาเมจที่ Lv เดียวกัน',(armorDR43(pDef(),s.lvl)*100).toFixed(1)+'%'],['เจาะเกราะ',(statPierce43()*100).toFixed(1)+'%'],['HP สูงสุด',s.maxhp],['MP สูงสุด',s.maxmp],['คริติคอล',r1(critPct())+'%'],['คริดาเมจ','×'+critMul().toFixed(2)],['แม่นยำ',r1(hitPct())+'%'],['หลบ',r1(dodgePct())+'%'],['ความเร็วโจมตี',(1000/aspdMs()).toFixed(2)+'/วิ'],['ลดดาเมจ (อุปกรณ์)',r1(gearStat('dr'))+'%'],['ต้านสถานะ',r1(gearStat('res'))+'%'],['โอกาสลดคูลดาวน์ทุกสกิลเพิ่ม 1 เทิร์น',r1(gearStat('cdr'))+'%'],['โอกาสลดคูลดาวน์สกิลที่ใช้ 1 เทิร์น',r1(gearStat('cdt'))+'%'],['MP ฟื้น/ตา','+'+Math.round(gearStat('mpr'))],['ดูดเลือด',r1(gearStat('ls'))+'%'],['เซ็ตอุปกรณ์',gsetOf(s)?GSET[gsetOf(s)].n:'-'],
   ['พลังสกิล','×'+skPow().toFixed(2)],['โบนัสชุด',setBonus(s)>0?'+'+Math.round(setBonus(s)*100)+'%':'-'],['โบนัสกิลด์',gl?'HP +'+gl+'% · ทอง +'+gl*2+'%':'ไม่มีกิลด์']].map(function(x){
   var big=String(x[1]).length<=7;
   return '<div class="stat"><span>'+x[0]+'</span><b'+(big?'':' style="font-size:15px"')+'>'+x[1]+'</b></div>'}).join('');
@@ -6156,7 +6192,7 @@ function doLogin(){
   startGame(key,false);
  }).catch(function(){setMsg('เข้าเกมส์ไม่สำเร็จ ลองใหม่อีกครั้ง')}).then(function(){setBusy(false)});
 }
-function showLogin(){JOB_CONFIRM135=null;GEAR_UI.ask135=null;AR73_UI.open=false;AR73_UI.confirm=false;AR73_UI.quote=null;FXSK41=[];if(!SV)netReset68();NAV66.world=false;NAV66.rev=0;SPECIAL57.nav66=null;GOALS69.slot='w';GOALS69.previewAt=0;BOOK_UI70.z=0;BOOK_UI70.i=0;BOOK_UI70.rare=false;BOOK_UI70.pet='dragon';BOOK_UI70.form=0;FARM63_UI.ask=false;COL_UI59.session=false;COL_UI59.show=false;COL_UI59.z=0;SPECIAL57.key='';SPECIAL57.back=null;SPECIAL57.etab=null;scene53Reset();BAWAY=null;GEAR_UI.slot=null;SHOP_UI.open=false;PARTY_UI.open=false;PARTY_UI.uid=0;AUTO_UI.open=false;BATTLE_PRESENT.data=null;BATTLE_PRESENT.until=0;document.body.classList.remove('town-landscape');document.body.classList.remove('creating-character');
+function showLogin(){JOB_CONFIRM135=null;GEAR_UI.ask135=null;GEAR_UI.lock137=null;AR73_UI.open=false;AR73_UI.confirm=false;AR73_UI.quote=null;FXSK41=[];if(!SV)netReset68();NAV66.world=false;NAV66.rev=0;SPECIAL57.nav66=null;GOALS69.slot='w';GOALS69.previewAt=0;BOOK_UI70.z=0;BOOK_UI70.i=0;BOOK_UI70.rare=false;BOOK_UI70.pet='dragon';BOOK_UI70.form=0;FARM63_UI.ask=false;COL_UI59.session=false;COL_UI59.show=false;COL_UI59.z=0;SPECIAL57.key='';SPECIAL57.back=null;SPECIAL57.etab=null;scene53Reset();BAWAY=null;GEAR_UI.slot=null;SHOP_UI.open=false;PARTY_UI.open=false;PARTY_UI.uid=0;AUTO_UI.open=false;BATTLE_PRESENT.data=null;BATTLE_PRESENT.until=0;document.body.classList.remove('town-landscape');document.body.classList.remove('creating-character');
  var an=document.getElementById('authNote');if(an)an.textContent=CL?'เล่นออนไลน์: สมัครไอดีเพื่อใช้บัญชีเดิมข้ามเครื่อง · ผู้เยี่ยมชมควรตั้งไอดีถาวรก่อนเปลี่ยนเครื่อง':'โหมดเล่นในเครื่อง: บัญชีและเซฟอยู่ในเบราว์เซอร์นี้ กรุณาใช้เครื่องเดิมเพื่อเล่นต่อ';
  s=null;curUser=null;ON.open=false;SNDW.b=false;SNDW.lvl=0;MUS_DEMO=0;SND.last63={};musTick();SCROLL_UI.drag=null;SCROLL_UI.pending=false;SCROLL_UI.positions=Object.create(null);ENTRY_TOUCH64=null;entryLayoutSync();
  document.getElementById('login').hidden=false;
