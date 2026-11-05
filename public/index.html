@@ -3066,7 +3066,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B147';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B148';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -8534,14 +8534,19 @@ function sealDraw147(c,tier,colors,x,y,u,t,alpha,layer){if(!(tier>=1&&tier<=4)||
  var still=ECO.on||MOTION69&&MOTION69.matches,frame=still?0:Math.floor(Math.max(0,t)/100)%24,tile=sealTile147(tier,colors,frame),w=64*u,h=64*u;
  c.save();try{if(alpha!=null)c.globalAlpha*=Math.max(0,Math.min(1,alpha));c.imageSmoothingEnabled=true;if(layer!=='front')c.drawImage(tile,0,0,256,256,x-w/2,y-h*213/256,w,h);if(layer!=='back')c.drawImage(tile,256,0,256,256,x-w/2,y-h*213/256,w,h)}finally{c.restore()}}
 
-// Cosmetic auras keep their existing colors and use the same new seal design.
-auraDraw76=function(c,id,x,y,u,t,alpha,layer){var colors=Array.isArray(id)?id:AURA[id];if(colors)sealDraw147(c,2,colors,x,y,u,t,alpha,layer)};
+// B148: Draw the forge seal and the original cosmetic aura as separate layers.
 var backBefore147=fashionBack;
-fashionBack=function(c,look,cx,gy,u,t,row,rig){var tier=enhanceTier147(look.enh147);if(tier){sealDraw147(c,tier,sealColors147(look),cx,gy,u,t,undefined,'back');look=Object.assign({},look,{aura:'none'})}backBefore147(c,look,cx,gy,u,t,row,rig)};
+fashionBack=function(c,look,cx,gy,u,t,row,rig){
+ var tier=enhanceTier147(look.enh147);
+ if(tier)sealDraw147(c,tier,sealColors147(look),cx,gy,u,t,undefined,'back');
+ backBefore147(c,look,cx,gy,u,t,row,rig);
+};
 var frontBefore147=auraFront80;
-auraFront80=function(c,look,x,y,u,t,alpha){var tier=enhanceTier147(look.enh147);if(tier)sealDraw147(c,tier,sealColors147(look),x,y,u,t,alpha,'front');else frontBefore147(c,look,x,y,u,t,alpha)};
-var colBefore147=colDraw59;
-colDraw59=function(c,look,x,y,u,t,alpha){if(!enhanceTier147(look.enh147))colBefore147(c,look,x,y,u,t,alpha)};
+auraFront80=function(c,look,x,y,u,t,alpha){
+ frontBefore147(c,look,x,y,u,t,alpha);
+ var tier=enhanceTier147(look.enh147);
+ if(tier)sealDraw147(c,tier,sealColors147(look),x,y,u,t,alpha,'front');
+};
 
 if(!SV)requestAnimationFrame(frame);
 if(!SV){var BOOTEL=document.getElementById('boot');if(BOOTEL){BOOTEL.style.transition='opacity .35s';BOOTEL.style.opacity='0';setTimeout(function(){if(BOOTEL.parentNode)BOOTEL.parentNode.removeChild(BOOTEL)},380)}}
