@@ -1362,7 +1362,10 @@ const routes = {
     if (!/^[a-z0-9]{1,20}$/.test(a) || (pr && pr.length > 80)) return send(res, 400, { error: 'คำสั่งไม่ถูกต้อง' });
     const p = await session(u.id);
     if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
-    if (['fishcast', 'fishreel', 'fishbuy', 'fishup', 'fishacast', 'fishareel'].includes(a)) {
+    if (['fishcast', 'fishreel', 'fishacast', 'fishareel'].includes(a) && wdOf(u.id)) {
+      return send(res, 409, { error: 'จบการดวลก่อนตกปลา' });
+    }
+    if (['fishbuy', 'fishup'].includes(a)) {
       const town = TOWN.get(u.id);
       if (!town || Date.now() - town.at > TOWN_ON_MS || wdOf(u.id)) {
         return send(res, 409, { error: 'เข้าบ่อตกปลาจากเมืองหลวงก่อน' });
