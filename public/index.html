@@ -825,6 +825,11 @@ body.view-ready #chatNative77 #chatPanel .chead{color:#fff;text-shadow:0 1px 3px
 
 .fish152{background:linear-gradient(155deg,#183e47,#132233);border-color:#62aba8}.fish152 .oddrow{padding:6px 0}.fish-controls152{display:flex;flex-wrap:wrap;gap:8px}.fish152 [hidden]{display:none!important}
 .hunt-tile150 svg.portal-icon154{inset:7px 8px auto auto;width:36px;height:36px;fill:#102b3aaa;stroke:var(--land);stroke-width:1.6;opacity:.95;filter:drop-shadow(0 0 4px var(--land));z-index:0;pointer-events:none}
+
+.shore-panel155{position:absolute;z-index:25;left:50%;bottom:calc(132px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(420px,calc(100% - 22px));max-height:53%;overflow:auto;box-sizing:border-box;background:#102638f7;border-color:#6dccbd;padding:9px;color:#ebfff8}
+.shore-panel155 header{display:flex;justify-content:space-between;align-items:center;gap:6px}.shore-panel155 p{margin:5px 0}.shore-panel155 [hidden]{display:none!important}
+.shore-gauge155{position:relative;height:14px;margin:7px 0;background:#101a2c;border:1px solid #79a2b1;border-radius:7px;overflow:hidden}.shore-gauge155 i{position:absolute;inset:0 0 0 var(--target,70%);background:#53d08b}.shore-gauge155 b{position:absolute;left:var(--cursor,0%);top:0;height:100%;width:3px;background:#fff2ac;transform:translateX(-50%);box-shadow:0 0 6px #0d1421}
+.fish-book155{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}.fish-card155{display:grid;justify-items:center;gap:2px;padding:5px 4px 8px;text-align:center;background:radial-gradient(ellipse at 50% 36%,#29495a,#112637 70%);border:1px solid #427482;border-radius:9px}.fish-card155.fish-r2{border-color:#ab87e3}.fish-card155.fish-r3{border-color:#e9bb66}.fish-card155 small{color:#aee1de}.fish-art155,.fish-legacy155{display:block;width:84px;height:84px;background-image:url(assets/images/fish155.png);background-size:1000% 1000%;background-repeat:no-repeat}.fish-legacy155{background:none;height:56px;font-size:35px}
 </style>
 
 <section id="login" class="login">
@@ -3100,7 +3105,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B154';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B155';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -4060,7 +4065,7 @@ function act(a,p){
   if(s.created){if(p==='wild'){returnWorld66();return}NAV66.world=false;BAWAY=p;render();if(window.scrollTo)window.scrollTo(0,0);return}
   BAWAY=null}
  if(!SV&&a==='fishopen'){if(FLD.town&&!TOWN.war&&!s.battle){BAWAY='fish';render()}return}
- if(!SV&&(portalLocal154(a,p)||fishLocal153(a,p)))return;
+ if(!SV&&(shoreAction155(a,p)||portalLocal154(a,p)||fishLocal153(a,p)))return;
  if(CL&&!CL_LOCAL[a]){netAct(a,p);return}
  if(fishActions153(a,p))return;
  if(a==='gemdo140'){gemDo140(String(p||''));save();render();return}
@@ -6101,6 +6106,7 @@ function viewBattleLegacy(){
 var TABI=(function(){var P={wild:'<path d="M5 19l9-9M14 4h6v6l-9 9M4 20l2-2M7 13l4 4"/>',char:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.6-4 4.6-6 8-6s6.4 2 8 6"/>',craft:'<path d="M3 21l9-9M11 6l3-3 7 7-3 3zM14 9l-4 4"/>',mat:'<path d="M5 9h14l-1.2 11H6.2zM9 9V7a3 3 0 016 0v2"/>',pvp:'<path d="M12 3l8 3v6c0 4.8-3.4 8-8 9-4.6-1-8-4.2-8-9V6z"/><path d="M9 12l2 2 4-4"/>',tower:'<path d="M12 3l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.4l-5.2 2.8 1-5.9L3.5 9.2l5.9-.8z"/>',guild:'<path d="M6 21V4M6 4h11l-2.5 4L17 12H6"/>',me:'<path d="M8 4l4 2 4-2 4 3-2.2 4-1.8-1v10H8V10l-1.8 1L4 7z"/>'};var o={};for(var k in P)o[k]='<svg viewBox="0 0 24 24" aria-hidden="true">'+P[k]+'</svg>';return o})();
 function render(){
  if(SV)return;
+ if(SHORE155.active&&!shoreReady155())shoreStop155();
  if(BAWAY==='wild'){s.tab='wild';BAWAY=null}
  scene53Sync();specialNav57();if(ECO.on)return;if(SCROLL_UI.drag&&SCROLL_UI.drag.moved){SCROLL_UI.pending=true;return}colScroll59(false);scrollRemember();menuRememberScroll();autoRemember();shopRemember(); // จอดำอยู่: กลับมาค่อยวาดใหม่
  try{sndWatch()}catch(e){}
@@ -6113,7 +6119,7 @@ function render(){
  else if(s.battle&&!BAWAY)v=viewBattle();
  else if(!BAWAY&&specialKind57()==='dg')v=viewDgTS107();
  else if(s.res&&!BAWAY)v=viewResult();
- else v=(BAWAY?miniBattle():'')+({wild:viewWild,fish:fishView153,char:viewChar,craft:function(){return GB.page&&!GB.open?gbagHtml():viewCraft()},mat:viewMat,pvp:viewPvp,tower:viewEvents,guild:viewGuild,me:viewDress}[BAWAY||s.tab]||viewWild)();
+ else v=(BAWAY?miniBattle():'')+({wild:viewWild,fish:fishBook155,char:viewChar,craft:function(){return GB.page&&!GB.open?gbagHtml():viewCraft()},mat:viewMat,pvp:viewPvp,tower:viewEvents,guild:viewGuild,me:viewDress}[BAWAY||s.tab]||viewWild)();
  if(landscapeMenuActive())v=menuWrap(v);
  var oldScene56=document.getElementById('menuScene55');
  document.getElementById('view').innerHTML=(battlePresentationActive()?'':offHtml()+sockHtml()+noPotHtml()+dupHtml())+v+chest131Btn()+navBar113()+ar73Popup()+autoPopup()+colPopup59()+partyPopup()+shopPopup()+gearPopup()+mailPopup101()+bagPopup104()+s105Popup()+jobConfirmPopup135();try{rpsReveal106()}catch(e){}
@@ -6716,6 +6722,8 @@ function fieldEngage(m){
 function fieldUpdate(dt,tn){
  fieldWatch();if(FLD.town){townUpdate(dt,tn);if(!(s&&s.battle))fieldMove(dt,tn);return}var AL=FLD.allies;if(AL)for(var ak in AL){var al=AL[ak],adx=al.tx-al.x,ady=al.ty-al.y,ad=Math.hypot(adx,ady);if(ad>240){al.x=al.tx;al.y=al.ty;al.mv=false}else if(ad>2){var as=Math.min(ad,90*dt);al.x+=adx/ad*as;al.y+=ady/ad*as;al.mv=true;al.spriteDir=characterDirection(adx,ady,al.spriteDir);if(Math.abs(adx)>1)al.dir=adx>0?1:-1}else al.mv=false}var b=!!(s&&s.battle),nt=nowMs();netBots();botsUpdate(dt,tn);
  if(b)return;
+ if(SHORE155.active&&shoreReady155()){FLD.moving=false;return}
+ if(SHORE155.walk&&SHORE155.zone===s.zone){if(shoreReady155()){FLD.tx=FLD.ty=null;FLD.moving=false}else fieldMove(dt,tn);return}
  if(CL&&s.autoHunt&&(NET68.needSync||navigator.onLine===false)){FLD.moving=false;return}
  if(FLD.gat&&FLD.gat.on){gatherTick(tn);fieldMove(dt,tn);return}
  var PH=ptFollowOn();if(PH){if(!FLD.hold)ptFollowTick(PH);fieldMove(dt,tn);return}
@@ -6787,7 +6795,9 @@ function drawField(c,W,H,tn){
  FLD.pools.forEach(function(p){var sx=fieldScreenX(p.x,p.y),sy=fieldScreenY(p.x,p.y);if(sx<-80||sx>W+80||sy<-60||sy>H+60)return;c.save();c.globalAlpha=P.lava?0.25+0.2*Math.sin(tn/300):0.18;c.fillStyle=P.lava?'#ffd04a':'#ffffff';
   for(var k=0;k<5;k++){var a=tn/900+k*1.3;c.fillRect(Math.round(sx+Math.cos(a)*p.rx*0.6),Math.round(sy+Math.sin(a*1.3)*p.ry*0.5),P.lava?3:5,1)}c.restore()});
  if(FLD.tx!=null&&!FLD.follow){var mk=(tn%600)/600,mark=townProject(FLD.tx,FLD.ty);c.strokeStyle='rgba(255,224,138,'+(1-mk)+')';c.lineWidth=1;c.beginPath();c.ellipse(mark[0]-cx,mark[1]-cy,4+mk*6,2+mk*3,0,0,7);c.stroke()}
+ if(!FLD.town)shorePondDraw155(c,tn);
  var ents=[],zz=ZONES[FLD.town?0:z];
+ if(!FLD.town)ents.push({y:GATE155.x+GATE155.y,gate155:true});
  if(FLD.town){TOWN.npcs.forEach(function(n){ents.push({y:n.x+n.y,np:n})});for(var tk in TOWN.list)ents.push({y:TOWN.list[tk].y,tw:TOWN.list[tk]})}
  FLD.mobs.forEach(function(m){if(m.alive)ents.push({y:m.x+m.y,m:m})});
  if(!FLD.town)(FLD.nodes||[]).forEach(function(n){ents.push({y:n.x+n.y,nd:n})});
@@ -6797,12 +6807,14 @@ function drawField(c,W,H,tn){
  (FLD.isoDecor||[]).forEach(function(d){ents.push({y:d.x+d.y,dec:d})});
  ents.push({y:FLD.px+FLD.py,me:1});ents.sort(function(a,b){return a.y-b.y});
  ents.forEach(function(e){
+  if(e.gate155){fieldGate155(c,tn);return}
   if(e.dec){var D=e.dec,dx=fieldScreenX(D.x,D.y),dy=fieldScreenY(D.x,D.y);if(dx>=-40&&dx<=W+40&&dy>=-20&&dy<=H+80)fDeco(c,D.t,dx,dy,P,D.r);return}
   if(e.nd){var N=e.nd,nx=fieldScreenX(N.x,N.y),ny=fieldScreenY(N.x,N.y);if(nx<-30||nx>W+30||ny<-40||ny>H+30)return;fNode(c,N,nx,ny,tn);var G0=FLD.gat;
    if(G0&&G0.node===N&&G0.until){var pc=GPCOL[N.k];for(var pq=0;pq<4;pq++){var ph=((tn/300)+pq*0.27)%1;c.fillStyle=pc[pq%2];c.fillRect(Math.round(nx+(pq-1.5)*5+Math.sin(tn/80+pq)*3),Math.round(ny-8-ph*14),2,2)}
     var pr=1-(G0.until-tn)/GATHER_MS;c.fillStyle='rgba(0,0,0,.6)';c.fillRect(Math.round(nx-12),Math.round(ny-22),24,4);c.fillStyle='#ffd04a';c.fillRect(Math.round(nx-11),Math.round(ny-21),Math.round(22*Math.max(0,Math.min(1,pr))),2)}
    else if(N.until<=Date.now()&&(Math.hypot(N.x-FLD.px,N.y-FLD.py)<80||(G0&&G0.node===N)))fLabel(c,T(GVERB[N.k]),nx,ny-(N.k==='wood'?36:20),'#bff0a0');return}
   if(e.me){var x=fieldScreenX(FLD.px,FLD.py),y=fieldScreenY(FLD.px,FLD.py),bob=FLD.moving&&SET.spriteChars===false?Math.abs(Math.sin(tn/90))*1.5:0;shadowAt(c,x,y+1,8);walkFx38(c,'field:me',FLD.px,FLD.py,x,y,FLD.moving,s.look,s.cls,1,tn);CPOSE=FLD.gat&&FLD.gat.until?{pose:'atk',f:Math.floor(tn/200)%4,dir:fieldIsoDir(FLD.spriteDir)}:{pose:FLD.moving?'walk':'idle',dir:fieldIsoDir(FLD.spriteDir),ex:nowMs()<(FLD.happyT||0)?'happy':''};drawChar(c,s.look,s.cls,Math.round(x-12),Math.round(y-bob),1,FLD.moving&&SET.spriteChars===false?tn*2:tn,FLD.dir>0,1);
+   if(SHORE155.active&&shoreReady155())shoreRod155(c,x,y,tn);
    ttlDraw100(c,s.title,!!s.sup100,x,y-51);var D5=nameDeco105(s);nameLabel105(c,nick().slice(0,12),x,y-40,'#ffe08a',D5.sf,D5.sg);if(FLD.town&&TOWN.mySay&&nowMs()-TOWN.mySay.at<7000)fBubble(c,TOWN.mySay.t,x,y-50);return}
   if(e.np||e.tw){var Q=e.np||e.tw,qx=fieldScreenX(Q.x,Q.y),qy=fieldScreenY(Q.x,Q.y);if(qx<-30||qx>W+30||qy<-60||qy>H+30)return;var qb=Q.mv?Math.abs(Math.sin(tn/90))*1.5:0;shadowAt(c,qx,qy+1,8);if(!e.np)walkFx38(c,walkActorId38(Q),Q.x,Q.y,qx,qy,Q.mv,Q.look||s.look,Q.cls,1,tn);
    if(CLASSES[Q.cls]){CPOSE=Q.pose==='atk'?{pose:'atk',f:Math.floor(tn/160)%4,dir:fieldIsoDir(Q.spriteDir==null?(Q.dir>0?6:2):Q.spriteDir)}:{pose:Q.mv?'walk':'idle',dir:fieldIsoDir(Q.spriteDir==null?(Q.dir>0?6:2):Q.spriteDir)};}if(CLASSES[Q.cls])drawChar(c,Q.look||s.look,Q.cls,Math.round(qx-12),Math.round(qy-qb),1,Q.mv?(SET.spriteChars===false?tn*2:tn):tn+(e.np?700:300),Q.dir>0,1);
@@ -6835,7 +6847,7 @@ function drawField(c,W,H,tn){
 function fieldPt(ev){var cv=document.getElementById('scene');if(!cv||cv.getAttribute('data-mode')!=='field')return null;var q=viewClientPoint(ev,cv.getBoundingClientRect()),cam=FLD.town?ISO_TOWN.camera:FLD.cam,point=townUnproject(q.x*artWidth74(cv)+Math.round(cam[0]),q.y*artHeight74(cv)+Math.round(cam[1]));return {x:point[0],y:point[1]}}
 
 if(!SV){
- document.addEventListener('pointerdown',function(ev){var t=ev.target;if(!t||t.id!=='scene'||t.getAttribute('data-mode')!=='field')return;var p=fieldPt(ev);if(!p)return;if(portalTap154(p)){ev.preventDefault();return}FLD.hold=true;fieldTarget(p.x,p.y);ev.preventDefault()},{passive:false});
+ document.addEventListener('pointerdown',function(ev){var t=ev.target;if(!t||t.id!=='scene'||t.getAttribute('data-mode')!=='field')return;var p=fieldPt(ev);if(!p)return;if(portalTap154(p)||SHORE155.active){ev.preventDefault();return}SHORE155.walk=false;FLD.hold=true;fieldTarget(p.x,p.y);ev.preventDefault()},{passive:false});
  document.addEventListener('pointermove',function(ev){if(!FLD.hold)return;var p=fieldPt(ev);if(p){FLD.tx=p.x;FLD.ty=p.y;if(FLD.follow&&!FLD.follow.boss&&Math.hypot(FLD.follow.x-p.x,FLD.follow.y-p.y)>30)FLD.follow=null}});
  ['pointerup','pointercancel'].forEach(function(n){document.addEventListener(n,function(){FLD.hold=false})})}
 
@@ -6894,7 +6906,7 @@ function townUpdate(dt,tn){
 function fBubble(c,t,x,y,mx){c.font='600 8px Kanit,sans-serif';t=String(t);mx=mx||28;if(t.length>mx)t=t.slice(0,mx-1)+'…';var w=Math.ceil(c.measureText(t).width)+10;x=Math.max(w/2+2,Math.min(artWidth74(c.canvas)-w/2-2,x));
  c.fillStyle='rgba(0,0,0,.35)';c.fillRect(Math.round(x-w/2)+1,Math.round(y-13)+1,w,13);c.fillStyle='#ffffff';c.fillRect(Math.round(x-w/2),Math.round(y-13),w,13);c.fillRect(Math.round(x-2),Math.round(y),4,2);c.fillRect(Math.round(x-1),Math.round(y+2),2,1);
  c.fillStyle='#1a1a2a';c.textAlign='center';c.fillText(t,x,y-4)}
-function townGo(on){PORTAL154.open=false;var wasWar=!!TOWN.war;ISO_TOWN.objectCache=null;ISO_TOWN.ground=null;TOWN.on=!!on;FLD.town=TOWN.on;FLD.map=null;FLD.z=-1;FLD.tx=FLD.ty=null;FLD.follow=null;FLD.path=null;TOWN.list={};if(!on)TOWN.war=false;
+function townGo(on){shoreStop155();PORTAL154.open=false;var wasWar=!!TOWN.war;ISO_TOWN.objectCache=null;ISO_TOWN.ground=null;TOWN.on=!!on;FLD.town=TOWN.on;FLD.map=null;FLD.z=-1;FLD.tx=FLD.ty=null;FLD.follow=null;FLD.path=null;TOWN.list={};if(!on)TOWN.war=false;
  if(on&&s&&s.autoHunt)act('autohunt');
  if(!on&&CL&&NET.token)apiCall('POST',wasWar?'/api/war':'/api/town',{leave:1}).catch(function(){});
  if(on)netTown(true);render();if(window.scrollTo)window.scrollTo(0,0)}
@@ -7050,7 +7062,7 @@ function townIsoDraw(c,W,H,tn){
  objects.sort(function(a,b){return a.depth-b.depth});
  objects.forEach(function(o){
   var q=o.q,pp=townProject(q?q.x:o.x,q?q.y:o.y);if(pp[0]<cx-450||pp[0]>cx+W+450||pp[1]<cy-80||pp[1]>cy+H+240)return;
-  if(o.kind==='portal154'){portalDraw154(c,pp[0],pp[1],tn);townWorldLabel(c,'ประตูวาร์ป',pp[0],pp[1]-78,'#a6fff2');return}
+  if(o.kind==='portal154'){portalDraw154(c,pp[0],pp[1],tn);townWorldLabel(c,'ประตูวาร์ป',pp[0],pp[1]-100,'#a6fff2');return}
   if(o.kind!=='actor'){if(TOWN.war)warIsoObject106(c,o);else townIsoObject(c,o);return}
   if(!CLASSES[q.cls])return;
   var worldDir=q.spriteDir==null?(q.dir==null?0:q.dir>0?6:2):q.spriteDir;
@@ -7084,7 +7096,7 @@ var townFlatBuild=townBuild;
 townBuild=function(){if(TOWN.war){warFlatBuild106();warIsoBuild106()}else{townFlatBuild();townIsoBuild()}};
 function townIsoView(){
  return '<section id="townStage"><canvas id="scene" data-mode="field" width="800" height="450" aria-label="เมืองหลวงมุมเฉียง แตะพื้นเพื่อเดิน"></canvas>'+
- '<div class="town-top"><div class="left-player">'+autoHud()+partyHud()+'</div><div class="zone-party"><strong>เมืองหลวง</strong></div><button class="btn sm" data-a="portalopen">✦ ประตูวาร์ป</button><button class="btn sm" data-a="fishopen">🎣 บ่อตกปลา</button></div>'+(PORTAL154.open?huntMapPicker150(true):'')+
+ '<div class="town-top"><div class="left-player">'+autoHud()+partyHud()+'</div><div class="zone-party"><strong>เมืองหลวง</strong></div><button class="btn sm" data-a="portalopen">✦ ประตูวาร์ป</button><button class="btn sm" data-a="fishopen">📖 สมุดปลา</button></div>'+(PORTAL154.open?huntMapPicker150(true):'')+
  '<div class="town-instruction">เขตปลอดภัย · '+TOWN.n+' คน · พลังเมือง '+townEnLeft()+' · แตะพื้นเพื่อเดิน <span>↻ หมุนมือถือเป็นแนวนอนเพื่อเล่นเต็มจอ</span></div>'+
  '<div class="town-bottom"><button class="btn sm" data-a="chatopen">💬 แชท<span class="chat48-unread" hidden></span></button><button class="btn sm" data-a="tab" data-p="char">เมนู</button><button class="btn sm" data-a="tab" data-p="mat">กระเป๋า</button><button class="btn sm" data-a="tab" data-p="me">แต่งตัว</button></div></section>';
 }
@@ -7098,10 +7110,10 @@ function fieldLandscapeActive(){var room=dgRoom();return !!(s&&s.created&&s.tab=
 function fieldIsoView(){
  var z=ZONES[s.zone];
  if(s.created&&(s.fmode|0)!==1&&nowMs()-(FLD.fmSent||0)>3000){FLD.fmSent=nowMs();setTimeout(function(){act('fmode','1')},0)}
- var zones=zoneOpen?huntMapPicker150():'';
+ var zones=PORTAL154.open?huntMapPicker150(true):zoneOpen?huntMapPicker150():'';
  var panel=FIELD_ISO.menu?'<div class="field-menu-panel"><button class="btn sm" data-a="fieldmenu">ปิดเมนู ✕</button>'+viewWildLegacy().replace(/<canvas\b[\s\S]*?<\/canvas>/g,'')+'</div>':'';
  return pendHtml()+'<section id="townStage"><canvas id="scene" data-mode="field" width="800" height="450" aria-label="แผนที่ล่ามุมเฉียง แตะพื้นเพื่อเดิน"></canvas>'+
- '<div class="town-top"><div class="left-player">'+autoHud()+partyHud()+'</div><div class="zone-party"><button class="btn sm" data-a="zonemenu">'+'🧭 '+esc(z.n)+' · Lv'+z.rec+'–'+z.max+' ▾</button></div><button class="btn sm" data-a="towngo">🏰 เมืองหลวง</button></div>'+zones+
+ '<div class="town-top"><div class="left-player">'+autoHud()+partyHud()+'</div><div class="zone-party"><button class="btn sm" data-a="zonemenu">'+'🧭 '+esc(z.n)+' · Lv'+z.rec+'–'+z.max+' ▾</button></div><button class="btn sm" data-a="towngo">🏰 เมืองหลวง</button><button id="shoreGo155" class="btn sm" data-a="shoreopen">🎣 ไปหนองน้ำ</button></div>'+zones+shorePanel155()+
  '<div class="town-instruction">แตะพื้นเพื่อเดิน · เปิดออโต้เพื่อออกล่า (−2 พลังต่อการต่อสู้)</div>'+
  '<div class="town-bottom"><button class="btn sm" data-a="chatopen">💬</button>'+autoControls55(autoRunning())+'<button class="btn sm" data-a="drink"'+(potTotal()<1||s.hp>=s.maxhp?' disabled':'')+'>ยา ('+potTotal()+')</button><button class="btn sm" data-a="tab" data-p="char">เมนู ☰</button><span id="viewToggleDock"></span></div>'+((FLD.gat&&FLD.gat.on)?'<div class="mat-field"><span id="matFieldStatus">'+esc(matStatus())+'</span><button class="btn" data-a="matstop">หยุด</button></div>':'')+panel+'</section>';
 }
@@ -8150,7 +8162,7 @@ function frame(tn){
  if(ECO.on){ecoFrame141(tn);return}
  newsPaint75();
  farmLive68(tn);matLive(tn);colPreview69(tn);bioPreview70(tn);ar73Live(tn);
- craftButtonsTick();pvpTimers85(tn);wbButtonTick150();fishTick152();fishAuto153();
+ craftButtonsTick();pvpTimers85(tn);wbButtonTick150();shoreTick155();
  battlePresentationTick(tn);scene53Paint(tn);battleButtonsSync(tn);
  if(TOWN.on&&s&&!s.battle&&!FLD.moving&&!FLD.hold){
   if(TOWN_FRAME_AT!==null&&tn-TOWN_FRAME_AT<1000/30-0.5){requestAnimationFrame(frame);return}
@@ -8188,7 +8200,7 @@ function netApply(j){
  if(!s||!s.mastery51||!j.s.mastery51||s.mastery51.rev!==j.s.mastery51.rev)M51_UI.reset=false;s=j.s;if(NAV66.world&&s.created)s.tab='wild';targetAck49();s.dqOpen=keep;NET.v=j.v;uiSet(j.ui);if(j.uid)NET.uid=j.uid;
  if(s.wbLast&&s.wbLast.at!==wl){NET.wbAt=0}
  var warp=NET68.inflight;
- if(warp&&warp.a==='portalzone'&&s.zone===Number(warp.p)&&!s.battle&&PORTAL154.open&&TOWN.on&&!TOWN.war){townGo(false);return}
+ if(warp&&warp.a==='portalzone'&&s.zone===Number(warp.p)&&!s.battle&&PORTAL154.open&&!TOWN.war){PORTAL154.open=false;shoreStop155();if(TOWN.on){townGo(false);return}}
  var now=nowMs();
  if(j.fxt)Object.keys(j.fxt).forEach(function(k){fx[k]=now+j.fxt[k]});
  (j.fx||[]).forEach(function(e){try{var f={fxScene:fxScene,fxApproach:fxApproach,fl:fl,fxPlayerHit:fxPlayerHit,fxSkill:fxSkill,fxBuff:fxBuff,fxEnemyHit:fxEnemyHit,fxUlt131:fxUlt131}[e[0]];if(f)f.apply(null,e[1])}catch(er){}});
@@ -8522,7 +8534,7 @@ function encounter146(p){var a=String(p||'').split(':'),nw=Date.now();if(a.lengt
  try{hunt();if(s.battle&&s.battle.kind==='monster'){if(s.battle.e.mapBoss)s.battle.fboss=1;else mkGroup(s.battle);if(s.autoBoss==='flee'&&s.battle.e.boss){var n=s.battle.e.n;s.battle=null;s.bossRun=(s.bossRun|0)+1;say('เจอบอส '+n+' — หนีออกมาแล้ว')}}}finally{FIELD_PICK=-1;FIELD_BOSS=false;FIELD_NOCD=false}}
 var moveBefore146=fieldMove;
 fieldMove=function(dt,tn){var x=FLD.px,y=FLD.py;moveBefore146(dt,tn);var E=ENCOUNTER146;if(E.z!==FLD.z){E.z=FLD.z;E.walk=0;E.need=100+Math.random()*100;E.last=0}
- if(!s||!s.autoHunt||s.battle||FLD.town||FLD.gat&&FLD.gat.on||FLD.hold||ptFollowOn()){E.walk=0;return}
+ if(!s||SHORE155.walk||SHORE155.active||!s.autoHunt||s.battle||FLD.town||FLD.gat&&FLD.gat.on||FLD.hold||ptFollowOn()){E.walk=0;return}
  var d=Math.hypot(FLD.px-x,FLD.py-y);if(d>0&&d<=Math.max(12,dt*100))E.walk+=d;
  if(E.walk<E.need||s.energy<2||s.dup||s.res||nowMs()<FLD.grace||Date.now()-E.last<8000||battlePresentationActive()||scene53Busy())return;
  if(CL&&(NET68.needSync||navigator.onLine===false||NET.busy||NET.q.length))return;
@@ -8674,14 +8686,6 @@ function fishState152(o){
  return o.fish152;
 }
 function fishCount152(f){return FISH152.filter(function(_,i){return f.best[i]>0}).length}
-function fishTick152(){
- var button=document.getElementById('fishReel152');if(!button||!s)return;
- var f=fishState152(s),c=f.cast,now=Date.now(),active=c&&now<=c.end;
- var baits=document.getElementById('fishBaits152'),status=document.getElementById('fishStatus152');
- baits.hidden=!!active;button.hidden=!active;button.disabled=!active||now<c.bite;
- var label=active?(now<c.bite?'กำลังรอปลากินเหยื่อ…':'ปลากินเหยื่อแล้ว! ดึงเบ็ดเลย'):c?'ปลาหลุดเบ็ด · เหวี่ยงใหม่ได้เลย':f.last||'เหวี่ยงเบ็ดแล้วรอปลากินเหยื่อ';
- if(status.textContent!==label)status.textContent=label;
-}
 TITLES.push({id:'fishall152',n:'นักตกปลาแห่งจันทร์สะท้อน',c:'#8bf4df',d:'สะสมปลาครบ 10 ชนิด',need:10,cur:function(){return fishCount152(fishState152(s))}});
 TITLES.push({id:'fishpond152',n:'ผู้เฝ้าบ่อเมืองหลวง',c:'#8bf4df',d:'แลกด้วยเหรียญตกปลา',need:1,cur:function(){return fishState152(s).title?1:0}});
 
@@ -8697,8 +8701,9 @@ var FISH_STATS153=['แรงดึง','ควบคุมเบ็ด','โช
 var FISH_BAITS153={plain:['ธรรมดา',0,1],silver:['เงิน',300,1.6],gold:['ทอง',500,2.2],glow:['เรืองแสง',0,2]};
 function pondFish153(p){
  if(!p)return FISH152;
- return FISH_PONDS153[p-1].map(function(n,i){return ['ปลา'+n.replace(/^ปลา/,''),9+p*3+i*10,25+p*6+i*20,[81,17,2][i]]});
+ return FISH_PONDS153[p-1].concat(FISH_EXTRA155[p-1]).map(function(n,i){return ['ปลา'+n.replace(/^ปลา/,''),9+p*3+i*5,25+p*6+i*12,[22,17,11,14,11,9,7,4,3,2][i]]});
 }
+function pondNeed155(p){return p<=1?1:p*5}
 function fishLevel153(f){return Math.min(50,1+Math.floor((f.xp||0)/16))}
 function fishUsed153(f){return f.day===dqDay()?f.used||0:0}
 function fishKey153(p,i){return p?p+':'+i:String(i)}
@@ -8721,7 +8726,7 @@ calcMax=function(o){return fishMaxBefore153(o)+fishBonus153(o).hp};
 calcMaxMp=function(o){return fishMpBefore153(o)+fishBonus153(o).mp};
 pAtk=function(){return fishAtkBefore153()+fishBonus153(s).atk};
 pDef=function(){return fishDefBefore153()+fishBonus153(s).def};
-function fishRarity153(p,i){return p?i+1:i===9?3:i>=7?2:1}
+function fishRarity153(p,i){return i===9||p&&i===2?3:i>=7||p&&i===1?2:1}
 function fishActions153(a,p){
  if(!['fishcast','fishreel','fishbuy','fishup','fishacast','fishareel'].includes(a))return false;
  if(!s.created||s.battle||s.dup)return true;
@@ -8730,18 +8735,20 @@ function fishActions153(a,p){
  var f=fishState152(s),now=Date.now(),used=fishUsed153(f),stats=f.stats||[0,0,0];
  if(a==='fishcast'||a==='fishacast'){
   if(f.cast&&now<=f.cast.end)return true;
-  var parts=String(p).split(':'),key=parts[0],pond=parts.length===1?0:Number(parts[1]);
-  if(!Object.prototype.hasOwnProperty.call(FISH_BAITS153,key)||!Number.isInteger(pond)||pond<0||pond>10||fishLevel153(f)<pond*5)return true;
+  var parts=String(p).split(':'),key=parts[0],pond=Number(parts[1]);
+  if(!Object.prototype.hasOwnProperty.call(FISH_BAITS153,key)||!Number.isInteger(pond)||pond<1||pond>10||pond!==s.zone+1||fishLevel153(f)<pondNeed155(pond)||parts.length!==4||!shoreNear155(Number(parts[2]),Number(parts[3])))return true;
   if(used>=FISH_LIMIT153&&(auto||key!=='plain'))return true;
   var bait=FISH_BAITS153[key];
   if(s.gold<bait[1]||key==='glow'&&f.coins<3)return true;
   s.gold-=bait[1];if(key==='glow')f.coins-=3;
   var bite=now+rnd(2300,4600);
-  f.cast={id:now,bite:bite,end:bite+3500+stats[1]*180,bait:key,pond:pond,practice:used>=FISH_LIMIT153};f.last='';
+  f.cast={id:now,bite:bite,end:bite+1350+stats[1]*150,bait:key,pond:pond,practice:used>=FISH_LIMIT153};f.last='';
  }else if(a==='fishreel'||a==='fishareel'){
-  var cast=f.cast;if(!cast||String(cast.id)!==p||now<cast.bite)return true;
+  var cast=f.cast;if(!cast||!cast.pond||cast.pond!==s.zone+1||String(cast.id)!==p)return true;
+  if(auto&&now<cast.bite)return true;
   f.cast=null;
-  if(now>cast.end)f.last='ปลาหลุดเบ็ด · เหวี่ยงใหม่ได้เลย';
+  if(now<cast.bite)f.last='ดึงเร็วไป · รอให้เข็มเข้าเขตสีเขียว';
+  else if(now>cast.end)f.last='ปลาหลุดเบ็ด · เหวี่ยงใหม่ได้เลย';
   else if(cast.practice||used>=FISH_LIMIT153)f.last='ดึงทัน! รอบนี้เป็นรอบซ้อม';
   else{
    var pond=cast.pond||0,fish=pondFish153(pond),bonus=fishBonus153(s),bait=FISH_BAITS153[cast.bait]||FISH_BAITS153[cast.glow?'glow':'plain'];
@@ -8766,52 +8773,15 @@ function fishActions153(a,p){
  }
  save();render();return true;
 }
-function fishView153(){
- var f=fishState152(s),cast=f.cast,p=FISH_UI153.pond,level=fishLevel153(f),used=fishUsed153(f),stats=f.stats||[0,0,0],bonus=fishBonus153(s),points=fishPoints153(f);
- var ponds=['เมืองหลวง'].concat(ZONES.map(function(z){return z.n}));
- return '<section class="card fish152"><p class="eyebrow">สมาคมตกปลาเมืองหลวง · ใช้พลัง 0</p><h2>🎣 '+esc(ponds[p])+'</h2><p>เลเวลตกปลา <b>'+level+'/50</b> · EXP '+(level===50?'เต็ม':(f.xp||0)%16+'/16')+' · รับรางวัลวันนี้ <b>'+used+'/60</b> · เหรียญ <b>'+f.coins+'</b></p>'+
- '<div class="fish-controls152">'+ponds.map(function(name,i){return '<button class="btn sm" data-a="fishpond" data-p="'+i+'" aria-pressed="'+(p===i)+'"'+(level<i*5?' disabled':'')+'>'+esc(name)+(i?' · ตกปลา Lv'+i*5:'')+'</button>'}).join('')+'</div>'+
- '<p id="fishStatus152" role="status">'+esc(f.last||'เลือกเหยื่อแล้วเหวี่ยงเบ็ด')+'</p>'+
- '<button class="btn primary" id="fishReel152" data-a="fishreel" data-p="'+(cast?cast.id:0)+'" disabled hidden>ดึงเบ็ด!</button>'+
- '<div id="fishBaits152" class="fish-controls152">'+Object.keys(FISH_BAITS153).map(function(k){var b=FISH_BAITS153[k];return '<button class="btn" data-a="fishcast" data-p="'+k+':'+p+'"'+(s.gold<b[1]||k==='glow'&&f.coins<3||used>=60&&k!=='plain'?' disabled':'')+'>'+b[0]+' · '+(k==='glow'?'3 เหรียญ':b[1]?b[1]+' ทอง':used>=60?'ซ้อมฟรี':'ฟรี')+'</button>'}).join('')+'</div>'+
- (mc105On()?'<p><label>เหยื่อออโต้ <select id="fishBait153">'+Object.keys(FISH_BAITS153).map(function(k){return '<option value="'+k+'"'+(k===FISH_UI153.bait?' selected':'')+'>'+FISH_BAITS153[k][0]+'</option>'}).join('')+'</select></label> <label><input type="checkbox" id="fishFallback153"'+(FISH_UI153.fallback?' checked':'')+'> สลับเหยื่อฟรีเมื่อจ่ายไม่ไหว</label></p><button class="btn primary" data-a="fishauto">'+(FISH_UI153.auto?'หยุดออโต้':'เปิดออโต้')+'</button>':'<p class="hint">ออโต้ตกปลาสำหรับบัตรรายเดือน · ใช้โควต้าร่วมกับการตกเอง</p>')+
- '<h3>แต้มตกปลา '+points+'</h3><div class="fish-controls152">'+FISH_STATS153.map(function(n,i){return '<button class="btn" data-a="fishup" data-p="'+i+'"'+(!points||stats[i]>=10?' disabled':'')+'>'+n+' '+stats[i]+'/10 · +</button>'}).join('')+'</div><p class="hint">แรงดึงช่วยลุ้นปลาตัวใหญ่ · ควบคุมเบ็ดเพิ่มเวลาดึง · โชคช่วยพบปลาหายาก</p>'+
- '<h3>สมุดปลา '+fishBookCount153(f,p)+'/'+pondFish153(p).length+'</h3>'+pondFish153(p).map(function(row,i){var best=f.best[fishKey153(p,i)];return '<div class="oddrow"><span>'+row[0]+'</span><b>'+(best?best+' ซม.':'ยังไม่พบ')+'</b></div>'}).join('')+
- '<p class="hint">'+(p?'พบ 1 ชนิด +'+(p%2?'MP 5':'HP 10')+' · 2 ชนิด +'+(p%2?'แรงดึง':'โชค')+' 1 · ครบ 3 ชนิด +'+(p%2?'โจมตี':'ป้องกัน')+' 1 และฉายา':'พบ 3 ชนิด HP +30 · 6 ชนิด ป้องกัน +2 · ครบ 10 ชนิด โจมตี +2 และฉายา')+'</p>'+
- '<p>โบนัสรวม HP +'+bonus.hp+' · MP +'+bonus.mp+' · โจมตี +'+bonus.atk+' · ป้องกัน +'+bonus.def+' · แรงดึง +'+bonus.pull+' · โชค +'+bonus.luck+'</p>'+
- '<p class="hint">ปลาซ้ำให้ 1 / 2 / 3 เหรียญตามความหายาก</p><button class="btn" data-a="fishbuy"'+(f.title||f.coins<20?' disabled':'')+'>'+(f.title?'แลกฉายาแล้ว':'แลกฉายา · 20 เหรียญ')+'</button> <button class="btn" data-a="bback">กลับเมือง</button></section>';
-}
 function fishLocal153(a,p){
  if(a==='fishpond'){
-  var pond=Number(p);if(BAWAY==='fish'&&Number.isInteger(pond)&&pond>=0&&pond<=10&&fishLevel153(fishState152(s))>=pond*5){FISH_UI153.pond=pond;FISH_UI153.auto=false;render()}return true;
- }
- if(a==='fishauto'){
-  if(BAWAY==='fish'&&mc105On()&&fishUsed153(fishState152(s))<60){
-   FISH_UI153.auto=!FISH_UI153.auto;render();
-  }return true;
+  var pond=Number(p);if(BAWAY==='fish'&&Number.isInteger(pond)&&pond>=0&&pond<=10){FISH_UI153.pond=pond;FISH_UI153.auto=false;render()}return true;
  }
  return false;
 }
-function fishAuto153(){
- var ui=FISH_UI153;
- if(BAWAY!=='fish'||!s||s.battle||!FLD.town||TOWN.war){ui.auto=false;return}
- var pick=document.getElementById('fishBait153'),fallback=document.getElementById('fishFallback153');
- if(pick)ui.bait=pick.value;if(fallback)ui.fallback=fallback.checked;
- if(!ui.auto||Date.now()<ui.at||CL&&(NET.busy||NET.tickBusy||NET.q.length))return;
- var f=fishState152(s);
- if(!mc105On()||fishUsed153(f)>=60){ui.auto=false;render();return}
- var now=Date.now(),c=f.cast;
- if(c&&now<c.bite)return;
- if(c&&now<=c.end){ui.at=now+450;act('fishareel',String(c.id));return}
- var key=ui.bait,bait=FISH_BAITS153[key];
- if(s.gold<bait[1]||key==='glow'&&f.coins<3){
-  if(!ui.fallback){ui.auto=false;render();return}key='plain';
- }
- ui.at=now+700;act('fishacast',key+':'+ui.pond);
-}
 FISH_PONDS153.forEach(function(_,i){var p=i+1;TITLES.push({id:'fishmap153'+p,n:'นักตกปลาแห่ง'+ZONES[i].n,d:'สะสมปลาประจำบ่อครบ 3 ชนิด',c:'#8bf4df',need:3,cur:function(){return fishBookCount153(fishState152(s),p)}})});
 
-var PORTAL154={x:785,y:708,open:false};
+var PORTAL154={x:720,y:540,open:false};
 function portalIcon154(i){
  var frames=['M7 29V17Q7 4 16 4T25 17V29M7 19L2 13M25 19L30 13',
  'M6 29L4 12 11 4 18 7 23 3 29 13 26 29Z','M5 29V14L11 10 16 2 22 12 27 16V29Z',
@@ -8847,28 +8817,167 @@ function portalDraw154(c,x,y,t){
  c.restore();
 }
 function portalTap154(p){
- if(!TOWN.on||!FLD.town||TOWN.war||s.battle)return false;
- var target=townProject(PORTAL154.x,PORTAL154.y),tap=townProject(p.x,p.y);
- if(Math.abs(tap[0]-target[0])>35||tap[1]-target[1]<-78||tap[1]-target[1]>13)return false;
+ if(TOWN.war||s.battle||SHORE155.active)return false;
+ var gate=FLD.town?PORTAL154:GATE155,target=townProject(gate.x,gate.y),tap=townProject(p.x,p.y);
+ if(Math.abs(tap[0]-target[0])>35||tap[1]-target[1]<-100||tap[1]-target[1]>13)return false;
  FLD.hold=false;FLD.tx=FLD.ty=null;FLD.path=null;
  PORTAL154.open=true;render();return true;
 }
 function portalLocal154(a,p){
  if(a==='portalopen'||a==='portalclose'){
-  PORTAL154.open=a==='portalopen'&&TOWN.on&&FLD.town&&!TOWN.war&&!s.battle;
+  PORTAL154.open=a==='portalopen'&&!TOWN.war&&!s.battle;
   render();return true;
  }
  if(a!=='portaltravel')return false;
- if(!PORTAL154.open||!TOWN.on||TOWN.war||s.battle||!/^\d+$/.test(p))return true;
+ if(!PORTAL154.open||TOWN.war||s.battle||!/^\d+$/.test(p))return true;
  var zone=Number(p);
  if(!ZONES[zone]||s.lvl<ZONES[zone].rec)return true;
  if(CL){
   if(!NET.q.some(function(q){return q.a==='portalzone'})&&!(NET68.inflight&&NET68.inflight.a==='portalzone'))netAct('portalzone',p);
  }else{
   act('zone',p);
-  if(s.zone===zone){PORTAL154.open=false;townGo(false)}
+  if(s.zone===zone){PORTAL154.open=false;shoreStop155();if(TOWN.on)townGo(false);else render()}
  }
  return true;
+}
+
+var SHORE155={x:385,y:235,waterX:235,waterY:235,active:false,walk:false,zone:-1,auto:false,at:0};
+var GATE155={x:720,y:540,image:null};
+var FISH_EXTRA155=[
+ ['ใบเฟิร์น','หางสน','เกล็ดไม้','ดอกบัว','กิ่งหยก','เงาพง','วิญญาณป่า'],
+ ['หยดแร่','ครีบหิน','คริสตัล','เงาค้างคาว','ไข่มุกถ้ำ','ผลึกม่วง','จอมถ้ำ'],
+ ['ถ่านแดง','ควันไฟ','สะเก็ดไฟ','หางอัคคี','แก้วลาวา','สุริยัน','อสูรเพลิง'],
+ ['ทรายทอง','หางอูฐ','อัญมณีทราย','โอเอซิส','ครีบตะวัน','เม็ดทอง','ภูตทะเลทราย'],
+ ['ครีบหิมะ','เกล็ดแก้ว','ธารเย็น','หางธารา','ผลึกขาว','จันทร์หนาว','ราชันน้ำแข็ง'],
+ ['เงาหอคอย','ครีบคำสาป','ม่านรัตติกาล','หางม่วง','วิญญาณดำ','เนตรอสูร','ราชันอเวจี'],
+ ['ใบหนอง','ครีบตะไคร่','พรายบึง','พิษมรกต','หางเห็ด','เงาบึง','ราชาหนอง'],
+ ['ครีบวายุ','หยดฝน','หางเมฆ','ครีบอัสนี','หมอกฟ้า','สายฟ้าทอง','มังกรพายุ'],
+ ['ดาวเงิน','วงแหวนดาว','เกล็ดเนบิวลา','ดาวตก','ไข่มุกจันทรา','ครีบกาแล็กซี','ราชันดารา'],
+ ['ครีบสุญญะ','หางรอยแยก','เกล็ดมิติ','ครีบผลึก','เงาจักรวาล','ดาวดับ','จ้าวห้วงมิติ']
+];
+function shoreNear155(x,y){return Math.hypot(x-SHORE155.x,y-SHORE155.y)<=34}
+function shoreReady155(){return s&&!s.battle&&!s.res&&!s.dup&&!FLD.town&&!BAWAY&&FLD.z===s.zone&&shoreNear155(FLD.px,FLD.py)}
+function shoreStop155(){SHORE155.active=SHORE155.walk=SHORE155.auto=false}
+function shoreAction155(a,p){
+ if(a==='shoreclose'){shoreStop155();render();return true}
+ if(a==='shoreopen'){
+  if(!s||s.battle||s.res||s.dup||FLD.town||BAWAY||FLD.z!==s.zone)return true;
+  if(!shoreReady155()){
+   SHORE155.walk=true;SHORE155.zone=s.zone;
+   FLD.tx=SHORE155.x;FLD.ty=SHORE155.y;FLD.follow=null;FLD.path=null;return true;
+  }
+  var f=fishState152(s);
+  if(fishLevel153(f)<pondNeed155(s.zone+1)){fieldSay('บ่อนี้ต้องเลเวลตกปลา '+pondNeed155(s.zone+1));return true}
+  SHORE155.active=true;SHORE155.walk=false;SHORE155.zone=s.zone;SHORE155.auto=false;
+  FLD.tx=FLD.ty=null;FLD.follow=null;FLD.path=null;FLD.moving=false;FLD.spriteDir=2;
+  render();return true;
+ }
+ if(a==='shoreauto'){
+  if(SHORE155.active&&shoreReady155()&&mc105On()&&fishUsed153(fishState152(s))<60){
+   SHORE155.auto=!SHORE155.auto;render();
+  }return true;
+ }
+ return false;
+}
+function shoreCastParam155(bait){return bait+':'+(s.zone+1)+':'+Math.round(FLD.px)+':'+Math.round(FLD.py)}
+function shorePanel155(){
+ if(!SHORE155.active||SHORE155.zone!==s.zone||!shoreReady155())return '';
+ var f=fishState152(s),used=fishUsed153(f),cast=f.cast&&f.cast.pond===s.zone+1?f.cast:null;
+ return '<section class="shore-panel155 card" aria-label="ตกปลาริมหนอง"><header><b>🎣 '+esc(ZONES[s.zone].n)+'</b><button class="btn sm" data-a="shoreclose">หยุด ✕</button></header>'+
+ '<small>Lv ตกปลา '+fishLevel153(f)+' · '+used+'/60 ตัววันนี้ · พลัง 0</small><p id="fishStatus152" role="status">'+esc(f.last||'เลือกเหยื่อแล้วเหวี่ยงเบ็ด')+'</p>'+
+ '<div id="shoreGauge155" class="shore-gauge155" hidden aria-hidden="true"><i></i><b></b></div>'+
+ '<button class="btn primary" id="fishReel152" data-a="fishreel" data-p="'+(cast?cast.id:0)+'" disabled hidden>ดึงเบ็ด</button>'+
+ '<div class="fish-controls152" id="fishBaits152">'+Object.keys(FISH_BAITS153).map(function(key){
+  var bait=FISH_BAITS153[key],locked=s.gold<bait[1]||key==='glow'&&f.coins<3||used>=60&&key!=='plain';
+  return '<button class="btn sm" data-a="fishcast" data-p="'+shoreCastParam155(key)+'"'+(locked?' disabled':'')+'>'+bait[0]+' · '+(key==='glow'?'3 เหรียญ':bait[1]?bait[1]+' ทอง':used>=60?'ซ้อมฟรี':'ฟรี')+'</button>';
+ }).join('')+'</div>'+
+ (mc105On()?'<div class="fish-controls152"><label>เหยื่อออโต้ <select id="fishBait153">'+Object.keys(FISH_BAITS153).map(function(key){return '<option value="'+key+'"'+(key===FISH_UI153.bait?' selected':'')+'>'+FISH_BAITS153[key][0]+'</option>'}).join('')+'</select></label><label><input type="checkbox" id="fishFallback153"'+(FISH_UI153.fallback?' checked':'')+'> สลับเป็นเหยื่อฟรี</label><button class="btn sm" data-a="shoreauto">'+(SHORE155.auto?'หยุดออโต้':'เปิดออโต้')+'</button></div>':'<small>ออโต้ตกปลา · บัตรรายเดือน 99 บาท</small>')+'</section>';
+}
+function shoreTick155(){
+ var go=document.getElementById('shoreGo155'),near=shoreReady155();
+ if(go){var label=near?'🎣 ตกปลา':'🎣 ไปหนองน้ำ';if(go.textContent!==label)go.textContent=label}
+ if(SHORE155.walk&&(!s||SHORE155.zone!==s.zone||s.battle||FLD.town||BAWAY))SHORE155.walk=false;
+ if(!SHORE155.active)return;
+ if(!near||SHORE155.zone!==s.zone){shoreStop155();return}
+ var button=document.getElementById('fishReel152');if(!button)return;
+ var f=fishState152(s),c=f.cast&&f.cast.pond===s.zone+1?f.cast:null,now=Date.now(),active=c&&now<=c.end;
+ var baits=document.getElementById('fishBaits152'),status=document.getElementById('fishStatus152'),g=document.getElementById('shoreGauge155');
+ baits.hidden=!!active;button.hidden=!active;button.disabled=!active||SHORE155.auto;
+ g.hidden=!active;
+ if(active){
+  var span=c.end-c.id;
+  g.style.setProperty('--target',100*(c.bite-c.id)/span+'%');
+  g.style.setProperty('--cursor',Math.min(100,Math.max(0,100*(now-c.id)/span))+'%');
+ }
+ var label=active?(now<c.bite?'กดเมื่อเข็มเข้าเขตสีเขียว':'ได้จังหวะ! ดึงเบ็ดเลย'):c?'ปลาหลุดเบ็ด · เหวี่ยงใหม่ได้เลย':f.last||'เลือกเหยื่อแล้วเหวี่ยงเบ็ด';
+ if(status.textContent!==label)status.textContent=label;
+ var pick=document.getElementById('fishBait153'),fallback=document.getElementById('fishFallback153');
+ if(pick)FISH_UI153.bait=pick.value;if(fallback)FISH_UI153.fallback=fallback.checked;
+ if(!SHORE155.auto||now<SHORE155.at||CL&&(NET.busy||NET.tickBusy||NET.q.length||NET68.needSync||navigator.onLine===false))return;
+ if(!mc105On()||fishUsed153(f)>=60){SHORE155.auto=false;render();return}
+ if(active){
+  if(now<c.bite+140)return;
+  SHORE155.at=now+650;act('fishareel',String(c.id));return;
+ }
+ var key=FISH_UI153.bait,bait=FISH_BAITS153[key];
+ if(s.gold<bait[1]||key==='glow'&&f.coins<3){
+  if(!FISH_UI153.fallback){SHORE155.auto=false;render();return}key='plain';
+ }
+ SHORE155.at=now+700;act('fishacast',shoreCastParam155(key));
+}
+function shorePondDraw155(c,t){
+ var x=fieldScreenX(SHORE155.waterX,SHORE155.waterY),y=fieldScreenY(SHORE155.waterX,SHORE155.waterY);
+ if(x<-150||y<-100||x>artWidth74(c.canvas)+150||y>artHeight74(c.canvas)+100)return;
+ var tint=HUNT_ART150[s.zone][0];
+ c.save();c.translate(x,y);
+ function oval(rx,ry,fill){c.beginPath();c.ellipse(0,0,rx,ry,-.08,0,Math.PI*2);c.fillStyle=fill;c.fill()}
+ oval(128,67,'#142d3a');oval(119,59,'#739b83');
+ var water=c.createLinearGradient(0,-54,0,52);water.addColorStop(0,'#113a63');water.addColorStop(1,'#388e9e');
+ oval(111,53,water);
+ c.strokeStyle=tint;c.lineWidth=1;
+ for(var i=0;i<5;i++){var a=(t/80+i*17)%75;c.globalAlpha=(1-a/75)*.38;c.beginPath();c.ellipse((i%2?1:-1)*18,i*7-16,12+a,.8+a*.23,0,0,Math.PI*2);c.stroke()}
+ c.globalAlpha=.9;c.fillStyle=tint;
+ for(var j=0;j<9;j++){var a=j*.72;c.fillRect(Math.cos(a)*116,Math.sin(a)*53,2,4)}
+ c.restore();
+ var sx=fieldScreenX(SHORE155.x,SHORE155.y),sy=fieldScreenY(SHORE155.x,SHORE155.y);
+ c.strokeStyle=tint;c.beginPath();c.ellipse(sx,sy,15,7,0,0,Math.PI*2);c.stroke();
+ fLabel(c,'🎣 จุดตกปลา',sx,sy-12,tint);
+}
+function shoreRod155(c,x,y,t){
+ c.save();c.lineCap='round';c.lineWidth=2;c.strokeStyle='#e8b975';c.beginPath();c.moveTo(x-3,y-14);c.quadraticCurveTo(x-18,y-32,x-33,y-30);c.stroke();
+ c.lineWidth=1;c.strokeStyle='#e6fff3';c.beginPath();c.moveTo(x-33,y-30);c.quadraticCurveTo(x-37,y-18,x-44,y-7);c.stroke();
+ c.fillStyle='#ff7958';c.beginPath();c.ellipse(x-44,y-7+Math.sin(t/260),2.5,1.5,0,0,Math.PI*2);c.fill();c.restore();
+}
+function gateAsset155(){
+ if(SV||GATE155.image)return;
+ var im=new Image();im.src='assets/images/warp155.webp';GATE155.image=im;
+}
+var portalFallback155=portalDraw154;
+portalDraw154=function(c,x,y,t){
+ gateAsset155();var im=GATE155.image;
+ if(!im||!im.complete||!im.naturalWidth){portalFallback155(c,x,y,t);return}
+ var h=99,w=h*im.naturalWidth/im.naturalHeight;
+ c.save();c.imageSmoothingEnabled=true;c.drawImage(im,x-w/2,y-h+5,w,h);c.restore();
+};
+function fieldGate155(c,t){
+ var x=fieldScreenX(GATE155.x,GATE155.y),y=fieldScreenY(GATE155.x,GATE155.y);
+ if(x<-60||x>artWidth74(c.canvas)+60||y<-10||y>artHeight74(c.canvas)+100)return;
+ portalDraw154(c,x,y,t);fLabel(c,'ประตูวาร์ป',x,y-100,'#adfff3');
+}
+function fishBook155(){
+ var f=fishState152(s),p=FISH_UI153.pond,level=fishLevel153(f),points=fishPoints153(f),stats=f.stats||[0,0,0],bonus=fishBonus153(s);
+ var names=['สมุดเมืองหลวงเดิม'].concat(ZONES.map(function(z){return z.n}));
+ return '<section class="card fish152"><p class="eyebrow">สมาคมตกปลา · คลังปลาประจำแผนที่</p><h2>📖 สมุดสะสมปลา</h2>'+
+ '<p>เลเวลตกปลา <b>'+level+'/50</b> · EXP '+(level===50?'เต็ม':(f.xp||0)%16+'/16')+' · เหรียญ '+f.coins+' · วันนี้ '+fishUsed153(f)+'/60</p>'+
+ '<div class="fish-controls152">'+names.map(function(name,i){return '<button class="btn sm" data-a="fishpond" data-p="'+i+'" aria-pressed="'+(p===i)+'">'+esc(name)+'</button>'}).join('')+'</div>'+
+ '<h3>'+esc(names[p])+' · '+fishBookCount153(f,p)+'/10</h3>'+(p?'<p class="hint">เลเวลตกปลา '+pondNeed155(p)+' · ไปยืนริมหนองน้ำในแผนที่นี้</p>':'<p class="hint">เก็บสถิติและโบนัสจากบ่อเมืองหลวงเวอร์ชันเดิม</p>')+
+ '<div class="fish-book155">'+pondFish153(p).map(function(row,i){
+  var best=f.best[fishKey153(p,i)],rarity=fishRarity153(p,i),kind=['','ทั่วไป','หายาก','ตำนาน'][rarity];
+  return '<article class="fish-card155 fish-r'+rarity+'">'+(p?'<span class="fish-art155" role="img" aria-label="'+esc(row[0])+'" style="background-position:'+i*100/9+'% '+(p-1)*100/9+'%"></span>':'<span class="fish-legacy155" aria-hidden="true">🐟</span>')+'<b>'+esc(row[0])+'</b><small>'+kind+' · '+(best?'ใหญ่สุด '+best+' ซม.':'ยังไม่พบ')+'</small></article>';
+ }).join('')+'</div>'+
+ '<h3>แต้มตกปลา '+points+'</h3><div class="fish-controls152">'+FISH_STATS153.map(function(n,i){return '<button class="btn" data-a="fishup" data-p="'+i+'"'+(!points||stats[i]>=10?' disabled':'')+'>'+n+' '+stats[i]+'/10 · +</button>'}).join('')+'</div>'+
+ '<p>โบนัสรวม HP +'+bonus.hp+' · MP +'+bonus.mp+' · โจมตี +'+bonus.atk+' · ป้องกัน +'+bonus.def+' · แรงดึง +'+bonus.pull+' · โชค +'+bonus.luck+'</p>'+
+ '<p class="hint">ปลาซ้ำให้ 1–3 เหรียญตามความหายาก · เหยื่อเรืองแสง 3 เหรียญต่อครั้ง</p><button class="btn" data-a="fishbuy"'+(f.title||f.coins<20?' disabled':'')+'>'+(f.title?'แลกฉายาแล้ว':'แลกฉายา · 20 เหรียญ')+'</button> <button class="btn" data-a="bback">กลับเมือง</button></section>';
 }
 
 if(!SV)requestAnimationFrame(frame);
