@@ -76,6 +76,7 @@ function loadEngine(htmlPath) {
   return {
     fresh: () => clone(E.fresh()),
     normalize: o => clone(E.normalize(o)),
+    enhancementVisual: st => E.enhancementVisual(st),
     snap: st => { try { return E.snap(clone(st)); } catch (e) { return null; } },
     setBoard: (b, uid) => E.setBoard(b, uid),
     setWB: w => E.setWB(w),

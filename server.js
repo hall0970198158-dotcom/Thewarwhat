@@ -421,7 +421,7 @@ function playerLook52(o){
  const collect59=Number.isInteger(z)&&z>=0&&z<9&&c.q&&Array.isArray(c.q[z])&&c.q[z].length===3&&c.q[z].every(n=>n>=3)?colors[z]:null;
  const pet=o.look&&o.look.pet,owned=['cat','pcat','slime','peng','fox','bunny','owl','dragon','dawnbird73'].includes(pet)&&o.owned&&Array.isArray(o.owned.pet)&&o.owned.pet.includes(pet),p=o.book70&&o.book70.pets&&o.book70.pets[pet];
  const max=p&&Number.isFinite(p.bond)&&p.bond>=500?3:p&&Number.isFinite(p.bond)&&p.bond>=100?2:1,stage=owned&&p?Math.max(1,Math.min(max,p.stage|0)):1,petStage70=owned&&p?Math.max(1,Math.min(stage,p.form|0||stage)):1;
- return Object.assign({},o.look||{},{tier,br,collect59,petStage70});
+ return Object.assign({},o.look||{},{tier,br,collect59,petStage70,enh147:engine.enhancementVisual(o)});
 }
 function ptRefresh(m) { const q = live.get(m.uid); if (q && q.s) { m.n = String(q.s.name || m.n).slice(0, 16); m.cls = q.s.cls || m.cls; m.lvl = q.s.lvl | 0; m.z = q.s.zone | 0; m.b = q.s.battle ? 1 : 0; m.look = playerLook52(q.s); m.hp = Math.max(0,Number(q.s.hp)||0); m.mhp = Math.max(1,Number(q.s.maxhp)||1); } }
 function ptNear(uid, s) { // เพื่อนที่ออนไลน์ อยู่แผนที่เดียวกัน และเลเวลห่างไม่เกิน 15
