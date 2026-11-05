@@ -1306,6 +1306,7 @@ var ZONES=[
  {n:'ขอบจักรวาล',rec:100,max:120,gather:['ore','stone','hide'],amt:[5,8],mobs:[
   {n:'ค้างคาวดารา',k:'starbat',s:[.85,.9,.8,.8,.8],drops:{hide:[7,10],ore:[5,8]}},
   {n:'มังกรจักรวาล',k:'cosmicdragon',s:[1.5,1.25,1.6,1.4,1.5],drops:{hide:[9,12],ore:[7,10]}}]}
+ ,{n:'ห้วงอเวจีดารา',rec:121,max:150,gather:['ore','stone','hide'],amt:[6,10],mobs:[{n:'ค้างคาวห้วงอเวจี',k:'abyssbat146',s:[.85,.9,.8,.8,.8],drops:{hide:[9,12],ore:[7,10]}},{n:'มังกรเกราะห้วงอเวจี',k:'abyssdragon146',s:[1.5,1.25,1.6,1.4,1.5],drops:{hide:[11,15],ore:[9,13]}}]}
 ];
 var COL59=[
  ['เขี้ยวหมาป่าโบราณ','ขนหมูป่าสีเงิน','ตราผู้พิทักษ์ป่า','ผู้รู้ใจพงไพร','#85d98b'],
@@ -1316,14 +1317,15 @@ var COL59=[
  ['ปีกค้างคาวอเวจี','เกล็ดมังกรเงา','ตราปราสาทร้าง','ผู้เปิดประตูอเวจี','#bb8aff'],
  ['เขี้ยวงูหยก','แกนโคลนพิษ','ดอกบัวมรณะ','ผู้เดินผ่านม่านพิษ','#a6e85a'],
  ['เขี้ยวหมาป่าอัสนี','เกล็ดมังกรสายฟ้า','เศษระฆังเมฆา','ผู้ฟังเสียงอัสนี','#77cfff'],
- ['ปีกค้างคาวดารา','เกล็ดมังกรจักรวาล','เศษดาวแรกกำเนิด','นักเดินทางข้ามดารา','#ffa7dd']
+ ['ปีกค้างคาวดารา','เกล็ดมังกรจักรวาล','เศษดาวแรกกำเนิด','นักเดินทางข้ามดารา','#ffa7dd'],
+ ['ปีกห้วงอเวจี','เกล็ดมังกรเกราะดารา','แกนไททันสูญญากาศ','ผู้พิชิตห้วงอเวจีดารา','#80eaff']
 ];
 var COL_UI59={z:0,session:false,show:false,scroll:0};
 function colInt59(v,max){return Number.isFinite(v)?Math.max(0,Math.min(max,Math.floor(v))):0}
 function colNormalize59(o){
  var c=o.collect59&&typeof o.collect59==='object'&&!Array.isArray(o.collect59)?o.collect59:{},q=Array.isArray(c.q)?c.q:[],total=Array.isArray(c.total)?c.total:[],seen=Array.isArray(c.seen)?c.seen:[];
  c.q=COL59.map(function(_,z){return [0,1,2].map(function(i){return colInt59(q[z]&&q[z][i],3)})});
- c.total=Array.from({length:27},function(_,i){return colInt59(total[i],1e9)});c.seen=c.total.map(function(v,i){return Math.min(v,colInt59(seen[i],1e9))});
+ c.total=Array.from({length:ZONES.length*3},function(_,i){return colInt59(total[i],1e9)});c.seen=c.total.map(function(v,i){return Math.min(v,colInt59(seen[i],1e9))});
  c.pts=colInt59(c.pts,1e9);c.dup=colInt59(c.dup,1e9);c.seenDup=Math.min(c.dup,colInt59(c.seenDup,1e9));c.rev=colInt59(c.rev,1e9);
  c.fx=Number.isInteger(c.fx)&&c.fx>=0&&c.fx<9&&c.q[c.fx].every(function(n){return n===3})?c.fx:-1;o.collect59=c;return c;
 }
@@ -1406,11 +1408,11 @@ var BOOK_ART70=new Map(),RARE_ART70=new Map(),PET_ART70=new Map();
 function count70(n,max){return Number.isFinite(n)?Math.max(0,Math.min(max,Math.floor(n))):0}
 function bookNormalize70(o){
  var b=o.book70&&typeof o.book70==='object'&&!Array.isArray(o.book70)?o.book70:{},entries=Array.isArray(b.entries)?b.entries:[],pets=b.pets&&typeof b.pets==='object'?b.pets:{};
- b.entries=Array.from({length:27},function(_,i){var e=entries[i]||{},k=count70(e.k,1e9),r=Math.min(k,count70(e.r,1e9));return {k:k,r:r,s:Math.max(k,count70(e.s,1e9)),rs:Math.max(r,Math.min(count70(e.rs,1e9),Math.max(k,count70(e.s,1e9))))}});
+ b.entries=Array.from({length:ZONES.length*3},function(_,i){var e=entries[i]||{},k=count70(e.k,1e9),r=Math.min(k,count70(e.r,1e9));return {k:k,r:r,s:Math.max(k,count70(e.s,1e9)),rs:Math.max(r,Math.min(count70(e.rs,1e9),Math.max(k,count70(e.s,1e9))))}});
  b.pets={};PET_IDS70.forEach(function(id){var p=pets[id]||{},bond=count70(p.bond,500),max=bond>=500?3:bond>=100?2:1,stage=Math.max(1,Math.min(max,count70(p.stage,3)||1));b.pets[id]={bond:bond,stage:stage,form:Math.max(1,Math.min(stage,count70(p.form,3)||stage))}});b.v=1;o.book70=b;return b;
 }
 function bookState70(){return s.book70||bookNormalize70(s)}
-function bookMeta70(id){if(!Number.isInteger(id)||id<0||id>=27)return null;var z=Math.floor(id/3),i=id%3,d=ZONES[z].mobs[i===2?1:i];return {id:id,z:z,i:i,k:d.k,n:i===2?BOSSES[z]:d.n,boss:i===2}}
+function bookMeta70(id){if(!Number.isInteger(id)||id<0||id>=ZONES.length*3)return null;var z=Math.floor(id/3),i=id%3,d=ZONES[z].mobs[i===2?1:i];return {id:id,z:z,i:i,k:d.k,n:i===2?BOSSES[z]:d.n,boss:i===2}}
 function bookIndex70(e){if(!e||!e.field||!Number.isInteger(e.zi)||!ZONES[e.zi])return -1;var z=ZONES[e.zi],i=e.mapBoss?2:z.mobs.findIndex(function(m){return m.k===e.k});return i<0?-1:e.zi*3+i}
 function bookEligible70(b,e){return !!(b&&b.kind==='monster'&&!b.tower&&!b.wb&&!b.j4Trial&&!b.joint&&bookIndex70(e)>=0)}
 function bookRegister70(b){
@@ -1429,11 +1431,11 @@ function petAction70(a,p){
  var b=bookState70(),v=b.pets[id];if(a==='petevolve70'){if(s.battle||s.res||s.autoHunt||s.autoTower||n!==v.stage||n>=3||v.bond<(n===1?100:500))return true;v.stage++;v.form=v.stage;say('♥ '+COS.pet.find(function(x){return x.id===id}).n+' วิวัฒนาการขั้น '+v.stage+'! ไม่มีโบนัสค่าสเตตัส')}
  else{if(!Number.isInteger(n)||n<1||n>v.stage)return true;v.form=n}save();render();return true;
 }
-function bookTitles70(){for(var id=0;id<27;id++)(function(id){var m=bookMeta70(id);TITLES.push({id:'b70k'+id,n:'นักล่า'+m.n,d:'ปราบ '+m.n+' 100 ตัว (เริ่มนับ B70)',c:'#9edbd3',cur:function(){return bookState70().entries[id].k},need:100});if(!m.boss)TITLES.push({id:'b70r'+id,n:'ผู้พิชิตดารา'+m.n,d:'ชิ้นส่วนดารา '+m.n+' 3 ชิ้น · ผูกไอดี · ไม่มีค่าสเตตัส',c:'#f4ce7c',cur:function(){return bookState70().entries[id].r},need:3})})(id)}
+function bookTitles70(){for(var id=0;id<ZONES.length*3;id++)(function(id){var m=bookMeta70(id);TITLES.push({id:'b70k'+id,n:'นักล่า'+m.n,d:'ปราบ '+m.n+' 100 ตัว (เริ่มนับ B70)',c:'#9edbd3',cur:function(){return bookState70().entries[id].k},need:100});if(!m.boss)TITLES.push({id:'b70r'+id,n:'ผู้พิชิตดารา'+m.n,d:'ชิ้นส่วนดารา '+m.n+' 3 ชิ้น · ผูกไอดี · ไม่มีค่าสเตตัส',c:'#f4ce7c',cur:function(){return bookState70().entries[id].r},need:3})})(id)}
 function bookIcon70(m,rare){var key=m.id+':'+!!rare;if(BOOK_ART70.has(key))return BOOK_ART70.get(key);var cv=rare?rareArt70(m.k,0):monsterArt37(m.k,0,m.boss),url=cv?cv.toDataURL():'';BOOK_ART70.set(key,url);return url}
 function bookHtml70(){
  var z=BOOK_UI70.z|0;if(!ZONES[z])z=0;var i=Math.max(0,Math.min(2,BOOK_UI70.i|0)),id=z*3+i,m=bookMeta70(id),book=bookState70(),e=book.entries[id],seen=e.s>0,rare=BOOK_UI70.rare&&!m.boss,total=book.entries.reduce(function(n,a){return n+(a.s>0?1:0)},0);
- return '<section class="card bio70-hero"><small>บันทึกนักผจญภัย</small><h2>สมุดมอนสเตอร์</h2><p>ค้นพบ '+total+'/27 ชนิด · ร่างหายากพบได้ 2% ต่อมอนล่าปกติ</p><p class="hint">เริ่มนับจาก B70 · นับแต่ตัวที่ล้มจริง รวมตัวในฝูง · ไม่รวม PvP หอคอย ดันเจี้ยน บอสโลก และรางวัลออฟไลน์</p></section><section class="card"><div class="bio70-zones">'+ZONES.map(function(v,n){return '<button class="btn" data-a="bookzone70" data-p="'+n+'" aria-pressed="'+(z===n)+'">'+esc(v.n)+'</button>'}).join('')+'</div><div class="bio70-grid">'+[0,1,2].map(function(n){var d=bookMeta70(z*3+n),a=book.entries[d.id];return '<button class="bio70-tile" data-a="bookpick70" data-p="'+n+'" aria-pressed="'+(i===n)+'">'+(a.s?'<img src="'+bookIcon70(d,false)+'" alt="">':'<span class="bio70-unknown">?</span>')+'<b>'+esc(a.s?d.n:n===2?'บอสที่ยังไม่พบ':'ยังไม่เคยพบ')+'</b><small>'+(a.s?'ปราบ '+a.k+' ตัว':'ไปสำรวจแผนที่')+'</small>'+(a.r?'<em>✦ หายาก '+a.r+'</em>':'')+'</button>'}).join('')+'</div></section><section class="card bio70-detail"><div class="bio70-art"><canvas id="bioPreview70" width="300" height="190" aria-label="ตัวอย่างมอนสเตอร์"></canvas><small>'+(rare?'ตัวอย่างร่างหายาก · ไม่ใช่รางวัลที่ได้รับ':'ตัวอย่างรูปลักษณ์')+'</small></div><div><h3>'+esc(m.n)+(m.boss?' · บอสสนาม':'')+'</h3><p class="hint">'+esc(ZONES[z].n)+' · Lv'+ZONES[z].rec+'–'+ZONES[z].max+'</p>'+(!m.boss?'<div class="grid2"><button class="btn" data-a="bookrare70" data-p="0" aria-pressed="'+!rare+'">ปกติ</button><button class="btn" data-a="bookrare70" data-p="1" aria-pressed="'+rare+'">✦ หายาก</button></div>':'')+'<p>พบ '+e.s+' · ปราบ '+e.k+' ตัว</p>'+goalMeter69(Math.min(100,e.k),100,'จำนวนปราบเพื่อฉายา')+'<button class="btn" data-a="title" data-p="b70k'+id+'"'+(e.k<100?' disabled':'')+'>'+(s.title==='b70k'+id?'ถอดฉายา':'ฉายา นักล่า'+esc(m.n))+'</button>'+(!m.boss?'<p>✦ พบหายาก '+e.rs+' · ชนะ '+e.r+'</p><p class="hint">ชิ้นส่วนดารา '+esc(m.n)+' '+e.r+'/3 · ได้แน่นอนเมื่อชนะร่างหายาก · ผูกไอดี ไม่มีการซื้อขายหรือแลกเงิน</p>'+goalMeter69(Math.min(3,e.r),3,'ชิ้นส่วนดาราเพื่อฉายา')+'<button class="btn" data-a="title" data-p="b70r'+id+'"'+(e.r<3?' disabled':'')+'>'+(s.title==='b70r'+id?'ถอดฉายาหายาก':'ฉายา ผู้พิชิตดารา'+esc(m.n))+'</button>':'')+'<p class="hint">ร่างหายากมีสี ลวดลาย และประกายเฉพาะ พลังต่อสู้และรางวัลเดิมเท่าร่างปกติ ฉายาใหม่ไม่มีค่าสเตตัส</p></div></section>';
+ return '<section class="card bio70-hero"><small>บันทึกนักผจญภัย</small><h2>สมุดมอนสเตอร์</h2><p>ค้นพบ '+total+'/'+(ZONES.length*3)+' ชนิด · ร่างหายากพบได้ 2% ต่อมอนล่าปกติ</p><p class="hint">เริ่มนับจาก B70 · นับแต่ตัวที่ล้มจริง รวมตัวในฝูง · ไม่รวม PvP หอคอย ดันเจี้ยน บอสโลก และรางวัลออฟไลน์</p></section><section class="card"><div class="bio70-zones">'+ZONES.map(function(v,n){return '<button class="btn" data-a="bookzone70" data-p="'+n+'" aria-pressed="'+(z===n)+'">'+esc(v.n)+'</button>'}).join('')+'</div><div class="bio70-grid">'+[0,1,2].map(function(n){var d=bookMeta70(z*3+n),a=book.entries[d.id];return '<button class="bio70-tile" data-a="bookpick70" data-p="'+n+'" aria-pressed="'+(i===n)+'">'+(a.s?'<img src="'+bookIcon70(d,false)+'" alt="">':'<span class="bio70-unknown">?</span>')+'<b>'+esc(a.s?d.n:n===2?'บอสที่ยังไม่พบ':'ยังไม่เคยพบ')+'</b><small>'+(a.s?'ปราบ '+a.k+' ตัว':'ไปสำรวจแผนที่')+'</small>'+(a.r?'<em>✦ หายาก '+a.r+'</em>':'')+'</button>'}).join('')+'</div></section><section class="card bio70-detail"><div class="bio70-art"><canvas id="bioPreview70" width="300" height="190" aria-label="ตัวอย่างมอนสเตอร์"></canvas><small>'+(rare?'ตัวอย่างร่างหายาก · ไม่ใช่รางวัลที่ได้รับ':'ตัวอย่างรูปลักษณ์')+'</small></div><div><h3>'+esc(m.n)+(m.boss?' · บอสสนาม':'')+'</h3><p class="hint">'+esc(ZONES[z].n)+' · Lv'+ZONES[z].rec+'–'+ZONES[z].max+'</p>'+(!m.boss?'<div class="grid2"><button class="btn" data-a="bookrare70" data-p="0" aria-pressed="'+!rare+'">ปกติ</button><button class="btn" data-a="bookrare70" data-p="1" aria-pressed="'+rare+'">✦ หายาก</button></div>':'')+'<p>พบ '+e.s+' · ปราบ '+e.k+' ตัว</p>'+goalMeter69(Math.min(100,e.k),100,'จำนวนปราบเพื่อฉายา')+'<button class="btn" data-a="title" data-p="b70k'+id+'"'+(e.k<100?' disabled':'')+'>'+(s.title==='b70k'+id?'ถอดฉายา':'ฉายา นักล่า'+esc(m.n))+'</button>'+(!m.boss?'<p>✦ พบหายาก '+e.rs+' · ชนะ '+e.r+'</p><p class="hint">ชิ้นส่วนดารา '+esc(m.n)+' '+e.r+'/3 · ได้แน่นอนเมื่อชนะร่างหายาก · ผูกไอดี ไม่มีการซื้อขายหรือแลกเงิน</p>'+goalMeter69(Math.min(3,e.r),3,'ชิ้นส่วนดาราเพื่อฉายา')+'<button class="btn" data-a="title" data-p="b70r'+id+'"'+(e.r<3?' disabled':'')+'>'+(s.title==='b70r'+id?'ถอดฉายาหายาก':'ฉายา ผู้พิชิตดารา'+esc(m.n))+'</button>':'')+'<p class="hint">ร่างหายากมีสี ลวดลาย และประกายเฉพาะ พลังต่อสู้และรางวัลเดิมเท่าร่างปกติ ฉายาใหม่ไม่มีค่าสเตตัส</p></div></section>';
 }
 function petHtml70(){
  var id=PET_IDS70.indexOf(BOOK_UI70.pet)>=0?BOOK_UI70.pet:'dragon',meta=COS.pet.find(function(x){return x.id===id}),owned=petOwned70(s,id),p=bookState70().pets[id],form=BOOK_UI70.form||p.form,next=p.stage===1?100:500,busy=!!s.battle||!!s.res||s.autoHunt||s.autoTower,r=dgRoom();busy=busy||r&&r.st==='fight';
@@ -1513,7 +1515,7 @@ function ar73Aura(c,x,y,u,t){auraDraw76(c,'valor73',x,y,u,t)}
 
 var FARM63_UI={ask:false};
 function farmNum63(v,signed){return Number.isFinite(v)?Math.max(signed?-1e12:0,Math.min(1e12,Math.floor(v))):0}
-function farmNormalize63(o){var f=o.farm63&&typeof o.farm63==='object'&&!Array.isArray(o.farm63)?o.farm63:{};f.since=Number.isFinite(f.since)&&f.since>0&&f.since<=Date.now()?f.since:Date.now();['w','l','x','off','dup','rev'].forEach(function(k){f[k]=farmNum63(f[k])});f.g=farmNum63(f.g,true);var m=f.mat||{};f.mat={};['wood','stone','ore','herb','hide','purple'].forEach(function(k){f.mat[k]=farmNum63(m[k])});var c=Array.isArray(f.col)?f.col:[];f.col=Array.from({length:27},function(_,i){return farmNum63(c[i])});f.activeMs68=farmNum63(f.activeMs68);f.last68=0;f.tracking68=false;f.stop68=typeof f.stop68==='string'?f.stop68.slice(0,120):'';f.stopAt68=farmNum63(f.stopAt68);o.farm63=f;return f}
+function farmNormalize63(o){var f=o.farm63&&typeof o.farm63==='object'&&!Array.isArray(o.farm63)?o.farm63:{};f.since=Number.isFinite(f.since)&&f.since>0&&f.since<=Date.now()?f.since:Date.now();['w','l','x','off','dup','rev'].forEach(function(k){f[k]=farmNum63(f[k])});f.g=farmNum63(f.g,true);var m=f.mat||{};f.mat={};['wood','stone','ore','herb','hide','purple'].forEach(function(k){f.mat[k]=farmNum63(m[k])});var c=Array.isArray(f.col)?f.col:[];f.col=Array.from({length:ZONES.length*3},function(_,i){return farmNum63(c[i])});f.activeMs68=farmNum63(f.activeMs68);f.last68=0;f.tracking68=false;f.stop68=typeof f.stop68==='string'?f.stop68.slice(0,120):'';f.stopAt68=farmNum63(f.stopAt68);o.farm63=f;return f}
 function farmState63(){return s.farm63||farmNormalize63(s)}
 function farmEligible63(b){return !!(b&&b.kind==='monster'&&b.e&&b.e.field&&!b.tower&&!b.wb&&!b.j4Trial)}
 function farmSnapshot63(){var c=colState59();return {g:s.gold,mat:Object.assign({},s.inv||{}),col:c.total.slice(),dup:c.dup}}
@@ -1581,7 +1583,7 @@ function fieldProgressMigrate(o){
  o.zone=eligibleZone(o,oldZone);o.fbAt=bossReadyAt(o,o.zone);return o;
 }
 
-var BOSSES=['ราชาหมาป่าเงา','โกเลมหินโบราณ','มังกรเพลิงอสูร','จักรพรรดิแมงป่อง','ราชามังกรน้ำแข็ง','จอมมารแห่งอเวจี','พญานาคพิษมรณะ','จักรพรรดิอัสนีเหนือเมฆ','เทพเจ้าแห่งจักรวาล'];
+var BOSSES=['ราชาหมาป่าเงา','โกเลมหินโบราณ','มังกรเพลิงอสูร','จักรพรรดิแมงป่อง','ราชามังกรน้ำแข็ง','จอมมารแห่งอเวจี','พญานาคพิษมรณะ','จักรพรรดิอัสนีเหนือเมฆ','เทพเจ้าแห่งจักรวาล','ไททันเกราะสูญญากาศ'];
 var HEAVY_COST=5,HEAVY_MAX=2; // ฟันหนัก: หักพลัง 5 ต่อครั้ง โอกาสโดน 50% ใช้ได้ไม่เกิน 2 ครั้งต่อการสู้
 var BOSS_P=0.03,BOSS_MUL=4,BOSS_HP=3.2,BOSS_ATK=1.25,BOSS_DEF=1.1,BOSS_DROP=0.2; // บอส: HP ×1.5, โจมตี ×1.35, เกราะ ×1.1 บนมอนตัวแรงสุดของแผนที่ (พลังรวมเก่งกว่ามอนเฉลี่ยราว 3 เท่า = +200%)
 var LV_REQ=[1,20,30,40,50,60,80,100,120],BREAK_P=0.1,ACCG=[1,1.6,2.3,3.1,4,5,6.4,8.2,10.4];
@@ -2426,7 +2428,7 @@ function huntField(p){
 function hunt(){
  if(s.energy<2||(!FIELD_NOCD&&cdLeft()>0)||s.battle||s.dup)return;if(s.zone!==eligibleZone(s,s.zone)){s.zone=eligibleZone(s,s.zone);say('ย้ายกลับแผนที่ที่ตรงกับเลเวล');return}s.energy-=2;
  var z=ZONES[s.zone];
- if(FIELD_BOSS||(FIELD_PICK<0&&s.lvl>=z.max-2&&Math.random()<BOSS_P)){
+ if(FIELD_BOSS||(FIELD_PICK<0&&Date.now()>=bossReadyAt(s,s.zone)&&s.lvl>=z.max-2&&Math.random()<BOSS_P)){
   var bm=mapBoss(s.zone);
   startBattle(bm,'monster');s.battle.lines=['บอส '+bm.n+' ปรากฏตัว!'];
  }else if(FIELD_PICK<0&&s.zone>=EASY_ZONES&&Math.random()<0.05){
@@ -3064,7 +3066,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B145';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B146';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -4061,7 +4063,8 @@ function act(a,p){
  else if(a==='zonemenu'){zoneOpen=!zoneOpen}
  else if(a==='zone'){if(s.battle){say('จบการต่อสู้ก่อนเปลี่ยนแผนที่')}else if(i>=0&&i<ZONES.length){if(s.lvl<ZONES[i].rec)say('ต้องเลเวล '+ZONES[i].rec+' เพื่อเข้า '+ZONES[i].n);else{s.zone=i;s.fbAt=bossReadyAt(s,i)}}zoneOpen=false}
 
- else if(a==='fhunt')huntField(p);
+ else if(a==='walkhunt146')encounter146(p);
+ else if(a==='fhunt'){/* B146: field targeting paused */}
  else if(a==='huntselect'){targetSave49(p)}
  else if(a==='fmode'){s.fmode=p==='1'?1:0}
  else if(a==='gather')gather(p);
@@ -6678,9 +6681,7 @@ function fieldUpdate(dt,tn){
  if(FLD.gat&&FLD.gat.on){gatherTick(tn);fieldMove(dt,tn);return}
  var PH=ptFollowOn();if(PH){if(!FLD.hold)ptFollowTick(PH);fieldMove(dt,tn);return}
  ptFollowZone();
- if(s.autoHunt)targetReady49();
- if(s.autoHunt&&FLD.follow&&(!fieldTargetAllowed(FLD.follow)||(fTarget()==='boss'&&fBossUp()&&!FLD.follow.boss))){FLD.follow=null;FLD.tx=FLD.ty=null;FLD.path=null}
- if(s.autoHunt&&!FLD.hold&&nt>=FLD.grace&&(!FLD.follow||(FLD.follow.boss?!fBossUp():!FLD.follow.alive))){var pk=fAutoPick();if(pk)FLD.follow=pk;else{FLD.follow=null;FLD.tx=FLD.ty=null;FLD.path=null}}
+ if(s.autoHunt&&!FLD.hold&&nt>=FLD.grace)wander146();
  fieldMove(dt,tn)}
 var FBOT={at:0,z:-1,busy:false};
 function netBots(){
@@ -7506,7 +7507,7 @@ function autoPopup(){
  var targets=[['all','ทุกตัว · ใกล้ที่สุด']].concat(z.mobs.map(function(m,i){return [String(i),m.n]})).concat([['boss','บอสก่อน · แล้วล่ามอนทั่วไป']]);
  return '<div class="auto-modal" role="dialog" aria-modal="true" aria-labelledby="autoTitle"><section class="auto-panel"><header><div><small>ตั้งค่าแล้วบันทึกทันที</small><h2 id="autoTitle">⚙ ออโต้และการเอาตัวรอด</h2></div><button class="btn" data-a="autoclose" aria-label="ปิดตั้งค่าออโต้">ปิด ✕</button></header><div id="autoContent" class="auto-content">'+
  autoChoice('run',autoRunning(),'ออโต้ต่อสู้')+autoChoice('skill',s.autoSkill,'ใช้สกิลออโต้')+
- '<section><h3>🎯 เลือกมอนสเตอร์ที่จะตี</h3><p>'+esc(z.n)+' · เลือกชนิดเดียวจะรอชนิดนั้นเกิดใหม่</p><div class="auto-targets">'+targets.map(function(t){return '<button class="btn" data-a="ftarget" data-p="'+t[0]+'" aria-pressed="'+(ft===t[0])+'">'+(ft===t[0]?'✓ ':'')+esc(t[1])+'</button>'}).join('')+'</div><p class="target49-status" role="status">'+esc(targetStatus49())+'</p><p>รอชนิดที่เลือกเกิดใหม่ · การเปลี่ยนเป้าหมายมีผลกับไฟต์ถัดไป</p></section>'+
+ '<section><h3>🎲 สุ่มเผชิญหน้าระหว่างเดิน</h3><p>เดินออโต้เพื่อสุ่มเจอมอนสเตอร์ มอนหายาก และบอสแผนที่ · ปิดการเลือกชนิดมอนชั่วคราว</p></section>'+
  '<section><h3>🧪 ปั๊มยาอัตโนมัติ · เหลือ '+potTotal()+' ขวด</h3>'+autoChoice('pot',potOn(),'กินยาออโต้')+'<div class="auto-percent"><span>กินยาเมื่อ HP ต่ำกว่า <b>'+Math.round(potThr()*100)+'%</b></span><button class="btn" data-a="potpct" data-p="-5" aria-label="ลดเปอร์เซ็นต์กินยา 5">−5%</button><button class="btn" data-a="potpct" data-p="5" aria-label="เพิ่มเปอร์เซ็นต์กินยา 5">+5%</button></div><p>ปรับได้ 5–95% · ใช้ยาที่มีอยู่ ตามข้อจำกัดของโหมดต่อสู้ · หากเสี่ยงตาย ระบบอาจกินยาก่อนถึงค่าที่ตั้ง</p></section>'+
  '<section><h3>🏃 การหนี</h3>'+autoChoice('flee',flee,'หนีอัตโนมัติเมื่อเลือดต่ำ')+'<div class="auto-percent"><span>พยายามหนีเมื่อ HP ต่ำกว่า <b>'+fp+'%</b></span><button class="btn" data-a="autoset" data-p="fleepct:'+Math.max(5,fp-5)+'" aria-label="ลดเปอร์เซ็นต์หนี 5">−5%</button><button class="btn" data-a="autoset" data-p="fleepct:'+Math.min(95,fp+5)+'" aria-label="เพิ่มเปอร์เซ็นต์หนี 5">+5%</button></div>'+bossCtl()+'<p>พยายามกินยาก่อนหนี · บางโหมดหนีไม่ได้ และการหนีมีโอกาสไม่สำเร็จ</p><button class="btn danger" data-a="autofleenow"'+(!s.battle||noFlee(s.battle)?' disabled':'')+'>หยุดออโต้และพยายามหนีตอนนี้</button></section></div><footer><span role="status">'+esc(farmStatus68())+'</span><button class="btn primary" data-a="autoclose">เสร็จสิ้น</button></footer></section></div>';
 }
@@ -8161,7 +8162,7 @@ function netConfigMatches68(x){var a=String(x.p).split(':'),n=Number(a[1]);if(x.
 function netFlush68(){Object.keys(NET68.safe).forEach(function(k){var x=NET68.safe[k];if(!netConfigMatches68(x)&&!NET.q.some(function(q){return netConfigKey68(q)===k}))NET.q.push({a:x.a,p:x.p,inp:netInputs(),fight:null,target:null});delete NET68.safe[k]})}
 function netFailure68(){NET68.tickId++;NET.tickBusy=false;NET.fails=Math.max(1,NET.fails|0);NET68.needSync=true;NET68.retryAt=Date.now()+NET68.backoff;NET68.backoff=Math.min(15000,NET68.backoff*2)}
 function netReset68(){NET68.epoch++;NET68.actId++;NET68.tickId++;NET68.inflight=null;NET68.needSync=false;NET68.retryAt=0;NET68.backoff=1000;NET68.safe=Object.create(null);NET68.note='';NET.q=[];NET.busy=NET.tickBusy=false;pressing=false;if(typeof FLD!=='undefined')FLD.hold=false}
-function netResume68(){pressing=false;FLD.hold=false;if(typeof SCROLL_UI!=='undefined'){SCROLL_UI.drag=null;SCROLL_UI.pending=false}if(!CL||!s||!NET.token)return;NET68.needSync=true;NET68.retryAt=0;NET.q=NET.q.filter(function(x){if(x.a==='autoset'&&x.p==='run:1'){NET68.note='เชื่อมต่อแล้วกดเปิดออโต้อีกครั้ง';return false}return x.a!=='b'&&x.a!=='fhunt'});netTick()}
+function netResume68(){pressing=false;FLD.hold=false;if(typeof SCROLL_UI!=='undefined'){SCROLL_UI.drag=null;SCROLL_UI.pending=false}if(!CL||!s||!NET.token)return;NET68.needSync=true;NET68.retryAt=0;NET.q=NET.q.filter(function(x){if(x.a==='autoset'&&x.p==='run:1'){NET68.note='เชื่อมต่อแล้วกดเปิดออโต้อีกครั้ง';return false}return x.a!=='b'&&x.a!=='fhunt'&&x.a!=='walkhunt146'});netTick()}
 function netWatch68(){var now=Date.now();if(NET.busy&&now-(NET.busyAt||now)>15000){netRemember68(NET68.inflight);NET68.actId++;NET68.inflight=null;NET.busy=false;netFailure68()}if(NET.tickBusy&&now-(NET.tickAt||now)>15000){NET68.tickId++;NET.tickBusy=false;netFailure68()}if(!NET68.needSync&&!NET.busy)netPump()}
 function netAct(a,p){
  if(a==='autoset'&&p==='run:1'&&(NET68.needSync||navigator.onLine===false)){NET68.note='รอเชื่อมต่อแล้วกดเปิดออโต้อีกครั้ง';fieldSay(NET68.note);return}if(a==='autoset'&&String(p).indexOf('run:')===0)NET68.note='';
@@ -8174,7 +8175,7 @@ function netPump(){
  if(NET.q.length>8)NET.q.splice(0,NET.q.length-8);var x=NET.q.shift();if(x.a==='b'&&(!s.battle||s.battle.key50!==x.fight||(s.battle.gi||0)!==x.target)){netPump();return}
  NET.busy=true;NET.busyAt=Date.now();NET68.inflight=x;var ep=NET68.epoch,id=++NET68.actId;
  function valid(){return ep===NET68.epoch&&id===NET68.actId}
- apiCall('POST','/api/act',x).then(function(j){if(!valid())return;if(!j||!j.s){var e=new Error('ยังไม่ได้รับผลคำสั่ง');e.net=true;throw e}netApply(j)}).catch(function(e){if(!valid())return;if(e.net||e.status>=500||e.status===429){netRemember68(x);netFailure68();NET.q=NET.q.filter(function(q){return q.a!=='b'&&q.a!=='fhunt'})}netErr(e)}).then(function(){if(!valid())return;NET68.inflight=null;NET.busy=false;if(!NET68.needSync)netPump()});
+ apiCall('POST','/api/act',x).then(function(j){if(!valid())return;if(!j||!j.s){var e=new Error('ยังไม่ได้รับผลคำสั่ง');e.net=true;throw e}netApply(j)}).catch(function(e){if(!valid())return;if(e.net||e.status>=500||e.status===429){netRemember68(x);netFailure68();NET.q=NET.q.filter(function(q){return q.a!=='b'&&q.a!=='fhunt'&&q.a!=='walkhunt146'})}netErr(e)}).then(function(){if(!valid())return;NET68.inflight=null;NET.busy=false;if(!NET68.needSync)netPump()});
 }
 function netTick(){
  if((battlePresentationActive()||scene53Busy())&&!NET68.needSync)return;
@@ -8343,7 +8344,7 @@ function mapProject138(flat,z){var W=FLD.W,H=FLD.H,P=MAP138[z]||MAP138[0],cv=doc
 function mapNodes138(z){var rng=frng(13890+z),spots=[],W=FLD.W,H=FLD.H;for(var i=0;i<8;i++){spots.push([120+i*(W-240)/7,108]);spots.push([120+i*(W-240)/7,H-108])}for(i=0;i<7;i++){spots.push([108,240+i*(H-480)/6]);spots.push([W-108,240+i*(H-480)/6])}
  var out=[];for(i=0;i<GNODE_N;i++)MATS.forEach(function(k,ki){var p=spots[(i*MATS.length+ki)%spots.length];out.push({k:k,x:p[0]+(rng()-.5)*16,y:p[1]+(rng()-.5)*16,until:0})});return out;
 }
-fieldBuild=function(z){z=Math.max(0,Math.min(ZONES.length-1,z|0));mapReset138(z);FLD.px=FLD.W/2;FLD.py=fPathY(FLD.px);FLD.boss.x=FLD.W*.80;FLD.boss.y=FLD.H*.25;FLD.nodes=mapNodes138(z);FLD.map=mapProject138(mapGround138(z,false),z);fGridBuild();var zz=ZONES[z],n=Math.max(24,Math.min(30,20+zz.mobs.length*3));for(var i=0;i<n;i++)FLD.mobs.push(fieldSpawn({i:i%zz.mobs.length}))};
+fieldBuild=function(z){z=Math.max(0,Math.min(ZONES.length-1,z|0));mapReset138(z);FLD.px=FLD.W/2;FLD.py=fPathY(FLD.px);FLD.boss.x=FLD.W*.80;FLD.boss.y=FLD.H*.25;FLD.nodes=mapNodes138(z);FLD.map=mapProject138(mapGround138(z,false),z);fGridBuild();FLD.mobs=[];ENCOUNTER146.z=-1};
 function townNpcs138(){if(TOWN.npcs.length)return;var list=[['ทหารยาม','warrior',610,260,1],['ทหารยาม','paladin',830,260,1],['พ่อค้าเร่','rogue',280,420,0],['ช่างตีเหล็ก','warrior',320,820,0],['นักบวชวิหาร','mage',1120,750,0],['เด็กน้อย','archer',900,820,0],['นักเดินทาง','archer',560,820,0],['ผู้ประกาศเมือง','paladin',720,700,1]];list.forEach(function(n){TOWN.npcs.push({ann:n[0]==='ผู้ประกาศเมือง',n:n[0],cls:n[1],x:n[2],y:n[3],hx:n[2],hy:n[3],st:n[4],look:{hair:0,hc:0,hat:'none',face:'none',wing:'none',pet:'none',aura:'none',dye:'def'},vx:0,vy:0,next:0,dir:1})})}
 townIsoBuild=function(){var cv=mapProject138(mapGround138(0,true),0);ISO_TOWN.width=cv.width;ISO_TOWN.height=cv.height;ISO_TOWN.ground=cv;ISO_TOWN.objectCache=null;ISO_TOWN.objects=[];
  // Buildings are scenery on the rim, leaving the whole plaza open.
@@ -8444,6 +8445,50 @@ var gemMdef140=pMdef;pMdef=function(){return gemMdef140()+gemStat140(s,'mdef')};
 var gemIncomingBase140=gearIncoming;gearIncoming=function(b,n,l){return gemAbsorb140(b,gemIncomingBase140(b,n,l),l)};
 var gemSnapBase140=mySnap;mySnap=function(){var snap=gemSnapBase140();snap.gemTier140=gemTier140(s);return snap};
 var gemOppBase140=oppFromSnap;oppFromSnap=function(x){var e=gemOppBase140(x);e.gemTier140=gemInt140(x.gemTier140,4);return e};
+
+// B146: encounter-only fields and high-resolution battle creatures.
+var mobBefore146=mobAt,bossBefore146=mapBoss;
+mobAt=function(m,z,level){var e=mobBefore146(m,z,level);if(ZONES.indexOf(z)===9){var i=z.mobs.indexOf(m),L=Math.max(100,Math.min(120,Math.round(100+(e.lvl-121)*20/29))),ref=mobBefore146(ZONES[8].mobs[i<0?0:i],ZONES[8],L);['hp','atk','def'].forEach(function(k){e[k]=ref[k]*2});e.power54=1}return e};
+mapBoss=function(zi){var e=bossBefore146(zi);e.k='boss146_'+zi;if(zi===9){var ref=bossBefore146(8);['hp','atk','def'].forEach(function(k){e[k]=ref[k]*2});e.power54=1}return e};
+MONS.abyssbat146=MONS.starbat;MONS.abyssdragon146=MONS.cosmicdragon;
+MBASE.abyssbat146='bat';MBASE.abyssdragon146='dragon';
+for(var bi146=0;bi146<10;bi146++){MONS['boss146_'+bi146]=MONS[ZONES[bi146].mobs[1].k];MBASE['boss146_'+bi146]=MBASE[ZONES[bi146].mobs[1].k]||'dragon'}
+FPAL.push(Object.assign({},FPAL[8],{g:['#183b55','#204764','#295b74','#163148'],path:'#5c86a0',water:'#39bfcf'}));
+MAP138.push({base:'#648eb4',light:'#b9e5f2',dark:'#475a8e',path:'#b8d9e7',rim:'#92adc9',edge:'#65bdcf',cliff:'#394d81',sky:'#cbdffc',accent:'#86ffff'});
+
+// Old target choices remain in saves for compatibility but are inactive.
+fTarget=function(){return 'all'};
+targetReady49=function(){TARGET49.pending={};return true};
+targetSelect49=function(){};targetSave49=function(){};
+fBossUp=function(){return false}; // No visible/collidable field boss.
+var ENCOUNTER146={z:-1,walk:0,need:100,last:0};
+function wander146(){FLD.follow=null;if(FLD.tx!=null)return;var a=Math.random()*Math.PI*2,d=140+Math.random()*160,p=mapClamp138(FLD.px+Math.cos(a)*d,FLD.py+Math.sin(a)*d);FLD.tx=p[0];FLD.ty=p[1];FLD.path=null}
+function encounter146(p){var a=String(p||'').split(':'),nw=Date.now();if(a.length!==2||a[0]!==String(s.zone)||a[1]!==String((s.encSeq146|0)+1)||!s.autoHunt||s.battle||s.dup||s.res||s.energy<2||s.zone!==eligibleZone(s,s.zone)||nw-(s.encAt146||0)<4000)return;
+ s.encSeq146=(s.encSeq146|0)+1;s.encAt146=nw;FIELD_PICK=-1;FIELD_BOSS=false;FIELD_NOCD=true;
+ try{hunt();if(s.battle&&s.battle.kind==='monster'){if(s.battle.e.mapBoss)s.battle.fboss=1;else mkGroup(s.battle);if(s.autoBoss==='flee'&&s.battle.e.boss){var n=s.battle.e.n;s.battle=null;s.bossRun=(s.bossRun|0)+1;say('เจอบอส '+n+' — หนีออกมาแล้ว')}}}finally{FIELD_PICK=-1;FIELD_BOSS=false;FIELD_NOCD=false}}
+var moveBefore146=fieldMove;
+fieldMove=function(dt,tn){var x=FLD.px,y=FLD.py;moveBefore146(dt,tn);var E=ENCOUNTER146;if(E.z!==FLD.z){E.z=FLD.z;E.walk=0;E.need=100+Math.random()*100;E.last=0}
+ if(!s||!s.autoHunt||s.battle||FLD.town||FLD.gat&&FLD.gat.on||FLD.hold||ptFollowOn()){E.walk=0;return}
+ var d=Math.hypot(FLD.px-x,FLD.py-y);if(d>0&&d<=Math.max(12,dt*100))E.walk+=d;
+ if(E.walk<E.need||s.energy<2||s.dup||s.res||nowMs()<FLD.grace||Date.now()-E.last<8000||battlePresentationActive()||scene53Busy())return;
+ if(CL&&(NET68.needSync||navigator.onLine===false||NET.busy||NET.q.length))return;
+ if(potOn()&&s.hp<s.maxhp*potThr()&&potTotal()>0)return;
+ E.walk=0;E.need=100+Math.random()*100;E.last=Date.now();FLD.tx=FLD.ty=null;FLD.follow=null;FLD.engM=null;act('walkhunt146',String(s.zone)+':'+String((s.encSeq146|0)+1));
+};
+
+var ART146_KEYS=['wolf','boar','bat','golem','lizard','dragon','scorp','sandgolem','icewolf','icedragon','voidbat','voiddragon','swamplizard','mudgolem','stormwolf','stormdragon','starbat','cosmicdragon','abyssbat146','abyssdragon146'];
+var ART146={atlas:null,hydra:null,ready:false,wbReady:false},ART146_TILES=new Map();
+WBA.w=150;WBA.h=100; // Match the new hydra's 3:2 silhouette; battle layouts fit this box.
+function artLoad146(){if(SV)return;var im=new Image();im.onload=function(){ART146.atlas=im;ART146.ready=true;BOOK_ART70.clear();if(s&&s.tab==='book')render()};im.src='assets/images/monsters146.webp';var wb=new Image();wb.onload=function(){ART146.hydra=wb;ART146.wbReady=true};wb.src='assets/images/worldboss146.webp'}
+function artIndex146(k,boss,rare){var i=ART146_KEYS.indexOf(k);if(/^boss146_\d+$/.test(k))return 20+Number(k.split('_')[1]);if(rare){if(/wolf/.test(k))return 31;if(k==='boar')return 32;if(/bat/.test(k))return 33;if(/golem/.test(k))return 34;if(/dragon/.test(k))return 35}if(boss&&i>=0)return 20+Math.floor(i/2);return i}
+function artTile146(k,boss,rare){if(!ART146.ready)return null;var i=artIndex146(k,boss,rare);if(i<0)return null;if(ART146_TILES.has(i))return ART146_TILES.get(i);var cv=document.createElement('canvas');cv.width=cv.height=256;cv.getContext('2d').drawImage(ART146.atlas,(i%6)*256,Math.floor(i/6)*256,256,256,0,0,256,256);ART146_TILES.set(i,cv);return cv}
+var mobDrawBefore146=fMob;
+fMob=function(c,k,x,y,sc,tn,flip,ph,boss,rare){var im=artTile146(k,boss,rare);if(!im){mobDrawBefore146(c,k,x,y,sc,tn,flip,ph,boss,rare);return}if(rare)rareFx70(c,x,y,.74*sc,tn);var size=64*.74*sc,bob=Math.sin((tn+(ph||0)*97)/320)*sc*.35;c.save();c.translate(x,y+bob);if(flip)c.scale(-1,1);c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';c.drawImage(im,-size/2,-size*.94,size,size);c.restore()};
+var bookIconBefore146=bookIcon70;
+bookIcon70=function(m,rare){var k=m.boss?'boss146_'+m.z:m.k,im=artTile146(k,m.boss,rare);return im?im.toDataURL():bookIconBefore146(m,rare)};
+var wbDrawBefore146=drawWBoss;
+drawWBoss=function(c,W,gy,tn,ex,ea,b){if(!ART146.wbReady){wbDrawBefore146(c,W,gy,tn,ex,ea,b);return}var dw=WBA.w*2.3,dh=WBA.h*2.3,x=W-6-dw+(ex||0),y=gy-dh+8;c.save();c.globalAlpha=ea==null?1:ea;c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';c.drawImage(ART146.hydra,x,y,dw,dh);c.restore();WBMOUTH=[x+dw*.2,y+dh*.3]};
+artLoad146();
 
 if(!SV)requestAnimationFrame(frame);
 if(!SV){var BOOTEL=document.getElementById('boot');if(BOOTEL){BOOTEL.style.transition='opacity .35s';BOOTEL.style.opacity='0';setTimeout(function(){if(BOOTEL.parentNode)BOOTEL.parentNode.removeChild(BOOTEL)},380)}}
