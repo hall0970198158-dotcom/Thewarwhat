@@ -74,6 +74,8 @@ async function session(uid) {
     let s = null, v = 0;
     if (row) { try { s = engine.normalize(JSON.parse(row.data)); v = row.ver | 0; } catch (e) { s = null; } }
     if (!s) s = engine.fresh();
+    const g = guildSummary169(await db.guild169(uid));
+    s = engine.run(s, {}, {}, E => E.guildSet169(g)).s;
     const np = { s, ui: {}, v, lastTick: 0, bucket: 30, bucketAt: Date.now(), touched: Date.now(), saving: false, dirty: false };
     live.set(uid, np);
     return np;
@@ -226,7 +228,7 @@ function twPick161(r,m,id) {
   return m.web.find(k=>k.id===id&&m.mp>=k.mp&&!m.webCd[id]&&!(k.t==='b'&&m.webBuff?.[id]>0));
 }
 function twReset161(r) {
-  for(const m of r.mem)Object.assign(m,{mp:m.mmp,webCd:{},webBuff:{},twPoison:0,twSkip:false,webCursor162:0});
+  for(const m of r.mem)Object.assign(m,{mp:m.mmp,webCd:{},webBuff:{},webShield170:0,twPoison:0,twSkip:false,webCursor162:0});
 }
 function twRound161(r,picks,ev,log,idx) {
   const en=r.en;
@@ -241,40 +243,66 @@ function twRound161(r,picks,ev,log,idx) {
     if(m.twSkip)continue;
     const k=twPick161(r,m,id);
     if(!k)continue;
+    const mp=m.mp;
     m.mp-=k.mp;m.webCd[id]=k.cd+1;
     log.push(m.n+' ใช้ '+k.n);
     if(k.t==='b'){
       m.webBuff[id]=k.dur;
       heal(m,m.mhp*(k.b.heal160?.[0]||0)/100);
-    }else attacks.push([m,k]);
+      if(k.shield)m.webShield170=Math.max(m.webShield170||0,Math.round(m.mhp*k.shield));
+      if(k.manaHeal)m.mp=Math.min(m.mmp,m.mp+Math.round(m.mmp*k.manaHeal));
+      if(k.cooldown){
+        engine.webCooldown170(m.webCd,id,k.cooldown);
+        engine.webCooldown170(m.cd,id,k.cooldown);
+      }
+    }else attacks.push([m,k,mp]);
   }
-  const offense=m=>1+buff(m,'atk');
-  const shellRate=pierce=>en.shell?.5+.5*Math.min(1,pierce+Math.min(.30,enemyBuff('edef160'))):1;
+  const offense=(m,skill)=> (1+buff(m,'atk'))*(skill?1+enemyBuff('vuln170'):1);
+  const shellRate=pierce=>{
+    const breakArmor=Math.min(.30,enemyBuff('edef160'));
+    return en.shell?.5+.5*Math.min(1,pierce+breakArmor):1+.5*breakArmor;
+  };
+  const recoverRate=()=>1-enemyBuff('antiHeal170');
   return {
-    offense,shellRate,
+    offense,shellRate,recoverRate,
     direct(){
       let total=0;
-      for(const [m,k] of attacks){
+      for(const [m,k,mp] of attacks){
         if(en.hp<=0)break;
         const shell=shellRate(k.ign||0);
-        const d=Math.max(1,Math.round(m.atk*k.m[0]*(k.hits||1)*offense(m)*shell*(en.stun?1.3:1)));
+        const crit=!!k.critAdd&&Math.random()*100<Math.min(75,m.crit+k.critAdd);
+        const power=engine.webPower170(k,m.hp,m.mhp,en.hp,en.mhp,mp,m.mmp);
+        const d=Math.max(1,Math.round(m.atk*k.m[0]*(k.hits||1)*offense(m,true)*shell*power*(crit?2:1)*(en.stun?1.3:1)));
+        const actual=Math.min(d,en.hp);
         en.hp-=d;total+=d;
-        ev.push({t:'p',i:idx(m),a:'sk',d});
-        if(k.leech)heal(m,d*k.leech);
+        ev.push({t:'p',i:idx(m),a:'sk',d,c:crit});
+        if(k.leech)heal(m,actual*k.leech);
+        if(k.refund)m.mp=Math.min(m.mmp,m.mp+k.refund);
+        if(k.burn)en.webBurn170={left:2,dmg:Math.max(1,Math.round(actual*k.burn))};
       }
       return total;
     },
     hit(m,raw,reduction=0){
-      const adjusted=raw*(1-Math.min(.25,enemyBuff('eatk160')))*(1-Math.min(.30,buff(m,'ward160')));
-      const d=gemHitServer140(m,Math.round(dgHitP(m,adjusted)*(1-reduction)));
+      const special=['sweep','blast'].includes(en.intent.t);
+      const adjusted=raw*(1-Math.min(.25,enemyBuff('eatk160')))*(1-Math.min(.30,buff(m,'ward160')))*(special?1-buff(m,'magicWard170'):1);
+      const dodge=100*(buff(m,'dodge')+enemyBuff('blind170'));
+      let d=gemHitServer140(m,Math.round(dgHitP(m,adjusted,dodge)*(1-reduction)));
+      if(m.webShield170&&buff(m,'shield170')){
+        const absorbed=Math.min(d,m.webShield170);m.webShield170-=absorbed;d-=absorbed;
+      }
       m.hp=Math.max(0,m.hp-d);
       if(!m.hp){m.down=true;log.push(m.n+' สลบ!');}
       return d;
     },
     afterEnemy(){
-      if(en.hp>0&&en.regen)en.hp=Math.min(en.mhp,en.hp+en.regen);
+      if(en.hp>0&&en.webBurn170?.left>0){
+        const fire=Math.min(en.hp,en.webBurn170.dmg);
+        en.hp-=fire;en.webBurn170.left--;log.push('คลื่นเพลิงเผาไหม้ −'+fire);
+      }
+      if(en.hp>0&&en.regen)en.hp=Math.min(en.mhp,en.hp+Math.round(en.regen*recoverRate()));
     },
     clear(){
+      for(const m of r.mem)if(!m.down)heal(m,m.mhp*buff(m,'regen170'));
       for(const m of r.mem)for(const id of Object.keys(m.webBuff||{}))if(m.webBuff[id]>0)m.webBuff[id]--;
     }
   };
@@ -285,10 +313,10 @@ function dgStats(p) {
 }
 
 // B140: shared combat semantics for dungeon, labyrinth and live duels (these modes have no MP).
-function gemTurnServer140(m, duel, log, ev, idx) {
+function gemTurnServer140(m, duel, log, ev, idx, healRate=1) {
  const q=m.gemState140||(m.gemState140={n:0,left:0,shield:0});q.n++;if(q.left>0&&!--q.left)q.shield=0;
  const t=m.gemTier140|0;if(t<1||t>4||q.n%5||m.hp<=0)return;
- const scale=duel?.5:1,h=Math.min(m.mhp-m.hp,Math.floor(m.mhp*[.01,.015,.02,.03][t-1]*scale));m.hp+=h;
+ const scale=duel?.5:1,h=Math.min(m.mhp-m.hp,Math.floor(m.mhp*[.01,.015,.02,.03][t-1]*scale*healRate));m.hp+=h;
  q.shield=Math.floor(m.mhp*[.02,.03,.04,.05][t-1]*scale);q.left=2;
  if(log)log.push(m.n+' ใช้พรแห่งผลึก Lv'+t+' · HP +'+h+' · โล่ '+q.shield);
  if(ev&&h)ev.push({t:'h',i:idx(m),v:h});
@@ -334,8 +362,8 @@ function dgStart(r) {
   r.st = 'fight'; r.stage = 0; r.round = 1; r.log = [(r.mode==='tower100'?'เข้าสู่หอคอย 100 ชั้น':'เข้าสู่กรุสมบัติต้องสาป')+' (' + r.mem.length + ' คน)']; r.ev = []; r.loot = {};
   dgStage(r); r.en.fresh = false; r.deadline = Date.now() + dgTime163(r); r.seq++; r.ver++;
 }
-function dgHitP(m, raw) { // ดาเมจที่ผู้เล่นได้รับ (ลดตามเกราะ ป้องกัน หลบ)
-  if (Math.random() * 100 < m.dodge) return 0;
+function dgHitP(m, raw, extraDodge=0) { // ดาเมจที่ผู้เล่นได้รับ (ลดตามเกราะ ป้องกัน หลบ)
+  if (Math.random() * 100 < Math.min(60,m.dodge+extraDodge)) return 0;
   const C = DG_CLS[m.cls] || DG_CLS.warrior;
   const red = Math.min(0.4, m.def / (m.def + 60 + m.lvl * 8));
   return Math.max(1, Math.round(raw * rnd(0.9, 1.1) * (1 - red) * (m.guard ? C.grd : 1)));
@@ -366,7 +394,7 @@ function dgResolve(r) {
     const C = DG_CLS[m.cls] || DG_CLS.warrior, hits = a === 'sk' && C.hits ? C.hits : 1, mult = a === 'sk' ? C.sk / hits : 1;
     let tot = 0, crit = false;
     for (let h = 0; h < hits; h++) {
-      let d = m.atk * rnd(0.85, 1.15) * mult * combo * team.offense(m);
+      let d = m.atk * rnd(0.85, 1.15) * mult * combo * team.offense(m,a==='sk');
       if (Math.random() * 100 < m.crit + (C.crit || 0)) { d *= 2; crit = true; }
       d *= team.shellRate(a==='sk'&&C.pierce?1:0);
       if (en.stun) d *= 1.3;
@@ -389,7 +417,7 @@ function dgResolve(r) {
       if (it.t === 'slam') { const from=tg;tg=guard||tg;if(tg!==from)covered=tg; }
       const d = hitOne(tg, A * (it.t === 'slam' ? 2.0 : 0.8));
       if((it.poison||r.mode!=='tower100'&&en.regen&&it.t==='shell')&&d>0&&!tg.down)tg.twPoison=2;
-      if(it.recover&&en.shell)en.hp=Math.min(en.mhp,en.hp+Math.round(en.mhp*.08*(en.twAntiHeal?.30:1)));
+      if(it.recover&&en.shell)en.hp=Math.min(en.mhp,en.hp+Math.round(en.mhp*.08*team.recoverRate()));
       log.push(en.n + (it.t === 'slam' ? ' ฟาดหนักใส่ ' : ' ตีเบา ๆ ใส่ ') + tg.n + (d ? ' −' + d.toLocaleString() : ' แต่หลบได้') + (covered === tg ? ' (รับแทนเพื่อน!)' : ''));
     } else if (it.t === 'sweep' || it.t === 'blast') {
       for (const m of al) {
@@ -632,7 +660,7 @@ function ptPayload(uid) {
   ptSweep();
   const r = ptOf(uid), now = Date.now();
   let pt = null;
-  if (r) { r.mem.forEach(ptRefresh); const hq = live.get(r.host); r.mem.forEach(m => { m.why = m.uid === r.host ? '' : ptWhy(hq && hq.s, m, now); }); pt = { id: r.id, mem: r.mem.map(m => ({ uid: m.uid, n: m.n, hp: m.hp, mhp: m.mhp, cls: m.cls, lvl: m.lvl, z: m.z, x: m.x, y: m.y, b: m.b, look: m.look, fol: !!m.fol, why: m.why || '', on: now - m.seen <= PT_ON_MS, host: m.uid === r.host, me: m.uid === uid })) }; }
+  if (r) { r.mem.forEach(ptRefresh); const hq = live.get(r.host); r.mem.forEach(m => { m.why = m.uid === r.host ? '' : ptWhy(hq && hq.s, m, now); }); pt = { id: r.id, mem: r.mem.map(m => ({ uid: m.uid, n: m.n, hp: m.hp, mhp: m.mhp, cls: m.cls, lvl: m.lvl, z: m.z, x: m.x, y: m.y, b: m.b, look: m.look, guild169:live.get(m.uid)?.s.guild169||null, fol: !!m.fol, why: m.why || '', on: now - m.seen <= PT_ON_MS, host: m.uid === r.host, me: m.uid === uid })) }; }
   const list = r ? [] : [...PTR.values()].filter(x => x.mem.length < PT_MAX).slice(0, 20).map(x => { x.mem.forEach(ptRefresh); const h0 = x.mem.find(m => m.uid === x.host) || x.mem[0]; return { id: x.id, n: h0.n, z: h0.z, c: x.mem.length, lvl: Math.round(x.mem.reduce((a, m) => a + m.lvl, 0) / x.mem.length) }; });
   return { pt, list, invites: ptInvites48(uid) };
 }
@@ -1174,7 +1202,7 @@ function rgResolve(r) { // เหมือน dgResolve + ผลของบั�
     const C = DG_CLS[m.cls] || DG_CLS.warrior, hits = a === 'sk' && C.hits ? C.hits : 1, mult = (a === 'sk' ? C.sk * (1 + (B(m).sk || 0)) / hits : 1) * (r.round === 1 ? 1 + (B(m).first || 0) : 1);
     let tot = 0, crit = false;
     for (let h = 0; h < hits; h++) {
-      let d = m.atk * rnd(0.85, 1.15) * mult * combo * team.offense(m);
+      let d = m.atk * rnd(0.85, 1.15) * mult * combo * team.offense(m,a==='sk');
       if (Math.random() * 100 < m.crit + (C.crit || 0)) { d *= 2; crit = true; }
       d *= team.shellRate(a==='sk'&&C.pierce?1:0);
       if (en.stun) d *= 1.3;
@@ -1271,13 +1299,18 @@ function wdAuto(d, i) { const m = d.s[i], o = d.s[1 - i]; if (m.ug >= 100) retur
     if(k&&!m.webBuff[k.id]){m.webCursor166=(at+1)%7;return k.id}
   }
   if (m.cd <= 0) return 'sk'; return 'atk'; }
-function wdHit(m, o, mult, pierce=0) { // คืน {d, crit, miss}
-  if (Math.random() * 100 < Math.min(25, o.dodge || 0)) return { d: 0, miss: true };
+function wdHit(m, o, mult, pierce=0, skill=false, critAdd=0) { // คืน {d, crit, miss}
+  if (Math.random() * 100 < Math.min(50,(o.dodge||0)+100*(wdWebBuff166(o,'dodge')+wdWebBuff166(m,'blind170')))) return { d: 0, miss: true };
   let d = m.atk * rnd(0.9, 1.1) * mult * (1+wdWebBuff166(m,'atk')) * (1-wdWebBuff166(o,'eatk160')), crit = false;
-  if (Math.random() * 100 < Math.min(60, m.crit || 0)) { d *= 1.8; crit = true; }
+  if (Math.random() * 100 < Math.min(60, (m.crit||0)+critAdd)) { d *= 1.8; crit = true; }
   const def=o.def*(1-Math.min(.8,pierce+wdWebBuff166(m,'edef160')));
   const red = Math.min(0.4, def / (def + 60 + o.lvl * 8)); d *= (1-red)*(1-wdWebBuff166(o,'ward160')); if (o.guard) d *= WD_GUARD;
-  return { d: gemHitServer140(o,Math.max(1, Math.round(d))), crit };
+  if(skill)d*= (1-wdWebBuff166(o,'magicWard170'))*(1+wdWebBuff166(m,'vuln170'));
+  d=gemHitServer140(o,Math.max(1,Math.round(d)));
+  if(o.webShield170&&wdWebBuff166(o,'shield170')){
+    const absorbed=Math.min(d,o.webShield170);o.webShield170-=absorbed;d-=absorbed;
+  }
+  return {d,crit};
 }
 function wdAct(d, i, a) {
   if (d.ph !== 'fight' || d.turn !== i) return 'ยังไม่ถึงตาคุณ';
@@ -1286,32 +1319,46 @@ function wdAct(d, i, a) {
   if (a === 'ult' && m.ug < 100) return 'ไม้ตายยังไม่เต็ม';
   if (a === 'pot' && m.pots <= 0) return 'ยาหมดแล้ว';
   if (!k&&!['atk', 'sk', 'grd', 'pot', 'ult'].includes(a)) return 'คำสั่งไม่ถูกต้อง';
-  m.guard = false;const gemLog140=[];gemTurnServer140(m,true,gemLog140);
-  for(const id of Object.keys(m.webBuff))if(m.webBuff[id]>0)m.webBuff[id]--;
+  m.guard = false;const gemLog140=[],healRate=1-wdWebBuff166(o,'antiHeal170');gemTurnServer140(m,true,gemLog140,null,null,healRate);
+  const mp=m.mp,power=k?engine.webPower170(k,m.hp,m.mhp,o.hp,o.mhp,mp,m.mmp):1;
+
   if(k){m.mp-=k.mp;m.webCd[k.id]=k.cd+1}
   if(k&&k.t==='b'){
     m.webBuff[k.id]=k.dur;ev.t='buff';
-    const heal=Math.min(m.mhp-m.hp,Math.round(m.mhp*(k.b.heal160?.[0]||0)*.005));
+    const heal=Math.min(m.mhp-m.hp,Math.round(m.mhp*(k.b.heal160?.[0]||0)*.005*healRate));
+    if(k.shield)m.webShield170=Math.max(m.webShield170||0,Math.round(m.mhp*k.shield*.5));
+    if(k.manaHeal)m.mp=Math.min(m.mmp,m.mp+Math.round(m.mmp*k.manaHeal));
+    if(k.cooldown){engine.webCooldown170(m.webCd,k.id,k.cooldown);m.cd=Math.max(0,m.cd-k.cooldown);}
     m.hp+=heal;ev.h=heal;txt=m.n+' ใช้ '+k.n+(heal?' · ฟื้น HP '+heal:'');
   }
   else if (a === 'grd') { m.guard = true; m.ug = Math.min(100, m.ug + 15); txt = m.n + ' ตั้งท่าป้องกัน (ดาเมจตาถัดไป −50%)'; }
-  else if (a === 'pot') { const v = Math.min(m.mhp - m.hp, Math.round(m.mhp * 0.25)); m.hp += v; m.pots--; ev.h = v; txt = m.n + ' ดื่มยา +' + v.toLocaleString() + ' HP (เหลือ ' + m.pots + ')'; }
+  else if (a === 'pot') { const v = Math.min(m.mhp - m.hp, Math.round(m.mhp * 0.25 * healRate)); m.hp += v; m.pots--; ev.h = v; txt = m.n + ' ดื่มยา +' + v.toLocaleString() + ' HP (เหลือ ' + m.pots + ')'; }
   else {
     const hits=k?k.hits||1:a==='sk'?m.hits:1, mult=k?k.m[0]*hits:a==='ult'?4:a==='sk'?m.skm:1; let tot = 0, crit = false, miss = false;
-    for (let h = 0; h < hits; h++) { const r = wdHit(m, o, mult / hits,k?.ign||0); tot += r.d; crit = crit || r.crit; miss = miss || r.miss; }
+    for (let h = 0; h < hits; h++) { const r = wdHit(m, o, mult*power/hits,k?.ign||0,!!k||a==='sk'||a==='ult',k?.critAdd||0); tot += r.d; crit = crit || r.crit; miss = miss || r.miss; }
     if (a === 'sk') m.cd = 3; if (a === 'ult') m.ug = 0; else m.ug = Math.min(100, m.ug + 20);
+    const actual=Math.min(o.hp,tot);
     o.hp = Math.max(0, o.hp - tot); if (tot > 0) o.ug = Math.min(100, o.ug + 10); ev.d = tot; ev.c = crit; ev.m = miss && !tot;
     txt = m.n + (a === 'ult' ? ' ปล่อยไม้ตาย! ' : a === 'sk' ? ' ใช้' + m.skn + ' ' : ' โจมตี ') + (tot ? '−' + tot.toLocaleString() + (crit ? ' คริติคอล!' : '') : '· ' + o.n + ' หลบได้!');
     if(k){
-      const heal=Math.min(m.mhp-m.hp,Math.round(tot*(k.leech||0)*.5));m.hp+=heal;ev.h=heal;
+      const heal=Math.min(m.mhp-m.hp,Math.round(actual*(k.leech||0)*.5*healRate));m.hp+=heal;ev.h=heal;
+      if(tot>0&&k.refund)m.mp=Math.min(m.mmp,m.mp+k.refund);
+      if(actual>0&&k.burn)o.webBurn170={left:2,dmg:Math.max(1,Math.round(actual*k.burn*.5))};
       txt=m.n+' ใช้ '+k.n+' −'+tot;
     }
     o.guard = false;
   }
+  const regen=Math.min(m.mhp-m.hp,Math.round(m.mhp*wdWebBuff166(m,'regen170')*healRate));
+  if(regen>0)m.hp+=regen;
+  for(const id of Object.keys(m.webBuff))if(m.webBuff[id]>0&&id!==k?.id)m.webBuff[id]--;
   for(const id of Object.keys(m.webCd))if(m.webCd[id]>0)m.webCd[id]--;
   if (m.cd > 0 && a !== 'sk') m.cd--;
+  if(m.webBurn170?.left>0){
+    const fire=Math.min(m.hp,m.webBurn170.dmg);m.hp-=fire;m.webBurn170.left--;gemLog140.push('คลื่นเพลิงเผาไหม้ −'+fire);
+  }
   d.ev = [ev]; d.log = [txt].concat(gemLog140,d.log).slice(0, 8); d.seq++; d.ver++;
   if (o.hp <= 0) { wdEnd(d, i, o.n + ' หมดแรง!'); return null; }
+  if(m.hp<=0){wdEnd(d,1-i,m.n+' หมดแรง!');return null;}
   d.turn = 1 - i; if (d.turn === 0) d.round++; d.deadline = Date.now() + WD_TURN; return null;
 }
 async function wdEnd(d, wi, why) {
@@ -1430,6 +1477,87 @@ function cleanInputs(inp) {
   if (inp && typeof inp === 'object') for (const k of ['cname', 'gname', 'gamt']) if (typeof inp[k] === 'string') o[k] = inp[k].slice(0, 40);
   return o;
 }
+const GUILD_CREATE169=200000,GUILD_CAP169=190000000,GUILD_DEFAULT169=['.444444.','.488884.','.488884.','.481184.','.488884.','..4884..','...44...','........'].join('');
+const accountQueue169=new Map();
+let guildQueue169=Promise.resolve();
+function guildEmblem171(emblem){
+  if(/^[.0-9ab]{576}$/.test(emblem))return emblem;
+  const old=/^[.0-9ab]{64}$/.test(emblem)?emblem:GUILD_DEFAULT169;
+  return old.match(/.{8}/g).map(row=>Array.from(row,pixel=>pixel.repeat(3)).join('').repeat(3)).join('');
+}
+function guildSummary169(row){
+  if(!row)return null;
+  const gold=Number(row.gold);
+  const lv=Math.min(20,Math.floor((1+Math.sqrt(1+8*gold/1000000))/2));
+  return {id:Number(row.id),name:row.name,owner:Number(row.owner),gold,lv,emblem:guildEmblem171(row.emblem)};
+}
+function guildSync169(uid,p,g){
+  if(JSON.stringify(p.s.guild169||null)===JSON.stringify(g))return;
+  p.s=engine.run(p.s,p.ui,{},E=>E.guildSet169(g)).s;
+  p.v++;updateSnap(uid,p);
+  const t=TOWN.get(uid);if(t)t.guild169=g;
+}
+async function guildView169(p){
+  const g=p.s.guild169;
+  if(g){
+    const roster=await db.guildRoster169(g.id);
+    return {members:roster.map(m=>({uid:Number(m.uid),name:m.name,lv:Number(m.level)}))};
+  }
+  const list=await db.guildList169();
+  return {list:list.map(row=>({...guildSummary169(row),count:Number(row.members)}))};
+}
+async function guildAction169(uid,p,b,res){
+  const fail=(error,code=409)=>send(res,code,{error});
+  if(!p.s.created)return fail('สร้างตัวละครก่อน');
+  const op=b.op;
+  if(op==='list')return send(res,200,{guild:p.s.guild169||null,...await guildView169(p)});
+  if(!takeToken(p))return fail('ส่งคำสั่งเร็วเกินไป',429);
+  if(p.s.battle||DGR.get(DGU.get(uid))?.st==='fight')return fail('จบการต่อสู้ก่อนจัดการกิลด์');
+  const g=p.s.guild169;
+  let target=g?.id, cost=0, name='', key='';
+  if(op==='create'){
+    if(g)return fail('คุณมีกิลด์แล้ว');
+    name=typeof b.name==='string'?b.name.normalize('NFKC').trim().replace(/\s+/gu,' '):'';
+    if(Array.from(name).length<2||Array.from(name).length>14||/[\p{Cc}\p{Cf}]/u.test(name))return fail('ชื่อกิลด์ต้องยาว 2–14 ตัวอักษร',400);
+    key=name.toLowerCase();cost=GUILD_CREATE169;
+  }else if(op==='donate'){
+    if(!g)return fail('เข้ากิลด์ก่อน');
+    if(g.lv>=20)return fail('กิลด์เลเวลเต็มแล้ว');
+    cost=b.gold;
+    if(!Number.isSafeInteger(cost)||cost<1||cost>GUILD_CAP169-g.gold)return fail('จำนวนทองบริจาคไม่ถูกต้อง',400);
+  }else if(op==='join'){
+    target=b.id;
+    if(g||!Number.isSafeInteger(target)||target<=0)return fail('เข้ากิลด์ไม่ได้');
+    if(!await db.guildJoin169(uid,target))return fail('กิลด์เต็มหรือไม่พบกิลด์');
+  }else if(op==='leave'){
+    if(!g)return fail('คุณยังไม่มีกิลด์');
+    await db.guildLeave169(uid);
+  }else if(op==='emblem'){
+    if(!g||g.owner!==uid)return fail('เฉพาะหัวหน้ากิลด์แก้ตราได้',403);
+    if(typeof b.emblem!=='string'||!(/^[.0-9ab]{576}$/).test(b.emblem))return fail('ตรากิลด์ไม่ถูกต้อง',400);
+    if(!await db.guildEmblem169(uid,b.emblem))return fail('เฉพาะหัวหน้ากิลด์แก้ตราได้',403);
+  }else return fail('คำสั่งกิลด์ไม่ถูกต้อง',400);
+  if(cost){
+    if(p.s.gold<cost)return fail('ทองไม่พอ');
+    await persist(uid,p);
+    const id=crypto.randomUUID(),ver=p.v;
+    try{await db.guildPay169(id,uid,target||0,cost,ver,name,key,guildEmblem171(GUILD_DEFAULT169),Date.now());}
+    catch(e){
+      if(e.message.includes('guild_name'))return fail('ชื่อกิลด์นี้ถูกใช้แล้ว');
+      if(/guild_balance|guild_donation|guild_member/.test(e.message))return fail('ข้อมูลกิลด์หรือยอดทองเปลี่ยน กรุณาลองใหม่');
+      if(!await db.guildPayment169(id))throw e;
+    }
+    p.s.gold-=cost;p.v++;
+  }
+  const mine=guildSummary169(await db.guild169(uid));
+  guildSync169(uid,p,mine);
+  const current=mine||guildSummary169(await db.guildById169(target));
+  for(const [mid,m] of live)if(mid!==uid&&m.s.guild169?.id===target){
+    m.pendingGuild169=current;
+    const t=TOWN.get(mid);if(t)t.guild169=current;
+  }
+  return send(res,200,{s:p.s,ui:p.ui,v:p.v,guild:mine,...await guildView169(p)});
+}
 const reply=(res,p,out,user)=>{const pending=p.partyFx50;delete p.partyFx50;return send(res,200,{s:p.s,ui:p.ui,fx:(out.fx||[]).concat(pending&&Date.now()-pending.at<5000?pending.fx:[]),fxt:out.fxt||{},v:p.v,user})};
 
 // B48: public equipment views and opt-in party invitations, kept outside saves.
@@ -1533,15 +1661,23 @@ const routes = {
     await wbEnsure(); engine.setWB(wbCtx()); engine.setBoard(board(), u.id);
     await wbPrizes(u.id, p).catch(e => console.error('prize', e.message));
     await mailAllLoad(); mailSync101(p);
-    await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad(); await launchLoad();
+    await funLoad(); await launchLoad();
     const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); E.enter(); });
     p.s = out.s; p.ui = out.ui;newsEnter75(u.id,p);await newsClock75(); p.v++; persist(u.id, p); updateSnap(u.id, p);
     send(res, 200, { s: out.s, ui: out.ui, fx: [], fxt: {}, v: p.v, user: u.display, uid: u.id });
+  },
+  'POST /api/guild': async (req,res)=>{
+    const u=await auth(req);if(!u)return send(res,401,{error:'กรุณาเข้าสู่ระบบ'});
+    const b=await readBody(req),p=await session(u.id);
+    const work=guildQueue169.then(()=>guildAction169(u.id,p,b,res));
+    guildQueue169=work.catch(()=>{});
+    return work;
   },
   'POST /api/act': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
     const b = await readBody(req);
     const a = String(b.a || ''), pr = b.p == null ? null : String(b.p);
+    if (/^(fac|city|war106|gcreate|gjoin|gleave|gdonate|gshop|wardecl|warfighton)/.test(a))return send(res,410,{error:'กิจกรรมนี้ปิดแล้ว'});
     if (!/^[a-z0-9]{1,20}$/.test(a) || (pr && pr.length > 80)) return send(res, 400, { error: 'คำสั่งไม่ถูกต้อง' });
     const p = await session(u.id);
     if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
@@ -1570,11 +1706,11 @@ const routes = {
     const before = p.s.gold;
     engine.setBoard(board(), u.id); await wbEnsure(); engine.setWB(wbCtx());
     ptPrep(u.id, p);
-    await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad(); await launchLoad();
+    await funLoad(); await launchLoad();
     const js0 = jSnap(p.s), newsBefore=newsSnap75(p.s);
     const out = engine.run(p.s, p.ui, cleanInputs(b.inp), E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); if (warSnap && E.warOpp106) E.warOpp106(warSnap, warTid); if (revSnap && E.pvpRevOpp110) E.pvpRevOpp110(revSnap, revTid); E.act(a, pr); });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; newsAfter75(u.id,p,newsBefore);partyAfter50(u.id,p,js0,out);ptAfter(u.id, p); cityAfter(p); funMark(p); await launchCheck(u.id, p); if (p.s.war106Res) await warResolve(u.id, p).catch(e => console.error('war resolve', e.message)); if (p.s.pvpRes110) await pvpAfter110(u.id, p).catch(e => console.error('pvp rev', e.message));; p.v++; persist(u.id, p); updateSnap(u.id, p);
+    p.s = out.s; p.ui = out.ui; newsAfter75(u.id,p,newsBefore);partyAfter50(u.id,p,js0,out);ptAfter(u.id, p); funMark(p); await launchCheck(u.id, p); if (p.s.war106Res) await warResolve(u.id, p).catch(e => console.error('war resolve', e.message)); if (p.s.pvpRes110) await pvpAfter110(u.id, p).catch(e => console.error('pvp rev', e.message));; p.v++; persist(u.id, p); updateSnap(u.id, p);
     if (out.s.gold - before > 200000) db.audit(u.id, 'gold_jump', a + ' +' + (out.s.gold - before)).catch(() => {});
     reply(res, p, out);
   },
@@ -1587,14 +1723,14 @@ const routes = {
     let changed = PRIZE_PENDING.has(u.id);
     await prizeCheck(u.id, p);
     await mailAllLoad(); if (mailSync101(p)) changed = true;
-    await warLoad(); { const wb = WAR.buff && WAR.buff.fac === p.s.fac && WAR.buff.until > Date.now() ? WAR.buff.until : 0; if ((p.s.wb106 || 0) !== wb) { p.s.wb106 = wb; changed = true; } }
+
     engine.setBoard(board(), u.id); engine.setWB(wbCtx());
     ptPrep(u.id, p);
-    await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad(); await launchLoad();
+    await funLoad(); await launchLoad();
     const twn = TOWN.get(u.id), inTown = !!(twn && !twn.lake && now - twn.at < 6000), js0 = jSnap(p.s),newsBefore=newsSnap75(p.s);newsTouch75(p);
     const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); const tg = E.townEn ? E.townEn(inTown) : false; changed = E.tick() || tg || changed; });
     if (out.wb) await wbRecord(u.id, p, out.wb);
-    p.s = out.s; p.ui = out.ui; newsAfter75(u.id,p,newsBefore);partyAfter50(u.id,p,js0,out);ptAfter(u.id, p); funMark(p); if (await launchCheck(u.id, p)) changed = true; if (p.s.cityRes) { cityAfter(p); changed = true; } if (p.s.pvpRes110) { await pvpAfter110(u.id, p).catch(e => console.error('pvp rev', e.message)); changed = true; }
+    p.s = out.s; p.ui = out.ui; newsAfter75(u.id,p,newsBefore);partyAfter50(u.id,p,js0,out);ptAfter(u.id, p); funMark(p); if (await launchCheck(u.id, p)) changed = true;  if (p.s.pvpRes110) { await pvpAfter110(u.id, p).catch(e => console.error('pvp rev', e.message)); changed = true; }
     if (changed || out.fx.length) { p.v++; persist(u.id, p); updateSnap(u.id, p); }
     if (!changed && !out.fx.length && Number(b.v) === p.v) return send(res, 200, { same: true, v: p.v });
     reply(res, p, out);
@@ -1607,7 +1743,7 @@ const routes = {
     const newsSince=Math.max(0,Number(new URL(req.url,'http://x').searchParams.get('newsSince'))||0);
     const team = await teamOf(u.id);
     const since = Number(new URL(req.url, 'http://x').searchParams.get('since')) || 0;
-    const fac = p.s.fac == null ? null : p.s.fac;
+    const fac = null;
     const out = [];
     for (const m of CHATLOG) {
       if (m.id <= since) continue;
@@ -1627,7 +1763,7 @@ const routes = {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
     const b = await readBody(req);
     const ch = String(b.ch || ''), t = String(b.t || '').replace(/\s+/g, ' ').trim().slice(0, 100);
-    if (!['world', 'fac', 'team', 'dm'].includes(ch) || !t) return send(res, 400, { error: 'ข้อความไม่ถูกต้อง' });
+    if (!['world', 'team', 'dm'].includes(ch) || !t) return send(res, 400, { error: 'ข้อความไม่ถูกต้อง' });
     const p = await session(u.id), now = Date.now();
     if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
     if (now - (p.lastChat || 0) < 1200) return send(res, 429, { error: 'ส่งเร็วเกินไป รอสักครู่' });
@@ -1790,7 +1926,7 @@ const routes = {
   },
   'GET /api/city': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
-    await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad(); await launchLoad();
+    await funLoad(); await launchLoad();
     send(res, 200, cityCtx());
   },
   'POST /api/town': async (req, res) => {
@@ -1802,14 +1938,14 @@ const routes = {
     const now = Date.now();
     if (b.leave) { TOWN.delete(u.id); return send(res, 200, { list: [] }); }
     const lake = b.lake === true;
-    TOWN.set(u.id, { lake, n: String(p.s.name || u.display).slice(0, 16), cls: p.s.cls, lvl: p.s.lvl | 0, look: playerLook52(p.s), tt: String(p.s.title || '').slice(0, 12), sp: p.s.sup100 ? 1 : 0, sf: p.s.s105 && p.s.s105.fx && p.s.s105.fx.frame ? 1 : 0, sg: p.s.s105 && p.s.s105.fx && p.s.s105.fx.glow ? 1 : 0, x: Math.max(0, Math.min(lake ? 893 : 1440, Number(b.x) || 0)), y: Math.max(0, Math.min(1080, Number(b.y) || 0)), at: now });
+    TOWN.set(u.id, { lake, n: String(p.s.name || u.display).slice(0, 16), cls: p.s.cls, lvl: p.s.lvl | 0, look: playerLook52(p.s), guild169:p.s.guild169||null, tt: String(p.s.title || '').slice(0, 12), sp: p.s.sup100 ? 1 : 0, sf: p.s.s105 && p.s.s105.fx && p.s.s105.fx.frame ? 1 : 0, sg: p.s.s105 && p.s.s105.fx && p.s.s105.fx.glow ? 1 : 0, x: Math.max(0, Math.min(lake ? 893 : 1440, Number(b.x) || 0)), y: Math.max(0, Math.min(1080, Number(b.y) || 0)), at: now });
     for (const [id, t] of TOWN) if (now - t.at > TOWN_ON_MS * 5) TOWN.delete(id);
     for (const [id, t] of LASTSAY) if (now - t.at > 10000) LASTSAY.delete(id);
     const list = [];
     for (const [id, t] of TOWN) {
       if (id === u.id || !!t.lake !== lake || now - t.at > TOWN_ON_MS) continue;
       const sy = LASTSAY.get(id);
-      list.push({ uid: id, n: t.n, cls: t.cls, lvl: t.lvl, look: t.look, tt: t.tt, sp: t.sp, sf: t.sf, sg: t.sg, x: t.x, y: t.y, say: sy && now - sy.at < 7000 ? sy.t : '', sayAge: sy ? now - sy.at : 0 });
+      list.push({ uid: id, n: t.n, cls: t.cls, lvl: t.lvl, look: t.look, guild169:t.guild169||null, tt: t.tt, sp: t.sp, sf: t.sf, sg: t.sg, x: t.x, y: t.y, say: sy && now - sy.at < 7000 ? sy.t : '', sayAge: sy ? now - sy.at : 0 });
       if (list.length >= TOWN_MAX) break;
     }
     for (const bt of lake ? [] : botsActive(now)) { if (list.length >= TOWN_MAX) break; if (botWhere(bt, now) !== 'town') continue; list.push(Object.assign(botPub(bt, now), botTownPos(bt, now), { say: '', sayAge: 0 })); }
@@ -1844,7 +1980,7 @@ const routes = {
     send(res, 200, { top: all.slice(0, 10).map(x => ({ n: x.n, cls: x.cls, lvl: x.lvl, rating: x.rating, tt: x.tt, sp: x.sp | 0, me: x.id === u.id })), rank: idx >= 0 ? idx + 1 : 0, total: all.length });
   },
   'GET /api/top': async (req, res) => { if (Date.now() - TOPC.at > 60000) TOPC = { at: Date.now(), top: (await db.top()).map(r => ({ name: r.name, cls: r.cls, lvl: r.level })) }; send(res, 200, { top: TOPC.top }); },
-  'GET /api/online': async (req, res) => { await boardLoad(); await warLoad(); await warRoll(); send(res, 200, { n: realOnline(Date.now()), board: BOARD104.v, war: warStatus(), cv: CLV_SRV }); }, // B98 จำนวนผู้เล่นจริงที่ออนไลน์ (ไม่นับบอท)
+  'GET /api/online': async (req, res) => { await boardLoad(); send(res, 200, { n: realOnline(Date.now()), board: BOARD104.v, war:null, cv: CLV_SRV }); }, // B98 จำนวนผู้เล่นจริงที่ออนไลน์ (ไม่นับบอท)
   'POST /api/pay/checkout': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
     const b = await readBody(req); const sku = String(b.sku || 'sup35'), it = PAY_SKU[sku];
@@ -1909,7 +2045,7 @@ const routes = {
       newsPush75('admin', 0, '📢 ทีมงาน', title + ' · ' + text.replace(/\s+/g, ' ').slice(0, 120));
       return send(res, 200, { msg: 'ตั้งป้ายประกาศแล้ว ผู้เล่นจะเห็นตอนเข้าเกม (และภายใน 1 นาทีสำหรับคนที่ออนไลน์อยู่)', board: BOARD104.v });
     }
-    if (b.op === 'wartest') { await warLoad(); const m = Math.max(0, Math.min(180, Math.floor(+b.min || 0))); WAR.testUntil = m ? Date.now() + m * 60000 : 0; await warSave(true); return send(res, 200, { msg: m ? 'เปิดศึกชิงแดนทดสอบ ' + m + ' นาที' : 'ปิดศึกชิงแดนทดสอบแล้ว' }); }
+    if (b.op === 'wartest') { return send(res,410,{error:'ระบบฝ่ายปิดแล้ว'}); }
     if (b.op === 'boardget') { await boardLoad(); return send(res, 200, { msg: BOARD104.v ? 'มีป้ายประกาศอยู่' : 'ยังไม่มีป้ายประกาศ', board: BOARD104.v }); }
     if (b.op === 'pays') { await payLogLoad(); return send(res, 200, { msg: 'โหลดแล้ว', pays: PAYLOG.list, mode: payStatus101().key }); }
     if (b.op === 'mkt') {
@@ -2028,6 +2164,25 @@ const routes = {
   'GET /api/health': async (req, res) => send(res, 200, { ok: true, players: live.size, db: db.kind.split(' ')[0] }),
 };
 
+// Serialize gameplay saves with guild payments for the same account.
+for(const key of ['GET /api/state','POST /api/act','POST /api/tick','POST /api/guild','POST /api/mkt']){
+  const route=routes[key];
+  routes[key]=async (req,res)=>{
+    const u=await auth(req);
+    if(!u)return send(res,401,{error:'กรุณาเข้าสู่ระบบ'});
+    const previous=accountQueue169.get(u.id);
+    const work=Promise.resolve(previous).catch(()=>{}).then(()=>{
+      const p=live.get(u.id);
+      if(p&&p.pendingGuild169!==undefined){
+        guildSync169(u.id,p,p.pendingGuild169);delete p.pendingGuild169;
+      }
+      return route(req,res);
+    });
+    accountQueue169.set(u.id,work);
+    try{return await work;}finally{if(accountQueue169.get(u.id)===work)accountQueue169.delete(u.id);}
+  };
+}
+
 // Hashed images are standalone files; allow only one safe filename below assets/images.
 async function serveImage61(req,res,pathname){
  if(!pathname.startsWith('/assets/'))return false;
@@ -2056,6 +2211,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(302, { Location: '/' });
       return res.end();
     }
+    if(['GET /api/fac','GET /api/city','POST /api/war','POST /api/wd'].includes(key))return send(res,410,{error:'ระบบฝ่ายปิดแล้ว'});
     if (routes[key]) { if (key === 'POST /api/tick' || key === 'POST /api/act') { const t0 = process.hrtime.bigint(); try { return await routes[key](req, res); } finally { const ms = Number(process.hrtime.bigint() - t0) / 1e6; PERF.n++; PERF.sum += ms; PERF.max = Math.max(PERF.max, ms); if (PERF.n >= 400) { PERF.last = { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) }; PERF.n = 0; PERF.sum = 0; PERF.max = 0; } } } return await routes[key](req, res); }
     if (req.method === 'GET' && url.pathname === '/manifest.webmanifest') { res.writeHead(200, { 'Content-Type': 'application/manifest+json; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }); return res.end(MANIFEST); }
     if (req.method === 'GET' && ICONS[url.pathname]) { res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' }); return res.end(ICONS[url.pathname]); }

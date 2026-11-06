@@ -78,6 +78,8 @@ function loadEngine(htmlPath) {
     normalize: o => clone(E.normalize(o)),
     enhancementVisual: st => E.enhancementVisual(st),
     towerBase163: floor => clone(E.towerBase163(floor)),
+    webPower170: (...args) => E.webPower170(...args),
+    webCooldown170: (cd,id,n) => E.webCooldown170(cd,id,n),
     soloWeb166: st => clone(E.soloWeb166(st)),
     teamWeb161: st => clone(E.teamWeb161(st)),
     snap: st => { try { return E.snap(clone(st)); } catch (e) { return null; } },
