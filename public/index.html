@@ -411,6 +411,9 @@ body.town-landscape #gameWrap main,body.town-landscape #view{position:absolute;i
 .town-top>*{pointer-events:auto;background:rgba(12,22,36,.88);border:1px solid #b99c5d;border-radius:8px;padding:7px 12px;box-shadow:0 3px 12px #0005}
 .town-top strong{font-size:18px;text-align:center}.town-top small{display:block;font-size:10px;color:#ded3bb}.town-player{min-width:145px;font-size:13px}.town-meter{height:5px;background:#241f2c;margin:4px 0;border-radius:3px;overflow:hidden}.town-meter i{display:block;height:100%;background:#75c66e}
 .town-bottom{position:absolute;bottom:max(10px,env(safe-area-inset-bottom));left:14px;right:14px;display:flex;align-items:center;gap:7px;padding:7px;background:rgba(12,22,36,.9);border:1px solid #b99c5d;border-radius:9px}.town-bottom span{flex:1;font-size:11px;text-align:center;color:#d9d5c1}.town-bottom .btn,.town-top .btn{width:auto;min-width:68px;font-size:12px;margin:0;padding:7px 10px}
+#townStage .capital-zoom185{position:absolute;right:10px;bottom:calc(145px + env(safe-area-inset-bottom));z-index:5;display:flex;align-items:center;gap:3px;padding:4px;background:#111e2eeb;border:1px solid #ae9462;border-radius:10px}
+#gameWrap #townStage .capital-zoom185 .btn{min-width:40px;min-height:40px;padding:4px;font-size:15px}
+#gameWrap #townStage .capital-zoom185 .zoom-reset185{font-size:11px;min-width:46px}
 .town-instruction{position:absolute;left:16px;bottom:78px;font-size:10px;color:#eee5c9;text-shadow:0 1px 3px #000;pointer-events:none}.town-instruction span{display:none}
 @media(orientation:portrait){body.town-landscape #gameWrap{inset:auto;left:50%;top:50%;width:100dvh;height:100vw;transform:translate(-50%,-50%) rotate(90deg);transform-origin:center}.town-instruction span{display:inline;margin-left:12px}}
 
@@ -3449,7 +3452,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B184';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B185';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -4426,6 +4429,7 @@ function act(a,p){
  if(!SV&&a==='menudaily'){s.dqOpen=!s.dqOpen;dqUI();return}
  if(!SV&&a==='menuopen'){menuOpen(p);return}
  if(!SV&&a==='tab')GB.page=false;
+ if(!SV&&a==='capitalzoom185'){capitalZoomChange185(p);return}
  if(!SV&&a==='chest131'){chest131Open();return}
  if(!SV&&a==='nav113'){navAct113(p);return}
  if(!SV&&a==='menuback'){menuBack();return}
@@ -7787,7 +7791,11 @@ function townDrawError181(o,error){
 function townIsoDraw(c,W,H,tn){
  if(FLD.z!==(TOWN.war?'war':TOWN.lake?'lake':'town')||!FLD.map||!ISO_TOWN.ground)townBuild();
  var dt=Math.min(.05,Math.max(0,(tn-(FLD.last||tn))/1000));FLD.last=tn;fieldUpdate(dt,tn);
- var me=townProject(FLD.px,FLD.py),cx=Math.max(-60,Math.min(ISO_TOWN.width-W+60,me[0]-W/2)),cy=Math.max(-100,Math.min(ISO_TOWN.height-H+80,me[1]-H*(TOWN.lake?.46:.60)));ISO_TOWN.camera=[cx,cy];
+ var me=townProject(FLD.px,FLD.py),cx=Math.max(-60,Math.min(ISO_TOWN.width-W+60,me[0]-W/2)),cy=Math.max(-100,Math.min(ISO_TOWN.height-H+80,me[1]-H*(TOWN.lake?.46:.60)));if(capitalActive180()){
+  if(W>=ISO_TOWN.width)cx=(ISO_TOWN.width-W)/2;
+  if(H>=ISO_TOWN.height)cy=(ISO_TOWN.height-H)/2;
+ }
+ ISO_TOWN.camera=[cx,cy];
  c.clearRect(0,0,W,H);mapBackdrop138(c,W,H,TOWN.war?3:0);c.save();c.translate(-Math.round(cx),-Math.round(cy));c.imageSmoothingEnabled=false;c.drawImage(ISO_TOWN.ground,0,0);if(TOWN.lake)lakeRipples158(c,tn);
  var objects=ISO_TOWN.objects.slice();
  if(!TOWN.war&&!TOWN.lake)objects.push({kind:'portal154',x:PORTAL154.x,y:PORTAL154.y,depth:PORTAL154.x+PORTAL154.y});
@@ -7859,7 +7867,25 @@ function artResize74(cv,w,h){
 }
 function artContext74(c,cv){var a=cv._art74;c.setTransform(a?a.sx:1,0,0,a?a.sy:1,0,0);c.imageSmoothingEnabled=false;c.globalAlpha=1;c.globalCompositeOperation='source-over'}
 function artSettings74(){return '<h4 class="st">ความคมชัดของภาพ</h4><div class="grid2">'+[[2,'คมชัด'],[1,'มาตรฐาน']].map(function(q){return '<button class="btn" data-a="setart74" data-p="'+q[0]+'" aria-pressed="'+(artDensity74()===q[0])+'">'+q[1]+'</button>'}).join('')+'</div><p class="hint">คมชัด: เพิ่มความละเอียดการวาดตามจอ โดยคงสไตล์พิกเซล · หากเครื่องช้าเลือกมาตรฐาน</p>'}
-function townIsoViewport(cv){var w=cv.clientWidth||VIEW_UI.width||800,h=cv.clientHeight||VIEW_UI.height||450,ratio=h/Math.max(1,w),targetW=Math.min((VIEW_UI.effectiveMode78||VIEW_UI.mode)==='portrait'?360:800,1440/ratio),tw=Math.max(1,Math.round(targetW)),th=Math.max(1,Math.round(tw*ratio));artResize74(cv,tw,th)}
+var CAPITAL_ZOOM185=[60,80,100,120,140],capitalZoom185=2;
+try{var zoomSaved185=Number(localStorage.getItem('capital-zoom185'));if(CAPITAL_ZOOM185.includes(zoomSaved185))capitalZoom185=CAPITAL_ZOOM185.indexOf(zoomSaved185)}catch(e){}
+function capitalZoomChange185(p){
+ if(!s||s.battle||!capitalActive180()||!['in','out','reset'].includes(p))return;
+ var next=p==='reset'?2:Math.max(0,Math.min(CAPITAL_ZOOM185.length-1,capitalZoom185+(p==='in'?1:-1)));
+ if(next===capitalZoom185)return;
+ capitalZoom185=next;
+ try{localStorage.setItem('capital-zoom185',String(CAPITAL_ZOOM185[next]))}catch(e){}
+ render();
+}
+function capitalZoomHtml185(){
+ return '<div class="capital-zoom185" role="group" aria-label="ซูมเมืองหลวง"><button class="btn" data-a="capitalzoom185" data-p="out" aria-label="ซูมออก"'+(capitalZoom185===0?' disabled':'')+'>−</button><button class="btn zoom-reset185" data-a="capitalzoom185" data-p="reset" aria-label="คืนค่าซูม 100 เปอร์เซ็นต์">'+CAPITAL_ZOOM185[capitalZoom185]+'%</button><button class="btn" data-a="capitalzoom185" data-p="in" aria-label="ซูมเข้า"'+(capitalZoom185===CAPITAL_ZOOM185.length-1?' disabled':'')+'>+</button></div>';
+}
+function townIsoViewport(cv){
+ var w=cv.clientWidth||VIEW_UI.width||800,h=cv.clientHeight||VIEW_UI.height||450,ratio=h/Math.max(1,w);
+ var targetW=Math.min((VIEW_UI.effectiveMode78||VIEW_UI.mode)==='portrait'?360:800,1440/ratio);
+ if(cv.getAttribute('data-mode')==='field'&&capitalActive180())targetW=targetW*100/CAPITAL_ZOOM185[capitalZoom185];
+ var tw=Math.max(1,Math.round(targetW)),th=Math.max(1,Math.round(tw*ratio));artResize74(cv,tw,th);
+}
 
 var townFlatBuild=townBuild;
 townBuild=function(){if(TOWN.war){warFlatBuild106();warIsoBuild106()}else{townFlatBuild();townIsoBuild()}};
@@ -7873,7 +7899,7 @@ function townIsoView(){
  (lake?'<button class="btn sm" data-a="lakeexit">กลับแผนที่เดิม</button>':'<button class="btn sm" data-a="portalopen">✦ ประตูวาร์ป</button>')+'</div>'+
  (!lake&&PORTAL154.open?huntMapPicker150(true):'')+(lake?shorePanel155():'')+
  '<div class="town-instruction">'+(lake?'เดินไปที่หาดทรายแล้วกดตกปลาได้ตลอดแนวริมน้ำ':'เขตปลอดภัย · '+TOWN.n+' คน · พลังเมือง '+townEnLeft())+'</div>'+
- chatFloatHtml159()+'<div class="town-bottom">'+fishButtons158()+'</div></section>';
+ (lake?'':capitalZoomHtml185())+chatFloatHtml159()+'<div class="town-bottom">'+fishButtons158()+'</div></section>';
 }
 
 function viewWild(){var room=dgRoom();if(room&&(room.st==='fight'||room.st!=='lobby'&&!NAV66.world))return pendHtml()+viewDgFight();if(FLD.town)return pendHtml()+viewTown();return fieldIsoView()}
