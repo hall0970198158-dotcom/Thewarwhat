@@ -3230,7 +3230,10 @@ function navCur113(){var cur=BAWAY||s.tab||'wild',d=s.dtab||'',onMenu=landscapeM
  if(cur==='me'){if(d==='goals'||d==='farm'||d==='bestiary')return ['adv',d];if(d==='bag')return ['bag','acct'];if(d==='set')return ['set','set'];return ['look',['pets','title','collect','book','box'].indexOf(d)>=0?d:'look']}
  if(cur==='char')return ['char',s.chtab||'stat'];if(cur==='craft')return ['bag','craft'];if(cur==='mat')return ['bag','mat'];
  if(cur==='pvp')return ['event','pvp'];if(cur==='tower')return ['event',s.etab||'tower'];if(cur==='guild')return ['fac','guild'];return ['adv','wild']}
-function navGo113(g,sub){NAV113L[g]=sub;MENU_UI.jump=null;{try{if(typeof GB!=='undefined'&&GB.open){GB.open=false;GB.sel=-1}if(typeof MAIL101!=='undefined')MAIL101.open=false}catch(e){}}
+function navGo113(g,sub){
+ // สมุดปลาเป็นหน้าต่างแยก จึงไม่แทนแท็บย่อยล่าสุดของตัวละคร
+ if(g!=='char'||sub!=='fish')NAV113L[g]=sub;
+ MENU_UI.jump=null;{try{if(typeof GB!=='undefined'&&GB.open){GB.open=false;GB.sel=-1}if(typeof MAIL101!=='undefined')MAIL101.open=false}catch(e){}}
  if(sub==='fish'){act('fishopen');return}
  if(g==='set'){menuOpen('settings');return}
  if(g==='adv'){if(sub==='daily'){s.dqOpen=true;dqUI();render();return}if(sub==='wild'){returnWorld66();return}menuOpen(sub);return}
@@ -3239,7 +3242,7 @@ function navGo113(g,sub){NAV113L[g]=sub;MENU_UI.jump=null;{try{if(typeof GB!=='u
  if(g==='look'){if(sub==='collect')COL_UI59.show=false;act('tab','me');act('dtabset',sub);return}
  if(g==='event'){if(sub==='pvp'){act('tab','pvp');return}act('tab','tower');act('etab',sub);return}
  if(g==='fac'){GUILD_UI169.data=null;GUILD_UI169.error='';GUILD_UI169.page='home';act('tab','guild');return}}
-function navAct113(p){var a=String(p||'').split(':'),g=a[0],sub=a[1];if(g==='set'){navGo113('set','set');return}var G=NAV113.filter(function(x){return x.g===g})[0];if(g!=='set'&&!G)return;if(!sub){if(g==='adv')sub=landscapeMenuActive()&&navCur113()[0]!=='adv'?'wild':(navCur113()[1]==='wild'?(NAV113L.advm||'goals'):'wild');else sub=NAV113L[g]||G.subs[0][0]}if(g==='adv'&&sub!=='wild'&&sub!=='daily')NAV113L.advm=sub;navGo113(g,sub)}
+function navAct113(p){var a=String(p||'').split(':'),g=a[0],sub=a[1];if(g==='set'){navGo113('set','set');return}var G=NAV113.filter(function(x){return x.g===g})[0];if(g!=='set'&&!G)return;if(!sub){if(g==='adv')sub=landscapeMenuActive()&&navCur113()[0]!=='adv'?'wild':(navCur113()[1]==='wild'?(NAV113L.advm||'goals'):'wild');else sub=(g==='char'&&NAV113L[g]==='fish'?'stat':NAV113L[g])||G.subs[0][0]}if(g==='adv'&&sub!=='wild'&&sub!=='daily')NAV113L.advm=sub;navGo113(g,sub)}
 function navDot113(g){try{if(g==='char')return s.sp>0||s.skp>0||m51Budget(s)>m51Spent(s)||(j4Eligible(s)&&!job4Of(s));if(g==='adv')return dqClaimable()||!lgState().got||!lg30State().got;if(g==='event')return typeof s105Can==='function'&&false}catch(e){}return false}
 function navShow113(){if(SV||!s||!s.created||(battlePresentationActive()&&!BAWAY))return false;if(s.battle&&!BAWAY)return false;var r=dgRoom();if(r&&r.st==='fight'&&!BAWAY)return false;if(typeof wdOn108==='function'&&wdOn108()&&(TOWN.war||NET.wd?.friendly173)&&!BAWAY)return false;if(s.res&&!BAWAY)return false;return true}
 var UI_ICONS157=['adv','char','bag','look','event','fac','gear','rod','fish'];
@@ -3432,7 +3435,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B176';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B177';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
