@@ -31,6 +31,39 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS wbkill (user_id INTEGER NOT NULL, day INTEGER NOT NULL, claimed INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (user_id, day))`,
   `CREATE TABLE IF NOT EXISTS ladder (user_id INTEGER PRIMARY KEY, snap TEXT NOT NULL, rating INTEGER NOT NULL DEFAULT 1000, upd INTEGER NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS teams_team ON teams(team)`,
+  `CREATE TABLE IF NOT EXISTS guild169 (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, name_key TEXT NOT NULL UNIQUE,
+    owner INTEGER NOT NULL, gold INTEGER NOT NULL DEFAULT 0, emblem TEXT NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS guild_member169 (
+    uid INTEGER PRIMARY KEY, gid INTEGER NOT NULL, joined INTEGER NOT NULL)`,
+  `CREATE INDEX IF NOT EXISTS guild_member169_gid ON guild_member169(gid, joined, uid)`,
+  `CREATE TABLE IF NOT EXISTS guild_payment169 (
+    id TEXT PRIMARY KEY, uid INTEGER NOT NULL, gid INTEGER NOT NULL, cost INTEGER NOT NULL,
+    ver INTEGER NOT NULL, name TEXT NOT NULL, name_key TEXT NOT NULL, emblem TEXT NOT NULL, at INTEGER NOT NULL)`,
+  `CREATE TRIGGER IF NOT EXISTS guild_payment169_apply AFTER INSERT ON guild_payment169 BEGIN
+    SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM saves WHERE user_id=NEW.uid AND ver=NEW.ver AND gold>=NEW.cost)
+      THEN RAISE(ABORT,'guild_balance') END;
+    SELECT CASE WHEN NEW.gid=0 AND EXISTS(SELECT 1 FROM guild_member169 WHERE uid=NEW.uid)
+      THEN RAISE(ABORT,'guild_member') END;
+    SELECT CASE WHEN NEW.gid=0 AND EXISTS(SELECT 1 FROM guild169 WHERE name_key=NEW.name_key)
+      THEN RAISE(ABORT,'guild_name') END;
+    SELECT CASE WHEN NEW.gid>0 AND NOT EXISTS(
+      SELECT 1 FROM guild169 g JOIN guild_member169 m ON m.gid=g.id
+      WHERE g.id=NEW.gid AND m.uid=NEW.uid AND g.gold+NEW.cost<=190000000)
+      THEN RAISE(ABORT,'guild_donation') END;
+    INSERT INTO guild169(name,name_key,owner,emblem)
+      SELECT NEW.name,NEW.name_key,NEW.uid,NEW.emblem WHERE NEW.gid=0;
+    INSERT INTO guild_member169(uid,gid,joined)
+      SELECT NEW.uid,last_insert_rowid(),NEW.at WHERE NEW.gid=0;
+    UPDATE guild169 SET gold=gold+NEW.cost WHERE id=NEW.gid;
+    UPDATE saves SET data=json_set(data,'$.gold',gold-NEW.cost), gold=gold-NEW.cost,
+      ver=ver+1, updated_at=NEW.at WHERE user_id=NEW.uid;
+  END`,
+  `CREATE TRIGGER IF NOT EXISTS guild_member169_leave AFTER DELETE ON guild_member169 BEGIN
+    DELETE FROM guild169 WHERE id=OLD.gid AND NOT EXISTS(SELECT 1 FROM guild_member169 WHERE gid=OLD.gid);
+    UPDATE guild169 SET owner=(SELECT uid FROM guild_member169 WHERE gid=OLD.gid ORDER BY joined,uid LIMIT 1)
+      WHERE id=OLD.gid AND owner=OLD.uid;
+  END`,
   `CREATE TABLE IF NOT EXISTS audit (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER, at INTEGER, kind TEXT, detail TEXT)`,
@@ -140,6 +173,20 @@ function createDb() {
     ? tursoBackend(process.env.TURSO_URL, process.env.TURSO_TOKEN || '')
     : localBackend(process.env.DB_PATH || path.join(__dirname, 'data', 'game.db'));
   return {
+    guildById169: id => B.get('SELECT * FROM guild169 WHERE id=?',[id]),
+    guild169: uid => B.get('SELECT g.* FROM guild169 g JOIN guild_member169 m ON m.gid=g.id WHERE m.uid=?', [uid]),
+    guildList169: () => B.all(`SELECT g.*, (SELECT COUNT(*) FROM guild_member169 m WHERE m.gid=g.id) AS members
+      FROM guild169 g ORDER BY g.gold DESC,g.id LIMIT 100`),
+    guildRoster169: gid => B.all(`SELECT m.uid,s.name,s.level FROM guild_member169 m JOIN saves s ON s.user_id=m.uid
+      WHERE m.gid=? ORDER BY m.joined,m.uid`, [gid]),
+    guildPayment169: id => B.get('SELECT id FROM guild_payment169 WHERE id=?',[id]),
+    guildPay169: (id,uid,gid,cost,ver,name,key,emblem,at) => B.run(
+      'INSERT INTO guild_payment169 VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING',[id,uid,gid,cost,ver,name,key,emblem,at]),
+    guildJoin169: (uid,gid) => B.get(`INSERT INTO guild_member169(uid,gid,joined)
+      SELECT ?,id,? FROM guild169 WHERE id=? AND (SELECT COUNT(*) FROM guild_member169 WHERE gid=?)<20
+      ON CONFLICT(uid) DO NOTHING RETURNING gid`, [uid,Date.now(),gid,gid]),
+    guildLeave169: uid => B.run('DELETE FROM guild_member169 WHERE uid=?', [uid]),
+    guildEmblem169: (uid,emblem) => B.get('UPDATE guild169 SET emblem=? WHERE owner=? RETURNING id', [emblem,uid]),
     kind: B.kind,
     init: B.init,
     userByName: n => B.get(SQL.userByName, [n]),
