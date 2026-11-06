@@ -558,7 +558,7 @@ function dgAutoWeb162(r,m) {
     m.pick=id;m.twTarget=r.mem[slot];m.twElement=slot;m.webCursor162=(at+1)%7;
     return;
   }
-  if(order.some(Boolean)){m.pick='atk';return}
+  if(order.some(id=>m.web.some(k=>k.id===id))){m.pick='atk';return}
   const alive=dgAlive(r),intent=r.en.intent;
   const needHeal=alive.some(x=>x.hp/x.mhp<.40)||alive.length<r.mem.length;
   m.pick=needHeal&&!m.cd.heal?'heal':
