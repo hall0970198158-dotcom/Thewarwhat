@@ -715,13 +715,6 @@ function botsActive(now) {
 }
 // อยู่ในเมือง (~35%) หรือออกล่าตามโซนที่เหมาะกับเลเวล · สลับทุก ~8 นาที
 function botWhere(b, now) { const k = Math.floor((now + b.off * 3) / 480000); if (bHash(b.i + 303, k) < 0.35) return 'town'; return Math.min(5, Math.floor((botLvl(b, now) - 1) / 10)); }
-// เส้นทางเดินในเมือง (ถนนที่ไม่มีสิ่งกีดขวาง)
-const BOT_SEG = [[540, 728, 900, 728], [720, 690, 720, 1000], [600, 820, 840, 820], [200, 545, 600, 545], [840, 545, 1240, 545], [560, 728, 880, 728], [720, 330, 720, 480], [620, 900, 820, 900]];
-function botTownPos(b, now) {
-  const seg = BOT_SEG[b.i % BOT_SEG.length], step = 5000 + Math.floor(bHash(b.i + 7, 1) * 4000), k = Math.floor((now + b.off) / step);
-  const t = bHash(b.i + 505, k), stay = bHash(b.i + 606, k) < 0.35, tt = stay ? bHash(b.i + 505, k - 1) : t;
-  return { x: Math.round(seg[0] + (seg[2] - seg[0]) * tt), y: Math.round(seg[1] + (seg[3] - seg[1]) * tt) };
-}
 function botPub(b, now) { return { uid: 'bot' + b.i, n: b.n, cls: b.cls, lvl: botLvl(b, now), look: b.look }; }
 
 // B75: public notices are produced from authoritative before/after state only.
@@ -2129,7 +2122,6 @@ const routes = {
       list.push({ uid: id, n: t.n, cls: t.cls, lvl: t.lvl, look: t.look, guild169:t.guild169||null, tt: t.tt, sp: t.sp, sf: t.sf, sg: t.sg, x: t.x, y: t.y, say: sy && now - sy.at < 7000 ? sy.t : '', sayAge: sy ? now - sy.at : 0 });
       if (list.length >= TOWN_MAX) break;
     }
-    for (const bt of lake ? [] : botsActive(now)) { if (list.length >= TOWN_MAX) break; if (botWhere(bt, now) !== 'town') continue; list.push(Object.assign(botPub(bt, now), botTownPos(bt, now), { say: '', sayAge: 0 })); }
     send(res, 200, { list });
   },
   'GET /api/launch': async (req, res) => {
