@@ -1367,12 +1367,10 @@ const routes = {
       if (wdOf(u.id) || (room && room.st === 'fight')) {
         return send(res, 409, { error: 'จบการต่อสู้ก่อนตกปลา' });
       }
-      const pond = a.endsWith('cast') ? Number(pr?.split(':')[1]) : p.s.fish152?.cast?.pond;
-      if (pond === 0 || a === 'fishbuy' || a === 'fishup') {
-        const town = TOWN.get(u.id);
-        if (!town || Date.now() - town.at > TOWN_ON_MS) {
-          return send(res, 409, { error: 'เข้าเมืองหลวงก่อนใช้คำสั่งนี้' });
-        }
+      const town = TOWN.get(u.id);
+      const manage = a === 'fishbuy' || a === 'fishup';
+      if (!town || Date.now() - town.at > TOWN_ON_MS || (!manage && !town.lake)) {
+        return send(res, 409, { error: manage ? 'เข้าเมืองหลวงหรือทะเลสาบก่อน' : 'ตกปลาได้ที่ทะเลสาบเท่านั้น' });
       }
     }
     if(/^m51(add|cap|reset)$/.test(a)||a==='petevolve70'||a==='ar73start'){const room=DGR.get(DGU.get(u.id));if(a==='ar73start'&&room)return send(res,409,{error:'ออกจากห้องดันเจี้ยนก่อนเข้าท้าประลอง'});if(room&&room.st==='fight')return send(res,409,{error:a==='ar73start'?'จบดันเจี้ยนทีมก่อนเข้าท้าประลอง':a==='petevolve70'?'จบดันเจี้ยนทีมก่อนวิวัฒนาการสัตว์เลี้ยง':'จบดันเจี้ยนทีมก่อนปรับความชำนาญ'});}
@@ -1407,7 +1405,7 @@ const routes = {
     engine.setBoard(board(), u.id); engine.setWB(wbCtx());
     ptPrep(u.id, p);
     await cityLoad(); cityTick(); await facResLoad(); facResTick(); await funLoad(); await launchLoad();
-    const twn = TOWN.get(u.id), inTown = !!(twn && now - twn.at < 6000), js0 = jSnap(p.s),newsBefore=newsSnap75(p.s);newsTouch75(p);
+    const twn = TOWN.get(u.id), inTown = !!(twn && !twn.lake && now - twn.at < 6000), js0 = jSnap(p.s),newsBefore=newsSnap75(p.s);newsTouch75(p);
     const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); const tg = E.townEn ? E.townEn(inTown) : false; changed = E.tick() || tg || changed; });
     if (out.wb) await wbRecord(u.id, p, out.wb);
     p.s = out.s; p.ui = out.ui; newsAfter75(u.id,p,newsBefore);partyAfter50(u.id,p,js0,out);ptAfter(u.id, p); funMark(p); if (await launchCheck(u.id, p)) changed = true; if (p.s.cityRes) { cityAfter(p); changed = true; } if (p.s.pvpRes110) { await pvpAfter110(u.id, p).catch(e => console.error('pvp rev', e.message)); changed = true; }
@@ -1596,17 +1594,18 @@ const routes = {
     if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
     const now = Date.now();
     if (b.leave) { TOWN.delete(u.id); return send(res, 200, { list: [] }); }
-    TOWN.set(u.id, { n: String(p.s.name || u.display).slice(0, 16), cls: p.s.cls, lvl: p.s.lvl | 0, look: playerLook52(p.s), tt: String(p.s.title || '').slice(0, 12), sp: p.s.sup100 ? 1 : 0, sf: p.s.s105 && p.s.s105.fx && p.s.s105.fx.frame ? 1 : 0, sg: p.s.s105 && p.s.s105.fx && p.s.s105.fx.glow ? 1 : 0, x: Math.max(0, Math.min(1440, Number(b.x) || 0)), y: Math.max(0, Math.min(1080, Number(b.y) || 0)), at: now });
+    const lake = b.lake === true;
+    TOWN.set(u.id, { lake, n: String(p.s.name || u.display).slice(0, 16), cls: p.s.cls, lvl: p.s.lvl | 0, look: playerLook52(p.s), tt: String(p.s.title || '').slice(0, 12), sp: p.s.sup100 ? 1 : 0, sf: p.s.s105 && p.s.s105.fx && p.s.s105.fx.frame ? 1 : 0, sg: p.s.s105 && p.s.s105.fx && p.s.s105.fx.glow ? 1 : 0, x: Math.max(0, Math.min(lake ? 893 : 1440, Number(b.x) || 0)), y: Math.max(0, Math.min(1080, Number(b.y) || 0)), at: now });
     for (const [id, t] of TOWN) if (now - t.at > TOWN_ON_MS * 5) TOWN.delete(id);
     for (const [id, t] of LASTSAY) if (now - t.at > 10000) LASTSAY.delete(id);
     const list = [];
     for (const [id, t] of TOWN) {
-      if (id === u.id || now - t.at > TOWN_ON_MS) continue;
+      if (id === u.id || !!t.lake !== lake || now - t.at > TOWN_ON_MS) continue;
       const sy = LASTSAY.get(id);
       list.push({ uid: id, n: t.n, cls: t.cls, lvl: t.lvl, look: t.look, tt: t.tt, sp: t.sp, sf: t.sf, sg: t.sg, x: t.x, y: t.y, say: sy && now - sy.at < 7000 ? sy.t : '', sayAge: sy ? now - sy.at : 0 });
       if (list.length >= TOWN_MAX) break;
     }
-    for (const bt of botsActive(now)) { if (list.length >= TOWN_MAX) break; if (botWhere(bt, now) !== 'town') continue; list.push(Object.assign(botPub(bt, now), botTownPos(bt, now), { say: '', sayAge: 0 })); }
+    for (const bt of lake ? [] : botsActive(now)) { if (list.length >= TOWN_MAX) break; if (botWhere(bt, now) !== 'town') continue; list.push(Object.assign(botPub(bt, now), botTownPos(bt, now), { say: '', sayAge: 0 })); }
     send(res, 200, { list });
   },
   'GET /api/launch': async (req, res) => {
