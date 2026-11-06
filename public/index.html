@@ -1305,23 +1305,50 @@ function webLinks160(i){
  return [(z+4)%5*WEB_BRANCH160+t,(z+1)%5*WEB_BRANCH160+t].concat(t?[i-1]:[],t<WEB_BRANCH160-1?[i+1]:[]);
 }
 function webOpen160(o,i){return i%WEB_BRANCH160===0||webLinks160(i).some(function(j){return webRank160(o,j)>0})}
-function webEquipped160(o,z){
- var tier=Math.min(4,Math.floor(o.lvl/30)-1),chosen=o.web160&&o.web160.eq&&o.web160.eq[z];
- return WEB160[z].moves[Number.isInteger(chosen)&&chosen>=0&&chosen<=tier?chosen:tier];
+function webLearned165(o,k,team){
+ var n=team?Number(k.id.slice(2)):0;
+ var node=team?Math.floor(n/6)*WEB_BRANCH160+n%6:k.web*WEB_BRANCH160+k.step;
+ return o.lvl>=k.req&&webRank160(o,node)>0;
 }
-function teamWebLoadout161(o){
- if(o.lvl<30)return [];
- return WEB160.map(function(_,z){
-  var t=o.web161&&o.web161[z],k=TEAM_WEB161[z*6+t];
-  if(Number.isInteger(t)&&t>=0&&t<6&&k.req<=o.lvl)return k;
-  return TEAM_WEB161[z*6+Math.min(4,Math.floor(o.lvl/30)-1)];
- }).filter(function(k){return k&&k.req<=o.lvl});
+function webLoadout165(o,team){
+ var pool=team?TEAM_WEB161:WEB160.flatMap(function(z){return z.moves});
+ var learned=pool.filter(function(k){return webLearned165(o,k,team)});
+ var stored=o[team?'teamSlots165':'soloSlots165'],chosen=[];
+ if(Array.isArray(stored)){
+  stored.slice(0,5).forEach(function(id){
+   var k=learned.find(function(move){return move.id===id});
+   if(k&&!chosen.includes(k))chosen.push(k);
+  });
+ }else{
+  var legacy=team?o.web161:o.web160&&o.web160.eq;
+  if(legacy)for(var z=0;z<5;z++){
+   var t=legacy[z],k=Number.isInteger(t)&&t>=0&&(team?t<6:t<5)?(team?TEAM_WEB161[z*6+t]:WEB160[z].moves[t]):null;
+   if(k&&learned.includes(k))chosen.push(k);
+  }
+ }
+ return chosen.concat(learned.filter(function(k){return !chosen.includes(k)})).slice(0,5);
+}
+function teamWebLoadout161(o){return webLoadout165(o,true)}
+function webEquip165(o,k,team,slot){
+ if(!k||!webLearned165(o,k,team))return false;
+ var list=webLoadout165(o,team).map(function(x){return x.id}),at=list.indexOf(k.id);
+ if(at>=0)return false;
+ list[slot==null?Math.min(4,list.length):Math.min(slot,list.length)]=k.id;
+ o[team?'teamSlots165':'soloSlots165']=list;return true;
+}
+function webEquipHtml165(k,team){
+ var learned=webLearned165(s,k,team),list=webLoadout165(s,team),selected=list.includes(k);
+ if(!learned||selected)return '<small>'+(selected?'ติดตั้งแล้ว · ช่อง '+(list.indexOf(k)+1):s.lvl<k.req?'ต้องถึง Lv.'+k.req:'ต้องเดินเส้นใยและลงแต้มจุดนี้')+'</small>';
+ var id=team?Number(k.id.slice(2)):k.web*WEB_BRANCH160+k.step;
+ return '<span class="web-equip165">'+(list.length<5?[list.length]:[0,1,2,3,4]).map(function(slot){
+  return '<button class="btn sm" data-a="'+(team?'webteam':'webequip')+'" data-p="'+id+':'+slot+'"'+(s.battle?' disabled':'')+' title="'+(list[slot]?esc(list[slot].n):'ช่องว่าง')+'">'+(list.length<5?'ติดตั้ง':'แทนช่อง '+(slot+1))+'</button>';
+ }).join(' ')+'</span>';
 }
 function webAction160(a,p){
  if(a==='webteam'){
-  if(!s.created||s.battle||s.dup||s.res||(!SV&&battleLive54())||!/^([0-9]|[12][0-9])$/.test(p))return true;
-  var i=Number(p),k=TEAM_WEB161[i];
-  if(s.lvl>=k.req){(s.web161||(s.web161={}))[Math.floor(i/6)]=i%6;save();render()}
+  if(!s.created||s.battle||s.dup||s.res||(!SV&&battleLive54()))return true;
+  var input=/^([0-9]|[12][0-9])(?::([0-4]))?$/.exec(p||'');
+  if(input&&webEquip165(s,TEAM_WEB161[Number(input[1])],true,input[2]==null?null:Number(input[2]))){save();render()}
   return true;
  }
  if(a!=='webup'&&a!=='webequip')return false;
@@ -1334,12 +1361,11 @@ function webAction160(a,p){
   if(rank!==Number(match[2])||rank>=5||!webPoints160(s)||!webOpen160(s,i))return true;
   d.r[i]=rank+1;recalc();
  }else{
-  if(!WEB160[z].moves[t]||s.lvl<WEB160[z].moves[t].req)return true;
-  d.eq[z]=t;
+  if(Number(match[2])>4||!webEquip165(s,WEB160[z].moves[t],false,Number(match[2])))return true;
  }
  save();render();return true;
 }
-function webSkills160(){return WEB160.map(function(_,z){return webEquipped160(s,z)}).filter(Boolean)}
+function webSkills160(){return webLoadout165(s,false)}
 function webSkillDesc160(k){
  if(k.web<2)return skDesc(k,1);
  var b=k.b,list=[];
@@ -1362,21 +1388,20 @@ function webHtml160(){
   webLinks160(j).forEach(function(l){if(l>j)paths+=line(p,nodes[l],lv&&webRank160(s,l))});
   buttons+='<button class="web-node160'+(j===i?' selected':'')+'" data-a="webselect" data-p="'+j+'" aria-pressed="'+(j===i)+'" aria-label="'+lane.name+' '+lane.nodes[step][0]+' ขั้น '+lv+'" style="left:'+p[0]/5.04+'%;top:'+p[1]/5.04+'%;--web-color:'+lane.color+';opacity:'+(webOpen160(s,j)?1:.65)+'">'+lv+'/5</button>';
  });
- var ready=webOpen160(s,i),equipped=webEquipped160(s,z)===k;
+ var ready=webOpen160(s,i);
  return '<section class="card web160"><div class="row"><h2>ผังบิวด์ใยแมงมุม</h2><b>แต้มเหลือ '+pts+'</b></div>'+
- '<p class="hint">ได้ 1 แต้มเมื่อเลเวลอัป · เปิดทางด้วยการอัปจุดที่ติดกันอย่างน้อย 1 ขั้น · สกิลกดใช้ปลดทุกสายที่ Lv.30, 60, 90, 120 และ 150</p>'+
+ '<p class="hint">ได้ 1 แต้มเมื่อเลเวลอัป · เปิดทางด้วยการอัปจุดที่ติดกันอย่างน้อย 1 ขั้น · สกิลกดใช้ต้องถึงเลเวลและลงแต้มที่จุดของสกิลในผัง</p>'+
  '<div class="web-legend160">'+WEB160.map(function(w){return '<span style="color:'+w.color+'">'+w.name+'</span>'}).join('')+' <button class="btn sm" data-a="webzoom" data-p="-">−</button> <button class="btn sm" data-a="webzoom" data-p="+">+</button></div>'+
  '<div class="web-scroll160"><div class="web-map160" style="width:'+Math.round(390*WEB_UI160.zoom)+'px"><svg viewBox="0 0 504 504" aria-hidden="true">'+paths+'<circle cx="252" cy="252" r="15" fill="#f4cd84"/></svg>'+buttons+'</div></div>'+
  '<div class="reveal"><b style="color:'+zone.color+'">'+zone.name+' · '+node[0]+'</b><br>'+node[1]+' +'+r1(node[2]*(node[2]<.1?100:1))+'%'+' ต่อขั้น · '+rank+'/5'+
  ' <button class="btn primary" data-a="webup" data-p="'+i+':'+rank+'"'+(!ready||rank>=5||!pts||s.battle?' disabled':'')+'>อัป 1 แต้ม</button>'+
  (!ready?' <small>เปิดจุดข้างเคียงก่อน</small>':'')+
  (k?'<hr><b>'+k.n+' · Lv.'+k.req+'</b><p>'+webSkillDesc160(k)+' · MP '+k.mp+' · คูลดาวน์ '+k.cd+'</p>'+
- '<button class="btn" data-a="webequip" data-p="'+i+':0"'+(equipped||s.lvl<k.req||s.battle?' disabled':'')+'>'+(equipped?'ติดตั้งแล้ว':s.lvl<k.req?'ยังไม่ถึงเลเวล':'ติดตั้งสกิล')+'</button>':'')+
- '<details class="team-web161" open><summary>สกิลทีม 30 ท่า · '+zone.name+'</summary>'+TEAM_WEB161.slice(z*6,z*6+6).map(function(move){
- var selected=teamWebLoadout161(s).includes(move);
- return '<p>'+teamIcon162(move.id)+' <b>'+move.n+'</b> · Lv.'+move.req+' · MP '+move.mp+' · รอ '+move.cd+' รอบ<br>'+move.d+' <button class="btn sm" data-a="webteam" data-p="'+move.id.slice(2)+'"'+(selected||s.lvl<move.req||s.battle?' disabled':'')+'>'+(selected?'ติดตั้งแล้ว':'ติดตั้ง')+'</button></p>';
+ webEquipHtml165(k,false):'')+
+ '<details class="team-web161" open><summary>สกิลทีม 30 ท่า · '+zone.name+'</summary>'+TEAM_WEB161.slice(z*6,z*6+6).map(function(move,step){
+ return '<p>'+teamIcon162(move.id)+' <b>'+move.n+'</b> · Lv.'+move.req+' · จุด '+esc(zone.nodes[step][0])+' · MP '+move.mp+' · รอ '+move.cd+' รอบ<br>'+move.d+' '+webEquipHtml165(move,true)+'</p>';
  }).join('')+'<small>สกิลทีมใช้ในกรุสมบัติต้องสาปและหอคอย 100 ชั้น · สกิลด้านบนเป็นชุดต่อสู้เดี่ยว</small></details>'+
- '<p class="hint">ติดตั้งได้สายละ 1 สกิล · ค่าเริ่มต้นใช้ขั้นสูงสุดที่ปลดแล้ว · สกิลบิวด์กดใช้เองในฉากต่อสู้</p></div></section>';
+ '<p class="hint">ติดตั้งได้ 5 ช่องต่อชุด เลือกจากสายเดียวกันได้ทั้งหมด · เมื่อช่องว่าง ระบบใส่สกิลที่ปลดแล้วให้</p></div></section>';
 }
 
 var LPAS={hp:['HP สูงสุด +',''],mp:['MP สูงสุด +',''],atk:['โจมตี +',''],def:['เกราะ +',''],crit:['คริติคอล +','%'],dodge:['หลบ +','%']};
@@ -2365,7 +2390,7 @@ function pick(a){return a[Math.floor(Math.random()*a.length)]}
 function pct(a,b){return Math.max(0,Math.min(100,Math.round(a/b*100)))}
 function say(t){s.log.unshift(clockStr()+' · '+t);if(s.log.length>30)s.log.length=30}
 function wName(i){return i===10?CLASSES[s.cls].w[9]+'แห่งยอดหอ':CLASSES[s.cls].w[i]}
-function skLv(id){var k=SKMAP[id];return k&&k.web!==undefined?(webEquipped160(s,k.web)===k?1:0):s.sk[id]||0}
+function skLv(id){var k=SKMAP[id];return k&&k.web!==undefined?(webSkills160().includes(k)?1:0):s.sk[id]||0}
 function passive(key){return passiveOf(s,key)}
 function bb(key){
  var b=s.battle,t=0;if(!b||!b.buffs)return 0;
@@ -3259,7 +3284,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B164';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B165';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -3677,7 +3702,7 @@ function autoAct(){if(!SV&&(battlePresentationActive()||scene53Busy()))return;
   if(s.hp<s.maxhp*potThr()||s.hp<=dg){b.potNeed=s.hp<=dg?dg-s.hp+1:0;var rr=battleAct('potion');b.potNeed=0;return rr}}
  if(s.autoFlee!==false&&s.hp<s.maxhp*((s.fleePct>=5&&s.fleePct<=95?s.fleePct:20)/100)&&!noFlee(b))return battleAct('flee');
  var order=!b.challenge73&&s.autoSkill?(s.autoOrder162||[]):[];
- if(order.some(Boolean)){
+ if(order.some(function(id){return id==='ult'&&!!s.ult||!!(id&&SKMAP[id]&&skLv(id))})){
   for(var i=0;i<7;i++){
    var at=((b.autoCursor162||0)+i)%7,id=order[at],k=SKMAP[id],cmd=id==='ult'?'ult':'sk:'+id;
    if(!id||id!=='ult'&&(!k||s.skAuto[id]===false||k.t==='b'&&(b.buffs||{})[id]>0)||!battleCommand50(cmd,b))continue;
@@ -7804,7 +7829,7 @@ function autoHud(){var duel=s.battle&&isDuel(s.battle),mul=duel?DUEL_HP:1;return
 function autoOrderSet162(p){
  var m=/^([st]):([0-6]):([a-z0-9]*)$/.exec(p||'');if(!s.created||!m)return;
  var team=m[1]==='t', id=m[3],field=team?'teamOrder162':'autoOrder162';
- if(id&&(team?!TEAM_WEB161.some(function(k){return k.id===id&&k.req<=s.lvl}):id!=='ult'&&(!SKMAP[id]||SKMAP[id].t==='p'||!skLv(id))))return;
+ if(id&&(team?!teamWebLoadout161(s).some(function(k){return k.id===id}):id!=='ult'&&(!SKMAP[id]||SKMAP[id].t==='p'||!skLv(id))))return;
  var list=Array.isArray(s[field])?s[field]:[];
  list[Number(m[2])]=id;s[field]=list;
  if(!team&&s.battle)s.battle.autoCursor162=0;
@@ -7815,10 +7840,10 @@ function autoOrderHtml162(team){
  var opts=skills.map(function(k){return [k.id,k.n]});if(!team&&s.ult)opts.push(['ult','ไม้ตาย']);
  return '<section class="order162"><button class="btn sm" data-a="autoordertab" data-p="s" aria-pressed="'+!team+'">ต่อสู้ปกติ</button> <button class="btn sm" data-a="autoordertab" data-p="t" aria-pressed="'+team+'">สกิลทีม</button><h3>เรียงสกิลออโต้ 7 ช่อง · '+(team?'กรุสมบัติ / หอคอย 100 ชั้น':'ต่อสู้ปกติ')+'</h3>'+
  Array.from({length:7},function(_,i){
-  var id=list[i]||'';
+  var id=opts.some(function(o){return o[0]===list[i]})?list[i]:'';
   return '<label><b>'+(i+1)+'</b><select data-order162="'+(team?'t':'s')+':'+i+'" aria-label="ลำดับ '+(i+1)+'"><option value="">— เว้นช่อง —</option>'+
   opts.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===id?' selected':'')+'>'+esc(o[1])+'</option>'}).join('')+
-  (id&&!opts.some(function(o){return o[0]===id})?'<option value="'+esc(id)+'" selected>สกิลที่ไม่ได้ติดตั้ง</option>':'')+'</select></label>';
+  '</select></label>';
  }).join('')+'<p>วนจาก 1 ถึง 7 · ข้ามช่องว่างและท่าที่ยังใช้ไม่ได้ · ถ้าใช้ไม่ได้ทั้งหมดจะโจมตีปกติ</p></section>';
 }
 if(!SV)document.addEventListener('change',function(e){
