@@ -3449,7 +3449,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B181';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B182';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -9327,15 +9327,15 @@ function mapNodes138(z){var rng=frng(13890+z),spots=[],W=FLD.W,H=FLD.H;for(var i
  var out=[];for(i=0;i<GNODE_N;i++)MATS.forEach(function(k,ki){var p=spots[(i*MATS.length+ki)%spots.length];out.push({k:k,x:p[0]+(rng()-.5)*16,y:p[1]+(rng()-.5)*16,until:0})});return out;
 }
 fieldBuild=function(z){z=Math.max(0,Math.min(ZONES.length-1,z|0));mapReset138(z);FLD.px=FLD.W/2;FLD.py=fPathY(FLD.px);FLD.boss.x=FLD.W*.80;FLD.boss.y=FLD.H*.25;FLD.nodes=mapNodes138(z);FLD.map=mapProject138(mapGround138(z,false),z);fGridBuild();FLD.mobs=[];ENCOUNTER146.z=-1};
-function townNpcs138(){if(TOWN.npcs.length)return;var list=[['ทหารยาม','warrior',610,260,1],['ทหารยาม','paladin',830,260,1],['พ่อค้าเร่','rogue',280,420,0],['ช่างตีเหล็ก','warrior',320,820,0],['นักบวชวิหาร','mage',1120,750,0],['เด็กน้อย','archer',900,820,0],['นักเดินทาง','archer',560,820,0],['ผู้ประกาศเมือง','paladin',720,700,1]];list.forEach(function(n){TOWN.npcs.push({ann:n[0]==='ผู้ประกาศเมือง',n:n[0],cls:n[1],x:n[2],y:n[3],hx:n[2],hy:n[3],st:n[4],look:{hair:0,hc:0,hat:'none',face:'none',wing:'none',pet:'none',aura:'none',dye:'def'},vx:0,vy:0,next:0,dir:1})})}
+function townNpcs138(){if(TOWN.npcs.length)return;var list=[['ทหารยาม','warrior',610,322,1],['ทหารยาม','paladin',798,322,1],['พ่อค้าเร่','rogue',280,420,0],['ช่างตีเหล็ก','warrior',320,820,0],['นักบวชวิหาร','mage',1120,750,0],['เด็กน้อย','archer',900,820,0],['นักเดินทาง','archer',560,820,0],['ผู้ประกาศเมือง','paladin',720,700,1]];list.forEach(function(n){TOWN.npcs.push({ann:n[0]==='ผู้ประกาศเมือง',n:n[0],cls:n[1],x:n[2],y:n[3],hx:n[2],hy:n[3],st:n[4],look:{hair:0,hc:0,hat:'none',face:'none',wing:'none',pet:'none',aura:'none',dye:'def'},vx:0,vy:0,next:0,dir:1})})}
 var CAPITAL180=[
- {kind:'castle',x:485,y:98,w:420,d:196,name:'พระราชวัง',art:'palace'},
- {kind:'clocktower',x:616,y:405,w:88,d:88,name:'หอนาฬิกา',art:'clock'},
+ {kind:'castle',x:535,y:132,w:315,d:154,name:'พระราชวัง',art:'palace'},
+ {kind:'clocktower',x:517,y:471,w:65,d:65,name:'หอนาฬิกา',art:'clock'},
  {kind:'house',x:235,y:358,w:182,d:116,color:'#344c79',name:'โรงตีเหล็ก',art:'smith',action:'craft'},
  {kind:'house',x:365,y:675,w:168,d:108,color:'#277f83',name:'ร้านยา',art:'potions',action:'potions'},
  {kind:'house',x:988,y:330,w:182,d:118,color:'#862f46',name:'ศาลากิลด์',art:'guild',action:'guild'},
  {kind:'house',x:1008,y:674,w:184,d:114,color:'#9e6239',name:'ตลาดและโกดัง',art:'market',action:'market'},
- {kind:'fountain',x:720,y:570,depth:1340}
+ {kind:'fountain',x:720,y:570,depth:1340,art:'fountain',displayWidth:103}
 ];
 var CAPITAL_ART180={};
 function capitalActive180(){return FLD.town&&!TOWN.war&&!TOWN.lake}
@@ -9343,24 +9343,27 @@ function capitalSolid180(o,x,y,r){
  if(o.kind==='fountain')return Math.hypot(x-o.x,y-o.y)<52+r;
  return x>o.x-8-r&&x<o.x+o.w+8+r&&y>o.y-8-r&&y<o.y+o.d+8+r;
 }
-function capitalRoad180(c,x,y,w,h){
- c.fillStyle='#bc9d70';c.fillRect(x-5,y-5,w+10,h+10);
- c.fillStyle='#f5e5c1';c.fillRect(x,y,w,h);
- c.strokeStyle='#dec89e';c.lineWidth=1;
- for(var j=y+18;j<y+h;j+=18){c.beginPath();c.moveTo(x,j);c.lineTo(x+w,j);c.stroke();for(var i=x+(((j-y)/18)%2?17:34);i<x+w;i+=34){c.beginPath();c.moveTo(i,j-18);c.lineTo(i,j);c.stroke()}}
-}
 function capitalGround180(){
- var flat=mapGround138(0,true),c=flat.getContext('2d');
- capitalRoad180(c,585,82,270,928);
- capitalRoad180(c,195,510,1045,126);
- capitalRoad180(c,220,300,330,510);
- capitalRoad180(c,930,292,320,516);
- capitalRoad180(c,455,80,480,254);
- c.strokeStyle='#a68958';c.lineWidth=8;c.strokeRect(456,82,478,250);
- c.strokeStyle='#fff0cb';c.lineWidth=3;c.strokeRect(464,90,462,234);
- for(var i=0;i<5;i++){c.fillStyle=i%2?'#d5bc8c':'#e7d3ad';c.fillRect(624,317+i*5,138,5)}
- [148,FLD.W-160].forEach(function(x){c.fillStyle='#9caf75';c.fillRect(x,173,12,710)});
- [174,902].forEach(function(y){c.fillStyle='#c2ae88';c.fillRect(160,y,1120,10)});
+ var flat=document.createElement('canvas');flat.width=FLD.W;flat.height=FLD.H;
+ var c=flat.getContext('2d'),rng=frng(182),g=c.createLinearGradient(0,0,FLD.W,FLD.H);
+ g.addColorStop(0,'#8bb46b');g.addColorStop(.5,'#75a45a');g.addColorStop(1,'#567f50');
+ c.fillStyle=g;c.fillRect(0,0,FLD.W,FLD.H);
+ for(var i=0;i<1700;i++){
+  var x=rng()*FLD.W,y=rng()*FLD.H;
+  c.fillStyle=i%3?'#d0d79038':'#446a4038';c.fillRect(x,y,1+rng()*4,1+rng()*2);
+ }
+ // Paint the connected road as a single surface so junctions have no seams.
+ var roads=[[619,110,206,901],[195,510,1045,134],[220,300,328,510],[930,292,320,528],[457,112,480,224],[488,437,152,133],[574,477,311,217],[515,760,135,63],[800,768,145,57]];
+ function roadPath(pad){
+  c.beginPath();
+  roads.forEach(function(r){c.rect(r[0]-pad,r[1]-pad,r[2]+pad*2,r[3]+pad*2)});
+ }
+ roadPath(9);c.fillStyle='#8b734c';c.fill();
+ roadPath(5);c.fillStyle='#dbc294';c.fill();
+ var tile=capitalArt180('road');
+ roadPath(0);c.fillStyle=tile&&c.createPattern(tile,'repeat')||'#e3cba2';c.fill();
+ c.save();c.translate(720,570);c.strokeStyle='#a77d46';c.lineWidth=3;
+ [63,70].forEach(function(r){c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.stroke()});c.restore();
  return flat;
 }
 townIsoBuild=function(){
@@ -9368,19 +9371,25 @@ townIsoBuild=function(){
  ISO_TOWN.width=cv.width;ISO_TOWN.height=cv.height;ISO_TOWN.ground=cv;ISO_TOWN.objectCache=null;
  ISO_TOWN.objects=CAPITAL180.map(function(o){return Object.assign({depth:o.x+o.y+(o.w||0)+(o.d||0)},o)});
  [[536,488],[910,488],[536,654],[910,654],[625,926],[817,926]].forEach(function(p){
-  ISO_TOWN.objects.push({kind:'lamp',x:p[0],y:p[1],depth:p[0]+p[1]});
+  ISO_TOWN.objects.push({kind:'lamp',art:'lamp',displayWidth:24,x:p[0],y:p[1],depth:p[0]+p[1]});
  });
  [[526,354],[895,354],[455,548],[936,548],[547,728],[863,728]].forEach(function(p){
-  ISO_TOWN.objects.push({kind:'flowers',x:p[0],y:p[1],depth:p[0]+p[1]+72});
+  ISO_TOWN.objects.push({kind:'flowers',art:'flowers',displayWidth:54,x:p[0],y:p[1],depth:p[0]+p[1]+72});
  });
  [[167,219],[178,826],[1230,235],[1275,867],[540,220],[909,225]].forEach(function(p){
-  ISO_TOWN.objects.push({kind:'tree',x:p[0],y:p[1],depth:p[0]+p[1]});
+  ISO_TOWN.objects.push({kind:'tree',art:'tree',displayWidth:66,x:p[0],y:p[1],depth:p[0]+p[1]});
  });
  fGridBuild();FLD.map=cv;
 };
 function capitalArt180(key){
  if(!CAPITAL_ART180[key]){
-  var im=new Image();im.src='assets/images/capital180_'+key+'.webp';CAPITAL_ART180[key]=im;
+  var im=new Image();CAPITAL_ART180[key]=im;
+  if(key==='road')im.onload=function(){
+   if(!capitalActive180()||FLD.z!=='town')return;
+   var cv=mapProject138(capitalGround180(),0);
+   ISO_TOWN.ground=FLD.map=cv;
+  };
+  im.src='assets/images/capital'+(['smith','potions','guild','market'].includes(key)?'180':'182')+'_'+key+'.webp';
  }
  var im=CAPITAL_ART180[key];return im.complete&&im.naturalWidth?im:null;
 }
@@ -9388,11 +9397,11 @@ warIsoBuild106=function(){var flat=mapGround138(3,true),c=flat.getContext('2d'),
 townBuild=function(){if(TOWN.lake){lakeBuild158()}else if(TOWN.war){warFlatBuild106();warIsoBuild106()}else{mapReset138('town');FLD.nodes=[];FLD.px=720;FLD.py=667;townNpcs138();townIsoBuild()}};
 var townObjectBefore138=townIsoObject;
 townIsoObject=function(c,o){var near=FLD.px>o.x-38&&FLD.px<o.x+(o.w||80)+28&&FLD.py>o.y-48&&FLD.py<o.y+(o.d||60)+18;
- c.save();try{if(near)c.globalAlpha*=.45;
+ c.save();try{if(near&&o.w&&o.d)c.globalAlpha*=.58;
  var im=o.art&&capitalArt180(o.art);
  if(im){
-  var foot=townProject(o.x+o.w,o.y+o.d),width=(o.w+o.d)*.75,height=width*im.naturalHeight/im.naturalWidth;
-  var center=townProject(o.x+o.w/2,o.y+o.d/2);
+  var w=o.w||0,d=o.d||0,foot=townProject(o.x+w,o.y+d),width=o.displayWidth||(w+d)*.75;
+  var height=width*im.naturalHeight/im.naturalWidth,center=townProject(o.x+w/2,o.y+d/2);
   c.imageSmoothingEnabled=true;c.drawImage(im,center[0]-width/2,foot[1]-height,width,height);
   townWorldLabel(c,o.name,center[0],foot[1]-height-8,'#ffe5ad');
  }else townObjectBefore138(c,o);
