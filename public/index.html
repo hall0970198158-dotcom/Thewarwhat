@@ -2689,8 +2689,13 @@ function pvpTurnTick172(b){
  if(b.pvpSide172==='enemy'&&now>=b.nextAt){
   battleActBase73(null,'enemy');return true;
  }
- if(b.pvpSide172==='player'&&now>=b.pvpUntil172){
+ if(b.pvpSide172!=='player'||now<b.nextAt)return false;
+ if(now>=b.pvpUntil172){
   battleActBase73('atk','timeout');return true;
+ }
+ if(b.auto){
+  autoAct();
+  return s.battle!==b||b.pvpSide172==='enemy';
  }
  return false;
 }
@@ -3403,7 +3408,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B174';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B175';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -3845,7 +3850,7 @@ function autoAct(){if(!SV&&(battlePresentationActive()||scene53Busy()))return;
  var b=s.battle;if(!b)return;if(b.challenge73){ar73Tick();if(s.battle!==b)return;}
  if(bossFight(b)&&!noFlee(b)&&s.autoBoss==='stop'&&s.autoHunt){s.autoHunt=false;b.auto=false;b.jw=0;s.autoMsg='ออโต้หยุด: เจอบอส (สู้เองได้เลย)';say('เจอบอส! ออโต้หยุดทำงาน');return}
  if(!b.challenge73&&!b.j4Trial&&!b.wb&&potOn()&&potTotal()>0&&s.hp<s.maxhp&&!(isDuel(b)&&(b.pots|0)>=DUEL_POTS)){
-  var dg=((b.eg||0)+eRatio(b)>=0.999)?eDanger(b):0; // ศัตรูจะตีตาถัดไป: ถ้าเลือดไม่พอรับ → ดื่มยาก่อน (ถึงยังไม่ถึง % ที่ตั้ง)
+  var dg=(b.kind==='pvp'||(b.eg||0)+eRatio(b)>=0.999)?eDanger(b):0; // ศัตรูจะตีตาถัดไป: ถ้าเลือดไม่พอรับ → ดื่มยาก่อน (ถึงยังไม่ถึง % ที่ตั้ง)
   if(s.hp<s.maxhp*potThr()||s.hp<=dg){b.potNeed=s.hp<=dg?dg-s.hp+1:0;var rr=battleAct('potion');b.potNeed=0;return rr}}
  if(s.autoFlee!==false&&s.hp<s.maxhp*((s.fleePct>=5&&s.fleePct<=95?s.fleePct:20)/100)&&!noFlee(b))return battleAct('flee');
  var order=!b.challenge73&&s.autoSkill?(s.autoOrder162||[]):[];
@@ -8048,7 +8053,7 @@ function viewBattleLandscape(){
  var potDis=b.wb||b.j4Trial||potTotal()<1||s.hp>=s.maxhp||(duel&&(b.pots|0)>=DUEL_POTS),heavyDis=b.j4Trial||s.energy<HEAVY_COST||(b.hv|0)>=HEAVY_MAX,pf=!b.wb&&(s.potF|0)>0&&!duel&&!b.j4Trial;
  var actions='<button class="btn primary" data-a="b" data-p="atk">⚔️ โจมตี<small>โจมตีปกติ</small></button>'+ultBtn131(b)+skillBtns(b)+'<button class="btn" data-a="b" data-p="heavy"'+(heavyDis?' disabled':'')+'>💥 ฟันหนัก<small>−'+HEAVY_COST+' พลัง · '+Math.max(0,HEAVY_MAX-(b.hv|0))+'/'+HEAVY_MAX+'</small></button><button class="btn" data-a="b" data-p="potion"'+(potDis?' disabled':'')+'>🧪 ดื่มยา<small>'+(duel?(b.pots|0)+'/'+DUEL_POTS:'เหลือ '+potTotal())+'</small></button>'+(pf?'<button class="btn" data-a="b" data-p="potionf"'+(s.hp>=s.maxhp?' disabled':'')+'>💖 ยาเต็ม<small>'+s.potF+' ขวด</small></button>':'')+'<button class="btn" data-a="b" data-p="flee"'+(noFlee(b)?' disabled':'')+'>🏃 '+(noFlee(b)?'หนีไม่ได้':'หนี')+'</button>';
  if(b.challenge73)actions='<button class="btn primary" data-a="b" data-p="atk">โจมตี</button>'+skillBtns(b)+'<button class="btn" id="ar73guardBtn" data-a="ar73guard" data-p="'+b.challenge73+'">ป้องกัน<small>ลดแรงกดดัน · MP +8%</small></button><button class="btn" data-a="ar73quit" data-p="'+b.challenge73+'">ยอมแพ้</button>';
- return '<section id="battleStage" class="ts169'+(b.wb?' wb-battle150':'')+'">'+ts169TurnHtml(b)+'<canvas id="scene" data-mode="battle-landscape" width="800" height="450" aria-label="ฉากต่อสู้แนวนอน มุมเฉียง"></canvas>'+buildRail162(b,null)+'<div class="battle-top battle-compact156"><div class="battle-side38">'+battleVitals156(s.hp,s.maxhp,s.mp,s.maxmp,duel?DUEL_HP:1)+'<div class="battle-tools38">'+(b.challenge73?ar81Controls(b):b.kind==='pvp'?'':battleAutoButton38(auto))+'<button class="btn sm battle-menu54" data-a="bmenu54" aria-label="เปิดเมนูระหว่างต่อสู้">เมนู ☰</button></div></div></div><div class="battle-alert">'+(b.wb?'<div>ไฮดรา · ดาเมจ '+Math.max(0,Math.round((b.wbStart|0)-Math.max(0,b.ehp))).toLocaleString()+' · โจมตี ×'+Math.max(1,(b.turn|0)+1)+' รอบหน้า</div>':'')+buffHtml(b)+(b.challenge73?'<div id="ar73Status">'+esc(ar73Status())+'</div>':'')+'</div><div class="battle-dock"><div class="battle-self"><b>'+esc(nick())+' · Lv'+s.lvl+'</b>'+eGauge(b)+'<small>เลือก 1 คำสั่งต่อการกระทำ</small><small id="battleReady" role="status">พร้อมเลือกคำสั่ง</small></div><div class="battle-actions">'+actions+'</div></div></section>';
+ return '<section id="battleStage" class="ts169'+(b.wb?' wb-battle150':'')+'">'+ts169TurnHtml(b)+'<canvas id="scene" data-mode="battle-landscape" width="800" height="450" aria-label="ฉากต่อสู้แนวนอน มุมเฉียง"></canvas>'+buildRail162(b,null)+'<div class="battle-top battle-compact156"><div class="battle-side38">'+battleVitals156(s.hp,s.maxhp,s.mp,s.maxmp,duel?DUEL_HP:1)+'<div class="battle-tools38">'+(b.challenge73?ar81Controls(b):battleAutoButton38(auto))+'<button class="btn sm battle-menu54" data-a="bmenu54" aria-label="เปิดเมนูระหว่างต่อสู้">เมนู ☰</button></div></div></div><div class="battle-alert">'+(b.wb?'<div>ไฮดรา · ดาเมจ '+Math.max(0,Math.round((b.wbStart|0)-Math.max(0,b.ehp))).toLocaleString()+' · โจมตี ×'+Math.max(1,(b.turn|0)+1)+' รอบหน้า</div>':'')+buffHtml(b)+(b.challenge73?'<div id="ar73Status">'+esc(ar73Status())+'</div>':'')+'</div><div class="battle-dock"><div class="battle-self"><b>'+esc(nick())+' · Lv'+s.lvl+'</b>'+eGauge(b)+'<small>เลือก 1 คำสั่งต่อการกระทำ</small><small id="battleReady" role="status">พร้อมเลือกคำสั่ง</small></div><div class="battle-actions">'+actions+'</div></div></section>';
 }
 function drawDgLandscape(c,W,H,tn,visual){if(H>W){drawDgTS107(c,W,H,tn,visual);return}
  var r=visual?visual.room:dgRoom();if(!r)return;battleIsoGround(c,W,H,1);skillStage71(c,W,H,tn,W*.2,H*.45,W*.72,H*.53,null,'ground',String(r.id)+':'+r.stage);
