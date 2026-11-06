@@ -222,133 +222,63 @@ const DGU = new Map();   // uid -> room id
 let DG_ID = 100;
 const rnd = (a, b) => a + Math.random() * (b - a);
 const pickA = a => a[Math.floor(Math.random() * a.length)];
-const TW_WEAK161 = { golem: 1, lizard: 2, dragon: 3 };
-function twReady161(r, m, k) {
-  const en = r.en, it = en.intent;
-  switch (k.need) {
-    case 'rear': return !!en.rear?.hp;
-    case 'slam': return it.t === 'slam' && (k.id !== 'tw12' || it.tg !== m.uid);
-    case 'stun': return !!en.stun;
-    case 'charge': return it.t === 'charge';
-    case 'shell': return !!en.shell;
-    case 'blast': return it.t === 'blast' && !en.twDelayed;
-    case 'hidden': return it.t === 'slam' && !!it.hidden;
-    case 'regen': return en.regen > 0;
-    case 'revive': return !m.twRevive && r.mem.some(x => x.down);
-    case 'cleanse': return r.mem.some(x => !x.down && (x.twPoison || x.twSkip));
-    case 'cooldown': return r.mem.some(x => x !== m && !x.down && Object.values(x.webCd || {}).some(n => n > 0));
-    default: return true;
-  }
-}
-function twPick161(r, m, id, target) {
-  const k = m.web.find(x => x.id === id), t = r.mem[target];
-  if (!k || m.mp < k.mp || m.webCd[id] || !twReady161(r, m, k)) return null;
-  if (k.need === 'element' && (target < 0 || target > 3)) return null;
-  if (['ally','cooldown','cleanse','revive'].includes(k.need)) {
-    if (!t || (k.need === 'revive' ? !t.down : t.down)) return null;
-    if (k.need !== 'cleanse' && t === m) return null;
-    if (k.need === 'cleanse' && !t.twPoison && !t.twSkip) return null;
-    if (k.need === 'cooldown' && !Object.values(t.webCd || {}).some(n => n > 0)) return null;
-    if (id === 'tw18' && (m.mp < 1 || t.mp >= t.mmp)) return null;
-  }
-  return k;
+function twPick161(r,m,id) {
+  return m.web.find(k=>k.id===id&&m.mp>=k.mp&&!m.webCd[id]&&!(k.t==='b'&&m.webBuff?.[id]>0));
 }
 function twReset161(r) {
-  for (const m of r.mem) Object.assign(m, {mp:m.mmp, webCd:{}, twRevive:false, twPoison:0, twSkip:false, twTarget:null,webCursor162:0});
+  for(const m of r.mem)Object.assign(m,{mp:m.mmp,webCd:{},webBuff:{},twPoison:0,twSkip:false,webCursor162:0});
 }
-function twRound161(r, picks, ev, log, idx) {
-  const en = r.en, alive = () => dgAlive(r), W = {};
-  const heal = (m, rate) => {
-    const n = Math.min(m.mhp - m.hp, Math.round(m.mhp * rate));
-    if (n > 0) { m.hp += n; ev.push({t:'h', i:idx(m), v:n}); }
+function twRound161(r,picks,ev,log,idx) {
+  const en=r.en;
+  const buff=(m,key)=>m.web.reduce((sum,k)=>sum+(m.webBuff?.[k.id]>0?(k.b?.[key]?.[0]||0):0),0)/100;
+  const enemyBuff=key=>Math.max(0,...r.mem.filter(m=>!m.down).map(m=>buff(m,key)));
+  const heal=(m,n)=>{
+    const v=Math.min(m.mhp-m.hp,Math.round(n));
+    if(v>0){m.hp+=v;ev.push({t:'h',i:idx(m),v});}
   };
-  function damage(m, raw, target = en, pierce = false) {
-    if (!target || target.hp <= 0) return 0;
-    const n = Math.max(1, Math.round(raw * (target.shell && !pierce ? .5 : 1)));
-    target.hp -= n;
-    ev.push({t:'p',i:idx(m),a:'sk',d:n,c:false});
-    return n;
-  }
-  let moves = picks.filter(([, a]) => a.startsWith('tw')).map(([m,a]) => [m,twPick161(r,m,a,(a==='tw9'?m.twElement:r.mem.indexOf(m.twTarget)))]).filter(([,k])=>k);
-  const cleansed=new Set(moves.filter(([m,k])=>k.id==='tw19'&&!m.twSkip).map(([m])=>m.twTarget));
-  moves=moves.filter(([m])=>!m.twSkip||cleansed.has(m));
-  for (const [m,k] of moves) {
-    m.mp -= k.mp; m.webCd[k.id] = k.cd + 1;
-  }
-  const direct=[];
-  for (const [m,k] of moves) {
-    const queue=fn=>direct.push(()=>{const n=fn();return n+afterAttack(m,'sk',n)});
-    const t=m.twTarget, n=Number(k.id.slice(2));
+  const attacks=[];
+  for(const [m,id] of picks){
+    if(m.twSkip)continue;
+    const k=twPick161(r,m,id);
+    if(!k)continue;
+    m.mp-=k.mp;m.webCd[id]=k.cd+1;
     log.push(m.n+' ใช้ '+k.n);
-    switch (n) {
-      case 0: queue(()=>{const d=damage(m,m.atk*.8); en.twWound=true; return d}); break;
-      case 1: queue(()=>{damage(m,m.atk*1.15,en.rear,true);return 0}); break;
-      case 2: queue(()=>damage(m,m.atk*(1+Math.min(en.boss?.6:1,1-en.hp/en.mhp)))); break;
-      case 3: queue(()=>{const d=damage(m,m.atk*1.15); if(en.hp<=0)damage(m,m.atk*.65,en.rear||null); return d}); break;
-      case 4: W.counter=m; break;
-      case 5: en.twMark={m,n:3}; break;
-      case 6: en.twOrb={m,n:3}; break;
-      case 7: queue(()=>{const d=damage(m,m.atk*1.05); if(en.rear)damage(m,m.atk*.55,en.rear); return d}); break;
-      case 8: W.delay=m; break;
-      case 9: queue(()=>damage(m,m.atk*(TW_WEAK161[en.k]===m.twElement?1.7:1))); break;
-      case 10: queue(()=>damage(m,m.atk*1.85)); break;
-      case 11: W.echo=m; break;
-      case 12: if(!W.cover) W.cover=m; break;
-      case 13: for(const x of alive())x.twShield=Math.round(x.mhp*.12); break;
-      case 14: m.twReflect=true; break;
-      case 15: for(const x of alive())x.twAnchor=true; break;
-      case 16: if(!t.twBond)t.twBond=m; break;
-      case 17: for(const x of alive())x.twLast=true; break;
-      case 18: { const mp=Math.min(12,m.mp,t.mmp-t.mp);m.mp-=mp;t.mp+=mp;break; }
-      case 19: t.twPoison=0;t.twSkip=false;break;
-      case 20: { const id=Object.keys(t.webCd).sort((a,b)=>t.webCd[b]-t.webCd[a])[0]; if(id&&t.webCd[id]>0)t.webCd[id]--;break; }
-      case 21: { const first=alive().sort((a,b)=>a.hp/a.mhp-b.hp/b.mhp)[0]; for(const x of alive())heal(x,x===first?.18:.07);break; }
-      case 22: if(t.down){t.down=false;t.hp=Math.max(1,Math.round(t.mhp*.25));m.twRevive=true;ev.push({t:'h',i:idx(t),v:t.hp,rv:1})}break;
-      case 23: W.link=m;break;
-      case 24: en.twInterrupt=true;break;
-      case 25: en.twAntiHeal=2;break;
-      case 26: en.shell=false;break;
-      case 27: en.intent.tg=m.uid;break;
-      case 28: en.twDelayed=true;en.blastNext=true;en.intent={t:'wait'};break;
-      case 29: { const x=alive().find(x=>x.uid===en.intent.tg);if(x){en.intent.hidden=false;x.twReveal=true;log.push('เป้าหมายคือ '+x.n)}break; }
-    }
+    if(k.t==='b'){
+      m.webBuff[id]=k.dur;
+      heal(m,m.mhp*(k.b.heal160?.[0]||0)/100);
+    }else attacks.push([m,k]);
   }
-  const linked = W.link && picks.filter(([m,a])=>m!==W.link&&(a==='atk'||a==='sk')).length===2;
-  function afterAttack(m, a, n) {
-    if(n<=0)return 0;
-    let extra=linked&&m!==W.link?damage(m,n*.25):0;
-    if(a==='atk'&&en.twMark&&!--en.twMark.n){extra+=damage(en.twMark.m,en.twMark.m.atk*1.7);en.twMark=null}
-    if(a==='sk'){
-      if(en.twOrb&&!--en.twOrb.n){extra+=damage(en.twOrb.m,en.twOrb.m.atk*1.55);en.twOrb=null}
-      if(W.echo&&W.echo!==m){extra+=damage(W.echo,n*.55);W.echo=null}
-    }
-    return extra;
-  }
-  function hit(m, raw, reduction=0) {
-    let d = gemHitServer140(m,Math.round(dgHitP(m,raw*(m===W.cover?.70:1)*(m.twReveal?.75:1))*(1-reduction)));
-    if(d>0&&m.twReflect){m.twReflect=false;const back=Math.round(d*.6);d-=back;if(back>0)damage(m,back)}
-    const shield=Math.min(d,m.twShield||0);if(shield)m.twShield-=shield;d-=shield;
-    if(d&&m.twBond&&!m.twBond.down&&m.twBond!==m){
-      const mate=m.twBond,share=Math.floor(d/2);m.twBond=null;d-=share;apply(mate,share);
-    }
-    apply(m,d);return d;
-  }
-  function apply(m,d){
-    m.hp-=d;
-    if(m.hp<=0&&m.twLast){m.twLast=false;m.hp=1}
-    if(m.hp<=0){m.hp=0;m.down=true;log.push(m.n+' สลบ!')}
-  }
-  return {W, afterAttack, direct:()=>direct.reduce((a,fn)=>a+fn(),0), hit,
-    afterEnemy(tg,replaced){
-      if(replaced&&W.counter&&tg!==W.counter&&!W.counter.down)damage(W.counter,W.counter.atk*1.55);
-      if(W.delay&&!W.delay.down)damage(W.delay,W.delay.atk*1.5);
-      if(en.hp>0&&en.regen){en.hp=Math.min(en.mhp,en.hp+Math.round(en.regen*(en.twAntiHeal?.30:1)))}
-      if(en.twAntiHeal)en.twAntiHeal--;
+  const offense=m=>1+buff(m,'atk');
+  const shellRate=pierce=>en.shell?.5+.5*Math.min(1,pierce+Math.min(.30,enemyBuff('edef160'))):1;
+  return {
+    offense,shellRate,
+    direct(){
+      let total=0;
+      for(const [m,k] of attacks){
+        if(en.hp<=0)break;
+        const shell=shellRate(k.ign||0);
+        const d=Math.max(1,Math.round(m.atk*k.m[0]*(k.hits||1)*offense(m)*shell*(en.stun?1.3:1)));
+        en.hp-=d;total+=d;
+        ev.push({t:'p',i:idx(m),a:'sk',d});
+        if(k.leech)heal(m,d*k.leech);
+      }
+      return total;
     },
-    clear(){for(const m of r.mem)Object.assign(m,{twShield:0,twReflect:false,twAnchor:false,twBond:null,twLast:false,twReveal:false,twTarget:null});}
+    hit(m,raw,reduction=0){
+      const adjusted=raw*(1-Math.min(.25,enemyBuff('eatk160')))*(1-Math.min(.30,buff(m,'ward160')));
+      const d=gemHitServer140(m,Math.round(dgHitP(m,adjusted)*(1-reduction)));
+      m.hp=Math.max(0,m.hp-d);
+      if(!m.hp){m.down=true;log.push(m.n+' สลบ!');}
+      return d;
+    },
+    afterEnemy(){
+      if(en.hp>0&&en.regen)en.hp=Math.min(en.mhp,en.hp+en.regen);
+    },
+    clear(){
+      for(const m of r.mem)for(const id of Object.keys(m.webBuff||{}))if(m.webBuff[id]>0)m.webBuff[id]--;
+    }
   };
 }
-
 function dgStats(p) {
   const sn = engine.snap(p.s); if (!sn) return null;
   return { web: engine.teamWeb161(p.s), mmp: Math.max(20,p.s.maxmp|0), n: sn.n, cls: sn.cls, lvl: sn.lvl | 0, look: sn.look, mhp: Math.max(1, sn.hp | 0), atk: Math.max(1, sn.atk | 0), def: Math.max(0, sn.def | 0), crit: Math.min(60, sn.crit || 0), dodge: Math.min(25, sn.dodge || 0), gemTier140: Math.max(0,Math.min(4,sn.gemTier140|0)) };
@@ -369,14 +299,14 @@ function dgMember(uid, p) { const st = dgStats(p); if (!st) return null; return 
 function dgAlive(r) { return r.mem.filter(m => !m.down); }
 function dgIntent(r) {
   const en = r.en;
-  en.shell = false; en.stun = false; en.twInterrupt=false;
+  en.shell = false; en.stun = false;
   if (en.stunNext) { en.stunNext = false; en.stun = true; en.intent = { t: 'stun', txt: 'มึนงง! รอบนี้ไม่โจมตี และรับดาเมจ +30% — ทุ่มสุดตัวเลย' }; return; }
   if (en.blastNext) { en.blastNext = false; en.intent = { t: 'blast', txt: 'ระเบิดพลังใส่ทั้งทีม (แรงมาก)! กดป้องกันเพื่อลดดาเมจ หรือเตรียมฟื้นฟู' }; return; }
   if(r.mode==='tower100'){towerIntent163(r);return}
   const S=DG_STAGES[r.stage];
   let t = pickA(S.pool); if (t === en.lastT && t !== 'slam') t = 'slam'; en.lastT = t;
   const al = dgAlive(r);
-  if (t === 'slam') { const tg = pickA(al); en.intent = { t, tg: tg.uid, hidden: r.stage===2 && r.mem.some(m=>m.web.some(k=>k.id==='tw29')) && r.round%3===0, txt: 'ฟาดหนักใส่ ' + tg.n + ' — เพื่อนกดป้องกันเพื่อรับแทนได้' }; }
+  if (t === 'slam') { const tg = pickA(al); en.intent = { t, tg: tg.uid, txt: 'ฟาดหนักใส่ ' + tg.n + ' — เพื่อนกดป้องกันเพื่อรับแทนได้' }; }
   else if (t === 'sweep') en.intent = { t, txt: 'กวาดโจมตีทั้งทีม' };
   else if (t === 'charge') { en.brk = Math.max(1, Math.round(en.mhp / S.R * 0.9)); en.intent = { t, txt: 'กำลังชาร์จพลัง! ทีมต้องทำดาเมจรวม ' + en.brk.toLocaleString() + ' ในรอบนี้เพื่อขัดจังหวะ ไม่งั้นรอบหน้าระเบิดใส่ทั้งทีม' }; }
   else { en.shell = true; en.intent = { t: 'shell', txt: 'ตั้งเกราะหิน: รับดาเมจครึ่งเดียวรอบนี้ (ศรทะลวงทะลุได้) และตีเบา ๆ — จังหวะดีที่จะฟื้นฟู' }; }
@@ -395,7 +325,6 @@ function dgStage(r) {
     if(S.boss)r.en.n=TOWER163_BOSSES[floor/10-1];
   }
   if (r.mem.length > 1 && r.mem.some(m=>m.web.length) && (tower?floor>=30&&S.boss:r.stage>=1)) {
-    r.en.rear={hp:Math.round(dps*.85)};
     r.en.regen=Math.round(mhp*.035);
   }
   dgIntent(r); r.en.fresh = true;
@@ -418,7 +347,7 @@ function dgResolve(r) {
   const team = twRound161(r,picks,ev,log,idx);
   for(const pair of picks){
     const m=pair[0];
-    if(m.twSkip){m.twSkip=false;if(!pair[1].startsWith('tw'))pair[1]='wait';log.push(m.n+' ถูกผนึกจังหวะ')}
+    if(m.twSkip){m.twSkip=false;pair[1]='wait';log.push(m.n+' ถูกผนึกจังหวะ')}
     if(m.twPoison){m.twPoison--;m.hp=Math.max(1,m.hp-Math.round(m.mhp*.04));log.push(m.n+' เสีย HP จากพิษ');}
   }
   const nAtk = picks.filter(([, a]) => a === 'atk' || a === 'sk').length, combo = nAtk >= 2 ? 1 + 0.15 * (nAtk - 1) : 1;
@@ -437,15 +366,14 @@ function dgResolve(r) {
     const C = DG_CLS[m.cls] || DG_CLS.warrior, hits = a === 'sk' && C.hits ? C.hits : 1, mult = a === 'sk' ? C.sk / hits : 1;
     let tot = 0, crit = false;
     for (let h = 0; h < hits; h++) {
-      let d = m.atk * rnd(0.85, 1.15) * mult * combo;
+      let d = m.atk * rnd(0.85, 1.15) * mult * combo * team.offense(m);
       if (Math.random() * 100 < m.crit + (C.crit || 0)) { d *= 2; crit = true; }
-      if (en.shell && !(a === 'sk' && C.pierce)) d *= 0.5;
+      d *= team.shellRate(a==='sk'&&C.pierce?1:0);
       if (en.stun) d *= 1.3;
       tot += Math.max(1, Math.round(d));
     }
     if (a === 'sk') m.cd.sk = 3;
-    if(a==='atk'&&en.twWound){tot=Math.round(tot*1.35);en.twWound=false}
-    en.hp -= tot; dealt += tot + team.afterAttack(m,a,tot);
+    en.hp -= tot; dealt += tot;
     ev.push({ t: 'p', i: idx(m), a, d: tot, c: crit });
     log.push(m.n + (a === 'sk' ? ' ใช้' + C.skn : ' โจมตี') + ' −' + tot.toLocaleString() + (crit ? ' (คริติคอล!)' : ''));
   }
@@ -458,7 +386,7 @@ function dgResolve(r) {
     if (it.t === 'slam' || it.t === 'shell') {
       const guard = al.filter(m => m.guard).sort((a, b) => (DG_CLS[a.cls] || {}).grd - (DG_CLS[b.cls] || {}).grd)[0];
       let tg = it.t === 'slam' ? al.find(m => m.uid === it.tg) || pickA(al) : pickA(al);
-      if (it.t === 'slam') { const from=tg;tg=team.W.cover||guard||tg;if(tg!==from)covered=tg; }
+      if (it.t === 'slam') { const from=tg;tg=guard||tg;if(tg!==from)covered=tg; }
       const d = hitOne(tg, A * (it.t === 'slam' ? 2.0 : 0.8));
       if((it.poison||r.mode!=='tower100'&&en.regen&&it.t==='shell')&&d>0&&!tg.down)tg.twPoison=2;
       if(it.recover&&en.shell)en.hp=Math.min(en.mhp,en.hp+Math.round(en.mhp*.08*(en.twAntiHeal?.30:1)));
@@ -466,17 +394,17 @@ function dgResolve(r) {
     } else if (it.t === 'sweep' || it.t === 'blast') {
       for (const m of al) {
         hitOne(m, A * (it.t === 'sweep' ? 1.1 : 2.6));
-        if((it.bind||en.regen&&it.t==='blast')&&!m.down&&!m.twAnchor)m.twSkip=true;
+        if((it.bind||en.regen&&it.t==='blast')&&!m.down)m.twSkip=true;
         if(it.poison&&!m.down)m.twPoison=2;
       }
       log.push(en.n + (it.t === 'sweep' ? ' กวาดโจมตีทั้งทีม' : ' ระเบิดพลังใส่ทั้งทีม!'));
     } else if (it.t === 'charge') {
-      if (en.twInterrupt || dealt >= en.brk) { en.stunNext = true; ev.push({ t: 'brk' }); log.push('ขัดจังหวะการชาร์จสำเร็จ! ' + en.n + ' มึนงง'); }
+      if (dealt >= en.brk) { en.stunNext = true; ev.push({ t: 'brk' }); log.push('ขัดจังหวะการชาร์จสำเร็จ! ' + en.n + ' มึนงง'); }
       else { en.blastNext = true; log.push(en.n + ' ชาร์จพลังเต็ม... (ดาเมจรวม ' + dealt.toLocaleString() + '/' + en.brk.toLocaleString() + ')'); }
     } else if (it.t === 'stun') log.push(en.n + ' มึนงง ไม่ได้โจมตี');
     if(en.rear?.hp>0&&dgAlive(r).length)hitOne(pickA(dgAlive(r)),A*.55);
     if (hits.length) ev.push({ t: 'e', k: it.t, hits });
-    team.afterEnemy(covered,!!covered);
+    team.afterEnemy();
     if (en.hp>0&&!dgAlive(r).length) { r.st = 'lost'; r.ended = Date.now(); log.push('ทั้งทีมสลบ... ภารกิจล้มเหลว'); }
   }
   team.clear();
@@ -526,9 +454,9 @@ function dgView(r, uid) {
     floors:dgMax163(r), turnMs:dgTime163(r),
     me: r.mem.findIndex(m => m.uid === uid),
     mem: r.mem.map(m => ({ n: m.n, cls: m.cls, lvl: m.lvl, look: m.look, hp: m.hp, mhp: m.mhp, down: m.down, ready: m.ready, host: m.uid === r.host, me: m.uid === uid,
-      web:m.uid===uid&&r.st==='fight'?(m.web||[]).map(k=>({...k,ready:twReady161(r,m,k)})):null, webCd:m.uid===uid?m.webCd:null, mp:m.mp,mmp:m.mmp, poisoned:!!m.twPoison, bound:!!m.twSkip, cooling:Object.values(m.webCd||{}).some(n=>n>0),
+      web:m.uid===uid&&r.st==='fight'?(m.web||[]).map(k=>({...k,ready:!!twPick161(r,m,k.id)})):null, webCd:m.uid===uid?m.webCd:null, mp:m.mp,mmp:m.mmp, poisoned:!!m.twPoison, bound:!!m.twSkip, cooling:Object.values(m.webCd||{}).some(n=>n>0),
       picked: !!m.pick, auto: !!m.auto, grd: false, pick: m.uid === uid ? m.pick : null, cd: m.uid === uid ? m.cd : null })),
-    en: r.en && r.st === 'fight' ? { n: r.en.n, k: r.en.k, boss: r.en.boss, skillCount:r.en.skillCount, elite: !!r.en.elite, hp: r.en.hp, mhp: r.en.mhp, shell: r.en.shell, stun: r.en.stun, rear:r.en.rear?.hp>0?{hp:r.en.rear.hp}:null, weak:r.mode==='rg'?null:TW_WEAK161[r.en.k], intent: Object.assign({}, r.en.intent, { tg: undefined, ti, ...(r.en.intent.hidden?{txt:'ฟาดเป้าลับ · ใช้เปิดโปงเพื่อเผยเป้า'}:{}) }) } : r.en ? { n: r.en.n, k: r.en.k, boss: r.en.boss, hp: r.en.hp, mhp: r.en.mhp } : null,
+    en: r.en && r.st === 'fight' ? { n: r.en.n, k: r.en.k, boss: r.en.boss, skillCount:r.en.skillCount, elite: !!r.en.elite, hp: r.en.hp, mhp: r.en.mhp, shell: r.en.shell, stun: r.en.stun, rear:r.en.rear?.hp>0?{hp:r.en.rear.hp}:null, weak:null, intent: Object.assign({}, r.en.intent, { tg: undefined, ti, ...(r.en.intent.hidden?{txt:'ฟาดเป้าลับ · ใช้เปิดโปงเพื่อเผยเป้า'}:{}) }) } : r.en ? { n: r.en.n, k: r.en.k, boss: r.en.boss, hp: r.en.hp, mhp: r.en.mhp } : null,
     ev: r.ev || [], log: (r.log || []).slice(0, 8), loot: r.loot ? r.loot[uid] || null : null,
   };
 }
@@ -548,14 +476,8 @@ function dgAutoWeb162(r,m) {
   for(let n=0;n<7;n++){
     const at=((m.webCursor162||0)+n)%7,id=order[at],k=m.web.find(x=>x.id===id);
     if(!k)continue;
-    let slot=0;
-    if(k.need==='element')slot=TW_WEAK161[r.en.k]??0;
-    if(['ally','cooldown','cleanse','revive'].includes(k.need)){
-      const members=r.mem.map((x,i)=>({x,i})).sort((a,b)=>a.x.hp/a.x.mhp-b.x.hp/b.x.mhp);
-      slot=members.find(({i})=>twPick161(r,m,id,i))?.i??-1;
-    }
-    if(!twPick161(r,m,id,slot))continue;
-    m.pick=id;m.twTarget=r.mem[slot];m.twElement=slot;m.webCursor162=(at+1)%7;
+    if(!twPick161(r,m,id))continue;
+    m.pick=id;m.webCursor162=(at+1)%7;
     return;
   }
   if(r.mode==='rg'){m.pick=rgAutoPick(r,m);return}
@@ -1130,7 +1052,7 @@ function rgEnemy(r, type) {
   rgIntent(r); r.en.fresh = true;
 }
 function rgIntent(r) { // ใช้ตรรกะเดียวกับดันเจี้ยนเดิม แต่สุ่มจากชุดท่าตามประเภทมอน
-  const en = r.en; en.twInterrupt=false;en.shell = false; en.stun = false;
+  const en = r.en;en.shell = false; en.stun = false;
   if (en.stunNext) { en.stunNext = false; en.stun = true; en.intent = { t: 'stun', txt: 'มึนงง! รอบนี้ไม่โจมตี และรับดาเมจ +30%' }; return; }
   if (en.blastNext) { en.blastNext = false; en.intent = { t: 'blast', txt: 'ระเบิดพลังใส่ทั้งทีม (แรงมาก)! กดป้องกันหรือเตรียมฟื้นฟู' }; return; }
   let t = pickA(RG_POOL[en.type] || RG_POOL.f); if (t === en.lastT && t !== 'slam') t = 'slam'; en.lastT = t;
@@ -1252,15 +1174,14 @@ function rgResolve(r) { // เหมือน dgResolve + ผลของบั�
     const C = DG_CLS[m.cls] || DG_CLS.warrior, hits = a === 'sk' && C.hits ? C.hits : 1, mult = (a === 'sk' ? C.sk * (1 + (B(m).sk || 0)) / hits : 1) * (r.round === 1 ? 1 + (B(m).first || 0) : 1);
     let tot = 0, crit = false;
     for (let h = 0; h < hits; h++) {
-      let d = m.atk * rnd(0.85, 1.15) * mult * combo;
+      let d = m.atk * rnd(0.85, 1.15) * mult * combo * team.offense(m);
       if (Math.random() * 100 < m.crit + (C.crit || 0)) { d *= 2; crit = true; }
-      if (en.shell && !(a === 'sk' && C.pierce)) d *= 0.5;
+      d *= team.shellRate(a==='sk'&&C.pierce?1:0);
       if (en.stun) d *= 1.3;
       tot += Math.max(1, Math.round(d));
     }
     if (a === 'sk') m.cd.sk = 3;
-    if(a==='atk'&&en.twWound){tot=Math.round(tot*1.35);en.twWound=false}
-    en.hp -= tot; dealt += tot + team.afterAttack(m,a,tot);
+    en.hp -= tot; dealt += tot;
     if (B(m).ls) { const v = Math.min(m.mhp - m.hp, Math.round(tot * B(m).ls)); if (v > 0) m.hp += v; }
     ev.push({ t: 'p', i: idx(m), a, d: tot, c: crit });
     log.push(m.n + (a === 'sk' ? ' ใช้' + C.skn : ' โจมตี') + ' −' + tot.toLocaleString() + (crit ? ' (คริติคอล!)' : ''));
@@ -1268,7 +1189,6 @@ function rgResolve(r) { // เหมือน dgResolve + ผลของบั�
   if (combo > 1) log.push('โจมตีประสาน ' + nAtk + ' คน! ดาเมจ +' + Math.round((combo - 1) * 100) + '%');
   if(en.hp>0){
   const it = en.intent, al = dgAlive(r), A = en.A, hits = [];
-  let covered=null;
   const hitOne = (m,raw) => {
     const d=team.hit(m,raw,Math.min(.5,B(m).red||0));
     hits.push([idx(m),d]);
@@ -1278,18 +1198,18 @@ function rgResolve(r) { // เหมือน dgResolve + ผลของบั�
   if (it.t === 'slam' || it.t === 'shell') {
     const guard = al.filter(m => m.guard).sort((a, b) => (DG_CLS[a.cls] || {}).grd - (DG_CLS[b.cls] || {}).grd)[0];
     let tg = it.t === 'slam' ? al.find(m => m.uid === it.tg) || pickA(al) : pickA(al);
-    if(it.t==='slam'){const original=tg;tg=team.W.cover||guard||tg;if(tg!==original)covered=tg;}
+    if(it.t==='slam')tg=guard||tg;
     const d = hitOne(tg, A * (it.t === 'slam' ? 2.0 : 0.8));
     log.push(en.n + (it.t === 'slam' ? ' ฟาดหนักใส่ ' : ' ตีเบา ๆ ใส่ ') + tg.n + (d ? ' −' + d.toLocaleString() : ' แต่หลบได้'));
   } else if (it.t === 'sweep' || it.t === 'blast') {
     for (const m of al) hitOne(m, A * (it.t === 'sweep' ? 1.1 : 2.6));
     log.push(en.n + (it.t === 'sweep' ? ' กวาดโจมตีทั้งทีม' : ' ระเบิดพลังใส่ทั้งทีม!'));
   } else if (it.t === 'charge') {
-    if (en.twInterrupt || dealt >= en.brk) { en.stunNext = true; ev.push({ t: 'brk' }); log.push('ขัดจังหวะการชาร์จสำเร็จ! ' + en.n + ' มึนงง'); }
+    if (dealt >= en.brk) { en.stunNext = true; ev.push({ t: 'brk' }); log.push('ขัดจังหวะการชาร์จสำเร็จ! ' + en.n + ' มึนงง'); }
     else { en.blastNext = true; log.push(en.n + ' ชาร์จพลังเต็ม... (ดาเมจรวม ' + dealt.toLocaleString() + '/' + en.brk.toLocaleString() + ')'); }
   } else if (it.t === 'stun') log.push(en.n + ' มึนงง ไม่ได้โจมตี');
   if (hits.length) ev.push({ t: 'e', k: it.t, hits });
-  team.afterEnemy(covered,!!covered);
+  team.afterEnemy();
   }
   team.clear();
   for (const m of r.mem) { for(const id of Object.keys(m.webCd||{}))if(m.webCd[id]>0)m.webCd[id]--;m.guard = false; m.pick = null; if (m.cd.sk > 0) m.cd.sk--; if (m.cd.heal > 0) m.cd.heal--; }
@@ -1637,7 +1557,7 @@ const routes = {
       }
     }
     if(/^m51(add|cap|reset)$/.test(a)||a==='petevolve70'||a==='ar73start'){const room=DGR.get(DGU.get(u.id));if(a==='ar73start'&&room)return send(res,409,{error:'ออกจากห้องดันเจี้ยนก่อนเข้าท้าประลอง'});if(room&&room.st==='fight')return send(res,409,{error:a==='ar73start'?'จบดันเจี้ยนทีมก่อนเข้าท้าประลอง':a==='petevolve70'?'จบดันเจี้ยนทีมก่อนวิวัฒนาการสัตว์เลี้ยง':'จบดันเจี้ยนทีมก่อนปรับความชำนาญ'});}
-    if ((a === 'webup' || a === 'webequip' || a === 'webteam') && (DGR.get(DGU.get(u.id))?.st === 'fight' || wdOf(u.id))) {
+    if (['webup','webequip','webreset167'].includes(a) && (DGR.get(DGU.get(u.id))?.st === 'fight' || DGR.get(DGU.get(u.id))?.st === 'rg' || wdOf(u.id))) {
       return send(res, 409, { error: 'จบการต่อสู้ก่อนปรับบิวด์' });
     }
     if(a==='gemdo140'&&(DGU.has(u.id)||wdOf(u.id)))return send(res,409,{error:'ออกจากห้องดันเจี้ยนหรือจบการดวลก่อนเปลี่ยนหรือคราฟ Gem'});
@@ -1813,8 +1733,8 @@ const routes = {
       m.auto=!m.auto;cur.ver++;
     } else if (op === 'web') {
       const m = cur.mem.find(x => x.uid === u.id), slot = Number(b.target), id = String(b.act);
-      if (cur.st !== 'fight' || !m || m.down || Number(b.seq)!==cur.seq || cur.mode==='tower100'&&Date.now()>=cur.deadline || !Number.isInteger(slot) || !twPick161(cur,m,id,slot)) return bad('ใช้สกิลทีมไม่ได้ในรอบนี้');
-      m.pick=id; m.twTarget=cur.mem[slot]; m.twElement=slot; cur.ver++;
+      if (cur.st !== 'fight' || !m || m.down || Number(b.seq)!==cur.seq || cur.mode==='tower100'&&Date.now()>=cur.deadline || !Number.isInteger(slot) || !twPick161(cur,m,id)) return bad('ใช้สกิลทีมไม่ได้ในรอบนี้');
+      m.pick=id; cur.ver++;
       if(dgAlive(cur).every(x=>x.pick))dgResolve(cur);
     } else if (op === 'pick') {
       const a = String(b.act || ''), m = cur.mem.find(x => x.uid === u.id);
