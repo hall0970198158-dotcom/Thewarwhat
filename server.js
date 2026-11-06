@@ -618,6 +618,7 @@ function ptAfter(uid, p) {
 }
 // หัวปาร์ตี้เริ่มสู้มอน → ลูกทีมที่เปิด "เดินตาม" (แผนที่เดียวกัน · เลเวลห่าง ≤15) เข้าสู้พร้อมกัน · ทั้งหมดได้ XP ÷2
 function ptWhy(hs, m, now) { // '' = พร้อมเข้าสู้ด้วยกัน
+  if(wdOf(m.uid)?.friendly173)return 'กำลังดวล';
   if (now - m.seen > PT_ON_MS) return 'ออฟไลน์/ปิดจอ'; const q = live.get(m.uid); if (!q || !q.s) return 'ออฟไลน์';
   if (!hs) return 'หัวปาร์ตี้ออฟไลน์'; if ((q.s.zone | 0) !== (hs.zone | 0)) return 'อยู่คนละแผนที่';
   if (Math.abs((q.s.lvl | 0) - (hs.lvl | 0)) > PT_LV) return 'เลเวลห่างเกิน ' + PT_LV; if ((q.s.energy | 0) < 2) return 'พลังไม่พอ';
@@ -863,7 +864,7 @@ function takeToken(p) { // ผู้เล่นส่งคำสั่งไ�
 // ใส่คีย์ใน Render → Environment เท่านั้น: STRIPE_SECRET_KEY (sk_...) และ STRIPE_WEBHOOK_SECRET (whsec_...)
 const PAY_SKU = { sup35: { amt: 3500, name: 'แพ็กผู้สนับสนุน · TheWarWhat', desc: 'อุปกรณ์ Lv20 สีส้ม + ป้าย ✦ ผู้สนับสนุน (ซื้อได้ครั้งเดียว)' },
   m99: { amt: 9900, name: 'บัตรรายเดือน 30 วัน · TheWarWhat', desc: 'ของรายวัน 30 วัน + ทอง/XP จากการล่า +10%' },
-  p299: { amt: 29900, name: 'บัตรถาวร · TheWarWhat', desc: 'กระเป๋า +20 ช่อง · ทองรายวัน · ฉายาผู้อุปถัมภ์ (ใช้ตลอดไป)' },
+  p299: { amt: 29900, name: 'บัตรถาวร · TheWarWhat', desc: 'กระเป๋า +20 ช่อง · ทองรายวัน · ฉายาผู้อุปถัมภ์ · เดลส่วนตัว (ใช้ตลอดไป)' },
   s149: { amt: 14900, name: 'พาสซีซั่น 1 · TheWarWhat', desc: 'ปลดรางวัลพรีเมียมซีซั่น 1 (ถึง 31 ธ.ค.)' } };
 const S105_END = Date.UTC(2026, 11, 31, 16, 59, 59);
 const PAY_BUSY = new Set();
@@ -1359,16 +1360,17 @@ function wdAct(d, i, a) {
   d.ev = [ev]; d.log = [txt].concat(gemLog140,d.log).slice(0, 8); d.seq++; d.ver++;
   if (o.hp <= 0) { wdEnd(d, i, o.n + ' หมดแรง!'); return null; }
   if(m.hp<=0){wdEnd(d,1-i,m.n+' หมดแรง!');return null;}
-  d.turn = 1 - i; if (d.turn === 0) d.round++; d.deadline = Date.now() + WD_TURN; return null;
+  d.turn = 1 - i; if (d.turn === 0) d.round++; d.deadline = Date.now() + (d.friendly173?10000:WD_TURN); return null;
 }
 async function wdEnd(d, wi, why) {
   if (d.ph === 'end') return; d.ph = 'end'; d.win = wi; d.ended = Date.now();
   const W = d.s[wi], L = d.s[1 - wi]; d.log = ['🏆 ' + W.n + ' ชนะ! ' + (why || '')].concat(d.log).slice(0, 8); d.seq++; d.ver++;
+  if(d.friendly173)return;
   try { await warLoad(); await warScore(d.s[0].uid, d.s[1].uid, wi === 0, true); d.res = { aPts: (WAR.ppl[d.s[0].uid] || {}).pts | 0, bPts: (WAR.ppl[d.s[1].uid] || {}).pts | 0 }; d.ver++; } catch (e) { console.error('wd end', e.message); }
 }
 function wdView(d, uid) {
   if (!d) return null; const me = d.s.findIndex(x => x.uid === uid), now = Date.now();
-  return { id: d.id, ph: d.ph, me, turn: d.turn, round: d.round, left: Math.max(0, d.deadline - now), seq: d.seq, ver: d.ver, log: d.log.slice(0, 6), ev: d.ev, rps: d.ph !== 'rps' ? d.rps : null, win: d.win, res: d.res || null,
+  return { id: d.id, friendly173:!!d.friendly173, ph: d.ph, me, turn: d.turn, round: d.round, left: Math.max(0, d.deadline - now), seq: d.seq, ver: d.ver, log: d.log.slice(0, 6), ev: d.ev, rps: d.ph !== 'rps' ? d.rps : null, win: d.win, res: d.res || null,
     s: d.s.map((x, i) => ({ n: x.n, cls: x.cls, lvl: x.lvl, look: x.look, hp: x.hp, mhp: x.mhp, fac: x.fac, guard: x.guard, ug: x.ug, cd: x.cd, pots: x.pots, skn: x.skn, mp:x.mp,mmp:x.mmp,soloWeb:i===me?x.soloWeb:null,webCd:i===me?x.webCd:null, picked: d.ph === 'rps' ? !!x.hand : false, hand: i === me || d.ph !== 'rps' ? x.hand : null, on: now - x.seen < 15000 })) };
 }
 async function warScore(A, D, attackerWon, live) { // แต้มศึกชิงแดน (ใช้ทั้งดวลสดและดวลร่างจำลอง)
@@ -1393,8 +1395,8 @@ setInterval(() => { // หมดเวลา: เลือกท่าให้ 
   for (const d of WD.values()) {
     try {
       if (d.ph === 'rps' && (now >= d.deadline || d.s.every(x => x.hand))) wdRpsDone(d);
-      else if (d.ph === 'fight' && now >= d.deadline) { const a = wdAuto(d, d.turn); wdAct(d, d.turn, a); if (d.log[0] && d.ph === 'fight') d.log[0] = '⏱ ' + d.log[0]; }
-      else if (d.ph === 'fight' && d.s[d.turn] && now - d.s[d.turn].seen > 12000 && now - (d.deadline - WD_TURN) > 1500) wdAct(d, d.turn, wdAuto(d, d.turn)); // หลุด/ปิดแอป = ออโต้เร็วขึ้น
+      else if (d.ph === 'fight' && now >= d.deadline) { const a = d.friendly173?'atk':wdAuto(d, d.turn); wdAct(d, d.turn, a); if (d.log[0] && d.ph === 'fight') d.log[0] = '⏱ ' + d.log[0]; }
+      else if (!d.friendly173 && d.ph === 'fight' && d.s[d.turn] && now - d.s[d.turn].seen > 12000 && now - (d.deadline - WD_TURN) > 1500) wdAct(d, d.turn, wdAuto(d, d.turn)); // หลุด/ปิดแอป = ออโต้เร็วขึ้น
       if (d.ph === 'end' && now - d.ended > 60000) { WD.delete(d.id); for (const x of d.s) if (WDU.get(x.uid) === d.id) WDU.delete(x.uid); }
     } catch (e) { console.error('wd', e); }
   }
@@ -1489,7 +1491,7 @@ function guildSummary169(row){
   if(!row)return null;
   const gold=Number(row.gold);
   const lv=Math.min(20,Math.floor((1+Math.sqrt(1+8*gold/1000000))/2));
-  return {id:Number(row.id),name:row.name,owner:Number(row.owner),gold,lv,emblem:guildEmblem171(row.emblem)};
+  return {id:Number(row.id),name:row.name,owner:Number(row.owner),gold,lv,mode:row.mode||'open',minLevel:Number(row.min_level)||1,emblem:guildEmblem171(row.emblem)};
 }
 function guildSync169(uid,p,g){
   if(JSON.stringify(p.s.guild169||null)===JSON.stringify(g))return;
@@ -1497,20 +1499,23 @@ function guildSync169(uid,p,g){
   p.v++;updateSnap(uid,p);
   const t=TOWN.get(uid);if(t)t.guild169=g;
 }
-async function guildView169(p){
+async function guildView169(uid,p){
   const g=p.s.guild169;
   if(g){
     const roster=await db.guildRoster169(g.id);
-    return {members:roster.map(m=>({uid:Number(m.uid),name:m.name,lv:Number(m.level)}))};
+    const person=m=>({uid:Number(m.uid),name:m.name,lv:Number(m.level)});
+    const requests=g.owner===uid?await db.guildRequests174(g.id):[];
+    return {members:roster.map(m=>({...person(m),role:Number(m.uid)===g.owner?'leader':m.role||'member'})),requests:requests.map(person)};
   }
   const list=await db.guildList169();
-  return {list:list.map(row=>({...guildSummary169(row),count:Number(row.members)}))};
+  const applied=await db.guildApplied174(uid);
+  return {applied:applied.map(r=>Number(r.gid)),list:list.map(row=>({...guildSummary169(row),count:Number(row.members)}))};
 }
 async function guildAction169(uid,p,b,res){
   const fail=(error,code=409)=>send(res,code,{error});
   if(!p.s.created)return fail('สร้างตัวละครก่อน');
   const op=b.op;
-  if(op==='list')return send(res,200,{guild:p.s.guild169||null,...await guildView169(p)});
+  if(op==='list')return send(res,200,{guild:p.s.guild169||null,...await guildView169(uid,p)});
   if(!takeToken(p))return fail('ส่งคำสั่งเร็วเกินไป',429);
   if(p.s.battle||DGR.get(DGU.get(uid))?.st==='fight')return fail('จบการต่อสู้ก่อนจัดการกิลด์');
   const g=p.s.guild169;
@@ -1528,7 +1533,37 @@ async function guildAction169(uid,p,b,res){
   }else if(op==='join'){
     target=b.id;
     if(g||!Number.isSafeInteger(target)||target<=0)return fail('เข้ากิลด์ไม่ได้');
+    const found=guildSummary169(await db.guildById169(target));
+    if(!found||found.mode==='closed'||p.s.lvl<found.minLevel)return fail('กิลด์ปิดรับหรือเลเวลยังไม่ถึง');
+    if(found.mode==='approval'){
+      await db.guildApply174(uid,target);
+      return send(res,200,{guild:null,...await guildView169(uid,p)});
+    }
     if(!await db.guildJoin169(uid,target))return fail('กิลด์เต็มหรือไม่พบกิลด์');
+  }else if(op==='withdraw'){
+    if(g||!Number.isSafeInteger(b.id)||b.id<=0)return fail('ยกเลิกใบสมัครไม่ได้');
+    await db.guildReject174(uid,b.id);
+  }else if(['settings','role','approve','reject'].includes(op)){
+    if(!g||g.owner!==uid)return fail('เฉพาะหัวหน้ากิลด์',403);
+    if(op==='settings'){
+      if(!['open','approval','closed'].includes(b.mode)||!Number.isInteger(b.lv)||b.lv<1||b.lv>150)return fail('ตั้งค่ารับสมาชิกไม่ถูกต้อง',400);
+      await db.guildSettings174(g.id,b.mode,b.lv);
+    }else if(op==='role'){
+      if(!Number.isSafeInteger(b.uid)||b.uid===uid||!['member','officer','deputy'].includes(b.role))return fail('ตำแหน่งไม่ถูกต้อง',400);
+      const member=await db.guild169(b.uid);
+      if(Number(member?.id)!==g.id)return fail('ไม่พบสมาชิกในกิลด์');
+      await db.guildRole174(b.uid,b.role);
+    }else{
+      if(!Number.isSafeInteger(b.uid)||b.uid<=0)return fail('ใบสมัครไม่ถูกต้อง',400);
+      const request=(await db.guildRequests174(g.id)).find(x=>Number(x.uid)===b.uid);
+      if(!request)return fail('ไม่พบใบสมัคร');
+      if(op==='reject')await db.guildReject174(b.uid,g.id);
+      else{
+        const q=await session(b.uid);
+        if(g.mode==='closed'||q.s.lvl<g.minLevel||!await db.guildJoin169(b.uid,g.id))return fail('กิลด์เต็ม ปิดรับ หรือผู้สมัครไม่ผ่านเงื่อนไข');
+        q.pendingGuild169=g;
+      }
+    }
   }else if(op==='leave'){
     if(!g)return fail('คุณยังไม่มีกิลด์');
     await db.guildLeave169(uid);
@@ -1551,12 +1586,144 @@ async function guildAction169(uid,p,b,res){
   }
   const mine=guildSummary169(await db.guild169(uid));
   guildSync169(uid,p,mine);
-  const current=mine||guildSummary169(await db.guildById169(target));
-  for(const [mid,m] of live)if(mid!==uid&&m.s.guild169?.id===target){
+  const current=mine||(target?guildSummary169(await db.guildById169(target)):null);
+  for(const [mid,m] of live)if(mid!==uid&&target&&(m.pendingGuild169===undefined?m.s.guild169:m.pendingGuild169)?.id===target){
     m.pendingGuild169=current;
     const t=TOWN.get(mid);if(t)t.guild169=current;
   }
-  return send(res,200,{s:p.s,ui:p.ui,v:p.v,guild:mine,...await guildView169(p)});
+  return send(res,200,{s:p.s,ui:p.ui,v:p.v,guild:mine,...await guildView169(uid,p)});
+}
+const SOCIAL173=new Map();
+setInterval(()=>{for(const uid of SOCIAL173.keys())socialRoom173(uid);},30000).unref();
+function accountWork173(ids,fn){
+  const previous=ids.map(uid=>accountQueue169.get(uid));
+  const work=Promise.allSettled(previous).then(fn);
+  for(const uid of ids)accountQueue169.set(uid,work);
+  return work.finally(()=>{
+    for(const uid of ids)if(accountQueue169.get(uid)===work)accountQueue169.delete(uid);
+  });
+}
+function socialRoom173(uid){
+  const r=SOCIAL173.get(uid);
+  if(r&&Date.now()>=r.until){socialClear173(r);return null;}
+  return r;
+}
+function socialClear173(r){
+  for(const id of r.ids)if(SOCIAL173.get(id)===r)SOCIAL173.delete(id);
+}
+function socialItem173(p,it){
+  let info=null;
+  engine.run(p.s,p.ui,{},E=>{info=E.tradeInfo173(it);});
+  return info;
+}
+function socialView173(uid,p){
+  const r=socialRoom173(uid),d=WD.get(WDU.get(uid));
+  const me=r?r.ids.indexOf(uid):-1;
+  const items=r?.mode==='trade'&&r.stage==='open'?(p.s.gbag||[]).flatMap((it,i)=>{
+    const info=it&&!it.lk?socialItem173(p,it):null;
+    return info?[{i,n:info.name}]:[];
+  }):[];
+  return {wd:d?.friendly173?wdView(d,uid):null,pass:!!p.s.pc105,items,
+    room:r?{id:r.id,mode:r.mode,stage:r.stage,names:r.names,offers:r.offers.map(o=>o?{gold:o.gold,name:o.name,hasItem:o.slot!==null}:null),ready:r.ready,rev:r.rev,me}:null};
+}
+function socialBusy173(uid,p){
+  const room=DGR.get(DGU.get(uid));
+  return !p.s.created||!!(p.s.battle||p.s.res||wdOf(uid)||room?.st==='fight'||room?.st==='rg');
+}
+async function socialTrade173(r,players){
+  const bags=players.map(p=>(p.s.gbag||[]).slice());
+  const gold=players.map((p,i)=>p.s.gold-r.offers[i].gold+r.offers[1-i].gold);
+  const moved=[];
+  for(let i=0;i<2;i++){
+    const p=players[i],o=r.offers[i];
+    if(!p.s.pc105||p.s.gold<o.gold||!Number.isSafeInteger(gold[i]))return 'สิทธิ์เดลหรือยอดทองเปลี่ยน';
+    if(o.slot===null)continue;
+    const item=bags[i][o.slot];
+    if(!item||item.lk||!socialItem173(p,item)||JSON.stringify(item)!==o.sig)return 'ไอเทมในกระเป๋าเปลี่ยน กรุณาเลือกใหม่';
+    moved[i]=bags[i].splice(o.slot,1)[0];
+  }
+  for(let i=0;i<2;i++)if(moved[1-i]){
+    if(bags[i].length>=60)return 'กระเป๋าของผู้รับเต็ม';
+    bags[i].push(moved[1-i]);
+  }
+  await Promise.all(players.map((p,i)=>persist(r.ids[i],p)));
+  try{await db.trade173(r.id,...r.ids,...players.map(p=>p.v),...gold,...bags);}
+  catch(e){
+    if(e.message.includes('trade_changed'))return 'ข้อมูลเปลี่ยน กรุณายืนยันใหม่';
+    if(!await db.tradeDone173(r.id))throw e;
+  }
+  players.forEach((p,i)=>{p.s.gold=gold[i];p.s.gbag=bags[i];p.v++;});
+  r.stage='done';r.until=Date.now()+15000;
+  return null;
+}
+async function socialAction173(uid,b,res){
+  const fail=(error,code=409)=>send(res,code,{error});
+  const p=await session(uid),r=socialRoom173(uid),op=b.op;
+  const reply=()=>send(res,200,socialView173(uid,p));
+  if(op==='sync')return reply();
+  if(!takeToken(p))return fail('ส่งคำสั่งเร็วเกินไป',429);
+  if(op==='duelact'||op==='duelclose'){
+    const d=WD.get(WDU.get(uid));
+    if(!d?.friendly173||d.id!==b.id)return fail('ไม่พบการดวล');
+    if(op==='duelclose'){
+      if(d.ph!=='end')return fail('การดวลยังไม่จบ');
+      WDU.delete(uid);return reply();
+    }
+    if(b.seq!==d.seq||Date.now()>=d.deadline)return reply();
+    const i=d.s.findIndex(x=>x.uid===uid),error=wdAct(d,i,String(b.action||''));
+    if(error)return fail(error);
+    return reply();
+  }
+  if(op==='invite'){
+    const tid=b.uid;
+    if(!Number.isSafeInteger(tid)||tid<=0||tid===uid||!['duel','trade'].includes(b.mode))return fail('คำเชิญไม่ถูกต้อง',400);
+    const target=await userById(tid);
+    if(!target||target.banned)return fail('ไม่พบผู้เล่น');
+    const q=live.get(tid);
+    if(!q||Date.now()-q.touched>30000)return fail('อีกฝ่ายต้องออนไลน์');
+    if(r||socialRoom173(tid)||socialBusy173(uid,p)||socialBusy173(tid,q))return fail('อีกฝ่ายหรือคุณกำลังทำกิจกรรมอยู่');
+    if(b.mode==='trade'&&(!p.s.pc105||!q.s.pc105))return fail('ทั้งสองฝ่ายต้องมีบัตรถาวร 299 บาท',403);
+    const room={id:crypto.randomUUID(),ids:[uid,tid],names:[p.s.name,q.s.name],mode:b.mode,stage:'invite',
+      until:Date.now()+45000,rev:0,ready:[false,false],offers:[null,null]};
+    SOCIAL173.set(uid,room);SOCIAL173.set(tid,room);return reply();
+  }
+  if(!r||r.id!==b.id)return fail('คำเชิญหมดอายุ');
+  const me=r.ids.indexOf(uid);
+  if(op==='cancel'){socialClear173(r);return reply();}
+  const players=await Promise.all(r.ids.map(session));
+  if(op==='accept'&&me===1&&r.stage==='invite'){
+    if(players.some((q,i)=>socialBusy173(r.ids[i],q)))return fail('จบการต่อสู้ก่อน');
+    if(r.mode==='duel'){
+      const d=wdStart(r.ids[0],players[0],r.ids[1],players[1]);
+      if(!d)return fail('เริ่มดวลไม่ได้');
+      d.friendly173=true;d.ph='fight';d.turn=Math.random()<.5?0:1;d.round=1;d.deadline=Date.now()+10000;
+      d.log=['เริ่มดวลกระชับมิตร'];
+      socialClear173(r);return reply();
+    }
+    if(players.some(q=>!q.s.pc105))return fail('ทั้งสองฝ่ายต้องมีบัตรถาวร 299 บาท',403);
+    r.stage='open';r.until=Date.now()+180000;return reply();
+  }
+  if(r.stage!=='open'||r.mode!=='trade'||players.some((q,i)=>!q.s.pc105||socialBusy173(r.ids[i],q)))return fail('เดลไม่ได้ในขณะนี้');
+  if(op==='offer'){
+    const gold=b.gold,slot=b.slot;
+    if(!Number.isSafeInteger(gold)||gold<0||gold>p.s.gold||
+       !(slot===null||Number.isSafeInteger(slot)&&slot>=0))return fail('ข้อเสนอไม่ถูกต้อง',400);
+    const it=slot===null?null:(p.s.gbag||[])[slot];
+    const info=it&&!it.lk?mktInfo(p,it):null;
+    if(slot!==null&&!info?.ok)return fail('ไอเทมนี้เดลไม่ได้');
+    r.offers[me]={gold,slot,sig:it?JSON.stringify(it):'',name:info?.name||''};
+    r.ready=[false,false];r.rev++;return reply();
+  }
+  if(op==='confirm'){
+    if(b.rev!==r.rev||!r.offers.every(Boolean)||!r.offers.some(o=>o.gold||o.slot!==null))return fail('ตรวจสอบข้อเสนอทั้งสองฝ่ายก่อน');
+    r.ready[me]=true;
+    if(r.ready.every(Boolean)){
+      const error=await socialTrade173(r,players);
+      if(error){r.ready=[false,false];r.rev++;return fail(error);}
+    }
+    return reply();
+  }
+  return fail('คำสั่งไม่ถูกต้อง',400);
 }
 const reply=(res,p,out,user)=>{const pending=p.partyFx50;delete p.partyFx50;return send(res,200,{s:p.s,ui:p.ui,fx:(out.fx||[]).concat(pending&&Date.now()-pending.at<5000?pending.fx:[]),fxt:out.fxt||{},v:p.v,user})};
 
@@ -1568,7 +1735,7 @@ async function playerId48(uid, name) {
   for (const [id, p] of live) if (p.s && p.s.created && p.s.name === name) return id;
   const row = await db.findByName(name); return row ? Number(row.user_id) : 0;
 }
-function chatDto48(m, uid) { return { id: m.id, ch: m.ch, uid: m.from, n: m.n, t: m.t, to: m.to, toUid: m.toId, mine: m.from === uid, sp: m.sp | 0, cg: m.cg | 0 }; }
+function chatDto48(m, uid) { return { id: m.id, ch: m.ch, guildId:m.ch==='guild'?m.key:undefined, uid: m.from, n: m.n, t: m.t, to: m.to, toUid: m.toId, mine: m.from === uid, sp: m.sp | 0, cg: m.cg | 0 }; }
 function publicPlayer48(uid, p) {
   const o = p.s, acc = {}, sn = engine.snap(o) || {};
   for (const k of ['ring','neck','brooch','helm','armor','gloves','boots']) { const a = o.acc && o.acc[k]; acc[k] = a ? { t: a.t|0, g: a.g|0, e: a.e|0, sk: a.sk|0, cd: Array.isArray(a.cd) ? a.cd.slice(0, 5) : [] } : null; }
@@ -1680,6 +1847,7 @@ const routes = {
     if (/^(fac|city|war106|gcreate|gjoin|gleave|gdonate|gshop|wardecl|warfighton)/.test(a))return send(res,410,{error:'กิจกรรมนี้ปิดแล้ว'});
     if (!/^[a-z0-9]{1,20}$/.test(a) || (pr && pr.length > 80)) return send(res, 400, { error: 'คำสั่งไม่ถูกต้อง' });
     const p = await session(u.id);
+    if(wdOf(u.id)?.friendly173)return send(res,409,{error:'จบการดวลก่อน'});
     if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
     if (['fishcast', 'fishreel', 'fishacast', 'fishareel', 'fishbuy', 'fishup'].includes(a)) {
       const room = DGR.get(DGU.get(u.id));
@@ -1698,6 +1866,8 @@ const routes = {
     }
     if(a==='gemdo140'&&(DGU.has(u.id)||wdOf(u.id)))return send(res,409,{error:'ออกจากห้องดันเจี้ยนหรือจบการดวลก่อนเปลี่ยนหรือคราฟ Gem'});
     if(['reroll135','job2','job3','job4','clsch96'].includes(a)){const room=DGR.get(DGU.get(u.id));if(room&&room.st==='fight')return send(res,409,{error:'จบดันเจี้ยนทีมก่อนรีออฟหรือเปลี่ยนอาชีพ'});}
+    if(a==='b'&&p.s.battle?.kind==='pvp'&&
+      (b.fight!==p.s.battle.key50||b.turn172!==p.s.battle.pvpRound172))return reply(res,p,{fx:[],fxt:{}});
     if(a==='b'&&b.fight&&(!p.s.battle||p.s.battle.key50!==b.fight||(p.s.battle.gi||0)!==Number(b.target)))return reply(res,p,{fx:[],fxt:{}});
     let warSnap = null, warTid = 0, revSnap = null, revTid = 0;
     if (a === 'pvprev') { revTid = parseInt(pr, 10) || 0; const L = Array.isArray(p.s.rev110) ? p.s.rev110 : []; if (!L.some(x => x && x.uid === revTid && !x.done && Date.now() - (x.at || 0) < 48 * 3600e3)) return send(res, 409, { error: 'แก้แค้นคนนี้ไม่ได้แล้ว' }); const q = await session(revTid); if (!q.s.created) return send(res, 409, { error: 'ไม่พบผู้เล่น' }); revSnap = engine.snap(q.s); if (!revSnap) return send(res, 409, { error: 'ไม่พบข้อมูลผู้เล่น' }); }
@@ -1718,6 +1888,7 @@ const routes = {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
     const b = await readBody(req);
     const p = await session(u.id), now = Date.now();
+    if(wdOf(u.id)?.friendly173)return Number(b.v)===p.v?send(res,200,{same:true,v:p.v}):reply(res,p,{fx:[],fxt:{}});
     if(now-p.lastTick<500){if(Number(b.v)!==p.v)return reply(res,p,{fx:[],fxt:{}});return send(res,200,{same:true,v:p.v})} // tick ถี่กว่า 0.5 วินาทีไม่นับ
     p.lastTick = now;
     let changed = PRIZE_PENDING.has(u.id);
@@ -1743,14 +1914,20 @@ const routes = {
     const newsSince=Math.max(0,Number(new URL(req.url,'http://x').searchParams.get('newsSince'))||0);
     const team = await teamOf(u.id);
     const since = Number(new URL(req.url, 'http://x').searchParams.get('since')) || 0;
-    const fac = null;
+    const fac = null,guild=(p.pendingGuild169===undefined?p.s.guild169:p.pendingGuild169)?.id||0;
     const out = [];
     for (const m of CHATLOG) {
       if (m.id <= since) continue;
-      const ok = m.ch === 'world' || (m.ch === 'fac' && fac != null && m.key === fac) || (m.ch === 'team' && team && m.key === team) || (m.ch === 'dm' && (m.from === u.id || m.toId === u.id));
+      const ok = m.ch === 'world' || (m.ch==='guild'&&guild&&m.key===guild) || (m.ch === 'fac' && fac != null && m.key === fac) || (m.ch === 'team' && team && m.key === team) || (m.ch === 'dm' && (m.from === u.id || m.toId === u.id));
       if (ok) out.push(chatDto48(m,u.id));
     }
-    send(res, 200, { msgs: out.slice(-120), notices: NEWS75.log.filter(m=>m.id>newsSince),noticeEpoch:NEWS75.epoch,team, fac, me: p.s.name || u.display, meUid: u.id, invites: ptInvites48(u.id) });
+    send(res, 200, { msgs: out.slice(0,120), chatEpoch174:NEWS75.epoch, more174:out.length>120, notices: NEWS75.log.filter(m=>m.id>newsSince),noticeEpoch:NEWS75.epoch,team, fac, me: p.s.name || u.display, meUid: u.id, invites: ptInvites48(u.id) });
+  },
+  'POST /api/social': async (req,res)=>{
+    const u=await auth(req);if(!u)return send(res,401,{error:'กรุณาเข้าสู่ระบบ'});
+    const b=await readBody(req),r=socialRoom173(u.id);
+    const ids=b.op==='invite'&&Number.isSafeInteger(b.uid)&&b.uid>0?[...new Set([u.id,b.uid])]:r?r.ids:[u.id];
+    return accountWork173(ids,()=>socialAction173(u.id,b,res));
   },
   'GET /api/player': async (req,res) => {
     const u=await auth(req);if(!u)return send(res,401,{error:'กรุณาเข้าสู่ระบบ'});
@@ -1763,13 +1940,17 @@ const routes = {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
     const b = await readBody(req);
     const ch = String(b.ch || ''), t = String(b.t || '').replace(/\s+/g, ' ').trim().slice(0, 100);
-    if (!['world', 'team', 'dm'].includes(ch) || !t) return send(res, 400, { error: 'ข้อความไม่ถูกต้อง' });
+    if (!['world', 'guild', 'team', 'dm'].includes(ch) || !t) return send(res, 400, { error: 'ข้อความไม่ถูกต้อง' });
     const p = await session(u.id), now = Date.now();
     if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
     if (now - (p.lastChat || 0) < 1200) return send(res, 429, { error: 'ส่งเร็วเกินไป รอสักครู่' });
     if(p.chatBusy48)return send(res,429,{error:'กำลังส่งข้อความ'});p.chatBusy48=true;try{
     const m = { id: 0, ch, n: String(p.s.name || u.display).slice(0, 16), t, from: u.id, ts: now, sp: p.s.sup100 ? 1 : 0, cg: p.s.s105 && p.s.s105.fx && p.s.s105.fx.chat ? 1 : 0 };
-    if (ch === 'fac') { if (p.s.fac == null) return send(res, 400, { error: 'ยังไม่ได้เข้าฝ่าย' }); m.key = p.s.fac; }
+    if(ch==='guild'){
+      const g=await db.guild169(u.id);
+      if(!g)return send(res,403,{error:'เข้ากิลด์ก่อนใช้แชทกิลด์'});
+      m.key=Number(g.id);
+    }
     if (ch === 'team') { const team = await teamOf(u.id); if (!team) return send(res, 400, { error: 'ยังไม่มีทีม' }); m.key = team; }
     if (ch === 'dm') {
       const to = String(b.to || '').trim().slice(0,16);
@@ -2170,16 +2351,13 @@ for(const key of ['GET /api/state','POST /api/act','POST /api/tick','POST /api/g
   routes[key]=async (req,res)=>{
     const u=await auth(req);
     if(!u)return send(res,401,{error:'กรุณาเข้าสู่ระบบ'});
-    const previous=accountQueue169.get(u.id);
-    const work=Promise.resolve(previous).catch(()=>{}).then(()=>{
+    return accountWork173([u.id],()=>{
       const p=live.get(u.id);
       if(p&&p.pendingGuild169!==undefined){
         guildSync169(u.id,p,p.pendingGuild169);delete p.pendingGuild169;
       }
       return route(req,res);
     });
-    accountQueue169.set(u.id,work);
-    try{return await work;}finally{if(accountQueue169.get(u.id)===work)accountQueue169.delete(u.id);}
   };
 }
 

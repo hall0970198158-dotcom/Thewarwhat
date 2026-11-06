@@ -31,12 +31,36 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS wbkill (user_id INTEGER NOT NULL, day INTEGER NOT NULL, claimed INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (user_id, day))`,
   `CREATE TABLE IF NOT EXISTS ladder (user_id INTEGER PRIMARY KEY, snap TEXT NOT NULL, rating INTEGER NOT NULL DEFAULT 1000, upd INTEGER NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS teams_team ON teams(team)`,
+  `CREATE TABLE IF NOT EXISTS trade173 (
+    id TEXT PRIMARY KEY, a INTEGER NOT NULL, b INTEGER NOT NULL, av INTEGER NOT NULL, bv INTEGER NOT NULL,
+    ag INTEGER NOT NULL, bg INTEGER NOT NULL, ab TEXT NOT NULL, bb TEXT NOT NULL, at INTEGER NOT NULL)`,
+  `CREATE TRIGGER IF NOT EXISTS trade173_commit AFTER INSERT ON trade173 BEGIN
+    SELECT CASE WHEN NEW.a=NEW.b OR
+      (SELECT COUNT(*) FROM saves WHERE (user_id=NEW.a AND ver=NEW.av) OR (user_id=NEW.b AND ver=NEW.bv))<>2
+      THEN RAISE(ABORT,'trade_changed') END;
+    UPDATE saves SET gold=NEW.ag,data=json_set(data,'$.gold',NEW.ag,'$.gbag',json(NEW.ab)),ver=ver+1,updated_at=NEW.at WHERE user_id=NEW.a;
+    UPDATE saves SET gold=NEW.bg,data=json_set(data,'$.gold',NEW.bg,'$.gbag',json(NEW.bb)),ver=ver+1,updated_at=NEW.at WHERE user_id=NEW.b;
+  END`,
   `CREATE TABLE IF NOT EXISTS guild169 (
     id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, name_key TEXT NOT NULL UNIQUE,
     owner INTEGER NOT NULL, gold INTEGER NOT NULL DEFAULT 0, emblem TEXT NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS guild_member169 (
     uid INTEGER PRIMARY KEY, gid INTEGER NOT NULL, joined INTEGER NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS guild_member169_gid ON guild_member169(gid, joined, uid)`,
+  `CREATE TABLE IF NOT EXISTS guild_settings174(gid INTEGER PRIMARY KEY, mode TEXT NOT NULL, min_level INTEGER NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS guild_roles174(uid INTEGER PRIMARY KEY, role TEXT NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS guild_requests174(uid INTEGER NOT NULL,gid INTEGER NOT NULL,at INTEGER NOT NULL,PRIMARY KEY(uid,gid))`,
+  `CREATE INDEX IF NOT EXISTS guild_requests174_gid ON guild_requests174(gid,at)`,
+  `CREATE TRIGGER IF NOT EXISTS guild_join174_cleanup AFTER INSERT ON guild_member169 BEGIN
+    DELETE FROM guild_requests174 WHERE uid=NEW.uid;
+  END`,
+  `CREATE TRIGGER IF NOT EXISTS guild_leave174_cleanup AFTER DELETE ON guild_member169 BEGIN
+    DELETE FROM guild_roles174 WHERE uid=OLD.uid;
+  END`,
+  `CREATE TRIGGER IF NOT EXISTS guild_delete174_cleanup AFTER DELETE ON guild169 BEGIN
+    DELETE FROM guild_requests174 WHERE gid=OLD.id;
+    DELETE FROM guild_settings174 WHERE gid=OLD.id;
+  END`,
   `CREATE TABLE IF NOT EXISTS guild_payment169 (
     id TEXT PRIMARY KEY, uid INTEGER NOT NULL, gid INTEGER NOT NULL, cost INTEGER NOT NULL,
     ver INTEGER NOT NULL, name TEXT NOT NULL, name_key TEXT NOT NULL, emblem TEXT NOT NULL, at INTEGER NOT NULL)`,
@@ -173,12 +197,25 @@ function createDb() {
     ? tursoBackend(process.env.TURSO_URL, process.env.TURSO_TOKEN || '')
     : localBackend(process.env.DB_PATH || path.join(__dirname, 'data', 'game.db'));
   return {
-    guildById169: id => B.get('SELECT * FROM guild169 WHERE id=?',[id]),
-    guild169: uid => B.get('SELECT g.* FROM guild169 g JOIN guild_member169 m ON m.gid=g.id WHERE m.uid=?', [uid]),
-    guildList169: () => B.all(`SELECT g.*, (SELECT COUNT(*) FROM guild_member169 m WHERE m.gid=g.id) AS members
-      FROM guild169 g ORDER BY g.gold DESC,g.id LIMIT 100`),
-    guildRoster169: gid => B.all(`SELECT m.uid,s.name,s.level FROM guild_member169 m JOIN saves s ON s.user_id=m.uid
+    trade173: (id,a,b,av,bv,ag,bg,ab,bb) => B.run(
+      'INSERT INTO trade173 VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING',
+      [id,a,b,av,bv,ag,bg,JSON.stringify(ab),JSON.stringify(bb),Date.now()]),
+    tradeDone173: id => B.get('SELECT id FROM trade173 WHERE id=?',[id]),
+    guildById169: id => B.get('SELECT g.*,cfg.mode,cfg.min_level FROM guild169 g LEFT JOIN guild_settings174 cfg ON cfg.gid=g.id WHERE g.id=?',[id]),
+    guild169: uid => B.get('SELECT g.*,cfg.mode,cfg.min_level FROM guild169 g JOIN guild_member169 m ON m.gid=g.id LEFT JOIN guild_settings174 cfg ON cfg.gid=g.id WHERE m.uid=?', [uid]),
+    guildList169: () => B.all(`SELECT g.*,cfg.mode,cfg.min_level, (SELECT COUNT(*) FROM guild_member169 m WHERE m.gid=g.id) AS members
+      FROM guild169 g LEFT JOIN guild_settings174 cfg ON cfg.gid=g.id ORDER BY g.gold DESC,g.id LIMIT 100`),
+    guildRoster169: gid => B.all(`SELECT m.uid,s.name,s.level,r.role FROM guild_member169 m JOIN saves s ON s.user_id=m.uid LEFT JOIN guild_roles174 r ON r.uid=m.uid
       WHERE m.gid=? ORDER BY m.joined,m.uid`, [gid]),
+    guildSettings174: (gid,mode,lv) => B.run(`INSERT INTO guild_settings174 VALUES (?,?,?)
+      ON CONFLICT(gid) DO UPDATE SET mode=excluded.mode,min_level=excluded.min_level`,[gid,mode,lv]),
+    guildRole174: (uid,role) => B.run(`INSERT INTO guild_roles174 VALUES (?,?)
+      ON CONFLICT(uid) DO UPDATE SET role=excluded.role`,[uid,role]),
+    guildApply174: (uid,gid) => B.run('INSERT OR IGNORE INTO guild_requests174 VALUES (?,?,?)',[uid,gid,Date.now()]),
+    guildRequests174: gid => B.all(`SELECT r.uid,s.name,s.level FROM guild_requests174 r JOIN saves s ON s.user_id=r.uid
+      WHERE r.gid=? ORDER BY r.at,r.uid`,[gid]),
+    guildApplied174: uid => B.all('SELECT gid FROM guild_requests174 WHERE uid=?',[uid]),
+    guildReject174: (uid,gid) => B.run('DELETE FROM guild_requests174 WHERE uid=? AND gid=?',[uid,gid]),
     guildPayment169: id => B.get('SELECT id FROM guild_payment169 WHERE id=?',[id]),
     guildPay169: (id,uid,gid,cost,ver,name,key,emblem,at) => B.run(
       'INSERT INTO guild_payment169 VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING',[id,uid,gid,cost,ver,name,key,emblem,at]),
