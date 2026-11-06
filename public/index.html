@@ -808,7 +808,6 @@ body.eco141 #gameWrap,body.eco141 #nav113,body.eco141 #chatFab,body.eco141 #dqFa
 .hunt-tile150:focus-visible{outline:2px solid #ffe4a2;outline-offset:-3px}
 body.view-portrait .hunt-grid150{grid-template-columns:repeat(2,minmax(0,1fr))}
 body.view-ready #chatNative77 #chatPanel{height:min(310px,56%,calc(100% - 16px))!important;background:#111c2a45!important;backdrop-filter:none!important;box-shadow:0 4px 14px #0003;border-color:#b9cfe267}
-body.view-ready #chatNative77 #chatPanel:focus-within{height:min(250px,75%,calc(100% - 16px))!important}
 body.view-ready #chatNative77 #chatPanel .chatlog{background:transparent!important;border-color:#c6dce63d;color:#fff;text-shadow:0 1px 2px #000,0 0 5px #000}
 body.view-ready #chatNative77 #chatPanel .cm{background:#08142638}
 body.view-ready #chatNative77 #chatPanel #chatin{background:#142234a8!important;color:#fff}
@@ -874,6 +873,29 @@ body.view-ready #chatNative77 #chatPanel .chead{color:#fff;text-shadow:0 1px 3px
 .guild-pixel169{aspect-ratio:1;min-width:0;min-height:0;border-width:0;box-shadow:inset 0 0 0 .5px #485971}
 body.view-ready #chatNative77 #chatPanel #chatrow[hidden],body.view-ready .view-overlay #chatPanel #chatrow[hidden],#chatPanel #chatrow[hidden]{display:none!important}
 .guild-tabs174{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.guild-tabs174 .btn{min-height:38px}.guild-tabs174 + .card select{max-width:100%}
+body.view-ready #chatNative77 #chatPanel{
+ left:var(--chat-x,8px)!important;right:auto!important;top:var(--chat-y,auto)!important;bottom:var(--chat-bottom,8px)!important;
+ width:var(--chat-w,min(380px,calc(100% - 16px)))!important;height:var(--chat-h,min(340px,calc(100% - 16px)))!important;
+ background:linear-gradient(165deg,#121e30ed,#090e1bb8)!important;border-color:#77849d8c;padding:6px;gap:4px
+}
+body.view-ready #chatNative77 #chatPanel .chatlog{padding:5px 7px;overflow-anchor:none;user-select:text}
+#chatNative77 #chatPanel .chead{display:flex;justify-content:space-between;align-items:center;min-height:32px}
+#chatNative77 #chatPanel .chead .btn{min-width:36px;min-height:32px;padding:2px 6px}
+#chatNative77 #chatPanel .ctabs{display:flex;overflow-x:auto;flex:0 0 auto;touch-action:pan-x;margin:0;gap:3px}
+#chatNative77 #chatPanel .ctabs .btn{flex:1 0 auto;min-width:0;min-height:32px;padding:2px 6px;font-size:11px}
+#chatNative77 #chatPanel #chatExtra{max-height:26%;overflow:auto;touch-action:pan-y}
+body.view-ready #chatNative77 #chatPanel #chatrow{grid-template-columns:minmax(0,1fr) 42px 42px;gap:4px}
+#chatNative77 #chatPanel #chatrow .btn{min-width:0;min-height:40px;padding:2px 4px}
+body.view-ready #chatNative77 #chatPanel .cm{padding:3px 0;background:transparent}
+#chatNative77 #chatPanel .cm p{overflow-wrap:anywhere;white-space:pre-wrap}
+#chatNative77 #chatPanel .chat-sticker176{display:block;font-size:32px;line-height:1.35}
+#chatDrag176,#chatResize176{touch-action:none;user-select:none;color:#f0d594}
+#chatDrag176{cursor:grab;flex:1;min-height:32px;display:flex;align-items:center;gap:6px}
+#chatResize176{cursor:nesw-resize;width:40px;min-height:32px;text-align:center;line-height:32px;background:#253149;border-radius:7px}
+#chatTray176{position:absolute;bottom:55px;left:6px;right:6px;z-index:2;display:flex;flex-wrap:wrap;gap:4px;padding:6px;background:#141e30;border:1px solid #817453;border-radius:8px}
+#chatTray176[hidden],#chatLatest176[hidden]{display:none}
+#chatTray176 button{border:1px solid #536481;background:#24344a;border-radius:7px;min-width:38px;min-height:38px;font-size:22px;cursor:pointer}
+#chatLatest176{position:absolute;right:12px;bottom:57px;z-index:1}
 </style>
 
 <section id="login" class="login">
@@ -914,12 +936,14 @@ body.view-ready #chatNative77 #chatPanel #chatrow[hidden],body.view-ready .view-
 <button id="dqFab" class="dqfab" aria-label="ภารกิจประจำวัน" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span id="dqPts">0</span><span class="badge" id="dqBadge" hidden>!</span></button>
 <section id="dqPanel" class="dqpanel" role="dialog" aria-label="ภารกิจประจำวัน" hidden></section>
 <section id="chatPanel" class="cpanel" role="dialog" aria-label="แชท" hidden>
- <div class="chead"><b>แชท</b><span class="meta" id="chatCount"></span><button class="btn" data-a="chatclose" aria-label="ปิดแชท">✕</button></div>
+ <div class="chead"><div id="chatDrag176" title="ลากเพื่อย้ายหน้าต่าง">⠿ <b>แชท</b></div><span id="chatResize176" title="ลากขึ้นลงเพื่อปรับสูง และลากซ้ายขวาเพื่อปรับกว้าง">⤢</span><span class="meta" id="chatCount" hidden></span><button class="btn" data-a="chatclose" aria-label="ปิดแชท">✕</button></div>
  <div class="ctabs" id="chatTabs"></div>
  <div id="chatExtra"></div>
  <div class="cpeers" id="peers"></div>
  <div class="chatlog" id="chatlog"></div>
- <div class="chatrow" id="chatrow"><input class="txt" id="chatin" type="text" maxlength="100" placeholder="พิมพ์ข้อความ" aria-label="ข้อความแชท" autocomplete="off"><button id="chatSend60" class="btn primary" data-a="chatsend">ส่ง</button></div>
+ <button type="button" id="chatLatest176" class="btn" hidden>↓ ล่าสุด</button>
+ <div id="chatTray176" role="group" aria-label="สติกเกอร์" hidden></div>
+ <div class="chatrow" id="chatrow"><input class="txt" id="chatin" type="text" maxlength="100" placeholder="พิมพ์ข้อความ" aria-label="ข้อความแชท" autocomplete="off"><button type="button" class="btn" id="chatSticker176" aria-label="สติกเกอร์" aria-controls="chatTray176" aria-expanded="false">☺</button><button id="chatSend60" class="btn primary" data-a="chatsend">ส่ง</button></div>
 </section>
 
 <script>
@@ -2450,7 +2474,7 @@ function teamAct(join){
  apiCall('POST','/api/team',join?{name:nm}:{leave:true}).then(function(j){CHAT.team=j.team||'';CHAT.msg='';paintChat()}).catch(function(e){CHAT.msg=e.message||'ทำรายการไม่สำเร็จ';paintChat()})}
 function chatOpen(open){
  var p=document.getElementById('chatPanel');if(!p)return;
- p.hidden=!open;CHAT.open=open;ON.open=open;chatMount77(open);viewSync();
+ p.hidden=!open;if(!open)chatTray176(false);CHAT.open=open;ON.open=open;chatMount77(open);viewSync();
  if(open){bulClear();chatMarkSeen(CHAT.tab);paintChat();if(chatOnline()){chatPoll(true);chatLoop()}}
  chatUI()}
 function chatUI(){
@@ -3408,7 +3432,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B175';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B176';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -8413,6 +8437,7 @@ function chatViewport77(){
  var v=window.visualViewport,w=Math.max(1,window.innerWidth||800),h=Math.max(1,window.innerHeight||450);
  if(v){if(Number.isFinite(v.width)&&v.width>0)w=Math.min(w,v.width);if(Number.isFinite(v.height)&&v.height>0)h=Math.min(h,v.height)}
  host.style.left=(v&&Number.isFinite(v.offsetLeft)?v.offsetLeft:0)+'px';host.style.top=(v&&Number.isFinite(v.offsetTop)?v.offsetTop:0)+'px';host.style.width=w+'px';host.style.height=h+'px';host.classList.toggle('compact77',h<280);
+ var panel=document.getElementById('chatPanel');if(panel&&panel.chatFit176)panel.chatFit176();
 }
 function chatMount77(open){
  if(SV)return;var p=document.getElementById('chatPanel');if(!p)return;
@@ -8807,12 +8832,79 @@ function lg30Claim(){if(!s||!s.created)return;var a=lg30State();if(a.got)return;
 function lg30Html48(){var a=lg30State(),n=Math.max(1,a.next),w=LG30[n-1];return '<div class="dq47-login"><span>ล็อกอิน 30 วัน · วันที่ '+n+'</span><b>'+esc(w.t)+'</b><button class="btn primary" data-a="lg30claim"'+(a.got?' disabled':'')+'>'+(a.got?'✓ รับรางวัลวันนี้แล้ว':'รับรางวัล 30 วัน วันนี้')+'</button></div><p class="dq47-note">รับได้วันละ 1 ครั้ง · ขาดวันสะสมต่อได้ · ครบ 30 วันเริ่มรอบใหม่วันถัดไป<br>รับแยกจากรางวัล 7 วันได้ในวันเดียวกัน</p><div class="dq48-calendar">'+LG30.map(function(w,i){var n=i+1,got=(a.got||a.days<30)&&n<=a.days,cur=!a.got&&n===a.next;return '<div class="dq48-date'+(got?' is-done':cur?' is-ready':'')+'"><b>วันที่ '+n+(got?' ✓':'')+'</b><small>'+esc(w.t)+'</small></div>'}).join('')+'</div>'}
 
 var CHAT48={profile:null,selected:null,seq:0,busy:false,sendBusy:false,invites:[],users:{},teamDraft:'',dmSeen:new Set()};
+var CHAT_STICKERS176=['😀','😂','🥹','😎','😡','🎉','❤️','👍','🔥','⚔️','✨','👋'];
+function chatLayout176(){
+ var panel=document.getElementById('chatPanel'),host=document.getElementById('chatNative77');
+ var drag=document.getElementById('chatDrag176'),resize=document.getElementById('chatResize176');
+ var log=document.getElementById('chatlog'),latest=document.getElementById('chatLatest176'),tray=document.getElementById('chatTray176');
+ var saved={},gesture=null;
+ try{saved=JSON.parse(localStorage.getItem('chatLayout176'))||{}}catch(e){}
+ function mode(){return innerWidth>viewBox77().h?'wide':'tall'}
+ function bounds(g){
+  var maxW=Math.max(1,host.clientWidth-16),maxH=Math.max(1,host.clientHeight-16);
+  var w=Math.max(Math.min(240,maxW),Math.min(maxW,g.w));
+  var h=Math.max(Math.min(200,maxH),Math.min(maxH,g.h));
+  return {w:w,h:h,x:Math.max(8,Math.min(host.clientWidth-w-8,g.x)),y:Math.max(8,Math.min(host.clientHeight-h-8,g.y))};
+ }
+ function show(g){
+  ['x','y','w','h'].forEach(function(k){if(g)panel.style.setProperty('--chat-'+k,g[k]+'px');else panel.style.removeProperty('--chat-'+k)});
+  if(g)panel.style.setProperty('--chat-bottom','auto');else panel.style.removeProperty('--chat-bottom');
+ }
+ panel.chatFit176=function(){
+  host=document.getElementById('chatNative77');
+  if(!host||panel.parentElement!==host||panel.hidden||gesture)return;
+  var g=saved[mode()];show(g&&['x','y','w','h'].every(function(k){return Number.isFinite(g[k])})?bounds(g):null);
+ };
+ function start(e){
+  if(gesture||e.button!==0)return;
+  var r=panel.getBoundingClientRect(),box=host.getBoundingClientRect();
+  gesture={id:e.pointerId,handle:e.currentTarget,sx:e.clientX,sy:e.clientY,mode:mode(),start:{x:r.left-box.left,y:r.top-box.top,w:r.width,h:r.height}};
+  e.currentTarget.setPointerCapture(e.pointerId);e.preventDefault();
+ }
+ function move(e){
+  if(!gesture||gesture.id!==e.pointerId)return;
+  var d=gesture,g=d.start,dx=e.clientX-d.sx,dy=e.clientY-d.sy;
+  if(d.handle===resize){
+   var bottom=g.y+g.h,h=Math.max(Math.min(200,bottom-8),Math.min(bottom-8,g.h-dy));
+   var w=Math.max(Math.min(240,host.clientWidth-g.x-8),Math.min(host.clientWidth-g.x-8,g.w+dx));
+   d.next=bounds({x:g.x,y:bottom-h,w:w,h:h});
+  }else d.next=bounds({x:g.x+dx,y:g.y+dy,w:g.w,h:g.h});
+  show(d.next);
+ }
+ function end(e){
+  if(!gesture||gesture.id!==e.pointerId)return;
+  if(gesture.next){saved[gesture.mode]=gesture.next;try{localStorage.setItem('chatLayout176',JSON.stringify(saved))}catch(err){}}
+  gesture=null;panel.chatFit176();
+ }
+ [drag,resize].forEach(function(handle){
+  handle.addEventListener('pointerdown',start);
+  handle.addEventListener('pointermove',move);
+  ['pointerup','pointercancel','lostpointercapture'].forEach(function(type){handle.addEventListener(type,end)});
+ });
+ function updateLatest(){latest.hidden=!!CHAT48.selected||log.scrollTop+log.clientHeight>=log.scrollHeight-30}
+ log.addEventListener('scroll',updateLatest,{passive:true});
+ panel.chatLatest176=updateLatest;
+ latest.addEventListener('click',function(){log.scrollTop=log.scrollHeight;updateLatest()});
+ CHAT_STICKERS176.forEach(function(sticker){
+  var button=document.createElement('button');button.type='button';button.textContent=sticker;
+  button.setAttribute('aria-label','ส่ง '+sticker);
+  button.addEventListener('click',function(){if(!chatReady60()||CHAT48.sendBusy)return;chatTray176(false);chatSend(sticker)});
+  tray.appendChild(button);
+ });
+ document.getElementById('chatSticker176').addEventListener('click',function(){chatTray176(tray.hidden)});
+}
+function chatTray176(open){
+ var tray=document.getElementById('chatTray176'),button=document.getElementById('chatSticker176');
+ if(tray)tray.hidden=!open;if(button)button.setAttribute('aria-expanded',String(open));
+}
+if(!SV)chatLayout176();
+
 function chatName48(v){return String(v||'').trim().slice(0,16)}
 function chatTab174(tab){
  if(CHAT.tab===tab)return;
  var inp=document.getElementById('chatin'),drafts=CHAT.drafts174||(CHAT.drafts174={});
  if(inp){drafts[CHAT.tab]=inp.value;inp.value=drafts[tab]||'';}
- CHAT.tab=tab;
+ CHAT.tab=tab;chatTray176(false);
 }
 function chatDraft48(){var d=document.getElementById('dmto'),t=document.getElementById('teamin');if(d&&document.activeElement===d){var name=chatName48(d.value);if(name!==CHAT.dmTo)CHAT.dmUid=0;CHAT.dmTo=name}if(t)CHAT48.teamDraft=t.value}
 function chatExtra48(html){var el=document.getElementById('chatExtra');if(el&&el._html48!==html){var active=document.activeElement;if(active&&(active.id==='dmto'||active.id==='teamin')&&el.contains&&el.contains(active))return;el.innerHTML=html;el._html48=html}}
@@ -8838,19 +8930,23 @@ function paintChat(){
  else if(tab==='team'){if(!CHAT.team){canSend=false;extra='<div class="chatrow"><input class="txt" id="teamin" maxlength="16" value="'+esc(CHAT48.teamDraft)+'" placeholder="ชื่อทีม 2–16 ตัว"><button class="btn" data-a="teamjoin">เข้าทีม</button></div>'}else{extra='<div class="row"><span>ทีม '+esc(CHAT.team)+'</span><button class="btn" data-a="teamleave">ออกทีม</button></div>';ph='คุยในทีม'}}
  else if(tab==='dm'){canSend=!!CHAT.dmTo;extra='<div class="chat48-recipient"><label for="dmto">ถึง</label><input class="txt" id="dmto" maxlength="16" value="'+esc(CHAT.dmTo)+'" placeholder="ชื่อตัวละครเต็ม"><button class="btn chat48-all" data-a="chatall48">ทั้งหมด</button></div>';ph=CHAT.dmTo?'กระซิบถึง '+CHAT.dmTo:'ใส่ชื่อผู้รับก่อน'}
  if(CHAT.pollErr60)extra+='<button class="btn sm" data-a="chatretry60">แชทเชื่อมต่อขัดข้อง · ลองใหม่ ↻</button>';
- if(CHAT.msg)extra+='<p class="chat48-message" role="status">'+esc(CHAT.msg)+'</p>';chatExtra48(extra);if(row)row.hidden=tab==='notice'||!!CHAT48.selected;var send=document.getElementById('chatSend60');if(send){send.disabled=!canSend||CHAT48.sendBusy;send.setAttribute('aria-disabled',String(send.disabled))}if(inp){inp.placeholder=!chatOnline()&&!canSend?'พิมพ์รอเชื่อมต่อได้':ph;inp.disabled=false}if(pe){pe.hidden=true;pe.innerHTML=''}if(cn)cn.textContent=CHAT48.selected?'ข้อมูลผู้เล่น':'แตะชื่อเพื่อดูผู้เล่น';
+ if(CHAT.msg)extra+='<p class="chat48-message" role="status">'+esc(CHAT.msg)+'</p>';chatExtra48(extra);if(row)row.hidden=tab==='notice'||!!CHAT48.selected;var send=document.getElementById('chatSend60');if(send){send.disabled=!canSend||CHAT48.sendBusy;send.setAttribute('aria-disabled',String(send.disabled))}var stickerButton=document.getElementById('chatSticker176');if(stickerButton){stickerButton.disabled=!canSend||CHAT48.sendBusy;if(stickerButton.disabled)chatTray176(false)}if(inp){inp.placeholder=!chatOnline()&&!canSend?'พิมพ์รอเชื่อมต่อได้':ph;inp.disabled=false}if(pe){pe.hidden=true;pe.innerHTML=''}if(cn)cn.textContent=CHAT48.selected?'ข้อมูลผู้เล่น':'แตะชื่อเพื่อดูผู้เล่น';
  var atEnd=lg.scrollTop+lg.clientHeight>=lg.scrollHeight-30,html='';
  if(CHAT48.selected)html=chatProfileHtml48(CHAT48.profile);
- else{html=chatInvites48();var list=chatMsgs(tab);if(tab==='dm'&&CHAT.dmTo)list=list.filter(function(m){return m.mine?(CHAT.dmUid?m.toUid===CHAT.dmUid:m.to===CHAT.dmTo):(CHAT.dmUid?m.uid===CHAT.dmUid:m.n===CHAT.dmTo)});CHAT48.users={};html+=list.length?list.map(function(m){var peer=m.ch==='dm'&&m.mine?{uid:m.toUid||0,n:m.to||''}:{uid:m.uid||0,n:m.n||''},key=String(m.id),name=chatName48(peer.n);if(!m.mine||m.ch==='dm')CHAT48.users[key]=peer;var who=(m.ch==='notice'&&!peer.uid)||(m.mine&&m.ch!=='dm')||(!peer.uid&&name==='📢 ประกาศ')?'<b>'+esc(m.n)+'</b>':'<button class="chat48-name" data-a="chatuser48" data-p="'+esc(key)+'">'+esc(name)+'</button>';return '<div class="cm'+(m.ch==='dm'?' dm':m.ch==='notice'?' notice75':'')+'"><div class="chat48-msghead">'+(m.ch==='dm'?'<small>'+(m.mine?'ถึง':'จาก')+'</small>':'')+who+(m.sp?'<span class="sup100b" title="ผู้สนับสนุน">✦</span>':'')+(m.ch==='notice'?'<small class="news75-time">'+esc(new Date(m.ts).toLocaleTimeString('th-TH',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit'}))+'</small>':'')+(m.mine?'<small>คุณ</small>':'')+'</div><p'+(m.cg?' class="cg105"':'')+'>'+esc(String(m.t||'').slice(0,m.ch==='notice'?160:100))+'</p></div>'}).join(''):'<p class="hint chat48-empty">'+(tab==='notice'?'ยังไม่มีประกาศใหม่':tab==='dm'?'เลือกผู้รับแล้วเริ่มกระซิบได้เลย':'ยังไม่มีข้อความ · แตะชื่อผู้เล่นเพื่อดูอุปกรณ์')+'</p>'}
- if(lg._html48!==html){var top=lg.scrollTop,switched=lg.dataset.tab!==tab;lg.innerHTML=html;lg._html48=html;lg.dataset.tab=tab;lg.scrollTop=CHAT48.selected?0:switched||atEnd||!lg.dataset.init?lg.scrollHeight:top;lg.dataset.init=1}if(CHAT.open&&!CHAT48.selected)chatMarkSeen(tab);
+ else{html=chatInvites48();var list=chatMsgs(tab);if(tab==='dm'&&CHAT.dmTo)list=list.filter(function(m){return m.mine?(CHAT.dmUid?m.toUid===CHAT.dmUid:m.to===CHAT.dmTo):(CHAT.dmUid?m.uid===CHAT.dmUid:m.n===CHAT.dmTo)});CHAT48.users={};html+=list.length?list.map(function(m){var peer=m.ch==='dm'&&m.mine?{uid:m.toUid||0,n:m.to||''}:{uid:m.uid||0,n:m.n||''},key=String(m.id),name=chatName48(peer.n);if(!m.mine||m.ch==='dm')CHAT48.users[key]=peer;var who=(m.ch==='notice'&&!peer.uid)||(m.mine&&m.ch!=='dm')||(!peer.uid&&name==='📢 ประกาศ')?'<b>'+esc(m.n)+'</b>':'<button class="chat48-name" data-a="chatuser48" data-p="'+esc(key)+'">'+esc(name)+'</button>';var content=String(m.t||'').slice(0,m.ch==='notice'?160:100),sticker=m.ch!=='notice'&&CHAT_STICKERS176.includes(content);return '<div data-chat-id="'+esc(key)+'" class="cm'+(m.ch==='dm'?' dm':m.ch==='notice'?' notice75':'')+'"><div class="chat48-msghead">'+(m.ch==='dm'?'<small>'+(m.mine?'ถึง':'จาก')+'</small>':'')+who+(m.sp?'<span class="sup100b" title="ผู้สนับสนุน">✦</span>':'')+(m.ch==='notice'?'<small class="news75-time">'+esc(new Date(m.ts).toLocaleTimeString('th-TH',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit'}))+'</small>':'')+(m.mine?'<small>คุณ</small>':'')+'</div><p'+(sticker?' class="chat-sticker176"':m.cg?' class="cg105"':'')+'>'+esc(content)+'</p></div>'}).join(''):'<p class="hint chat48-empty">'+(tab==='notice'?'ยังไม่มีประกาศใหม่':tab==='dm'?'เลือกผู้รับแล้วเริ่มกระซิบได้เลย':'ยังไม่มีข้อความ · แตะชื่อผู้เล่นเพื่อดูอุปกรณ์')+'</p>'}
+ if(lg._html48!==html){var top=lg.scrollTop,switched=lg.dataset.tab!==tab||lg.dataset.profile!==String(!!CHAT48.selected),anchor,offset;
+ if(!switched&&!atEnd){anchor=Array.from(lg.children).find(function(el){return el.dataset.chatId&&el.getBoundingClientRect().bottom>lg.getBoundingClientRect().top});if(anchor)offset=anchor.getBoundingClientRect().top}
+ lg.innerHTML=html;lg.dataset.profile=String(!!CHAT48.selected);lg._html48=html;lg.dataset.tab=tab;lg.scrollTop=CHAT48.selected?0:switched||atEnd||!lg.dataset.init?lg.scrollHeight:top;lg.dataset.init=1;
+ if(anchor){var next=Array.from(lg.children).find(function(el){return el.dataset.chatId===anchor.dataset.chatId});if(next)lg.scrollTop+=next.getBoundingClientRect().top-offset}
+ }var panel176=lg.closest('#chatPanel');if(panel176&&panel176.chatLatest176)panel176.chatLatest176();if(CHAT.open&&!CHAT48.selected)chatMarkSeen(tab);
 }
-function chatSend(){var inp=document.getElementById('chatin');if(!inp||CHAT48.sendBusy)return;var tx=inp.value.replace(/\s+/g,' ').trim().slice(0,100),now=Date.now();if(!tx)return;chatDraft48();if(!chatReady60()){CHAT.msg=CHAT48.selected?'กลับไปแชทก่อนส่งข้อความ':!chatOnline()?'ยังไม่เชื่อมต่อ ข้อความยังอยู่':CHAT.tab==='dm'?'ใส่ชื่อผู้รับก่อน':'เข้าฝ่ายหรือทีมก่อนส่งช่องนี้';paintChat();return}if(now-CHAT.lastSend<1500){CHAT.msg='รออีกสักครู่ก่อนส่งข้อความ';paintChat();return}
- if(!chatOnline()){if(CHAT.tab!=='world'||!ON.ok||!ON.canWrite)return;CHAT.lastSend=now;ON.lastSay=now;inp.value='';ON.db.doc('chat/m'+Math.floor(now/1000)%120).set({n:nick().slice(0,16),t:tx,ts:now,u:ON.uid}).catch(function(){});ON.chat.push({n:nick(),t:tx,ts:now});ON.chat=ON.chat.slice(-40);paintChat();return}
+function chatSend(sticker){var inp=document.getElementById('chatin');if(!inp||CHAT48.sendBusy)return;var tx=CHAT_STICKERS176.includes(sticker)?sticker:inp.value.replace(/\s+/g,' ').trim().slice(0,100),now=Date.now();if(!tx)return;chatDraft48();if(!chatReady60()){CHAT.msg=CHAT48.selected?'กลับไปแชทก่อนส่งข้อความ':!chatOnline()?'ยังไม่เชื่อมต่อ ข้อความยังอยู่':CHAT.tab==='dm'?'ใส่ชื่อผู้รับก่อน':'เข้าฝ่ายหรือทีมก่อนส่งช่องนี้';paintChat();return}if(now-CHAT.lastSend<1500){CHAT.msg='รออีกสักครู่ก่อนส่งข้อความ';paintChat();return}
+ if(!chatOnline()){if(CHAT.tab!=='world'||!ON.ok||!ON.canWrite)return;CHAT.lastSend=now;ON.lastSay=now;if(!sticker)inp.value='';ON.db.doc('chat/m'+Math.floor(now/1000)%120).set({n:nick().slice(0,16),t:tx,ts:now,u:ON.uid}).catch(function(){});ON.chat.push({n:nick(),t:tx,ts:now});ON.chat=ON.chat.slice(-40);paintChat();return}
  var dt=document.getElementById('dmto');if(dt)CHAT.dmTo=chatName48(dt.value);if(CHAT.tab==='dm'&&!CHAT.dmTo){CHAT.msg='ใส่ชื่อผู้รับก่อน';paintChat();return}
  var ch=CHAT.tab,to=CHAT.dmTo,toUid=CHAT.dmUid||0,epoch=CHAT48.epoch||0;CHAT48.sendBusy=true;CHAT.lastSend=now;CHAT.msg='';paintChat();
  apiCall('POST','/api/chat',{ch:ch,t:tx,to:ch==='dm'?to:undefined,toUid:ch==='dm'?toUid:undefined}).then(function(j){if((CHAT48.epoch||0)!==epoch)return;if(CHAT.tab===ch){
-  if(inp.value.replace(/\s+/g,' ').trim().slice(0,100)===tx)inp.value='';
- }else if(CHAT.drafts174?.[ch]?.replace(/\s+/g,' ').trim().slice(0,100)===tx)CHAT.drafts174[ch]='';if(j.message&&!CHAT.list.some(function(m){return m.id===j.message.id}))CHAT.list.push(j.message);CHAT.list.sort(function(a,b){return a.id-b.id;});chatPoll(true)}).catch(function(e){if((CHAT48.epoch||0)!==epoch)return;CHAT.msg=e.message||'ส่งไม่สำเร็จ ข้อความยังอยู่ในช่องพิมพ์'}).then(function(){if((CHAT48.epoch||0)!==epoch)return;CHAT48.sendBusy=false;paintChat()})}
+  if(!sticker&&inp.value.replace(/\s+/g,' ').trim().slice(0,100)===tx)inp.value='';
+ }else if(!sticker&&CHAT.drafts174?.[ch]?.replace(/\s+/g,' ').trim().slice(0,100)===tx)CHAT.drafts174[ch]='';if(j.message&&!CHAT.list.some(function(m){return m.id===j.message.id}))CHAT.list.push(j.message);CHAT.list.sort(function(a,b){return a.id-b.id;});chatPoll(true)}).catch(function(e){if((CHAT48.epoch||0)!==epoch)return;CHAT.msg=e.message||'ส่งไม่สำเร็จ ข้อความยังอยู่ในช่องพิมพ์'}).then(function(){if((CHAT48.epoch||0)!==epoch)return;CHAT48.sendBusy=false;paintChat()})}
 function chatUser48(key){var u=CHAT48.users[key];if(!u)return;CHAT48.selected={uid:u.uid||0,n:chatName48(u.n)};CHAT48.profile=null;CHAT.msg='';var seq=++CHAT48.seq;chatOpen(true);paintChat();if(!chatOnline()){CHAT48.profile={error:'ดูอุปกรณ์ผู้เล่นได้ในเวอร์ชันออนไลน์'};paintChat();return}apiCall('GET','/api/player?'+(u.uid?'uid='+u.uid:'name='+encodeURIComponent(u.n))).then(function(j){if(seq!==CHAT48.seq)return;CHAT48.profile=j.player;CHAT48.selected={uid:j.player.uid,n:j.player.n};paintChat()}).catch(function(e){if(seq!==CHAT48.seq)return;CHAT48.profile={error:e.message||'โหลดข้อมูลไม่ได้ กรุณาอัปเดต server.js B48'};paintChat()})}
 function chatBack48(){CHAT48.selected=null;CHAT48.profile=null;CHAT48.seq++;CHAT.msg='';paintChat()}
 function chatWhisper48(){var u=CHAT48.selected;if(!u)return;CHAT.dmTo=u.n;CHAT.dmUid=u.uid||0;chatTab174('dm');chatBack48();chatOpen(true);var inp=document.getElementById('chatin');if(inp)inp.focus()}
