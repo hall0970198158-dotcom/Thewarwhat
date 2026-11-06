@@ -3435,7 +3435,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B177';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B178';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -7059,6 +7059,7 @@ function volRow(id,lab,on,v,act){return '<div class="srow" style="grid-template-
  '<input type="range" id="'+id+'" min="0" max="100" step="5" value="'+v+'" aria-label="ระดับเสียง '+lab+'" style="width:100%;accent-color:#f0b93c"><b class="v" id="'+id+'v">'+v+'</b></div>'}
 function settingsHtml(){
  return '<section class="card"><h3>⚙️ ตั้งค่า</h3>'+
+  '<div class="row"><span>ไอดี <b>'+esc(curUser||'')+'</b></span><button type="button" class="btn danger" data-a="logout">ออกจากระบบ</button></div>'+
   orientationChoices()+artSettings74()+skillSettings71()+'<h4 class="st">ตัวละคร</h4>'+tgl('setsprites',SET.spriteChars!==false,'ชุดตัวละครใหม่','เปิด: ภาพเฉพาะครบ 35 อาชีพ · ยืน/โจมตี 8 ทิศ · กระโดดเบา ๆ เวลาเดิน · ปิด: ภาพเดิมที่ปรับทรงผมและสีชุดได้ครบ')+
   '<h4 class="st">เสียง</h4>'+volRow('volSfx','เสียงเอฟเฟกต์',SET.sfx,SET.vs,'setsfx')+volRow('volMus','เพลงพื้นหลัง',SET.mus,SET.vm,'setmus')+
   tgl('setquiet63',SET.quiet63,'ออโต้เสียงเบา','ลดเสียงระหว่างออโต้เล็กน้อยและเว้นเสียงซ้ำ · ปิดเพื่อใช้เสียงเต็มตามแถบปรับ')+
