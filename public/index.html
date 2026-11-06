@@ -872,6 +872,8 @@ body.view-ready #chatNative77 #chatPanel .chead{color:#fff;text-shadow:0 1px 3px
 .guild-color169[aria-pressed="true"]{outline:2px solid #ffd480;outline-offset:2px}
 .guild-canvas169{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));width:min(100%,360px);touch-action:none;user-select:none;background:#152035;margin:10px auto}
 .guild-pixel169{aspect-ratio:1;min-width:0;min-height:0;border-width:0;box-shadow:inset 0 0 0 .5px #485971}
+body.view-ready #chatNative77 #chatPanel #chatrow[hidden],body.view-ready .view-overlay #chatPanel #chatrow[hidden],#chatPanel #chatrow[hidden]{display:none!important}
+.guild-tabs174{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.guild-tabs174 .btn{min-height:38px}.guild-tabs174 + .card select{max-width:100%}
 </style>
 
 <section id="login" class="login">
@@ -2389,7 +2391,7 @@ function newsReceive75(j){
  if(q.list.length>120)q.list=q.list.slice(-120);q.ready=true;
 }
 function newsUser75(id){var m=NEWS_UI75.list.find(function(x){return String(x.id)===String(id)});if(!m||m.uid<=0)return;CHAT48.users['notice:'+m.id]={uid:m.uid,n:m.n};chatUser48('notice:'+m.id)}
-function newsOpen75(){CHAT.tab='notice';chatBack48();chatOpen(true);chatMarkSeen('notice');paintChat();chatUI()}
+function newsOpen75(){chatTab174('notice');chatBack48();chatOpen(true);chatMarkSeen('notice');paintChat();chatUI()}
 function newsPaint75(){
  if(SV)return;var q=NEWS_UI75,now=Date.now(),hide=SET.news75===false||!s||!s.created||document.hidden||ECO.on;
  if(hide){q.queue=[];q.current=null;if(q.node)q.node.hidden=true;return;}
@@ -2402,21 +2404,31 @@ function newsPaint75(){
 }
 
 var CHAT={tab:'world',open:false,list:[],last:0,seen:{world:0,fac:0,team:0,dm:0},dmTo:'',team:'',fac:null,me:'',busy:false,lastSend:0,timer:0,msg:''};
-var CHAT_TABS=[['world','โลก'],['team','ทีม'],['dm','กระซิบ'],['notice','ประกาศ']];
+var CHAT_TABS=[['world','โลก'],['guild','กิลด์'],['team','ทีม'],['dm','กระซิบ'],['notice','ประกาศ']];
 function chatOnline(){return CL&&!!NET.token}
 function chatMsgs(tab){
  if(tab==='notice')return NEWS_UI75.list;
  if(!chatOnline()){return tab==='world'?ON.chat.map(function(m){return {id:m.ts||0,ch:'world',n:m.n,t:m.t,mine:m.n===nick()}}):[]}
- return CHAT.list.filter(function(m){return m.ch===tab})}
+ return CHAT.list.filter(function(m){return m.ch===tab&&(tab!=='guild'||m.guildId===s?.guild169?.id)})}
 function chatPoll(force){
  if(!chatOnline()||CHAT.busy||!s||!s.created)return;
- CHAT.busy=true;var chatToken48=NET.token;
- apiCall('GET','/api/chat?since='+CHAT.last+'&newsSince='+NEWS_UI75.last).then(function(j){if(chatToken48!==NET.token)return;CHAT.pollErr60=false;if(CHAT.msg==='กำลังเชื่อมต่อแชท…')CHAT.msg='';
+ CHAT.busy=true;var chatToken48=NET.token,epoch=CHAT48.epoch||0;
+ apiCall('GET','/api/chat?since='+CHAT.last+'&newsSince='+NEWS_UI75.last).then(function(j){if(chatToken48!==NET.token||epoch!==(CHAT48.epoch||0))return;
+  if(CHAT.serverEpoch174&&j.chatEpoch174&&CHAT.serverEpoch174!==j.chatEpoch174){
+   CHAT.list=[];CHAT.last=0;CHAT.init=0;CHAT.seen={};CHAT48.dmSeen.clear();CHAT.serverEpoch174=j.chatEpoch174;
+   setTimeout(function(){if(epoch===(CHAT48.epoch||0))chatPoll(true);},0);return;
+  }
+  CHAT.serverEpoch174=j.chatEpoch174||CHAT.serverEpoch174;
+  CHAT.pollErr60=false;if(CHAT.msg==='กำลังเชื่อมต่อแชท…')CHAT.msg='';
   newsReceive75(j);CHAT48.invites=Array.isArray(j.invites)?j.invites:[];CHAT.team=j.team||'';CHAT.fac=j.fac==null?null:j.fac;CHAT.me=j.me||'';
   var fresh=!!CHAT.init;(j.msgs||[]).forEach(function(m){if(m.id>CHAT.last){if(!CHAT.list.some(function(x){return x.id===m.id}))CHAT.list.push(m);CHAT.last=m.id;if(fresh&&!m.mine)bulShow(m);if(fresh&&m.mine&&m.ch==='world')TOWN.mySay={t:m.t,at:nowMs()}}});
+  CHAT.list.sort(function(a,b){return a.id-b.id;});
   if(CHAT.list.length>300)CHAT.list=CHAT.list.slice(-300);
-  if(CHAT.seen.world===0&&!CHAT.init){CHAT.init=1;CHAT_TABS.forEach(function(t){chatMarkSeen(t[0])})}
-  paintChat();chatUI()}).catch(function(){if(chatToken48===NET.token){CHAT.pollErr60=true;paintChat()}}).then(function(){CHAT.busy=false})}
+  if(!CHAT.init){CHAT.init=1;CHAT_TABS.forEach(function(t){chatMarkSeen(t[0])})}
+  paintChat();chatUI();
+  if(j.more174)setTimeout(function(){if(epoch===(CHAT48.epoch||0))chatPoll(true);},0);
+ }).catch(function(){if(chatToken48===NET.token&&epoch===(CHAT48.epoch||0)){CHAT.pollErr60=true;paintChat()}})
+ .finally(function(){if(epoch===(CHAT48.epoch||0))CHAT.busy=false;});}
 function chatLoop(){clearTimeout(CHAT.timer);CHAT.timer=setTimeout(function(){if(!document.hidden)chatPoll();chatLoop()},CHAT.open?2500:(SET.bul!==false||SET.news75!==false?4000:8000))}
 var BUL={lane:[0,0,0,0],n:0};
 function bulShow(m){
@@ -2671,12 +2683,26 @@ function timeTick(){
 }
 
 var DUEL_HP=3,DUEL_POTS=3;
+var PVP_TURN172=10000,PVP_REPLY172=750;
+function pvpTurnTick172(b){
+ var now=Date.now();
+ if(b.pvpSide172==='enemy'&&now>=b.nextAt){
+  battleActBase73(null,'enemy');return true;
+ }
+ if(b.pvpSide172==='player'&&now>=b.pvpUntil172){
+  battleActBase73('atk','timeout');return true;
+ }
+ return false;
+}
 function isDuel(b){return !!b&&(b.kind==='pvp'||b.kind==='war')}
 function startBattle(e,kind,extra){
  if(kind==='monster'&&!(extra&&extra.wb))e=enemyPower54(e);
  fxApproach('idle');
  if(kind==='pvp'||kind==='war'){e=Object.assign({},e,{hp:Math.round(e.hp*DUEL_HP)});extra=Object.assign({pots:0,hp0:s.hp},extra||{});s.hp=s.maxhp}
  s.battle=Object.assign({e:e,ehp:e.hp,kind:kind,cd:{},buffs:{},lines:['พบ '+e.n]},extra||{});s.battle.intro53Until=Date.now()+SCENE53_IN;s.battle.nextAt=Math.max(s.battle.nextAt||0,s.battle.intro53Until);if(s.lvl>=100){s.maxhp=calcMax(s);s.maxmp=calcMaxMp(s);s.hp=(kind==='pvp'||kind==='war')?s.maxhp:Math.min(s.hp,s.maxhp);s.mp=Math.min(s.mp,s.maxmp)}
+ if(kind==='pvp')Object.assign(s.battle,{
+  pvpSide172:'player',pvpRound172:1,pvpUntil172:s.battle.nextAt+PVP_TURN172
+ });
 }
 function randLook(){
  return {hair:rnd(0,2),hc:rnd(0,5),hat:pick(['none','wiz','cap','ears']),face:pick(['none','gls','gog']),wing:'none',pet:'none',aura:'none',dye:pick(['red','blue','green','gold','purple'])};
@@ -3120,7 +3146,7 @@ function drawWd108z(c,W,H,tn){var w=NET.wd;if(!w)return;var L=ts169Layout(W,H),p
 }
 function wdView108(){var w=NET.wd,me=w.s[w.me]||{},op=w.s[1-w.me]||{},my=w.ph==='fight'&&w.turn===w.me,left=Math.max(0,Math.ceil((WD108.dl-Date.now())/1000));
  var fc=function(x){return FAC[x.fac]?FAC[x.fac].c:'#ccc'};
- var head='<div class="ts-turn169" role="group" aria-label="ดวลสด"><div class="rib169">⚔ ดวลสด · ศึกชิงแดน</div><div class="por169 dgpor107"><span class="dgc107 me" style="border-color:'+fc(me)+'">'+esc(String(me.n||'').slice(0,8))+'<i>'+(w.ph==='fight'&&my?'ตาคุณ':'คุณ')+'</i></span><i>VS</i><span class="dgc107 en" style="border-color:'+fc(op)+'">'+esc(String(op.n||'').slice(0,8))+'<i>'+(op.on===false?'หลุด · ออโต้':w.ph==='fight'&&!my?'กำลังคิด…':'Lv'+(op.lvl|0))+'</i></span></div><div class="meta169"><span>รอบ <b>'+(w.round|0)+'</b></span><span class="who169">⏱ '+left+' วิ</span></div></div>';
+ var head='<div class="ts-turn169" role="group" aria-label="ดวลสด"><div class="rib169">⚔ ดวลสด · '+(w.friendly173?'กระชับมิตร':'ศึกชิงแดน')+'</div><div class="por169 dgpor107"><span class="dgc107 me" style="border-color:'+fc(me)+'">'+esc(String(me.n||'').slice(0,8))+'<i>'+(w.ph==='fight'&&my?'ตาคุณ':'คุณ')+'</i></span><i>VS</i><span class="dgc107 en" style="border-color:'+fc(op)+'">'+esc(String(op.n||'').slice(0,8))+'<i>'+(op.on===false?'หลุด · ออโต้':w.ph==='fight'&&!my?'กำลังคิด…':'Lv'+(op.lvl|0))+'</i></span></div><div class="meta169"><span>รอบ <b>'+(w.round|0)+'</b></span><span class="who169">⏱ '+left+' วิ</span></div></div>';
  var alert=w.ph==='rps'?'<b>✊✋✌️ เป่ายิ้งฉุบ!</b> เลือกมือภายใน '+left+' วิ · ชนะได้ตีก่อน':w.ph==='end'?'<b>'+(w.win===w.me?'🏆 คุณชนะ!':'💀 คุณแพ้')+'</b> '+esc(w.log[0]||''):(my?'<b>ตาคุณ!</b> เลือกคำสั่ง ('+left+' วิ)':'<b>ตาของ '+esc(op.n||'')+'</b> รอสักครู่…')+'<br>'+esc(w.log[0]||'');
  var acts='';
  if(w.ph==='rps'){acts=['r','p','s'].map(function(k){return '<button class="btn'+(me.hand===k?' primary':'')+'" data-a="wd108rps" data-p="'+k+'"'+(me.hand?' disabled':'')+'>'+WD108_HAND[k][0]+' '+WD108_HAND[k][1]+'<small>'+(me.hand===k?'เลือกแล้ว':'แตะเพื่อเลือก')+'</small></button>'}).join('')}
@@ -3129,7 +3155,7 @@ function wdView108(){var w=NET.wd,me=w.s[w.me]||{},op=w.s[1-w.me]||{},my=w.ph===
   '<button class="btn" data-a="wd108act" data-p="grd"'+dis+'>🛡️ ป้องกัน<small>ดาเมจตาถัดไป −50%</small></button>'+
   '<button class="btn" data-a="wd108act" data-p="pot"'+(my&&me.pots>0?'':' disabled')+'>🧪 ดื่มยา<small>+25% HP · เหลือ '+(me.pots|0)+'</small></button>'+
   '<button class="btn'+(me.ug>=100?' primary':'')+'" data-a="wd108act" data-p="ult"'+(my&&me.ug>=100?'':' disabled')+'>💥 ไม้ตาย<small>'+(me.ug>=100?'พร้อม! ×4':'เกจ '+(me.ug|0)+'%')+'</small></button>'}
- else acts='<button class="btn primary" data-a="wd108close" style="grid-column:1/-1">กลับสมรภูมิ ➜</button>';
+ else acts='<button class="btn primary" data-a="wd108close" style="grid-column:1/-1">'+(w.friendly173?'กลับเข้าเกม':'กลับสมรภูมิ')+' ➜</button>';
  return '<section id="battleStage" class="ts169 wd108">'+head+(w.ph==='fight'?duelRail166(me,my):'')+'<canvas id="scene" data-mode="wd108" width="800" height="450" aria-label="ฉากดวลสด"></canvas>'+
   '<div class="battle-top battle-compact156"><div class="battle-side38">'+battleVitals156(me.hp||0,me.mhp||1,me.mp||0,me.mmp||0,1)+'</div></div>'+
   '<div class="battle-alert"><div class="reveal dgint107">'+alert+(WD108.msg?'<br><span style="color:#ffb0a0">'+esc(WD108.msg)+'</span>':'')+'</div></div>'+
@@ -3183,10 +3209,10 @@ function navGo113(g,sub){NAV113L[g]=sub;MENU_UI.jump=null;{try{if(typeof GB!=='u
  if(g==='bag'){if(sub==='gbag'||sub==='mkt'){MAIL101.open=false;GB.sel=-1;GB.msg='';GB.tab=sub==='mkt'?'mkt':'bag';act('tab','craft');GB.page=true;if(sub==='mkt')mktLoad(true);render();return}if(sub==='acct'){menuOpen('bag');return}act('tab',sub);return}
  if(g==='look'){if(sub==='collect')COL_UI59.show=false;act('tab','me');act('dtabset',sub);return}
  if(g==='event'){if(sub==='pvp'){act('tab','pvp');return}act('tab','tower');act('etab',sub);return}
- if(g==='fac'){GUILD_UI169.data=null;GUILD_UI169.error='';act('tab','guild');return}}
+ if(g==='fac'){GUILD_UI169.data=null;GUILD_UI169.error='';GUILD_UI169.page='home';act('tab','guild');return}}
 function navAct113(p){var a=String(p||'').split(':'),g=a[0],sub=a[1];if(g==='set'){navGo113('set','set');return}var G=NAV113.filter(function(x){return x.g===g})[0];if(g!=='set'&&!G)return;if(!sub){if(g==='adv')sub=landscapeMenuActive()&&navCur113()[0]!=='adv'?'wild':(navCur113()[1]==='wild'?(NAV113L.advm||'goals'):'wild');else sub=NAV113L[g]||G.subs[0][0]}if(g==='adv'&&sub!=='wild'&&sub!=='daily')NAV113L.advm=sub;navGo113(g,sub)}
 function navDot113(g){try{if(g==='char')return s.sp>0||s.skp>0||m51Budget(s)>m51Spent(s)||(j4Eligible(s)&&!job4Of(s));if(g==='adv')return dqClaimable()||!lgState().got||!lg30State().got;if(g==='event')return typeof s105Can==='function'&&false}catch(e){}return false}
-function navShow113(){if(SV||!s||!s.created||(battlePresentationActive()&&!BAWAY))return false;if(s.battle&&!BAWAY)return false;var r=dgRoom();if(r&&r.st==='fight'&&!BAWAY)return false;if(typeof wdOn108==='function'&&wdOn108()&&TOWN.war&&!BAWAY)return false;if(s.res&&!BAWAY)return false;return true}
+function navShow113(){if(SV||!s||!s.created||(battlePresentationActive()&&!BAWAY))return false;if(s.battle&&!BAWAY)return false;var r=dgRoom();if(r&&r.st==='fight'&&!BAWAY)return false;if(typeof wdOn108==='function'&&wdOn108()&&(TOWN.war||NET.wd?.friendly173)&&!BAWAY)return false;if(s.res&&!BAWAY)return false;return true}
 var UI_ICONS157=['adv','char','bag','look','event','fac','gear','rod','fish'];
 function uiIcon157(name,classes){
  var i=UI_ICONS157.indexOf(name);
@@ -3260,7 +3286,7 @@ function chest131Open(){CH131.open=true;CH131.ph='menu';chest131Draw()}
 var S105_START=Date.UTC(2026,9,31,17,0,0),S105_END=Date.UTC(2026,11,31,16,59,59),S105_RUSH=Date.UTC(2026,11,21,17,0,0),S105_CLAIM=S105_END+7*864e5,S105_MAX=50,S105_PER=1000,S105_KILLCAP=600;
 var SHOP105=[{sku:'sup35',ic:'🎁',n:'แพ็กผู้สนับสนุน',p:35,d:'อุปกรณ์ Lv20 สีส้ม + ป้าย ✦ ผู้สนับสนุน · ซื้อได้ครั้งเดียว'},
  {sku:'m99',ic:'💳',n:'บัตรรายเดือน',p:99,d:'30 วัน · ทุกวันได้ ทอง 20,000 + ยาฟื้นเต็ม ×1 + แต้มซีซั่น 100 + ⚡ พลังงานเต็ม 1 ครั้ง · ทอง/XP จากการล่า +10% (ไม่มีผลใน PvP) · ซื้อซ้ำบวกเพิ่ม 30 วัน'},
- {sku:'p299',ic:'💎',n:'บัตรถาวร',p:299,d:'ใช้ตลอดไป · กระเป๋าอุปกรณ์ +20 ช่อง · ทองรายวัน 10,000 · ⚡ เก็บพลังงานเกินหลอดได้ถึง 450 (เฉพาะตอนกดรับพลังงาน) · วางตลาดได้ 15 ชิ้น · ฉายา 💎 ผู้อุปถัมภ์'},
+ {sku:'p299',ic:'💎',n:'บัตรถาวร',p:299,d:'ใช้ตลอดไป · เปิดเดลส่วนตัว · กระเป๋าอุปกรณ์ +20 ช่อง · ทองรายวัน 10,000 · ⚡ เก็บพลังงานเกินหลอดได้ถึง 450 (เฉพาะตอนกดรับพลังงาน) · วางตลาดได้ 15 ชิ้น · ฉายา 💎 ผู้อุปถัมภ์'},
  {sku:'s149',ic:'👑',n:'พาสซีซั่น 1',p:149,d:'ปลดแถวรางวัลพรีเมียม 50 เลเวล (ได้ย้อนหลังทันที) · ปีก ออร่า สัตว์เลี้ยง กรอบชื่อ ฉายาเฉพาะซีซั่น 1'}];
 function s105Assets(){rg107Assets();(function(){COS.wing.push({id:'meteor105',n:'ปีกดาวตก (ซีซั่น 1)',r:4,x:1,bound:true});WINGS.meteor105=['#5a8aff','#e8f2ff'];WING2.meteor105={k:'shard',c:['#0a1438','#2a4ab0','#7ab0ff','#dcecff','#ffffff'],fx:'mote',n:8,sp:[150,270]};
  COS.aura.push({id:'snow105',n:'ออร่าหิมะปีใหม่ (ซีซั่น 1)',r:4,x:1,bound:true});AURA.snow105=['#bfe8ff','#ffffff'];
@@ -3377,7 +3403,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B171';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B174';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -3532,7 +3558,7 @@ function pvpFind(){
  if(!s.pv||s.pv.d!==pvpDay())s.pv={d:pvpDay(),n:0};
  if(pvpFreeLeft()>0)s.pv.n++;else s.gold-=PVP_PRICE;
  var re=realOpp();
- if(re){startBattle(re,'pvp');s.battle.lines=['จับคู่กับผู้เล่นจริง: '+re.n+' ('+CLASSES[re.cls].n+' Lv'+re.lvl+' · เรทติ้ง '+re.rating+')'];return}
+ if(re){startBattle(re,'pvp');s.battle.lines=['จับคู่กับร่างจำลองของ '+re.n+' ('+CLASSES[re.cls].n+' Lv'+re.lvl+' · เรทติ้ง '+re.rating+')'];return}
  var op=Math.max(0,s.pvp.r+rnd(-80,80));
  var lvl=Math.max(1,Math.min(LV_MAX100||150,s.lvl+rnd(-3,3)));
  var e=mirrorOpp110(pick(NPC_NAMES)+rnd(10,99),pick(CLS_ORDER),lvl,0.9+Math.max(0,op-1000)/4000+Math.random()*0.15,op);
@@ -3654,14 +3680,20 @@ function fieldBattleInfo(b){
 function fieldGuideHtml(z){return '<div class="hint">'+(s.lvl>50?'⚖ PvE หลัง Lv50: ปรับการเติบโตดาเมจให้ต่างกันน้อยลง · PvP ใช้ค่าเดิม<br>':'')+(s.lvl<50?'🌱 ช่วงเริ่มต้น Lv1–50: เก็บเลเวลไว · อัปสเตตัส สกิล และอุปกรณ์ตามเลเวล<br>':'')+z.mobs.map(function(d){var band=mobBand(d,z);return esc(d.n)+' Lv'+band[0]+'–'+band[1]}).join(' / ')+'<br>บอส '+esc(BOSSES[s.zone])+' Lv'+z.max+' · มอนเกินเลเวล 5 ขั้นเริ่มลด EXP</div>'}
 
 function jwOn(b){return !!(b&&b.jw&&Date.now()>=b.jw)}
-function battleActBase73(a){if(s.battle&&s.battle.jw&&Date.now()<s.battle.jw)s.battle.jw=0;
+function battleActBase73(a,phase172){if(s.battle&&s.battle.jw&&Date.now()<s.battle.jw)s.battle.jw=0;
  var b=s.battle;if(!b)return;var e=b.e,l=[],now=nowMs(),stun=false,id,j4Attack=false,j4Damage=0,j4Crit=false;
- if(!battleCommand50(a,b))return;
+ var pvp=b.kind==='pvp',enemyTurn=pvp&&phase172==='enemy',nowAt=Date.now();
+ if(pvp){
+  if(nowAt<b.nextAt||b.pvpSide172!==(enemyTurn?'enemy':'player'))return;
+  if(!enemyTurn&&nowAt>=b.pvpUntil172&&phase172!=='timeout')return;
+ }else if(b.nextAt&&nowAt<b.nextAt-60)return;
+ if(!enemyTurn&&!battleCommand50(a,b))return;
  if(b.j4Trial&&['potion','potionf','heavy'].indexOf(a)>=0)return;
  if(b.j4Trial&&a==='flee'){j4TrialEnd(false);return}
- var nw0=Date.now();if(b.nextAt&&nw0<b.nextAt-60)return; // ยังไม่ถึงจังหวะ (ความเร็วโจมตี)
- b.nextAt=Math.max(b.nextAt||0,nw0-ASPD_CATCH)+aspdMs();
+ if(!pvp)b.nextAt=Math.max(b.nextAt||0,nowAt-ASPD_CATCH)+aspdMs();
  b.cd=b.cd||{};b.buffs=b.buffs||{};b.balLow=s.hp<s.maxhp*0.4;
+ if(!enemyTurn){
+ if(phase172==='timeout')l.push('หมดเวลา · โจมตีปกติอัตโนมัติ');
  if(a==='flee'){
   if(noFlee(b))return;
   if(Math.random()<0.6){fxScene(battleSceneData('escape',b));say('หนีจาก '+e.n+' ได้');s.battle=null;if(b.tower)fightDone(HUNT_CD);return}
@@ -3739,9 +3771,17 @@ function battleActBase73(a){if(s.battle&&s.battle.jw&&Date.now()<s.battle.jw)s.b
  }
  if(j4Attack){j4EndAttack(b,j4Damage,j4Crit,l);m51AfterHit(b,j4Damage,j4Crit,l)}
  b.b2Actions=(b.b2Actions||0)+1;if(a!=='flee')gemAction140(b,l);if(ultOf()&&a!=='ult'&&a!=='flee')s.ug=Math.min(100,(s.ug|0)+(a==='potion'||a==='potionf'?3:9));
- var eAct=false;
- if(b.ehp>0){b.eg=(b.eg||0)+eRatio(b)*(a==='potion'||a==='potionf'?0.5:1);if(b.eg>=0.999){b.eg=Math.max(0,b.eg-1);eAct=true}}
- if(b.ehp>0){fieldPlayerTick(b,l);if(s.hp<=0){b.lines=l.slice().reverse().concat(b.lines).slice(0,6);return lose()}}
+ if(pvp&&b.ehp>0){fieldPlayerTick(b,l);if(s.hp<=0){b.lines=l.slice().reverse().concat(b.lines).slice(0,6);return lose()}}
+ if(pvp&&b.ehp>0){
+  b.pvpSide172='enemy';b.pvpStun172=stun;b.nextAt=Date.now()+PVP_REPLY172;
+  b.lines=l.slice().reverse().concat(b.lines).slice(0,6);
+  return;
+ }
+ }
+ var eAct=enemyTurn;
+ if(enemyTurn){stun=b.pvpStun172;delete b.pvpStun172;}
+ if(!pvp&&b.ehp>0){b.eg=(b.eg||0)+eRatio(b)*(a==='potion'||a==='potionf'?0.5:1);if(b.eg>=0.999){b.eg=Math.max(0,b.eg-1);eAct=true}}
+ if(!pvp&&b.ehp>0){fieldPlayerTick(b,l);if(s.hp<=0){b.lines=l.slice().reverse().concat(b.lines).slice(0,6);return lose()}}
  if(b.ehp>0&&eAct){
   b.turn=(b.turn||0)+1;if(e.mapBoss&&fieldBossPhase(b)===4)b.b2Guard=false;if(ultOf())s.ug=Math.min(100,(s.ug|0)+6);
   if(stun||(b.ulStun>0&&(b.ulStun--,true))){l.push(e.n+' มึนงง ข้ามการโจมตี')}
@@ -3785,6 +3825,10 @@ function battleActBase73(a){if(s.battle&&s.battle.jw&&Date.now()<s.battle.jw)s.b
  b.lines=l.slice().reverse().concat(b.lines).slice(0,6);
  if(b.ehp<=0){if(!b.grp)return win();if(s.hp>0){if(grpNext(b))return;return win()}}
  if(s.hp<=0){return lose()}
+ if(enemyTurn){
+  b.pvpSide172='player';b.pvpRound172++;
+  b.nextAt=Date.now()+PVP_REPLY172;b.pvpUntil172=b.nextAt+PVP_TURN172;
+ }
 }
 function battleAct(a){var b=s&&s.battle;if(!b||!b.challenge73)return battleActBase73(a);ar73Tick();if(s.battle!==b)return;if(a!=='atk'&&!(typeof a==='string'&&a.indexOf('sk:')===0))return;var hp=b.ehp,count=b.b2Actions||0,waves=ar73State().active.kills;battleActBase73(a);ar73After(b,hp,count,waves)}
 function eDanger(b){
@@ -4204,6 +4248,11 @@ function openBox0(){
 }
 var CL_LOCAL={setsprites:1,refshare:1,refcopy:1,seteco:1,rktog:1,rktab:1,ptfollow:1,gopen:1,gclaim:1,gathergo:1,towngo:1,townleave:1,setbul:1,setfs:1,fstog:1,appinst:1,ptfind:1,ptcreate:1,ptjoin:1,ptleave:1,ptkick:1,ftarget:1,fieldtog:1,tutreplay:1,setsfx:1,setmus:1,setlang:1,sndtest:1,bset:1,bback:1,dgcreate:1,dgjoin:1,dgleave:1,dgready:1,dgstart:1,dgpick:1,dgagain:1,nav113:1,wd108rps:1,wd108act:1,wd108close:1,rg107solo:1,rg107team:1,rg107go:1,rg107buff:1,rg107buy:1,rg107next:1,rg107auto:1,rg107tab:1,rg107giveup:1,logout:1,chatopen:1,chatclose:1,chatsend:1,chattab:1,chatdm:1,teamjoin:1,teamleave:1,clouddn:1,cloudup:1,dqclose:1};
 function act(a,p){
+ if(!SV&&a==='social173'){socialAct173(p);return;}
+ if(!SV&&NET.wd?.friendly173&&['wd108act','wd108close'].includes(a)){
+  socialCall173({op:a==='wd108act'?'duelact':'duelclose',id:NET.wd.id,seq:NET.wd.seq,action:p});return;
+ }
+
  if(!SV&&/^guild[a-z]+169$/.test(a)){guildAct169(a,p);return}
  if(!SV&&a==='ecoenter141'){if(s&&s.created&&SET.eco!==false){ECO.manual141=true;ecoEnter()}return}
 
@@ -4578,8 +4627,8 @@ function act(a,p){
    say((s.guild.gid===ON.uid?'ยุบกิลด์ ':'ออกจากกิลด์ ')+s.guild.n);s.guild=null;s.war=null;confirmLeave=false;s.guildMsg='ออกจากกิลด์แล้ว';recalc()}
  }
  else if(a==='chatsend'){chatSend();return}
- else if(a==='chattab'){if(!CHAT_TABS.some(function(t){return t[0]===p}))return;chatDraft48();chatBack48();CHAT.tab=p;CHAT.msg='';chatMarkSeen(p);paintChat();chatUI();return}
- else if(a==='chatdm'){CHAT.dmTo=chatName48(p);CHAT.dmUid=0;CHAT.tab='dm';CHAT.msg='';paintChat();return}
+ else if(a==='chattab'){if(!CHAT_TABS.some(function(t){return t[0]===p}))return;chatDraft48();chatBack48();chatTab174(p);CHAT.msg='';chatMarkSeen(p);paintChat();chatUI();return}
+ else if(a==='chatdm'){CHAT.dmTo=chatName48(p);CHAT.dmUid=0;chatTab174('dm');CHAT.msg='';paintChat();return}
  else if(a==='teamjoin'){teamAct(true);return}
  else if(a==='teamleave'){teamAct(false);return}
  else if(a==='chatopen'){chatOpen(true);return}
@@ -5963,12 +6012,12 @@ function pvpTimers85(tn){if(SV||!s||tn-PVP_UI85.at<100)return;PVP_UI85.at=tn;var
 }
 function viewPvp(){
  var match85=pvpMatchState85(),P=s.pvp,tot=P.w+P.l,msg=s.guildMsg?'<section class="card"><div class="reveal"><b>'+esc(s.guildMsg)+'</b></div></section>':'';
- var pvp='<section class="card"><p class="eyebrow">PvP จับคู่ 1-1</p>'+
+ var pvp='<section class="card"><p class="eyebrow">PvP 1-1 · ร่างจำลอง</p>'+
   '<div class="row"><h2>ระดับ'+tierOf(P.r)+'</h2><span class="meta">เรทติ้ง <b>'+P.r+'</b></span></div>'+
   '<div class="stats"><div class="stat"><span>ชนะ / แพ้</span><b>'+P.w+' / '+P.l+'</b></div><div class="stat"><span>ชนะติดต่อกัน</span><b>'+P.streak+'</b></div>'+
   '<div class="stat"><span>อัตราชนะ</span><b>'+(tot?Math.round(P.w/tot*100)+'%':'-')+'</b></div><div class="stat"><span>เรทติ้งสูงสุด</span><b>'+P.best+'</b></div></div>'+
   '<button id="pvpFind85" class="btn primary" data-a="pvpfind"'+(match85.disabled?' disabled':'')+'>'+match85.text+'</button>'+
-  '<p class="hint">ฟรี '+PVP_FREE+' ครั้งต่อวัน หลังจากนั้นครั้งละ '+PVP_PRICE+' ทอง · รางวัลเป็นทองอย่างเดียว · เลือดทั้งสองฝ่าย ×3 · ใช้ยาได้ไม่เกิน 3 ขวดต่อแมตช์ · สู้จบ HP เต็ม</p></section>'+revHtml110();
+  '<p class="hint">ผลัดกันออกคำสั่งทีละ 1 ครั้ง · เลือกภายใน 10 วินาที · หมดเวลาโจมตีปกติอัตโนมัติ</p><p class="hint">ฟรี '+PVP_FREE+' ครั้งต่อวัน หลังจากนั้นครั้งละ '+PVP_PRICE+' ทอง · รางวัลเป็นทองอย่างเดียว · เลือดทั้งสองฝ่าย ×3 · ใช้ยาได้ไม่เกิน 3 ขวดต่อแมตช์ · สู้จบ HP เต็ม</p></section>'+revHtml110();
  var g=s.guild,war='';
  if(g&&g.gid){war=warCardOn()}
  else if(!g){
@@ -6358,7 +6407,7 @@ function cityHtml(){
  return head+st+rows+(hist?'<h4 class="st" style="margin-top:10px">ประวัติการยึดเมือง</h4><ol class="hint" style="margin:0;padding-left:18px">'+hist+'</ol>':'')+'</section>'}
 
 var GUILD_PALETTE169=['#161b27','#ffffff','#ff4959','#ff913e','#ffd340','#a7e745','#36c878','#37d8df','#4f8eff','#8e5cf1','#ef70ba','#9a694b'];
-var GUILD_UI169={data:null,busy:false,error:'',draft:null,color:'2',name:'',gold:''};
+var GUILD_UI169={data:null,busy:false,error:'',draft:null,color:'2',name:'',gold:'',page:'home'};
 function guildColor169(pixel){return GUILD_PALETTE169[parseInt(pixel,12)]||'transparent'}
 var GUILD_SIZE171=24,GUILD_ART171=new Map();
 function guildBadge169(g){
@@ -6433,6 +6482,7 @@ function guildCall169(op,data){
   ui.data=j;
   if(op==='emblem'||op==='leave')ui.draft=null;
   if(op==='create')ui.name='';
+  if(['create','join','leave'].includes(op)&&j.s)ui.page='home';
   if(op==='donate')ui.gold='';
   if(j.s)netApply(j);
  }).catch(function(e){ui.error=e.message||'ติดต่อเซิร์ฟเวอร์ไม่ได้';})
@@ -6442,6 +6492,17 @@ function guildAct169(a,p){
  var ui=GUILD_UI169;
  var name=document.getElementById('guildName169'),gold=document.getElementById('guildGold169');
  if(name)ui.name=name.value;if(gold)ui.gold=gold.value;
+ if(a==='guildpage169'){ui.page=p;render();return;}
+ if(a==='guildwithdraw169')guildCall169('withdraw',{id:Number(p)});
+ if(a==='guildsettings169'){
+  guildCall169('settings',{mode:document.getElementById('guildMode174')?.value,lv:Number(document.getElementById('guildLevel174')?.value)});
+ }
+ if(a==='guildrole169'){
+  var role=document.getElementById('guildRole174-'+p)?.value;
+  if(role)guildCall169('role',{uid:Number(p),role:role});
+ }
+ if(a==='guildapprove169'||a==='guildreject169')guildCall169(a==='guildapprove169'?'approve':'reject',{uid:Number(p)});
+ if(a==='guildchat169'){chatTab174('guild');chatBack48();chatOpen(true);return;}
  if(a==='guildload169')guildCall169('list');
  if(a==='guildcreate169')guildCall169('create',{name:ui.name});
  if(a==='guildjoin169')guildCall169('join',{id:Number(p)});
@@ -6456,29 +6517,56 @@ function guildAct169(a,p){
 function viewGuild(){
  if(!CL)return '<section class="card"><h2>กิลด์</h2><p>เข้าสู่เกมออนไลน์เพื่อสร้างหรือเข้าร่วมกิลด์</p></section>';
  var ui=GUILD_UI169,g=s.guild169,data=ui.data||{},locked=ui.busy?' disabled':'';
- if(!ui.data&&!ui.busy&&!ui.error)guildCall169('list');
+ if((!ui.data||(ui.data.guild?.id||0)!==(g?.id||0))&&!ui.busy&&!ui.error)guildCall169('list');
  var button=function(a,label,p){
   return '<button class="btn" data-a="'+a+'"'+(p==null?'':' data-p="'+p+'"')+locked+'>'+label+'</button>';
  };
- var head='<section class="card"><h2>กิลด์</h2>'+(ui.error?'<p role="alert">'+esc(ui.error)+'</p>':'')+button('guildload169','รีเฟรช')+'</section>';
+ var modes={open:'เข้าร่วมได้ทันที',approval:'สมัครรออนุมัติ',closed:'ปิดรับ'};
+ var roles={leader:'หัวหน้ากิลด์',deputy:'รองหัวหน้า',officer:'เจ้าหน้าที่',member:'สมาชิก'};
+ var head='<section class="card"><h2>'+(g?guildBadge169(g)+' '+esc(g.name)+' · Lv.'+g.lv+'/20':'กิลด์')+'</h2>'+
+ (ui.error?'<p role="alert">'+esc(ui.error)+'</p>':'')+button('guildload169','รีเฟรช')+(g?' '+button('guildchat169','แชทกิลด์'):'')+'</section>';
  if(!g){
   var rows=(data.list||[]).map(function(x){
-   return '<div class="item"><div>'+guildBadge169(x)+' <b>'+esc(x.name)+'</b><br>Lv.'+x.lv+' · '+x.count+'/20 คน</div>'+(x.count<20?button('guildjoin169','เข้าร่วม',x.id):'<small>เต็ม</small>')+'</div>';
+   var applied=(data.applied||[]).includes(x.id);
+   var action=applied?button('guildwithdraw169','ยกเลิกใบสมัคร',x.id):x.mode==='closed'?'<small>ปิดรับ</small>':x.count>=20?'<small>เต็ม</small>':s.lvl<x.minLevel?'<small>เลเวลยังไม่ถึง</small>':button('guildjoin169',x.mode==='approval'?'ส่งใบสมัคร':'เข้าร่วม',x.id);
+   return '<div class="item"><div>'+guildBadge169(x)+' <b>'+esc(x.name)+'</b><br>Lv.'+x.lv+' · '+x.count+'/20 คน<br><small>'+modes[x.mode]+' · ขั้นต่ำ Lv.'+x.minLevel+'</small></div>'+action+'</div>';
+
   }).join('');
   return head+'<section class="card"><h3>สร้างกิลด์ · 200,000 ทอง</h3><input id="guildName169" class="txt" maxlength="14" placeholder="ชื่อกิลด์ 2–14 ตัวอักษร" value="'+esc(ui.name)+'">'+button('guildcreate169','สร้างกิลด์')+'</section><section class="card"><h3>กิลด์ที่เปิดรับ</h3>'+(rows||'<p>ยังไม่มีกิลด์ในรายการ</p>')+'</section>';
  }
  var base=g.lv*(g.lv-1)*500000, owner=g.owner===NET.uid;
  var members=data.guild?.id===g.id?(data.members||[]):[];
- var roster=members.map(function(m){return '<div class="item"><b>'+esc(m.name||'สมาชิก')+'</b><span>Lv.'+m.lv+(m.uid===g.owner?' · หัวหน้า':'')+'</span></div>'}).join('');
+ var tabs=[['home','ภาพรวม'],['members','สมาชิก'],['donate','บริจาค']];
+ if(owner)tabs.push(['settings','ตั้งค่ารับคน'],['emblem','ตรากิลด์']);
+ if(!tabs.some(function(t){return t[0]===ui.page}))ui.page='home';
+ head+='<div class="guild-tabs174">'+tabs.map(function(t){
+  return '<button class="btn'+(ui.page===t[0]?' primary':'')+'" data-a="guildpage169" data-p="'+t[0]+'" aria-pressed="'+(ui.page===t[0])+'">'+t[1]+'</button>';
+ }).join('')+'</div>';
+ var roster=members.map(function(m){
+  var edit=owner&&m.uid!==g.owner?'<select id="guildRole174-'+m.uid+'" aria-label="ตำแหน่งสมาชิก">'+['member','officer','deputy'].map(function(role){
+   return '<option value="'+role+'"'+(role===m.role?' selected':'')+'>'+roles[role]+'</option>';
+  }).join('')+'</select>'+button('guildrole169','บันทึกตำแหน่ง',m.uid):'';
+  return '<div class="item"><div><b>'+esc(m.name||'สมาชิก')+'</b><br><small>Lv.'+m.lv+' · '+roles[m.role]+'</small></div><div>'+edit+'</div></div>';
+ }).join('');
+ if(ui.page==='members')return head+'<section class="card"><h3>สมาชิก '+members.length+'/20 คน</h3>'+roster+'</section>';
+ if(ui.page==='settings'){
+  var options=Object.keys(modes).map(function(mode){return '<option value="'+mode+'"'+(mode===g.mode?' selected':'')+'>'+modes[mode]+'</option>';}).join('');
+  var requests=(data.requests||[]).map(function(m){
+   return '<div class="item"><div><b>'+esc(m.name||'ผู้สมัคร')+'</b><br>Lv.'+m.lv+'</div><div>'+button('guildapprove169','อนุมัติ',m.uid)+' '+button('guildreject169','ปฏิเสธ',m.uid)+'</div></div>';
+  }).join('');
+  return head+'<section class="card"><h3>ตั้งค่าการรับสมาชิก</h3><label>รูปแบบ <select id="guildMode174">'+options+'</select></label> <label>เลเวลขั้นต่ำ <input class="txt" id="guildLevel174" type="number" min="1" max="150" value="'+g.minLevel+'"></label> '+button('guildsettings169','บันทึก')+'</section><section class="card"><h3>ใบสมัคร</h3>'+(requests||'<p>ยังไม่มีใบสมัคร</p>')+'</section>';
+ }
+ if(ui.page==='home')return head+'<section class="card"><h3>ภาพรวมกิลด์</h3><p>สมาชิก '+members.length+'/20 คน · '+modes[g.mode]+' · ขั้นต่ำ Lv.'+g.minLevel+'</p><p>โบนัส STR · VIT · AGI · INT · DEX · LUK +'+g.lv+'</p>'+button('guildleave169','ออกจากกิลด์')+'</section>';
  var editor='';
  if(owner&&ui.draft){
   var colors='0123456789ab.'.split('').map(function(x){return '<button class="guild-color169" style="--ink:'+guildColor169(x)+'" data-a="guildcolor169" data-p="'+x+'" aria-pressed="'+(x===ui.color)+'" aria-label="'+(x==='.'?'ยางลบ':'สี '+(parseInt(x,12)+1))+'">'+(x==='.'?'×':'')+'</button>';}).join('');
   var pixels=ui.draft.map(function(x,i){return '<button class="guild-pixel169" style="--ink:'+guildColor169(x)+'" data-a="guildpixel169" data-p="'+i+'" aria-label="ช่อง '+(i+1)+'"></button>';}).join('');
   editor='<section class="card"><h3>วาดตรากิลด์ 24×24</h3><p>เลือกสีแล้วแตะหรือลากเพื่อระบาย</p><div class="guild-colors169">'+colors+'</div><div class="guild-canvas169">'+pixels+'</div>'+button('guildsave169','บันทึกตรา')+' '+button('guildcancel169','ยกเลิก')+'</section>';
  }
- return head+'<section class="card"><h2>'+guildBadge169(g)+' '+esc(g.name)+' · Lv.'+g.lv+'/20</h2><p>STR · VIT · AGI · INT · DEX · LUK +'+g.lv+'</p>'+
- (g.lv<20?'<p>บริจาคสำหรับเลเวลนี้ '+(g.gold-base).toLocaleString()+' / '+(g.lv*1000000).toLocaleString()+' ทอง</p><input class="txt" id="guildGold169" inputmode="numeric" placeholder="จำนวนทองบริจาค" value="'+esc(ui.gold)+'">'+button('guilddonate169','บริจาค'):'<p>เลเวลสูงสุดแล้ว</p>')+
- (owner&&!ui.draft?' '+button('guildedit169','วาดตรากิลด์'):'')+'</section>'+editor+'<section class="card"><h3>สมาชิก '+(members.length||'—')+'/20 คน</h3>'+roster+button('guildleave169','ออกจากกิลด์')+'</section>';
+ if(ui.page==='emblem')return head+(editor||'<section class="card"><h3>ตรากิลด์ 24×24</h3>'+button('guildedit169','วาดตรากิลด์')+'</section>');
+ return head+'<section class="card"><h3>บริจาคทอง</h3>'+
+ (g.lv<20?'<p>บริจาคสำหรับเลเวลนี้ '+(g.gold-base).toLocaleString()+' / '+(g.lv*1000000).toLocaleString()+' ทอง</p><input class="txt" id="guildGold169" inputmode="numeric" placeholder="จำนวนทองบริจาค" value="'+esc(ui.gold)+'">'+button('guilddonate169','บริจาค'):'<p>เลเวลสูงสุดแล้ว</p>')+'</section>';
+
 }
 function viewGuild0(){
  if(CL)netFac();else facSettle();
@@ -6540,7 +6628,7 @@ function viewGuildOld(){
 function grpHtml(b){if(!b.grp)return '';
  return '<div class="grp">'+b.grp.map(function(g,i){var hp=i===b.gi?b.ehp:g.ehp,dead=hp<=0;
   return '<span class="gm'+(i===b.gi?' on':'')+(dead?' dead':'')+'"><b>'+(g.e.boss?'👑 ':'')+esc(String(g.e.n))+'</b><i><u style="width:'+pct(Math.max(0,hp),g.e.hp)+'%"></u></i></span>'}).join('')+'</div>'}
-function eGauge(b){if(b.wb&&false)return '';var rt=eRatio(b),left=Math.max(1,Math.ceil((1-(b.eg||0))/rt-0.001));
+function eGauge(b){if(b.kind==='pvp')return '';if(b.wb&&false)return '';var rt=eRatio(b),left=Math.max(1,Math.ceil((1-(b.eg||0))/rt-0.001));
  return '<div class="m"><span>ศัตรูตี</span><div class="bar"><i style="width:'+Math.round(Math.min(1,b.eg||0)*100)+'%;background:linear-gradient(90deg,#ffb04a,#ff5a3c)"></i></div><em>'+(rt>=0.999?'ทุกครั้ง':'อีก '+left+' ครั้ง')+'</em></div>'}
 function viewBattle(){return viewBattleLandscape()}
 function viewBattleLegacy(){
@@ -6573,15 +6661,16 @@ function render(){
  document.body.classList.toggle('creating-character',!!s&&!s.created);
  renderStatus();
  var v;
- if(battlePresentationActive()&&!BAWAY)v=battlePresentView();
+ if(NET.wd?.friendly173)v=wdView108();
+ else if(battlePresentationActive()&&!BAWAY)v=battlePresentView();
  else if(!s.created)v=viewCreate();
  else if(s.battle&&!BAWAY)v=viewBattle();
  else if(!BAWAY&&specialKind57()==='dg')v=viewDgTS107();
  else if(s.res&&!BAWAY)v=viewResult();
  else v=(BAWAY&&(BAWAY!=='fish'||!menuLive55())?miniBattle():'')+({wild:viewWild,fish:fishBook155,char:viewChar,craft:function(){return GB.page&&!GB.open?gbagHtml():viewCraft()},mat:viewMat,pvp:viewPvp,tower:viewEvents,guild:viewGuild,me:viewDress}[BAWAY||s.tab]||viewWild)();
- if(landscapeMenuActive())v=menuWrap(v);
+ if(landscapeMenuActive()&&!NET.wd?.friendly173)v=menuWrap(v);
  var oldScene56=document.getElementById('menuScene55');
- document.getElementById('view').innerHTML=(battlePresentationActive()?'':offHtml()+sockHtml()+noPotHtml()+dupHtml())+v+chest131Btn()+navBar113()+ar73Popup()+autoPopup()+webPopup166()+colPopup59()+partyPopup()+shopPopup()+gearPopup()+mailPopup101()+bagPopup104()+s105Popup()+jobConfirmPopup135();try{rpsReveal106()}catch(e){}
+ document.getElementById('view').innerHTML=(battlePresentationActive()?'':offHtml()+sockHtml()+noPotHtml()+dupHtml())+v+chest131Btn()+navBar113()+ar73Popup()+autoPopup()+webPopup166()+colPopup59()+partyPopup()+shopPopup()+gearPopup()+mailPopup101()+bagPopup104()+s105Popup()+jobConfirmPopup135()+socialHtml173();try{rpsReveal106()}catch(e){}
  var newScene56=document.getElementById('menuScene55');if(oldScene56&&newScene56&&newScene56!==oldScene56&&newScene56.parentNode&&newScene56.parentNode.replaceChild)newScene56.parentNode.replaceChild(oldScene56,newScene56);
  try{restoreDraft()}catch(e){}
  colScroll59(true);menuRestoreScroll();autoRestore();shopUpdate();scrollRestore();webView168();
@@ -6597,7 +6686,7 @@ function render(){
 var DRAFT={};
 document.addEventListener('input',function(ev){var x=ev.target;if(x&&(x.id==='gname'||x.id==='gamt'))DRAFT[x.id]=x.value});
 function restoreDraft(){['gname','gamt'].forEach(function(id){var el=document.getElementById(id);if(el&&DRAFT[id]&&!el.value)el.value=DRAFT[id]})}
-document.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&ev.target&&ev.target.id==='chatin'){ev.preventDefault();chatSend()}});
+document.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&!ev.isComposing&&ev.keyCode!==229&&ev.target&&ev.target.id==='chatin'){ev.preventDefault();chatSend()}});
 document.addEventListener('click',function(ev){
  if(ev.target.closest('.chat-float159')&&Date.now()<CHAT_FLOAT159.ignore)return;
  if(ev.target.id==='scene'&&ev.target.getAttribute('data-mode')==='field'){var pos=fieldPt(ev);if(pos&&portalTap154(pos))return}
@@ -6646,7 +6735,9 @@ function autoLogic(){
   else if(potOn()&&s.hp<s.maxhp*potThr()&&!noPotSeen){noPot=true;noPotSeen=true;acted=true}
  }
  if(s.dup){if(Date.now()>=s.dup.until)resolveDup();return {acted:true,dup:true}}
- if(s.battle){
+ if(s.battle&&s.battle.kind==='pvp'){
+  acted=pvpTurnTick172(s.battle);
+ }else if(s.battle){
   for(var ai=0;ai<4&&s.battle&&(noFlee(s.battle)?!!s.battle.auto:(s.autoHunt||s.autoTower||jwOn(s.battle)))&&(!s.battle.nextAt||Date.now()>=s.battle.nextAt-60);ai++){autoAct();acted=true}
  }else if((s.autoHunt||s.autoTower)&&s.created){
   if(s.res){}
@@ -6674,7 +6765,7 @@ if(!SV)setInterval(function(){
  else if(!typing&&(ch||(ck!==lastCd&&(s.tab==='wild'||(BAWAY||s.tab)==='pvp')))){lastCd=ck;render()}
  else if(ck!==lastCd&&!(s.tab==='wild'||(BAWAY||s.tab)==='pvp'))lastCd=ck;
 },900);
-if(!SV)setInterval(function(){if(CL&&s&&s.battle&&s.battle.joint&&!document.hidden&&!pressing&&Date.now()-(NET.tickAt||0)>=450)netTick()},250);
+if(!SV)setInterval(function(){if(CL&&s&&s.battle&&(s.battle.joint||s.battle.kind==='pvp')&&!document.hidden&&!pressing&&Date.now()-(NET.tickAt||0)>=450)netTick()},250);
 /* ---------- บัญชีผู้เล่น (เก็บในเบราว์เซอร์ของเครื่องนี้) ---------- */
 var ACC_KEY='shuk-accounts-v1',SESS_KEY='shuk-session-v1',memAcc=null,memSess=null,curUser=null,authBusy=false;
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
@@ -6741,7 +6832,7 @@ function doLogin(){
   startGame(key,false);
  }).catch(function(){setMsg('เข้าเกมส์ไม่สำเร็จ ลองใหม่อีกครั้ง')}).then(function(){setBusy(false)});
 }
-function showLogin(){if(typeof GUILD_UI169!=='undefined'){GUILD_UI169.data=null;GUILD_UI169.draft=null;GUILD_UI169.name='';GUILD_UI169.gold='';GUILD_UI169.error='';}JOB_CONFIRM135=null;GEAR_UI.ask135=null;GEAR_UI.lock137=null;AR73_UI.open=false;AR73_UI.confirm=false;AR73_UI.quote=null;FXSK41=[];if(!SV)netReset68();NAV66.world=false;NAV66.rev=0;SPECIAL57.nav66=null;GOALS69.slot='w';GOALS69.previewAt=0;BOOK_UI70.z=0;BOOK_UI70.i=0;BOOK_UI70.rare=false;BOOK_UI70.pet='dragon';BOOK_UI70.form=0;FARM63_UI.ask=false;COL_UI59.session=false;COL_UI59.show=false;COL_UI59.z=0;SPECIAL57.key='';SPECIAL57.back=null;SPECIAL57.etab=null;scene53Reset();BAWAY=null;GEAR_UI.slot=null;SHOP_UI.open=false;PARTY_UI.open=false;PARTY_UI.uid=0;AUTO_UI.open=false;BATTLE_PRESENT.data=null;BATTLE_PRESENT.until=0;document.body.classList.remove('town-landscape');document.body.classList.remove('creating-character');
+function showLogin(){if(typeof SOCIAL_UI173!=='undefined'){SOCIAL_UI173.epoch++;SOCIAL_UI173.peer=SOCIAL_UI173.room=SOCIAL_UI173.pending=null;SOCIAL_UI173.busy=SOCIAL_UI173.redraw=false;SOCIAL_UI173.error=SOCIAL_UI173.gold=SOCIAL_UI173.slot='';if(NET.wd?.friendly173)wdSet108(null);}if(typeof GUILD_UI169!=='undefined'){GUILD_UI169.data=null;GUILD_UI169.draft=null;GUILD_UI169.name='';GUILD_UI169.gold='';GUILD_UI169.error='';}JOB_CONFIRM135=null;GEAR_UI.ask135=null;GEAR_UI.lock137=null;AR73_UI.open=false;AR73_UI.confirm=false;AR73_UI.quote=null;FXSK41=[];if(!SV)netReset68();NAV66.world=false;NAV66.rev=0;SPECIAL57.nav66=null;GOALS69.slot='w';GOALS69.previewAt=0;BOOK_UI70.z=0;BOOK_UI70.i=0;BOOK_UI70.rare=false;BOOK_UI70.pet='dragon';BOOK_UI70.form=0;FARM63_UI.ask=false;COL_UI59.session=false;COL_UI59.show=false;COL_UI59.z=0;SPECIAL57.key='';SPECIAL57.back=null;SPECIAL57.etab=null;scene53Reset();BAWAY=null;GEAR_UI.slot=null;SHOP_UI.open=false;PARTY_UI.open=false;PARTY_UI.uid=0;AUTO_UI.open=false;BATTLE_PRESENT.data=null;BATTLE_PRESENT.until=0;document.body.classList.remove('town-landscape');document.body.classList.remove('creating-character');
  var an=document.getElementById('authNote');if(an)an.textContent=CL?'เล่นออนไลน์: สมัครไอดีเพื่อใช้บัญชีเดิมข้ามเครื่อง · ผู้เยี่ยมชมควรตั้งไอดีถาวรก่อนเปลี่ยนเครื่อง':'โหมดเล่นในเครื่อง: บัญชีและเซฟอยู่ในเบราว์เซอร์นี้ กรุณาใช้เครื่องเดิมเพื่อเล่นต่อ';
  s=null;curUser=null;ON.open=false;SNDW.b=false;SNDW.lvl=0;MUS_DEMO=0;SND.last63={};musTick();SCROLL_UI.drag=null;SCROLL_UI.pending=false;SCROLL_UI.positions=Object.create(null);ENTRY_TOUCH64=null;entryLayoutSync();
  document.getElementById('login').hidden=false;
@@ -7304,10 +7395,115 @@ function drawField(c,W,H,tn){
  else if(FLD.gat&&!FLD.town){c.textAlign='center';var gtx=GICO[FLD.gat.res]+' '+T(GVERB[FLD.gat.res])+' · '+T('ได้แล้ว')+' '+FLD.gat.cnt+' · '+T('แตะพื้นเพื่อหยุด');c.strokeText(gtx,W/2,H-8);c.fillStyle='#bff0a0';c.fillText(gtx,W/2,H-8)}
  else if(s.autoHunt&&!FLD.town){c.textAlign='center';var at=targetStatus49();c.strokeText(at,W/2,H-8);c.fillStyle='#8fe07a';c.fillText(at,W/2,H-8)}
  var age=nowMs()-FLD.msgT;if(age<1400){c.globalAlpha=1-age/1400;fLabel(c,FLD.msg,fieldScreenX(FLD.px,FLD.py),fieldScreenY(FLD.px,FLD.py)-50-age/60,'#ffe08a');c.globalAlpha=1}}
+var SOCIAL_UI173={peer:null,room:null,items:[],busy:false,error:'',at:0,gold:'',slot:'',epoch:0};
+function socialTarget173(ev){
+ if(!CL||!NET.token||!s?.created||s.battle||BAWAY||wdOn108())return false;
+ var cv=ev.target,q=viewClientPoint(ev,cv.getBoundingClientRect()),x=q.x*artWidth74(cv),y=q.y*artHeight74(cv);
+ var users=FLD.town?TOWN.list:FLD.allies;
+ var best=null,dist=Infinity;
+ Object.keys(users||{}).forEach(function(id){
+  var uid=Number(id),m=users[id];
+  if(!Number.isSafeInteger(uid)||uid<=0||uid===NET.uid)return;
+  var point=FLD.town?townProject(m.x,m.y):[fieldScreenX(m.x,m.y),fieldScreenY(m.x,m.y)];
+  if(FLD.town){point[0]-=Math.round(ISO_TOWN.camera[0]);point[1]-=Math.round(ISO_TOWN.camera[1]);}
+  var dx=x-point[0],dy=y-(point[1]-22),score=Math.hypot(dx,dy);
+  if(Math.abs(dx)<=22&&Math.abs(dy)<=29&&score<dist){best={uid:uid,n:m.n};dist=score;}
+ });
+ if(!best)return false;
+ FLD.hold=false;SOCIAL_UI173.peer=best;SOCIAL_UI173.error='';render();return true;
+}
+function socialHtml173(){
+ var u=SOCIAL_UI173,r=u.room,p=u.peer;
+ if(!CL||!s?.created||wdOn108()||(!r&&!p&&!u.error))return '';
+ var btn=function(a,n){return '<button class="btn" data-a="social173" data-p="'+a+'"'+(u.busy?' disabled':'')+'>'+n+'</button>';};
+ var title=r?(r.mode==='trade'?'เดลส่วนตัว':'ท้าดวล'):p?esc(p.n):'ผู้เล่น';
+ var body='';
+ if(r){
+  var other=esc(r.names[1-r.me]);
+  if(r.stage==='invite'){
+   body='<p>'+(r.me===0?'รอ '+other+' ตอบรับ':other+' ส่งคำเชิญถึงคุณ')+'</p>'+
+     (r.me===1?btn('accept','ตอบรับ'):'')+btn('cancel',r.me===1?'ปฏิเสธ':'ยกเลิก');
+  }else if(r.stage==='done'){
+   body='<p>แลกเปลี่ยนสำเร็จ</p>'+btn('cancel','ปิด');
+  }else{
+   var offers=r.offers.map(function(o,i){
+    return '<div class="reveal"><b>'+esc(r.names[i])+'</b><p>'+(o?(o.name?esc(o.name)+' · ':'')+o.gold.toLocaleString()+' ทอง':'ยังไม่ได้ส่งข้อเสนอ')+
+    (r.ready[i]?' · ยืนยันแล้ว':'')+'</p></div>';
+   }).join('');
+   var opts=u.items.map(function(it){return '<option value="'+it.i+'"'+(String(it.i)===u.slot?' selected':'')+'>'+esc(it.n)+'</option>';}).join('');
+   body=offers+'<p>เลือกอุปกรณ์ได้ฝ่ายละ 1 ชิ้น และใส่จำนวนทองได้</p>'+
+     '<label>อุปกรณ์ <select id="socialSlot173"><option value="">ไม่ใส่ไอเทม</option>'+opts+'</select></label>'+
+     '<label>ทอง <input id="socialGold173" class="txt" inputmode="numeric" maxlength="16" value="'+esc(u.gold)+'"></label>'+
+     btn('offer','ส่งข้อเสนอ')+(r.offers.every(Boolean)&&!r.ready[r.me]?btn('confirm','ยืนยันแลกเปลี่ยน'):'')+btn('cancel','ยกเลิก');
+  }
+ }else if(p){
+  body=btn('inspect','ส่องของ')+btn('whisper','กระซิบ')+btn('duel','ท้าดวล')+
+    (s.pc105?btn('trade','เดลส่วนตัว'):btn('pass','บัตรถาวร 299 บาท · ปลดเดล'))+btn('close','ปิด');
+ }else body=btn('close','ปิด');
+ return '<div class="auto-modal social173" role="dialog" aria-modal="true" aria-label="'+title+'"><section class="auto-panel"><header><h2>'+title+'</h2></header><div class="auto-content">'+
+ (u.error?'<p role="alert">'+esc(u.error)+'</p>':'')+body+'</div></section></div>';
+}
+function socialDraft173(){
+ var gold=document.getElementById('socialGold173'),slot=document.getElementById('socialSlot173'),u=SOCIAL_UI173;
+ if(gold)u.gold=gold.value;if(slot)u.slot=slot.value;
+}
+function socialCall173(body){
+ var u=SOCIAL_UI173;if(!NET.token)return;
+ if(u.busy){if(body.op!=='sync'&&u.sync)u.pending=body;return;}
+ var epoch=u.epoch,token=NET.token,old=JSON.stringify(u.room),key=wdKey108(NET.wd),sec=Math.ceil((WD108.dl-Date.now())/1000);
+ u.busy=true;u.sync=body.op==='sync';u.at=Date.now();
+ apiCall('POST','/api/social',body).then(function(j){
+  if(epoch!==u.epoch||token!==NET.token)return;
+  if(u.room?.id!==j.room?.id){u.gold='';u.slot='';}
+  else socialDraft173();
+  u.room=j.room;u.items=j.items||[];
+  if(j.wd?.friendly173){
+   if(!NET.wd?.friendly173){BAWAY=null;chatOpen(false);u.peer=null;}
+   wdSet108(j.wd);
+  }else if(NET.wd?.friendly173)wdSet108(null);
+  if(body.op!=='sync'){u.error='';WD108.msg='';if(body.op==='invite')u.peer=null;}
+  if(body.op!=='sync'||old!==JSON.stringify(u.room)||key!==wdKey108(NET.wd)||j.wd&&Math.ceil(j.wd.left/1000)!==sec)u.redraw=true;
+ }).catch(function(e){
+  if(epoch!==u.epoch||body.op==='sync')return;
+  u.error=e.message;if(NET.wd?.friendly173)WD108.msg=e.message;
+  u.redraw=true;
+ }).finally(function(){
+  if(epoch!==u.epoch)return;
+  u.busy=false;
+  if(u.redraw){u.redraw=false;render();}
+  if(u.pending){var pending=u.pending;u.pending=null;socialCall173(pending);}
+ });
+}
+function socialAct173(action){
+ var u=SOCIAL_UI173,r=u.room,p=u.peer;
+ socialDraft173();
+ if(action==='close'){u.peer=null;u.error='';render();return;}
+ if(action==='pass'){u.peer=null;render();sup100Open('ทั้งสองฝ่ายต้องมีบัตรถาวร 299 บาทเพื่อเดล');return;}
+ if((action==='inspect'||action==='whisper')&&p){
+  u.peer=null;u.error='';render();
+  if(action==='inspect'){CHAT48.users['map173']=p;chatUser48('map173');}
+  else{CHAT48.selected=p;chatWhisper48();}
+  return;
+ }
+ if((action==='duel'||action==='trade')&&p){socialCall173({op:'invite',mode:action,uid:p.uid});return;}
+ if(!r)return;
+ var body={op:action,id:r.id};
+ if(action==='offer'){body.gold=Number(u.gold);body.slot=u.slot===''?null:Number(u.slot);}
+ if(action==='confirm')body.rev=r.rev;
+ socialCall173(body);
+}
+if(!SV&&CL){
+ document.addEventListener('input',function(ev){if(ev.target.id==='socialGold173'||ev.target.id==='socialSlot173')socialDraft173();});
+ setInterval(function(){
+ var u=SOCIAL_UI173;
+ if(!NET.token||!s?.created||document.hidden||Date.now()-u.at<(NET.wd?.friendly173?550:2400))return;
+ socialCall173({op:'sync'});
+ },600);
+}
 function fieldPt(ev){var cv=document.getElementById('scene');if(!cv||cv.getAttribute('data-mode')!=='field')return null;var q=viewClientPoint(ev,cv.getBoundingClientRect()),cam=FLD.town?ISO_TOWN.camera:FLD.cam,point=townUnproject(q.x*artWidth74(cv)+Math.round(cam[0]),q.y*artHeight74(cv)+Math.round(cam[1]));return {x:point[0],y:point[1]}}
 
 if(!SV){
- document.addEventListener('pointerdown',function(ev){var t=ev.target;if(!t||t.id!=='scene'||t.getAttribute('data-mode')!=='field')return;var p=fieldPt(ev);if(!p)return;if(portalHit156(p)||PORTAL154.open||SHORE155.active){ev.preventDefault();return}FLD.hold=true;fieldTarget(p.x,p.y);ev.preventDefault()},{passive:false});
+ document.addEventListener('pointerdown',function(ev){var t=ev.target;if(!t||t.id!=='scene'||t.getAttribute('data-mode')!=='field')return;var p=fieldPt(ev);if(!p)return;if(socialTarget173(ev)){ev.preventDefault();return}if(portalHit156(p)||PORTAL154.open||SHORE155.active){ev.preventDefault();return}FLD.hold=true;fieldTarget(p.x,p.y);ev.preventDefault()},{passive:false});
  document.addEventListener('pointermove',function(ev){if(!FLD.hold)return;var p=fieldPt(ev);if(p){FLD.tx=p.x;FLD.ty=p.y;if(FLD.follow&&!FLD.follow.boss&&Math.hypot(FLD.follow.x-p.x,FLD.follow.y-p.y)>30)FLD.follow=null}});
  ['pointerup','pointercancel'].forEach(function(n){document.addEventListener(n,function(){FLD.hold=false})})}
 
@@ -7852,7 +8048,7 @@ function viewBattleLandscape(){
  var potDis=b.wb||b.j4Trial||potTotal()<1||s.hp>=s.maxhp||(duel&&(b.pots|0)>=DUEL_POTS),heavyDis=b.j4Trial||s.energy<HEAVY_COST||(b.hv|0)>=HEAVY_MAX,pf=!b.wb&&(s.potF|0)>0&&!duel&&!b.j4Trial;
  var actions='<button class="btn primary" data-a="b" data-p="atk">⚔️ โจมตี<small>โจมตีปกติ</small></button>'+ultBtn131(b)+skillBtns(b)+'<button class="btn" data-a="b" data-p="heavy"'+(heavyDis?' disabled':'')+'>💥 ฟันหนัก<small>−'+HEAVY_COST+' พลัง · '+Math.max(0,HEAVY_MAX-(b.hv|0))+'/'+HEAVY_MAX+'</small></button><button class="btn" data-a="b" data-p="potion"'+(potDis?' disabled':'')+'>🧪 ดื่มยา<small>'+(duel?(b.pots|0)+'/'+DUEL_POTS:'เหลือ '+potTotal())+'</small></button>'+(pf?'<button class="btn" data-a="b" data-p="potionf"'+(s.hp>=s.maxhp?' disabled':'')+'>💖 ยาเต็ม<small>'+s.potF+' ขวด</small></button>':'')+'<button class="btn" data-a="b" data-p="flee"'+(noFlee(b)?' disabled':'')+'>🏃 '+(noFlee(b)?'หนีไม่ได้':'หนี')+'</button>';
  if(b.challenge73)actions='<button class="btn primary" data-a="b" data-p="atk">โจมตี</button>'+skillBtns(b)+'<button class="btn" id="ar73guardBtn" data-a="ar73guard" data-p="'+b.challenge73+'">ป้องกัน<small>ลดแรงกดดัน · MP +8%</small></button><button class="btn" data-a="ar73quit" data-p="'+b.challenge73+'">ยอมแพ้</button>';
- return '<section id="battleStage" class="ts169'+(b.wb?' wb-battle150':'')+'">'+ts169TurnHtml(b)+'<canvas id="scene" data-mode="battle-landscape" width="800" height="450" aria-label="ฉากต่อสู้แนวนอน มุมเฉียง"></canvas>'+buildRail162(b,null)+'<div class="battle-top battle-compact156"><div class="battle-side38">'+battleVitals156(s.hp,s.maxhp,s.mp,s.maxmp,duel?DUEL_HP:1)+'<div class="battle-tools38">'+(b.challenge73?ar81Controls(b):battleAutoButton38(auto))+'<button class="btn sm battle-menu54" data-a="bmenu54" aria-label="เปิดเมนูระหว่างต่อสู้">เมนู ☰</button></div></div></div><div class="battle-alert">'+(b.wb?'<div>ไฮดรา · ดาเมจ '+Math.max(0,Math.round((b.wbStart|0)-Math.max(0,b.ehp))).toLocaleString()+' · โจมตี ×'+Math.max(1,(b.turn|0)+1)+' รอบหน้า</div>':'')+buffHtml(b)+(b.challenge73?'<div id="ar73Status">'+esc(ar73Status())+'</div>':'')+'</div><div class="battle-dock"><div class="battle-self"><b>'+esc(nick())+' · Lv'+s.lvl+'</b>'+eGauge(b)+'<small>เลือก 1 คำสั่งต่อการกระทำ</small><small id="battleReady" role="status">พร้อมเลือกคำสั่ง</small></div><div class="battle-actions">'+actions+'</div></div></section>';
+ return '<section id="battleStage" class="ts169'+(b.wb?' wb-battle150':'')+'">'+ts169TurnHtml(b)+'<canvas id="scene" data-mode="battle-landscape" width="800" height="450" aria-label="ฉากต่อสู้แนวนอน มุมเฉียง"></canvas>'+buildRail162(b,null)+'<div class="battle-top battle-compact156"><div class="battle-side38">'+battleVitals156(s.hp,s.maxhp,s.mp,s.maxmp,duel?DUEL_HP:1)+'<div class="battle-tools38">'+(b.challenge73?ar81Controls(b):b.kind==='pvp'?'':battleAutoButton38(auto))+'<button class="btn sm battle-menu54" data-a="bmenu54" aria-label="เปิดเมนูระหว่างต่อสู้">เมนู ☰</button></div></div></div><div class="battle-alert">'+(b.wb?'<div>ไฮดรา · ดาเมจ '+Math.max(0,Math.round((b.wbStart|0)-Math.max(0,b.ehp))).toLocaleString()+' · โจมตี ×'+Math.max(1,(b.turn|0)+1)+' รอบหน้า</div>':'')+buffHtml(b)+(b.challenge73?'<div id="ar73Status">'+esc(ar73Status())+'</div>':'')+'</div><div class="battle-dock"><div class="battle-self"><b>'+esc(nick())+' · Lv'+s.lvl+'</b>'+eGauge(b)+'<small>เลือก 1 คำสั่งต่อการกระทำ</small><small id="battleReady" role="status">พร้อมเลือกคำสั่ง</small></div><div class="battle-actions">'+actions+'</div></div></section>';
 }
 function drawDgLandscape(c,W,H,tn,visual){if(H>W){drawDgTS107(c,W,H,tn,visual);return}
  var r=visual?visual.room:dgRoom();if(!r)return;battleIsoGround(c,W,H,1);skillStage71(c,W,H,tn,W*.2,H*.45,W*.72,H*.53,null,'ground',String(r.id)+':'+r.stage);
@@ -7925,8 +8121,9 @@ function battleButtonsSync(tn){
  var stage=document.getElementById('battleStage');if(!stage||!s||!s.battle||battlePresentationActive())return;
  var b=s.battle,key85=b.key50||b.intro53Until||b.e.n;if(stage._battleFight85!==key85||stage._battleStamp!==b.nextAt){stage._battleFight85=key85;stage._battleStamp=b.nextAt;stage._battleReady=tn+Math.max(0,Math.min(150000,(b.nextAt||0)-Date.now()-60))}
  var left=Math.max(0,(stage._battleReady||0)-tn),busy=CL&&(NET.busy||NET.q.some(function(x){return x.a==='b'}));
- stage.querySelectorAll('[data-a="b"]').forEach(function(button){var eligible85=battleCommand50(button.getAttribute('data-p'),b);button.disabled=!eligible85||left>0||busy||scene53Busy();button.setAttribute('aria-busy',(eligible85&&busy)?'true':'false');button.classList.toggle('command-waiting',eligible85&&(left>0||busy))});
- var el=document.getElementById('battleReady');if(el){var message=scene53Busy()?'กำลังเตรียมฉากต่อสู้…':busy?'กำลังส่งคำสั่ง…':left>0?'พร้อมใน '+(Math.ceil(left/100)/10).toFixed(1)+' วินาที':'พร้อมเลือกคำสั่ง';if(el.textContent!==message)el.textContent=message}
+ var turnWait=b.kind==='pvp'&&(b.pvpSide172!=='player'||Date.now()>=b.pvpUntil172);
+ stage.querySelectorAll('[data-a="b"]').forEach(function(button){var eligible85=battleCommand50(button.getAttribute('data-p'),b);button.disabled=!eligible85||left>0||busy||turnWait||scene53Busy();button.setAttribute('aria-busy',(eligible85&&busy)?'true':'false');button.classList.toggle('command-waiting',eligible85&&(left>0||busy))});
+ var el=document.getElementById('battleReady');if(el){var message=scene53Busy()?'กำลังเตรียมฉากต่อสู้…':busy?'กำลังส่งคำสั่ง…':b.kind==='pvp'?(b.pvpSide172==='enemy'?'เทิร์นคู่ต่อสู้':left>0?'เตรียมเข้าเทิร์น':turnWait?'หมดเวลา · กำลังโจมตีอัตโนมัติ':'เทิร์นคุณ · '+Math.min(10,Math.ceil((b.pvpUntil172-Date.now())/1000))+' วิ'):left>0?'พร้อมใน '+(Math.ceil(left/100)/10).toFixed(1)+' วินาที':'พร้อมเลือกคำสั่ง';if(el.textContent!==message)el.textContent=message}
  var actions=stage.querySelector('.battle-actions');if(actions)actions.classList.toggle('has-overflow',actions.scrollWidth>actions.clientWidth+2);
 }
 function townWorldLabel(c,t,x,y,color){if(!t)return;c.save();c.translate(Math.round(ISO_TOWN.camera[0]),Math.round(ISO_TOWN.camera[1]));fLabel(c,t,x-Math.round(ISO_TOWN.camera[0]),y-Math.round(ISO_TOWN.camera[1]),color);c.restore()}
@@ -8606,6 +8803,12 @@ function lg30Html48(){var a=lg30State(),n=Math.max(1,a.next),w=LG30[n-1];return 
 
 var CHAT48={profile:null,selected:null,seq:0,busy:false,sendBusy:false,invites:[],users:{},teamDraft:'',dmSeen:new Set()};
 function chatName48(v){return String(v||'').trim().slice(0,16)}
+function chatTab174(tab){
+ if(CHAT.tab===tab)return;
+ var inp=document.getElementById('chatin'),drafts=CHAT.drafts174||(CHAT.drafts174={});
+ if(inp){drafts[CHAT.tab]=inp.value;inp.value=drafts[tab]||'';}
+ CHAT.tab=tab;
+}
 function chatDraft48(){var d=document.getElementById('dmto'),t=document.getElementById('teamin');if(d&&document.activeElement===d){var name=chatName48(d.value);if(name!==CHAT.dmTo)CHAT.dmUid=0;CHAT.dmTo=name}if(t)CHAT48.teamDraft=t.value}
 function chatExtra48(html){var el=document.getElementById('chatExtra');if(el&&el._html48!==html){var active=document.activeElement;if(active&&(active.id==='dmto'||active.id==='teamin')&&el.contains&&el.contains(active))return;el.innerHTML=html;el._html48=html}}
 function chatInvites48(){return CHAT48.invites.filter(function(x){return x.expires>Date.now()}).map(function(x){return '<div class="chat48-invite"><b>'+esc(x.n)+' ชวนเข้าปาร์ตี้</b><span>ห้อง #'+x.party+' · หมดอายุใน '+Math.max(1,Math.ceil((x.expires-Date.now())/1000))+' วิ</span><div><button class="btn primary" data-a="chataccept48" data-p="'+x.id+'">ยอมรับ</button><button class="btn" data-a="chatdecline48" data-p="'+x.id+'">ปฏิเสธ</button></div></div>'}).join('')}
@@ -8615,7 +8818,7 @@ function chatProfileHtml48(p){if(!p)return '<p class="hint">กำลังโ�
  ACCK.forEach(function(k){var a=o.acc&&o.acc[k];if(a){var q=QT[a.t|0]||QT[0];rows.push(item(ACC[k].n+' Lv'+LV_REQ[a.g|0],a.t|0,a.e|0,ACC[k].d(q.m*(ACCG[a.g|0]||1)*enhMul(a.e|0))))}else rows.push(item(ACC[k].n+' · ยังไม่สวมใส่',0,0,''))});
  if(o.armor>0)rows.push(item('เกราะเดิม '+((ARMORS[o.armor]||{}).n||''),o.aq|0,o.aEnh|0,''));
  return '<div class="chat48-person"><b>'+esc(p.n)+'</b><span>'+esc(K.n)+' · Lv'+p.lvl+'</span></div><div class="chat48-profileactions"><button class="btn" data-a="chatwhisper48">กระซิบ</button><button class="btn primary" data-a="chatinvite48"'+(CHAT48.busy?' disabled':'')+'>ชวนปาร์ตี้</button></div><h3>อุปกรณ์สวมใส่</h3>'+rows.join('')}
-function chatReady60(){if(CHAT.tab==='notice')return false;if(CHAT48.selected)return false;var on=chatOnline();if(!on)return CHAT.tab==='world'&&ON.ok&&ON.canWrite;return CHAT.tab==='fac'?CHAT.fac!=null:CHAT.tab==='team'?!!CHAT.team:CHAT.tab==='dm'?!!CHAT.dmTo:true}
+function chatReady60(){if(CHAT.tab==='notice')return false;if(CHAT48.selected)return false;var on=chatOnline();if(!on)return CHAT.tab==='world'&&ON.ok&&ON.canWrite;return CHAT.tab==='guild'?!!s.guild169:CHAT.tab==='team'?!!CHAT.team:CHAT.tab==='dm'?!!CHAT.dmTo:true}
 function chatRetry60(){if(chatOnline()){CHAT.msg='กำลังเชื่อมต่อแชท…';chatPoll(true);chatLoop()}else CHAT.msg='เปิดเกมผ่านเซิร์ฟเวอร์และเข้าสู่ระบบเพื่อส่งแชท · พิมพ์ข้อความรอไว้ได้';paintChat()}
 function paintChat(){
  var lg=document.getElementById('chatlog'),pe=document.getElementById('peers'),tb=document.getElementById('chatTabs'),cn=document.getElementById('chatCount'),row=document.getElementById('chatrow'),inp=document.getElementById('chatin');if(!lg||!s)return;chatDraft48();var tab=CHAT.tab;
@@ -8626,28 +8829,30 @@ function paintChat(){
  else if(CHAT48.selected){extra='<button class="btn chat48-back" data-a="chatback48">‹ กลับไปแชท</button>';canSend=false}
  else if(!chatOnline()&&tab!=='world'){extra='<p class="hint">ช่องนี้ใช้ได้เมื่อเชื่อมต่อเซิร์ฟเวอร์เกม</p>';canSend=false}
  else if(tab==='world'){ph='คุยกับทุกคน';if(!chatOnline()&&!(ON.ok&&ON.canWrite)){canSend=false;extra='<p class="hint" role="status">ยังไม่เชื่อมต่อ · พิมพ์รอไว้ได้</p><button class="btn sm" data-a="chatretry60">ลองเชื่อมต่อใหม่ ↻</button>'}}
- else if(tab==='fac'){var f=CHAT.fac;if(f==null){canSend=false;extra='<p class="hint">เข้าฝ่ายก่อนเพื่อใช้แชทฝ่าย</p>'}else{extra='<p class="hint">ฝ่าย '+esc(FAC[f]?FAC[f].n:'')+'</p>';ph='คุยในฝ่าย'}}
+ else if(tab==='guild'){canSend=!!s.guild169;extra='<p class="hint">'+(s.guild169?'กิลด์ '+esc(s.guild169.name):'เข้ากิลด์ก่อนใช้ช่องนี้')+'</p>';ph='คุยในกิลด์'}
  else if(tab==='team'){if(!CHAT.team){canSend=false;extra='<div class="chatrow"><input class="txt" id="teamin" maxlength="16" value="'+esc(CHAT48.teamDraft)+'" placeholder="ชื่อทีม 2–16 ตัว"><button class="btn" data-a="teamjoin">เข้าทีม</button></div>'}else{extra='<div class="row"><span>ทีม '+esc(CHAT.team)+'</span><button class="btn" data-a="teamleave">ออกทีม</button></div>';ph='คุยในทีม'}}
- else if(tab==='dm'){extra='<div class="chat48-recipient"><label for="dmto">ถึง</label><input class="txt" id="dmto" maxlength="16" value="'+esc(CHAT.dmTo)+'" placeholder="ชื่อตัวละครเต็ม"><button class="btn chat48-all" data-a="chatall48">ทั้งหมด</button></div>';ph=CHAT.dmTo?'กระซิบถึง '+CHAT.dmTo:'ใส่ชื่อผู้รับก่อน'}
+ else if(tab==='dm'){canSend=!!CHAT.dmTo;extra='<div class="chat48-recipient"><label for="dmto">ถึง</label><input class="txt" id="dmto" maxlength="16" value="'+esc(CHAT.dmTo)+'" placeholder="ชื่อตัวละครเต็ม"><button class="btn chat48-all" data-a="chatall48">ทั้งหมด</button></div>';ph=CHAT.dmTo?'กระซิบถึง '+CHAT.dmTo:'ใส่ชื่อผู้รับก่อน'}
  if(CHAT.pollErr60)extra+='<button class="btn sm" data-a="chatretry60">แชทเชื่อมต่อขัดข้อง · ลองใหม่ ↻</button>';
- if(CHAT.msg)extra+='<p class="chat48-message" role="status">'+esc(CHAT.msg)+'</p>';chatExtra48(extra);if(row)row.hidden=false;var send=document.getElementById('chatSend60');if(send){send.disabled=!canSend||CHAT48.sendBusy;send.setAttribute('aria-disabled',String(send.disabled))}if(inp){inp.placeholder=!chatOnline()&&!canSend?'พิมพ์รอเชื่อมต่อได้':ph;inp.disabled=CHAT48.sendBusy}if(pe){pe.hidden=true;pe.innerHTML=''}if(cn)cn.textContent=CHAT48.selected?'ข้อมูลผู้เล่น':'แตะชื่อเพื่อดูผู้เล่น';
+ if(CHAT.msg)extra+='<p class="chat48-message" role="status">'+esc(CHAT.msg)+'</p>';chatExtra48(extra);if(row)row.hidden=tab==='notice'||!!CHAT48.selected;var send=document.getElementById('chatSend60');if(send){send.disabled=!canSend||CHAT48.sendBusy;send.setAttribute('aria-disabled',String(send.disabled))}if(inp){inp.placeholder=!chatOnline()&&!canSend?'พิมพ์รอเชื่อมต่อได้':ph;inp.disabled=false}if(pe){pe.hidden=true;pe.innerHTML=''}if(cn)cn.textContent=CHAT48.selected?'ข้อมูลผู้เล่น':'แตะชื่อเพื่อดูผู้เล่น';
  var atEnd=lg.scrollTop+lg.clientHeight>=lg.scrollHeight-30,html='';
  if(CHAT48.selected)html=chatProfileHtml48(CHAT48.profile);
  else{html=chatInvites48();var list=chatMsgs(tab);if(tab==='dm'&&CHAT.dmTo)list=list.filter(function(m){return m.mine?(CHAT.dmUid?m.toUid===CHAT.dmUid:m.to===CHAT.dmTo):(CHAT.dmUid?m.uid===CHAT.dmUid:m.n===CHAT.dmTo)});CHAT48.users={};html+=list.length?list.map(function(m){var peer=m.ch==='dm'&&m.mine?{uid:m.toUid||0,n:m.to||''}:{uid:m.uid||0,n:m.n||''},key=String(m.id),name=chatName48(peer.n);if(!m.mine||m.ch==='dm')CHAT48.users[key]=peer;var who=(m.ch==='notice'&&!peer.uid)||(m.mine&&m.ch!=='dm')||(!peer.uid&&name==='📢 ประกาศ')?'<b>'+esc(m.n)+'</b>':'<button class="chat48-name" data-a="chatuser48" data-p="'+esc(key)+'">'+esc(name)+'</button>';return '<div class="cm'+(m.ch==='dm'?' dm':m.ch==='notice'?' notice75':'')+'"><div class="chat48-msghead">'+(m.ch==='dm'?'<small>'+(m.mine?'ถึง':'จาก')+'</small>':'')+who+(m.sp?'<span class="sup100b" title="ผู้สนับสนุน">✦</span>':'')+(m.ch==='notice'?'<small class="news75-time">'+esc(new Date(m.ts).toLocaleTimeString('th-TH',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit'}))+'</small>':'')+(m.mine?'<small>คุณ</small>':'')+'</div><p'+(m.cg?' class="cg105"':'')+'>'+esc(String(m.t||'').slice(0,m.ch==='notice'?160:100))+'</p></div>'}).join(''):'<p class="hint chat48-empty">'+(tab==='notice'?'ยังไม่มีประกาศใหม่':tab==='dm'?'เลือกผู้รับแล้วเริ่มกระซิบได้เลย':'ยังไม่มีข้อความ · แตะชื่อผู้เล่นเพื่อดูอุปกรณ์')+'</p>'}
- if(lg._html48!==html){var top=lg.scrollTop;lg.innerHTML=html;lg._html48=html;lg.scrollTop=CHAT48.selected?0:atEnd||!lg.dataset.init?lg.scrollHeight:top;lg.dataset.init=1}if(CHAT.open&&!CHAT48.selected)chatMarkSeen(tab);
+ if(lg._html48!==html){var top=lg.scrollTop,switched=lg.dataset.tab!==tab;lg.innerHTML=html;lg._html48=html;lg.dataset.tab=tab;lg.scrollTop=CHAT48.selected?0:switched||atEnd||!lg.dataset.init?lg.scrollHeight:top;lg.dataset.init=1}if(CHAT.open&&!CHAT48.selected)chatMarkSeen(tab);
 }
 function chatSend(){var inp=document.getElementById('chatin');if(!inp||CHAT48.sendBusy)return;var tx=inp.value.replace(/\s+/g,' ').trim().slice(0,100),now=Date.now();if(!tx)return;chatDraft48();if(!chatReady60()){CHAT.msg=CHAT48.selected?'กลับไปแชทก่อนส่งข้อความ':!chatOnline()?'ยังไม่เชื่อมต่อ ข้อความยังอยู่':CHAT.tab==='dm'?'ใส่ชื่อผู้รับก่อน':'เข้าฝ่ายหรือทีมก่อนส่งช่องนี้';paintChat();return}if(now-CHAT.lastSend<1500){CHAT.msg='รออีกสักครู่ก่อนส่งข้อความ';paintChat();return}
  if(!chatOnline()){if(CHAT.tab!=='world'||!ON.ok||!ON.canWrite)return;CHAT.lastSend=now;ON.lastSay=now;inp.value='';ON.db.doc('chat/m'+Math.floor(now/1000)%120).set({n:nick().slice(0,16),t:tx,ts:now,u:ON.uid}).catch(function(){});ON.chat.push({n:nick(),t:tx,ts:now});ON.chat=ON.chat.slice(-40);paintChat();return}
  var dt=document.getElementById('dmto');if(dt)CHAT.dmTo=chatName48(dt.value);if(CHAT.tab==='dm'&&!CHAT.dmTo){CHAT.msg='ใส่ชื่อผู้รับก่อน';paintChat();return}
  var ch=CHAT.tab,to=CHAT.dmTo,toUid=CHAT.dmUid||0,epoch=CHAT48.epoch||0;CHAT48.sendBusy=true;CHAT.lastSend=now;CHAT.msg='';paintChat();
- apiCall('POST','/api/chat',{ch:ch,t:tx,to:ch==='dm'?to:undefined,toUid:ch==='dm'?toUid:undefined}).then(function(j){if((CHAT48.epoch||0)!==epoch)return;if(inp.value.replace(/\s+/g,' ').trim().slice(0,100)===tx)inp.value='';if(j.message&&!CHAT.list.some(function(m){return m.id===j.message.id}))CHAT.list.push(j.message);chatPoll(true)}).catch(function(e){if((CHAT48.epoch||0)!==epoch)return;CHAT.msg=e.message||'ส่งไม่สำเร็จ ข้อความยังอยู่ในช่องพิมพ์'}).then(function(){if((CHAT48.epoch||0)!==epoch)return;CHAT48.sendBusy=false;paintChat()})}
+ apiCall('POST','/api/chat',{ch:ch,t:tx,to:ch==='dm'?to:undefined,toUid:ch==='dm'?toUid:undefined}).then(function(j){if((CHAT48.epoch||0)!==epoch)return;if(CHAT.tab===ch){
+  if(inp.value.replace(/\s+/g,' ').trim().slice(0,100)===tx)inp.value='';
+ }else if(CHAT.drafts174?.[ch]?.replace(/\s+/g,' ').trim().slice(0,100)===tx)CHAT.drafts174[ch]='';if(j.message&&!CHAT.list.some(function(m){return m.id===j.message.id}))CHAT.list.push(j.message);CHAT.list.sort(function(a,b){return a.id-b.id;});chatPoll(true)}).catch(function(e){if((CHAT48.epoch||0)!==epoch)return;CHAT.msg=e.message||'ส่งไม่สำเร็จ ข้อความยังอยู่ในช่องพิมพ์'}).then(function(){if((CHAT48.epoch||0)!==epoch)return;CHAT48.sendBusy=false;paintChat()})}
 function chatUser48(key){var u=CHAT48.users[key];if(!u)return;CHAT48.selected={uid:u.uid||0,n:chatName48(u.n)};CHAT48.profile=null;CHAT.msg='';var seq=++CHAT48.seq;chatOpen(true);paintChat();if(!chatOnline()){CHAT48.profile={error:'ดูอุปกรณ์ผู้เล่นได้ในเวอร์ชันออนไลน์'};paintChat();return}apiCall('GET','/api/player?'+(u.uid?'uid='+u.uid:'name='+encodeURIComponent(u.n))).then(function(j){if(seq!==CHAT48.seq)return;CHAT48.profile=j.player;CHAT48.selected={uid:j.player.uid,n:j.player.n};paintChat()}).catch(function(e){if(seq!==CHAT48.seq)return;CHAT48.profile={error:e.message||'โหลดข้อมูลไม่ได้ กรุณาอัปเดต server.js B48'};paintChat()})}
 function chatBack48(){CHAT48.selected=null;CHAT48.profile=null;CHAT48.seq++;CHAT.msg='';paintChat()}
-function chatWhisper48(){var u=CHAT48.selected;if(!u)return;CHAT.dmTo=u.n;CHAT.dmUid=u.uid||0;CHAT.tab='dm';chatBack48();chatOpen(true);var inp=document.getElementById('chatin');if(inp)inp.focus()}
+function chatWhisper48(){var u=CHAT48.selected;if(!u)return;CHAT.dmTo=u.n;CHAT.dmUid=u.uid||0;chatTab174('dm');chatBack48();chatOpen(true);var inp=document.getElementById('chatin');if(inp)inp.focus()}
 function chatParty48(op,id){if(!chatOnline()||CHAT48.busy)return;CHAT48.busy=true;var epoch=CHAT48.epoch||0,b={op:op};if(op==='invite'){if(!CHAT48.selected){CHAT48.busy=false;return}b.uid=CHAT48.selected.uid;b.name=CHAT48.selected.n}else b.invite=Number(id);CHAT.msg='';paintChat();apiCall('POST','/api/party',b).then(function(j){if((CHAT48.epoch||0)!==epoch)return;ptRecv(j);if(j.invites)CHAT48.invites=j.invites;if(op==='invite')CHAT.msg='ส่งคำเชิญแล้ว รอผู้เล่นยอมรับ';else{CHAT48.invites=CHAT48.invites.filter(function(x){return x.id!==Number(id)});CHAT.msg=op==='accept'?'เข้าปาร์ตี้แล้ว':'ปฏิเสธคำเชิญแล้ว'}paintChat()}).catch(function(e){if((CHAT48.epoch||0)!==epoch)return;CHAT.msg=e.message||'ทำรายการไม่สำเร็จ';paintChat()}).then(function(){if((CHAT48.epoch||0)!==epoch)return;CHAT48.busy=false;paintChat()})}
-if(!SV)document.addEventListener('input',function(e){if(e.target&&e.target.id==='dmto'){CHAT.dmTo=chatName48(e.target.value);CHAT.dmUid=0}if(e.target&&e.target.id==='teamin')CHAT48.teamDraft=e.target.value});
+if(!SV)document.addEventListener('input',function(e){if(e.target&&e.target.id==='dmto'){CHAT.dmTo=chatName48(e.target.value);CHAT.dmUid=0;paintChat()}if(e.target&&e.target.id==='teamin')CHAT48.teamDraft=e.target.value});
 
-function chatReset48(){chatMount77(false);newsReset75();clearTimeout(CHAT.timer);CHAT48.seq++;CHAT48.epoch=(CHAT48.epoch||0)+1;CHAT48.profile=CHAT48.selected=null;CHAT48.invites=[];CHAT48.dmSeen.clear();CHAT48.users={};CHAT48.teamDraft='';CHAT48.busy=CHAT48.sendBusy=false;CHAT.list=[];CHAT.last=0;CHAT.init=0;CHAT.busy=false;CHAT.timer=0;CHAT.open=false;viewSync();CHAT.dmTo='';CHAT.dmUid=0;CHAT.msg='';CHAT.seen={world:0,fac:0,team:0,dm:0};var p=document.getElementById('chatPanel');if(p)p.hidden=true;var inp=document.getElementById('chatin');if(inp){inp.value='';inp.disabled=false}}
+function chatReset48(){chatMount77(false);newsReset75();clearTimeout(CHAT.timer);CHAT48.seq++;CHAT48.epoch=(CHAT48.epoch||0)+1;CHAT48.profile=CHAT48.selected=null;CHAT48.invites=[];CHAT48.dmSeen.clear();CHAT48.users={};CHAT48.teamDraft='';CHAT48.busy=CHAT48.sendBusy=false;CHAT.list=[];CHAT.last=0;CHAT.init=0;CHAT.serverEpoch174=null;CHAT.drafts174={};CHAT.tab='world';CHAT.busy=false;CHAT.timer=0;CHAT.open=false;viewSync();CHAT.dmTo='';CHAT.dmUid=0;CHAT.msg='';CHAT.seen={world:0,fac:0,team:0,dm:0};var p=document.getElementById('chatPanel');if(p)p.hidden=true;var inp=document.getElementById('chatin');if(inp){inp.value='';inp.disabled=false}}
 
 function chatPeer48(m){return !CHAT.dmTo|| (m.mine?(CHAT.dmUid?m.toUid===CHAT.dmUid:m.to===CHAT.dmTo):(CHAT.dmUid?m.uid===CHAT.dmUid:m.n===CHAT.dmTo))}
 function chatUnread(tab){if(tab==='dm'&&chatOnline())return chatMsgs(tab).filter(function(m){return !m.mine&&!CHAT48.dmSeen.has(m.id)}).length;var sn=CHAT.seen[tab]||0;return chatMsgs(tab).filter(function(m){return (m.id||0)>sn&&!m.mine}).length}
@@ -8740,7 +8945,7 @@ function netWatch68(){var now=Date.now();if(NET.busy&&now-(NET.busyAt||now)>1500
 function netAct(a,p){
  if(a==='autoset'&&p==='run:1'&&(NET68.needSync||navigator.onLine===false)){NET68.note='รอเชื่อมต่อแล้วกดเปิดออโต้อีกครั้ง';fieldSay(NET68.note);return}if(a==='autoset'&&String(p).indexOf('run:')===0)NET68.note='';
  if(a==='b'&&(!s.battle||battlePresentationActive()||scene53Busy()||NET.q.some(function(x){return x.a==='b'})))return;
- var x={a:a,p:p==null?null:String(p),inp:netInputs(),fight:a==='b'&&s.battle?s.battle.key50:null,target:a==='b'&&s.battle?(s.battle.gi||0):null},k=netConfigKey68(x);
+ var x={a:a,p:p==null?null:String(p),inp:netInputs(),fight:a==='b'&&s.battle?s.battle.key50:null,target:a==='b'&&s.battle?(s.battle.gi||0):null,turn172:a==='b'&&s.battle?.kind==='pvp'?s.battle.pvpRound172:null},k=netConfigKey68(x);
  if(k){delete NET68.safe[k];NET.q=NET.q.filter(function(q){return netConfigKey68(q)!==k})}NET.q.push(x);netPump();
 }
 function netPump(){
@@ -8827,6 +9032,12 @@ if(SV){
  warOpp106:function(snap,uid){warOpp106(snap,uid)},
  pvpRevOpp110:function(snap,uid){REVOPP110={snap:snap,uid:uid|0}},
  payGrant105:function(sku,sid){if(!s)return;payGrant105(sku,sid)},
+ tradeInfo173:function(it){
+  if(!it||it.lk||it.sp||it.by||!['w','a'].concat(ACCK).includes(it.k))return null;
+  var rarity=(QT[it.t|0]||QT[0]).th||'',ops=gopText(it.ops||it.op||[]);
+  return {name:pendName(it)+(it.e?' +'+it.e:'')+' · '+rarity+
+    (it.sk?' · ช่องการ์ด '+it.sk:'')+(ops.length?' · '+ops.join(' · '):'')};
+ },
  mktInfo103:function(it){return {min:mktMin(it),max:mktMax(it),name:pendName(it),ok:!it.by&&!it.sp}},
  mailAdd101:function(m){if(!s||!m)return;mailAdd101(m);if(m.bc)s.mailAll=Math.max(s.mailAll|0,m.bc|0)},
  pionGrant:function(rank){if(!s)return;s.pion=rank|0;addItem('potF',3);s.title='t12';recalc();say('🏆 ยินดีด้วย! คุณเป็นผู้บุกเบิกคนที่ '+rank+'/100 · ได้ฉายา "ผู้บุกเบิก" (XP +3%) และยาฟื้นเลือดเต็ม ×3');save()},ptJoin:function(J){if(!s||!s.created||s.battle||s.dup||s.res||s.energy<2||!J||!J.e)return false;if(!targetJoint49(J))return false;var cl=function(o){return JSON.parse(JSON.stringify(o))};s.energy-=2;
