@@ -3449,7 +3449,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B180';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B181';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -7778,6 +7778,12 @@ function townIsoObject(c,o){var p=townProject(o.x,o.y),x=p[0],y=p[1];
   c.fillStyle='#6a4e3b';c.fillRect(x-4,y-30,8,30);townPoly(c,[[x,y-76],[x-26,y-30],[x,y-16],[x+26,y-30]],'#315c43');townPoly(c,[[x,y-76],[x-26,y-30],[x,y-38]],'#4a8052');
  }
 }
+var TOWN_DRAW_ERRORS181=new Set();
+function townDrawError181(o,error){
+ var key=o.me?'player':o.art||o.kind;
+ if(TOWN_DRAW_ERRORS181.has(key))return;
+ TOWN_DRAW_ERRORS181.add(key);console.warn('Capital draw:',key,error);
+}
 function townIsoDraw(c,W,H,tn){
  if(FLD.z!==(TOWN.war?'war':TOWN.lake?'lake':'town')||!FLD.map||!ISO_TOWN.ground)townBuild();
  var dt=Math.min(.05,Math.max(0,(tn-(FLD.last||tn))/1000));FLD.last=tn;fieldUpdate(dt,tn);
@@ -7787,10 +7793,11 @@ function townIsoDraw(c,W,H,tn){
  if(!TOWN.war&&!TOWN.lake)objects.push({kind:'portal154',x:PORTAL154.x,y:PORTAL154.y,depth:PORTAL154.x+PORTAL154.y});
  if(!TOWN.war&&!TOWN.lake)TOWN.npcs.forEach(function(q){objects.push({kind:'actor',q:q,depth:q.x+q.y,npc:true})});else if(TOWN.war){warNear106();warSb106()}
  for(var key in TOWN.list){var q=TOWN.list[key];objects.push({kind:'actor',q:q,depth:q.x+q.y})}
- objects.push({kind:'actor',q:{x:FLD.px,y:FLD.py,cls:s.cls,look:s.look,n:nick(),mv:FLD.moving,dir:FLD.spriteDir},depth:FLD.px+FLD.py,me:true});
+ var player={kind:'actor',q:{x:FLD.px,y:FLD.py,cls:CLASSES[s.cls]?s.cls:'warrior',look:s.look,n:nick(),mv:FLD.moving,dir:FLD.spriteDir},depth:FLD.px+FLD.py,me:true};
+ if(!capitalActive180())objects.push(player);
  if(FLD.tx!=null){var target=townProject(FLD.tx,FLD.ty);c.strokeStyle='#7ee9e9';c.lineWidth=2;c.beginPath();c.moveTo(target[0],target[1]-7);c.lineTo(target[0]+14,target[1]);c.lineTo(target[0],target[1]+7);c.lineTo(target[0]-14,target[1]);c.closePath();c.stroke()}
  objects.sort(function(a,b){return a.depth-b.depth});
- objects.forEach(function(o){
+ function drawObject(o){
   var q=o.q,pp=townProject(q?q.x:o.x,q?q.y:o.y);if(pp[0]<cx-450||pp[0]>cx+W+450||pp[1]<cy-80||pp[1]>cy+H+240)return;
   if(o.kind==='portal154'){portalDraw154(c,pp[0],pp[1],tn);townWorldLabel(c,'ประตูวาร์ป',pp[0],pp[1]-100,'#a6fff2');return}
   if(o.kind!=='actor'){
@@ -7814,7 +7821,27 @@ function townIsoDraw(c,W,H,tn){
   }if(!o.npc){var tq100=o.me?{tt:s.title,sp:s.sup100}:q,tl100=ttlText100(tq100.tt,tq100.sp);if(tl100)townWorldLabel(c,tl100[0],pp[0],pp[1]-63,tl100[1])}var wcol=TOWN.war?(FAC[o.me?s.fac:q.fac]||{}).c:null;if(TOWN.war&&!o.me&&q.fac!=null&&q.fac!==s.fac){c.strokeStyle=q.ok?'#ff4a4a':'#888';c.lineWidth=2;c.beginPath();c.ellipse(pp[0],pp[1]+2,15,6,0,0,7);c.stroke()}townWorldLabel(c,(TOWN.war&&!o.me&&q.fac!=null&&q.fac!==s.fac?(q.sh?'🛡 ':'⚔️ '):'')+String(q.n||'').slice(0,16)+(TOWN.war&&!o.me?' Lv'+(q.lvl|0):''),pp[0],pp[1]-52,wcol||(o.me?'#ffe5a0':o.npc?'#e5d7c7':'#98dce9'));
   if(!o.npc&&q.say&&nowMs()-q.sayT<7000)townWorldBubble(c,q.say,pp[0],pp[1]-65);
   if(o.me&&TOWN.mySay&&nowMs()-TOWN.mySay.at<7000)townWorldBubble(c,TOWN.mySay.t,pp[0],pp[1]-65);
- });c.restore();
+ }
+ try{
+  objects.forEach(function(o){
+   if(!capitalActive180()){drawObject(o);return}
+   c.save();
+   try{drawObject(o)}catch(err){townDrawError181(o,err)}finally{c.restore()}
+  });
+  if(capitalActive180()){
+   c.save();
+   try{drawObject(player)}catch(err){
+    townDrawError181(player,err);
+    // Preserve an on-screen avatar even if a class or cosmetic image cannot render.
+    c.setTransform(c.canvas._art74?.sx||1,0,0,c.canvas._art74?.sy||1,0,0);
+    c.globalAlpha=1;c.globalCompositeOperation='source-over';
+    var x=me[0]-Math.round(cx),y=me[1]-Math.round(cy);
+    CPOSE={pose:FLD.moving?'walk':'idle',dir:0};
+    drawClassicChar(c,{hair:0,hc:0},player.q.cls,x-15,y,1.25,tn,false,1);
+    fLabel(c,player.q.n,x,y-52,'#ffe5a0');
+   }finally{c.restore()}
+  }
+ }finally{c.restore()}
 }
 function townLandscapeActive(){return !!(s&&s.created&&TOWN.on&&s.tab==='wild'&&!s.battle&&!s.res&&!BAWAY)}
 function townLayoutSync(){if(SV)return;entryLayoutSync();document.body.classList.toggle('town-landscape',fieldLandscapeActive()||battleLandscapeActive()||battlePresentationActive()||landscapeMenuActive())}
@@ -9361,7 +9388,7 @@ warIsoBuild106=function(){var flat=mapGround138(3,true),c=flat.getContext('2d'),
 townBuild=function(){if(TOWN.lake){lakeBuild158()}else if(TOWN.war){warFlatBuild106();warIsoBuild106()}else{mapReset138('town');FLD.nodes=[];FLD.px=720;FLD.py=667;townNpcs138();townIsoBuild()}};
 var townObjectBefore138=townIsoObject;
 townIsoObject=function(c,o){var near=FLD.px>o.x-38&&FLD.px<o.x+(o.w||80)+28&&FLD.py>o.y-48&&FLD.py<o.y+(o.d||60)+18;
- c.save();if(near)c.globalAlpha*=.45;
+ c.save();try{if(near)c.globalAlpha*=.45;
  var im=o.art&&capitalArt180(o.art);
  if(im){
   var foot=townProject(o.x+o.w,o.y+o.d),width=(o.w+o.d)*.75,height=width*im.naturalHeight/im.naturalWidth;
@@ -9369,7 +9396,7 @@ townIsoObject=function(c,o){var near=FLD.px>o.x-38&&FLD.px<o.x+(o.w||80)+28&&FLD
   c.imageSmoothingEnabled=true;c.drawImage(im,center[0]-width/2,foot[1]-height,width,height);
   townWorldLabel(c,o.name,center[0],foot[1]-height-8,'#ffe5ad');
  }else townObjectBefore138(c,o);
- c.restore()};
+ }finally{c.restore()}};
 
 
 // B139: bound cosmetic box. One authoritative roll, exact disjoint intervals, replay-safe sequence.
