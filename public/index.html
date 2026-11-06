@@ -2144,8 +2144,10 @@ function setMin(o){
 function setBonus(o){var m=setMin(o);return m>=20?0.25:m>=15?0.18:m>=10?0.10:m>=5?0.05:0}
 function calcMax(o){return Math.round((o===s&&s&&s.battle?1+bb('hpp')/100:1)*clsB88(o,'hp')*(o.title==='t11'?1.03:1)*(50+(o.lvl-1)*12+CLASSES[o.cls].hp+sv(o,'vit')*10+Math.floor(passiveOf(o,'hp'))+Math.round(accVal(o,'hp')))*(1+gLvOf(o)*0.01)*(1+setBonus(o))*(1+cardBonus(o,'hp'))*(1+j3Self(o,'hp'))*(1+m51Val(o,'hp',o.battle)+webValue160(o,'HP สูงสุด')))}
 function calcMaxMp(o){return Math.round(clsB88(o,'mp')*(20+(o.lvl-1)*3+sv(o,'int')*4+Math.floor(passiveOf(o,'mp'))+Math.round(accVal(o,'mp'))+CLASSES[o.cls].mp)*(1+j3Self(o,'mp'))*(1+m51Val(o,'mp',o.battle)+webValue160(o,'MP สูงสุด')))}
+var STARTER_POTS179=8;
+function starterHunt179(o){return o.zone===0&&o.lvl<=5}
 function fresh(){var o={job4:null,j4Quest:null,j4Version:J4_SAVE_VERSION,day:1,gold:30,lvl:1,xp:0,hp:65,maxhp:65,energy:30,maxEnergy:30,cdAt:0,eAt:Date.now(),rAt:Date.now(),pAt:periodId(Date.now()),
- inv:{wood:3,stone:0,ore:0,hide:0,herb:2,purple:0},potions:1,pot2:0,pot3:0,pot4:0,pot5:0,pot6:0,weapon:0,armor:0,wq:0,aq:0,wEnh:0,aEnh:0,wOp:[],gearRev135:0,erst:null,acc:{ring:null,neck:null,brooch:null,helm:null,armor:null,gloves:null,boots:null},pend:null,
+ inv:{wood:3,stone:0,ore:0,hide:0,herb:2,purple:0},potions:STARTER_POTS179,starterSupplies179:true,pot2:0,pot3:0,pot4:0,pot5:0,pot6:0,weapon:0,armor:0,wq:0,aq:0,wEnh:0,aEnh:0,wOp:[],gearRev135:0,erst:null,acc:{ring:null,neck:null,brooch:null,helm:null,armor:null,gloves:null,boots:null},pend:null,
  mp:20,maxmp:20,st:{str:0,vit:0,agi:0,int:0,dex:0,luk:0},sp:3,sk:{},skp:1,skAuto:{},autoSkill:true,guild:null,guildMsg:'',
  pvp:{r:1000,w:0,l:0,streak:0,best:1000},war:null,warLast:null,pv:null,
  zone:0,tab:'wild',battle:null,auto:false,autoHunt:false,autoTower:false,
@@ -2189,6 +2191,10 @@ function normalize(o){
  o.maxhp=calcMax(o);o.maxmp=calcMaxMp(o);
  if(typeof o.mp!=='number'||o.mp>o.maxmp)o.mp=o.maxmp;
  if(o.hp>o.maxhp)o.hp=o.maxhp;
+ if(!o.starterSupplies179){
+  if(o.lvl<=5)o.potions=Math.max(o.potions|0,STARTER_POTS179);
+  o.starterSupplies179=true;
+ }
  j4Normalize(o);fieldProgressMigrate(o);bindArena44(o);colNormalize59(o);farmNormalize63(o);bookNormalize70(o);ar73Recover(o,arSaved73);return o}
 var s=null;
 var confirmReset=false,confirmLeave=false,createMsg='';
@@ -2737,11 +2743,15 @@ function randLook(){
  return {hair:rnd(0,2),hc:rnd(0,5),hat:pick(['none','wiz','cap','ears']),face:pick(['none','gls','gog']),wing:'none',pet:'none',aura:'none',dye:pick(['red','blue','green','gold','purple'])};
 }
 var FIELD_PICK=-1,FIELD_BOSS=false,FIELD_NOCD=false;
-function mkMob(z,d){var band=mobBand(d,z),level=band[0]+Math.floor(Math.random()*(band[1]-band[0]+1)),m=mobAt(d,z,level);m.hp=Math.round(m.hp*(0.95+Math.random()*0.10));return m}
+function mkMob(z,d){
+ var band=mobBand(d,z),max=z===ZONES[0]?Math.max(band[0],Math.min(band[1],s.lvl+1)):band[1];
+ var level=band[0]+Math.floor(Math.random()*(max-band[0]+1)),m=mobAt(d,z,level);
+ m.hp=Math.round(m.hp*(0.95+Math.random()*0.10));return m;
+}
 var GRP_W=[60,30,10,0,0],GRP_K=[1,0.55,0.40],GRP_R=[1,1.6,2.4],MINION_K=0;
 function grpScale(m,k,rw){m.atk=Math.max(1,Math.round(m.atk*k));m.gold=[Math.round(m.gold[0]*rw),Math.round(m.gold[1]*rw)];m.xp=Math.max(1,Math.round(m.xp*rw));return m}
 function mkGroup(b){
- if(!b||b.kind!=='monster'||b.tower||b.wb||b.e.boss||s.lvl<5)return;
+ if(!b||b.kind!=='monster'||b.tower||b.wb||b.e.boss||s.lvl<=5)return;
  var z=ZONES[s.zone],e=b.e,w=Math.random()*100,n=w<60?1:w<90?2:3;if(n===1)return;
  var source=(FIELD_PICK>=0?z.mobs[FIELD_PICK]:null)||z.mobs.filter(function(d){return d.k===e.k})[0]||z.mobs[0],L=[],k=GRP_K[n-1];
  for(var i=0;i<n;i++){var m=i===0?e:mkMob(z,source);m.hp=Math.max(1,Math.round(m.hp*0.65));L.push(grpScale(m,k,0.8))}
@@ -2784,7 +2794,11 @@ function huntField(p){
 function hunt(){
  if(s.energy<2||(!FIELD_NOCD&&cdLeft()>0)||s.battle||s.dup)return;if(s.zone!==eligibleZone(s,s.zone)){s.zone=eligibleZone(s,s.zone);say('ย้ายกลับแผนที่ที่ตรงกับเลเวล');return}s.energy-=2;
  var z=ZONES[s.zone];
- if(FIELD_BOSS||(FIELD_PICK<0&&Date.now()>=bossReadyAt(s,s.zone)&&s.lvl>=z.max-2&&Math.random()<BOSS_P)){
+ if(starterHunt179(s)){
+  var wolf=mobAt(z.mobs[0],z,s.lvl);
+  wolf.hp=Math.round(wolf.hp*.8);wolf.atk=Math.max(1,Math.round(wolf.atk*.7));
+  startBattle(wolf,'monster',{starter179:true});
+ }else if(FIELD_BOSS||(FIELD_PICK<0&&Date.now()>=bossReadyAt(s,s.zone)&&s.lvl>=z.max-2&&Math.random()<BOSS_P)){
   var bm=mapBoss(s.zone);
   startBattle(bm,'monster');s.battle.lines=['บอส '+bm.n+' ปรากฏตัว!'];
  }else if(FIELD_PICK<0&&s.zone>=EASY_ZONES&&Math.random()<0.05){
@@ -3435,7 +3449,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B178';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B179';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -3922,6 +3936,10 @@ function win(){
  }
  if(b.tower&&s.tower.f===b.tower){var T=s.tower;T.f++;T.best=Math.max(T.best,b.tower);p.push('ผ่านชั้น '+b.tower);
   if(b.tower%10===0){var bg=Math.round(b.tower*50*0.2),pu=b.tower/10;s.gold+=bg;addItem('purple',pu);p.push('โบนัสผ่านชั้น ทอง +'+bg+', แร่หินสีม่วง +'+pu)}}
+ if(b.starter179){
+  var healed=Math.min(s.maxhp-s.hp,Math.ceil(s.maxhp*.2));
+  if(healed>0){s.hp+=healed;p.push('ฟื้น HP +'+healed)}
+ }
  farmRecord63(farmBefore63,xp,'win');say('ชนะ '+e.n+' ('+p.join(', ')+')');
  if(b.joint)s.res={kind:'party',won:true,n:e.n,text:s.log[0].replace(/^.*? · /,''),until:Date.now()+5000};
  if(b.tower)s.res={won:true,n:e.n,kind:'tower',f:b.tower,text:s.log[0].replace(/^.*? · /,''),until:Date.now()+TW_WAIT};
