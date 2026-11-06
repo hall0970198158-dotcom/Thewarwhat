@@ -78,6 +78,7 @@ function loadEngine(htmlPath) {
     normalize: o => clone(E.normalize(o)),
     enhancementVisual: st => E.enhancementVisual(st),
     towerBase163: floor => clone(E.towerBase163(floor)),
+    soloWeb166: st => clone(E.soloWeb166(st)),
     teamWeb161: st => clone(E.teamWeb161(st)),
     snap: st => { try { return E.snap(clone(st)); } catch (e) { return null; } },
     setBoard: (b, uid) => E.setBoard(b, uid),
