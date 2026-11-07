@@ -1857,7 +1857,7 @@ const routes = {
     const p = await session(u.id);
     if(wdOf(u.id)?.friendly173)return send(res,409,{error:'จบการดวลก่อน'});
     if (!takeToken(p)) return send(res, 429, { error: 'ส่งคำสั่งเร็วเกินไป' });
-    if (['fishcast', 'fishreel', 'fishacast', 'fishareel', 'fishbuy', 'fishup'].includes(a)) {
+    if (['fishcast', 'fishreel', 'fishacast', 'fishareel', 'fishhook', 'fishbuy', 'fishup'].includes(a)) {
       const room = DGR.get(DGU.get(u.id));
       if (wdOf(u.id) || (room && room.st === 'fight')) {
         return send(res, 409, { error: 'จบการต่อสู้ก่อนตกปลา' });
