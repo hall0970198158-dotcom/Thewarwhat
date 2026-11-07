@@ -2112,7 +2112,7 @@ const routes = {
     const now = Date.now();
     if (b.leave) { TOWN.delete(u.id); return send(res, 200, { list: [] }); }
     const lake = b.lake === true;
-    TOWN.set(u.id, { lake, n: String(p.s.name || u.display).slice(0, 16), cls: p.s.cls, lvl: p.s.lvl | 0, look: playerLook52(p.s), guild169:p.s.guild169||null, tt: String(p.s.title || '').slice(0, 12), sp: p.s.sup100 ? 1 : 0, sf: p.s.s105 && p.s.s105.fx && p.s.s105.fx.frame ? 1 : 0, sg: p.s.s105 && p.s.s105.fx && p.s.s105.fx.glow ? 1 : 0, x: Math.max(0, Math.min(lake ? 893 : 1440, Number(b.x) || 0)), y: Math.max(0, Math.min(1080, Number(b.y) || 0)), at: now });
+    TOWN.set(u.id, { lake, n: String(p.s.name || u.display).slice(0, 16), cls: p.s.cls, lvl: p.s.lvl | 0, look: playerLook52(p.s), guild169:p.s.guild169||null, tt: String(p.s.title || '').slice(0, 12), sp: p.s.sup100 ? 1 : 0, sf: p.s.s105 && p.s.s105.fx && p.s.s105.fx.frame ? 1 : 0, sg: p.s.s105 && p.s.s105.fx && p.s.s105.fx.glow ? 1 : 0, x: Math.max(0, Math.min(lake ? 893 : 2400, Number(b.x) || 0)), y: Math.max(0, Math.min(lake ? 1080 : 2400, Number(b.y) || 0)), at: now });
     for (const [id, t] of TOWN) if (now - t.at > TOWN_ON_MS * 5) TOWN.delete(id);
     for (const [id, t] of LASTSAY) if (now - t.at > 10000) LASTSAY.delete(id);
     const list = [];
