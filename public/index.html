@@ -1407,7 +1407,7 @@ var WEB160=[
  {name:'ซัพพอร์ต / บัฟ',color:'#93e6a3',nodes:[['ฟื้นกำลัง','ฟื้น HP จากสกิล',.025],['ลมหายใจ','MP สูงสุด',.006],['ชีพจร','HP สูงสุด',.004],['พลังอำนวย','ฟื้น HP จากสกิล',.025],['ฟื้นคืน','ฟื้น HP จากสกิล',.03]]},
  {name:'ก่อกวน / ดีบัฟ',color:'#f4c676',nodes:[['ช่องโหว่','เจาะเกราะ',.003],['อ่านจังหวะ','แม่นยำ',.4],['พลิ้วไหว','หลบ',.25],['ขยายรอยร้าว','พลังดีบัฟบิวด์',.025],['ผนึก','พลังดีบัฟบิวด์',.03]]}
 ];
-var WEB_BRANCH160=25,WEB_TOTAL160=125,WEB_RESET167=300000;
+var WEB_GROUP205=6,WEB_BRANCH160=30,WEB_TOTAL160=150,WEB_RESET167=300000;
 var WEB_MOVES170=[
  [
   {n:'ฟันคู่',m:[.55,0],hits:2,d:'โจมตี 2 ครั้ง ครั้งละ 55%'},
@@ -1454,10 +1454,15 @@ function webPower170(k,hp,maxhp,enemyHp,enemyMax,mp,maxmp){
 function webCooldown170(cd,id,n){
  for(var key in cd)if(key!==id&&cd[key]>0)cd[key]=Math.max(0,cd[key]-n);
 }
-function webRank160(o,i){return Math.max(0,Math.min(5,(o.web167&&o.web167.r&&o.web167.r[i])|0))}
+function webMigrate205(o){
+ var d=o.web167;if(!d||d.schema205===205)return;
+ var old=d.r||{},r={};Object.keys(old).forEach(function(id){var i=Number(id);if(!Number.isInteger(i)||i<0||i>=125)return;var v=Math.max(0,Math.min(5,old[id]|0));if(v)r[Math.floor(i/25)*30+i%25]=v});
+ d.r=r;d.schema205=205;d.rev=(d.rev||0)+1;
+}
+function webRank160(o,i){webMigrate205(o);return Math.max(0,Math.min(5,(o.web167&&o.web167.r&&o.web167.r[i])|0))}
 function webSpent167(o){var spent=0;for(var i=0;i<WEB_TOTAL160;i++)spent+=webRank160(o,i);return spent}
-function webPoints160(o){return Math.max(0,o.lvl-1-webSpent167(o))}
-function webNode167(i){return WEB160[Math.floor(i/WEB_BRANCH160)].nodes[i%5]}
+function webPoints160(o){return Math.max(0,o.lvl-webSpent167(o))}
+function webNode167(i){return WEB160[Math.floor(i/WEB_BRANCH160)].nodes[(i%WEB_BRANCH160)%5]}
 function webValue160(o,key){
  if(!o.web167||!o.web167.r)return 0;
  var sum=0;
@@ -1469,7 +1474,7 @@ function webValue160(o,key){
 }
 function webParents167(i){
  var z=Math.floor(i/WEB_BRANCH160),t=i%WEB_BRANCH160;
- if(t%5)return [i-1];
+ if(t%WEB_GROUP205)return [i-1];
  if(!t)return [];
  return [z,(z+4)%5,(z+1)%5].map(function(lane){return lane*WEB_BRANCH160+t-1});
 }
@@ -1478,7 +1483,7 @@ function webOpen160(o,i){
  return !parents.length||parents.some(function(j){return webRank160(o,j)===5});
 }
 function webLearned165(o,k){
- return o.lvl>=k.req&&webRank160(o,k.web*WEB_BRANCH160+k.step*5+4)===5;
+ return o.lvl>=k.req&&webRank160(o,k.web*WEB_BRANCH160+k.step*WEB_GROUP205+WEB_GROUP205-1)===5;
 }
 function webLoadout165(o){
  var learned=WEB160.flatMap(function(z){return z.moves}).filter(function(k){return webLearned165(o,k)});
@@ -1506,7 +1511,7 @@ function webEquipHtml165(k){
  var list=webLoadout165(s),at=list.indexOf(k);
  if(at>=0)return '<small>ปลดล็อกแล้ว · ช่อง '+(at+1)+'</small>';
  if(!webLearned165(s,k))return '<small>อัปจุดนี้เต็ม 5/5 และถึง Lv.'+k.req+'</small>';
- var id=k.web*WEB_BRANCH160+k.step*5+4;
+ var id=k.web*WEB_BRANCH160+k.step*WEB_GROUP205+WEB_GROUP205-1;
  return '<span class="web-equip165">'+[0,1,2,3,4].map(function(slot){
   return '<button class="btn sm" data-a="webequip" data-p="'+id+':'+slot+'"'+(webBusy167()?' disabled':'')+'>แทนช่อง '+(slot+1)+'</button>';
  }).join(' ')+'</span>';
@@ -1514,11 +1519,11 @@ function webEquipHtml165(k){
 function webAction160(a,p){
  if(a!=='webup'&&a!=='webequip'&&a!=='webreset167')return false;
  if(!s.created||s.battle||s.dup||s.res||(!SV&&webBusy167()))return true;
- var d=s.web167||(s.web167={r:{},rev:0});
+ webMigrate205(s);var d=s.web167||(s.web167={r:{},rev:0,schema205:205});
  if(a==='webreset167'){
   if(String(d.rev||0)!==p||!webSpent167(s)||s.gold<WEB_RESET167)return true;
   s.gold-=WEB_RESET167;
-  s.web167={r:{},rev:(d.rev||0)+1};
+  s.web167={r:{},rev:(d.rev||0)+1,schema205:205};
   s.teamOrder162=[];
   if(Array.isArray(s.autoOrder162))s.autoOrder162=s.autoOrder162.map(function(id){return String(id).startsWith('web')?'':id});
   say('รีบิวด์แล้ว คืนแต้มทั้งหมด');
@@ -1526,7 +1531,7 @@ function webAction160(a,p){
   var match=/^(\d{1,3}):([0-5])$/.exec(p||'');
   if(!match||Number(match[1])>=WEB_TOTAL160)return true;
   var i=Number(match[1]),z=Math.floor(i/WEB_BRANCH160),t=i%WEB_BRANCH160,v=Number(match[2]);
-  var k=t%5===4?WEB160[z].moves[Math.floor(t/5)]:null;
+  var k=t%WEB_GROUP205===WEB_GROUP205-1?WEB160[z].moves[Math.floor(t/WEB_GROUP205)]:null;
   if(a==='webup'){
    var rank=webRank160(s,i);
    if(rank!==v||rank>=5||!webPoints160(s)||!webOpen160(s,i))return true;
@@ -1551,16 +1556,16 @@ function skillArt168(k){
  return '<span class="skill-art168" aria-hidden="true" style="--node-x:'+k.step*100/6+'%;--node-y:'+k.web*25+'%"></span>';
 }
 function webRune168(step){
- return step%5===4?8:(step-Math.floor(step/5))%8;
+ return step%WEB_GROUP205===WEB_GROUP205-1?8:(step-Math.floor(step/WEB_GROUP205))%8;
 }
 function webPopup166(){
  if((BAWAY||s.tab)!=='char'||s.chtab!=='build')return '';
  if(WEB_UI160.reset)return '<div class="auto-modal" role="dialog" aria-modal="true" aria-labelledby="nodeTitle166"><section class="auto-panel"><header><h2 id="nodeTitle166">รีบิวด์</h2><button class="btn" data-a="webclose166" aria-label="ปิด">✕</button></header><div class="auto-content"><p>ใช้ 300,000 ทอง คืน '+webSpent167(s)+' แต้ม และล้างสกิลบิวด์ที่ปลดแล้ว</p></div><footer><button class="btn danger" data-a="webresetconfirm167"'+(webBusy167()||s.gold<WEB_RESET167||!webSpent167(s)?' disabled':'')+'>ยืนยันรีบิวด์</button></footer></section></div>';
  if(!WEB_UI160.open)return '';
- var i=WEB_UI160.node,z=Math.floor(i/WEB_BRANCH160),t=i%WEB_BRANCH160,zone=WEB160[z],node=webNode167(i),k=t%5===4?zone.moves[Math.floor(t/5)]:null;
+ var i=WEB_UI160.node,z=Math.floor(i/WEB_BRANCH160),t=i%WEB_BRANCH160,zone=WEB160[z],node=webNode167(i),k=t%WEB_GROUP205===WEB_GROUP205-1?zone.moves[Math.floor(t/WEB_GROUP205)]:null;
  var rank=webRank160(s,i),pts=webPoints160(s),ready=webOpen160(s,i),busy=webBusy167();
  var bonus=node[2]<.1?node[2]*100:node[2],fmt=function(v){return String(Math.round(v*100)/100)+'%'};
- return '<div class="auto-modal" role="dialog" aria-modal="true" aria-labelledby="nodeTitle166"><section class="auto-panel node-popup166" style="--web-color:'+zone.color+'"><header>'+nodeArt166(z,webRune168(t))+'<div><small>'+esc(zone.name)+' · จุด '+(t%5+1)+'/5 · ช่วง Lv.'+(Math.floor(t/5)+1)*30+'</small><h2 id="nodeTitle166">'+esc(node[0])+'</h2></div><button class="btn" data-a="webclose166" aria-label="ปิด">✕</button></header>'+
+ return '<div class="auto-modal" role="dialog" aria-modal="true" aria-labelledby="nodeTitle166"><section class="auto-panel node-popup166" style="--web-color:'+zone.color+'"><header>'+nodeArt166(z,webRune168(t))+'<div><small>'+esc(zone.name)+' · จุด '+(t%WEB_GROUP205+1)+'/6 · ช่วง Lv.'+(Math.floor(t/WEB_GROUP205)+1)*30+'</small><h2 id="nodeTitle166">'+esc(node[0])+'</h2></div><button class="btn" data-a="webclose166" aria-label="ปิด">✕</button></header>'+
  '<div class="auto-content"><p><b>ขั้น '+rank+'/5 · แต้มเหลือ '+pts+'</b></p><p>'+esc(node[1])+' ต่อขั้น +'+fmt(bonus)+'<br>ปัจจุบัน +'+fmt(bonus*rank)+(rank<5?' → ขั้นถัดไป +'+fmt(bonus*(rank+1)):'')+'</p>'+
  (!ready?'<p class="hint">ต้องอัปจุดก่อนหน้าให้เต็ม 5/5</p>':'')+
  (k?'<div class="reveal">'+skillArt168(k)+' <b>'+k.n+' Lv.'+k.req+'</b><p>'+webSkillDesc160(k)+' · MP '+k.mp+' · คูลดาวน์ '+k.cd+'</p>'+webEquipHtml165(k)+'</div>':'')+
@@ -1570,28 +1575,28 @@ function webHtml160(){
  var pts=webPoints160(s),paths='',buttons='',labels='',zoom=WEB_UI160.zoom;
  var nodes=Array.from({length:WEB_TOTAL160},function(_,i){
   var a=Math.floor(i/WEB_BRANCH160)*Math.PI*2/5-Math.PI/2,r=72+i%WEB_BRANCH160*32;
-  return [900+Math.cos(a)*r,900+Math.sin(a)*r];
+  return [1100+Math.cos(a)*r,1100+Math.sin(a)*r];
  });
  function line(a,b,color,active,cross){
   return '<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'" stroke="'+color+'" stroke-width="'+(active?4:2)+'" opacity="'+(active?.85:.32)+'"'+(cross?' stroke-dasharray="8 9"':'')+'/>';
  }
  for(var i=0;i<WEB_TOTAL160;i++){
-  var z=Math.floor(i/WEB_BRANCH160),t=i%WEB_BRANCH160,p=nodes[i],lane=WEB160[z],lv=webRank160(s,i),ready=webOpen160(s,i),mark=t%5===4;
+  var z=Math.floor(i/WEB_BRANCH160),t=i%WEB_BRANCH160,p=nodes[i],lane=WEB160[z],lv=webRank160(s,i),ready=webOpen160(s,i),mark=t%WEB_GROUP205===WEB_GROUP205-1;
   var parents=webParents167(i);
-  if(!parents.length)paths+=line([900,900],p,lane.color,true,false);
+  if(!parents.length)paths+=line([1100,1100],p,lane.color,true,false);
   parents.forEach(function(j){
    var cross=Math.floor(j/WEB_BRANCH160)!==z;
    paths+=line(nodes[j],p,cross?'#8a96ae':lane.color,webRank160(s,j)===5,cross);
   });
-  var milestone=(Math.floor(t/5)+1)*30;
+  var milestone=(Math.floor(t/WEB_GROUP205)+1)*30;
   if(mark)labels+='<text x="'+(p[0]+24)+'" y="'+(p[1]+6)+'" fill="'+lane.color+'">Lv.'+milestone+'</text>';
-  buttons+='<button class="web-node160'+(mark?' milestone167':'')+'" data-a="webselect" data-p="'+i+'" aria-label="'+lane.name+' ช่วง Lv.'+milestone+' จุด '+(t%5+1)+' ขั้น '+lv+'" style="left:'+p[0]/18+'%;top:'+p[1]/18+'%;--web-color:'+lane.color+';opacity:'+(ready?1:.62)+'">'+nodeArt166(z,webRune168(t))+'<em class="web-index203">'+(t+1)+'</em><small>'+lv+'/5</small></button>';
+  buttons+='<button class="web-node160'+(mark?' milestone167':'')+'" data-a="webselect" data-p="'+i+'" aria-label="'+lane.name+' ช่วง Lv.'+milestone+' จุด '+(t%WEB_GROUP205+1)+' ขั้น '+lv+'" style="left:'+p[0]/22+'%;top:'+p[1]/22+'%;--web-color:'+lane.color+';opacity:'+(ready?1:.62)+'">'+nodeArt166(z,webRune168(t))+'<em class="web-index203">'+(t+1)+'</em><small>'+lv+'/5</small></button>';
  }
  return '<section class="card web160"><div class="row"><h2>ผังบิวด์ใยแมงมุม</h2><b>แต้มเหลือ '+pts+'</b></div>'+
- '<p class="hint">สายละ 25 จุด · รวม 125 จุด · เลข 1–25 ไล่จากกลางถึง Lv.150 · อัปจุดก่อนหน้าเต็ม 5/5 เพื่อไปต่อ</p>'+
+ '<p class="hint">สายละ 30 จุด · รวม 150 จุด · เลข 1–30 · จุดละ 5 แต้ม · ทุก 6 จุดปลดล็อกสกิลช่วง Lv.30–150 · อัปจุดก่อนหน้าเต็ม 5/5 เพื่อไปต่อ</p>'+
  '<div class="web-legend160">'+WEB160.map(function(w){return '<span style="color:'+w.color+'">'+w.name+'</span>'}).join('')+'</div>'+
  '<div class="web-legend160"><button class="btn sm" data-a="webzoom" data-p="-" aria-label="ย่อผัง">−</button><button class="btn sm" data-a="webzoom" data-p="+" aria-label="ขยายผัง">+</button><button class="btn sm" data-a="webcenter168">กลับจุดเริ่ม</button><button class="btn sm" data-a="weboverview168">ดูทั้งผัง</button></div>'+
- '<div class="web-scroll160"><div class="web-map160" style="width:'+Math.round(1800*zoom)+'px;height:'+Math.round(1800*zoom)+'px;--node-size:'+(27*zoom)+'px"><svg viewBox="0 0 1800 1800" aria-hidden="true">'+paths+labels+'<circle cx="900" cy="900" r="18" fill="#f4cd84"/></svg>'+buttons+'</div></div>'+
+ '<div class="web-scroll160"><div class="web-map160" style="width:'+Math.round(2200*zoom)+'px;height:'+Math.round(2200*zoom)+'px;--node-size:'+(27*zoom)+'px"><svg viewBox="0 0 2200 2200" aria-hidden="true">'+paths+labels+'<circle cx="1100" cy="1100" r="18" fill="#f4cd84"/></svg>'+buttons+'</div></div>'+
  '<button class="btn danger" data-a="webresetopen167"'+(!webSpent167(s)||s.gold<WEB_RESET167||webBusy167()?' disabled':'')+'>รีบิวด์ · 300,000 ทอง</button></section>';
 }
 function webView168(){
@@ -1610,7 +1615,7 @@ function webZoom168(a,p){
  if(a==='webcenter168'){
   WEB_UI160.zoom=1;WEB_UI160.view=[.5,.5];
  }else if(a==='weboverview168'){
-  WEB_UI160.zoom=Math.min(panel.clientWidth,panel.clientHeight)/1800;WEB_UI160.view=[.5,.5];
+  WEB_UI160.zoom=Math.min(panel.clientWidth,panel.clientHeight)/2200;WEB_UI160.view=[.5,.5];
  }else{
   WEB_UI160.view=[(panel.scrollLeft+panel.clientWidth/2)/panel.scrollWidth,(panel.scrollTop+panel.clientHeight/2)/panel.scrollHeight];
   WEB_UI160.zoom=Math.min(1.45,Math.max(.15,WEB_UI160.zoom*(p==='+'?1.25:.8)));
@@ -2262,7 +2267,7 @@ function fresh(){var o={job4:null,j4Quest:null,j4Version:J4_SAVE_VERSION,day:1,g
  owned:{hat:['none'],face:['none'],wing:['none'],pet:['none'],aura:['none'],dye:['def']}};
  return o}
 function normalize(o){
- gemNormalize140(o);
+ webMigrate205(o);gemNormalize140(o);
  var arSaved73=o.battle&&o.battle.challenge73?{b:o.battle,hp:o.hp,mp:o.mp}:null;
  var f=fresh();o.guild=null;o.guild169=null;o.war=null;o.wb106=0;o.fac=(o.fac>=0&&o.fac<4&&o.fac!==null)?(o.fac|0):null;o.facTry=o.facTry||null;o.dq=(o.dq&&o.dq.p)?o.dq:null;o.title=(typeof o.title==='string')?o.title:'';o.dtab='';o.bagSel='';o.bagCf='';o.lg=(o.lg&&o.lg.last>0)?{last:o.lg.last|0,streak:Math.max(1,Math.min(7,o.lg.streak|0))}:{last:0,streak:0};o.lg30=o.lg30&&typeof o.lg30==='object'?{last:Math.max(0,o.lg30.last|0),days:Math.max(0,Math.min(30,o.lg30.days|0)),cycles:Math.max(0,o.lg30.cycles|0)}:{last:0,days:0,cycles:0};o.dqOpen=false;o.tower=(o.tower&&o.tower.f>=1)?{f:o.tower.f|0,best:o.tower.best|0}:{f:1,best:0};o.facClaim=o.facClaim||'';o.facLast=o.facLast||null;
  if(o.web160||o.web161||o.soloSlots165||o.teamSlots165){
@@ -3556,7 +3561,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B203';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B205';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -9500,6 +9505,12 @@ function faceTemplate201(eye){
  if(FACE_BASE201!==im){FACE_BASE201=im;FACE_COLORS201.clear()}
  var cached=FACE_COLORS201.get(eye);if(cached)return cached;
  var cv=document.createElement('canvas');cv.width=1536;cv.height=192;var c=cv.getContext('2d');c.drawImage(im,0,0);
+ var shade=c.getImageData(0,0,1536,192),sp=shade.data;
+ for(var d=0;d<8;d++)for(var y=97;y<107;y++)for(var x=48;x<145;x++){
+  var i=(y*1536+d*192+x)*4,r=sp[i],g=sp[i+1],b=sp[i+2];
+  if(sp[i+3]>0&&r>100&&g>55&&r>g&&g>b){var strength=Math.min(.28,(y-96)*.035);sp[i]=Math.round(r*(1-strength*.65));sp[i+1]=Math.round(g*(1-strength));sp[i+2]=Math.round(b*(1-strength));}
+ }
+ c.putImageData(shade,0,0);
  if(eye!=='default'){
  var pixels=c.getImageData(0,0,1536,192),p=pixels.data,rgb=colorRGB200(EYE_COLORS200[eye][1]);
  FACE_ANCHOR202.forEach(function(a,dir){if(!a)return;a.e.forEach(function(e){for(var y=Math.ceil(e[1]-6);y<=Math.floor(e[1]+6);y++)for(var x=Math.ceil(e[0]-4.5);x<=Math.floor(e[0]+4.5);x++){
@@ -9525,9 +9536,20 @@ function headAtlas200(im,key,look){
  var bx=dir*192,by=row*192,a=FACE_ANCHOR200[dir];
  // Replace the baked head; leave weapons, class outfit, hands and body in the original atlas.
  c.clearRect(bx+43,by+8,108,99);
- c.drawImage(face201,dir*192,0,192,192,bx,by,192,192);
- c.drawImage(tint,dir*192,0,192,192,bx+9.6,by+10,172.8,172.8);
- var restore=c.getImageData(bx,by,192,192),rp=restore.data;for(var yy=62;yy<107;yy++)for(var xx=43;xx<151;xx++){if(xx>=65&&xx<=130)continue;var si=((by+yy)*1536+bx+xx)*4,di=(yy*192+xx)*4,rr=source[si],gg=source[si+1],bb=source[si+2];if(source[si+3]>120&&Math.max(rr,gg,bb)-Math.min(rr,gg,bb)>48&&!(Math.max(rr,gg,bb)-Math.min(rr,gg,bb)<72&&bb>=rr*.88&&gg>=rr*.82)&&!(rr>125&&gg>70&&rr>gg*1.03&&gg>bb*1.06)){for(var kk=0;kk<4;kk++)rp[di+kk]=source[si+kk]}}c.putImageData(restore,bx,by);
+ // Recover the collar and shoulder tips before compositing the new head.
+ // The old rectangular head cutout also removed these parts of the outfit.
+ var restore=c.getImageData(bx,by,192,192),rp=restore.data;
+ for(var yy=62;yy<107;yy++)for(var xx=43;xx<151;xx++){
+  var si=((by+yy)*1536+bx+xx)*4,di=(yy*192+xx)*4,rr=source[si],gg=source[si+1],bb=source[si+2],spread=Math.max(rr,gg,bb)-Math.min(rr,gg,bb);
+  var nativeHair=spread<72&&bb>=rr*.88&&gg>=rr*.82;
+  var shoulder=yy>=92&&(xx<79||xx>115);
+  var accessory=(xx<65||xx>130)&&spread>48&&!(rr>125&&gg>70&&rr>gg*1.03&&gg>bb*1.06);
+  if(source[si+3]>120&&!nativeHair&&(shoulder||accessory))for(var kk=0;kk<4;kk++)rp[di+kk]=source[si+kk];
+ }
+ c.putImageData(restore,bx,by);
+ // Keep the face and hair together; trim the long neck below the jaw.
+ c.drawImage(face201,dir*192,0,192,102,bx,by+4,192,102);
+ c.drawImage(tint,dir*192,0,192,192,bx+9.6,by+14,172.8,172.8);
  }
  }else if(L.hairColor200!=='silver'){
  var d=c.getImageData(0,0,1536,384),p=d.data,rgb=colorRGB200(HAIR_COLORS200[L.hairColor200][1]);
