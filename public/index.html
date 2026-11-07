@@ -1003,6 +1003,13 @@ body.view-portrait #gameWrap #townStage .town-bottom .map-button197{min-width:44
 .fs160st{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:100%;margin:6px 0}.fs160st i{font-style:normal;font-size:11px;color:#a9c9d8;background:rgba(255,255,255,.06);border-radius:8px;padding:5px 2px}.fs160st i b{font-size:14px;color:#fff}
 .fs160card .fish-legacy155{width:84px;height:84px;font-size:58px;display:grid;place-items:center}
 .fs160tools .btn{white-space:nowrap}#fs160info{min-width:0;flex:1 1 auto}
+.petsk207{margin:8px 0;padding:10px;border-radius:12px;background:rgba(120,200,255,.08);border:1px solid rgba(140,210,255,.35);display:grid;gap:6px}
+.petsk207.sp{background:linear-gradient(135deg,rgba(255,200,80,.16),rgba(255,90,60,.12));border-color:#ffd23c;box-shadow:0 0 14px rgba(255,200,60,.25)}
+.petsk207>b{color:#ffe08a}.petsk207 small{color:#b9c9d7}.petsk207r{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.petsk207r span{font-size:11px;text-align:center;padding:5px 3px;border-radius:8px;background:rgba(0,0,0,.25);color:#c8d6e0}.petsk207r span i{font-style:normal;color:#fff;font-size:11px}
+.petsk207r span.on{outline:2px solid #6fe07a;background:rgba(80,200,110,.15)}
+.pvpdef208r{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:6px;margin:8px 0}.pvpdef208r label{display:grid;gap:3px;font-size:12px;color:#b9c9d7}
+.pvpdef208r select{padding:7px;border-radius:8px;background:#14233a;color:#eaf2ff;border:1px solid #3d5a80}.pvpdef208h{margin:6px 0 0;padding-left:18px;font-size:12px;color:#c8d6e0}
 </style>
 
 <section id="login" class="login">
@@ -1673,7 +1680,7 @@ var COS={
 };
 var SLOT_N={hat:'หมวก',face:'แว่น / หน้ากาก',wing:'ปีก',pet:'สัตว์เลี้ยง',aura:'ออร่า',dye:'สีชุด'};
 var RAR_N={1:'ธรรมดา',2:'หายาก',3:'ตำนาน',4:'เทพ'};
-var BOX_PRICE=1000000,BOX_REAL=0.1;
+var BOX_PRICE=2000000,BOX_REAL=0.1;
 var JUNK=['รองเท้าเก่า','กระป๋องสนิม','ถุงเท้าขาด','ก้างปลา','ก้อนหินธรรมดา','เศษผ้าขาด','ขวดแตก','กิ่งไม้ผุ'];
 /* B80: a hollow energy cocoon with depth-sorted orbiting flame streams. */
 var AURA_ART76=new Map();
@@ -1859,7 +1866,7 @@ function count70(n,max){return Number.isFinite(n)?Math.max(0,Math.min(max,Math.f
 function bookNormalize70(o){
  var b=o.book70&&typeof o.book70==='object'&&!Array.isArray(o.book70)?o.book70:{},entries=Array.isArray(b.entries)?b.entries:[],pets=b.pets&&typeof b.pets==='object'?b.pets:{};
  b.entries=Array.from({length:ZONES.length*3},function(_,i){var e=entries[i]||{},k=count70(e.k,1e9),r=Math.min(k,count70(e.r,1e9));return {k:k,r:r,s:Math.max(k,count70(e.s,1e9)),rs:Math.max(r,Math.min(count70(e.rs,1e9),Math.max(k,count70(e.s,1e9))))}});
- b.pets={};PET_IDS70.forEach(function(id){var p=pets[id]||{},bond=count70(p.bond,500),max=bond>=500?3:bond>=100?2:1,stage=Math.max(1,Math.min(max,count70(p.stage,3)||1));b.pets[id]={bond:bond,stage:stage,form:Math.max(1,Math.min(stage,count70(p.form,3)||stage))}});b.v=1;o.book70=b;return b;
+ b.pets={};PET_IDS70.forEach(function(id){var p=pets[id]||{},bond=count70(p.bond,7000),stage=Math.max(1,Math.min(3,count70(p.stage,3)||1));b.pets[id]={bond:bond,stage:stage,form:Math.max(1,Math.min(stage,count70(p.form,3)||stage))}});b.v=1;o.book70=b;return b;
 }
 function bookState70(){return s.book70||bookNormalize70(s)}
 function bookMeta70(id){if(!Number.isInteger(id)||id<0||id>=ZONES.length*3)return null;var z=Math.floor(id/3),i=id%3,d=ZONES[z].mobs[i===2?1:i];return {id:id,z:z,i:i,k:d.k,n:i===2?BOSSES[z]:d.n,boss:i===2}}
@@ -1869,16 +1876,16 @@ function bookRegister70(b){
  if(!b)return;(b.grp?b.grp.map(function(g){return g.e}):[b.e]).forEach(function(e){if(!bookEligible70(b,e)||e.tag70)return;var id=bookIndex70(e),a=bookState70().entries[id];e.tag70=1;e.rare70=id%3!==2&&Math.random()<.02;a.s=Math.min(1e9,a.s+1);if(e.rare70){a.rs=Math.min(1e9,a.rs+1);say('✦ พบ '+e.n+' ร่างหายาก! ชนะเพื่อรับชิ้นส่วนดารา')}});
 }
 function petOwned70(o,id){return PET_IDS70.indexOf(id)>=0&&o.owned&&Array.isArray(o.owned.pet)&&o.owned.pet.indexOf(id)>=0}
-function petForm70(o,id){if(!petOwned70(o,id))return 1;var p=o.book70&&o.book70.pets&&o.book70.pets[id];if(!p)return 1;var max=p.bond>=500?3:p.bond>=100?2:1,st=Math.max(1,Math.min(max,p.stage|0));return Math.max(1,Math.min(st,p.form|0||st))}
+function petForm70(o,id){if(!petOwned70(o,id))return 1;var p=o.book70&&o.book70.pets&&o.book70.pets[id];if(!p)return 1;var st=Math.max(1,Math.min(3,p.stage|0));return Math.max(1,Math.min(st,p.form|0||st))}
 function bookDefeat70(b,e){
  if(!bookEligible70(b,e)||e.done70)return;e.done70=1;var id=bookIndex70(e),book=bookState70(),a=book.entries[id],old=a.k,oldR=a.r;a.k=Math.min(1e9,a.k+1);a.s=Math.max(a.s,a.k);
  if(e.rare70&&e.tag70&&id%3!==2){a.r=Math.min(a.k,a.r+1);a.rs=Math.max(a.rs,a.r);say('✦ ชิ้นส่วนดารา '+e.n+' +1 (สะสม '+a.r+'/3 เพื่อปลดล็อกฉายา)')}
  if(old<100&&a.k>=100)say('ปลดล็อกฉายา นักล่า'+bookMeta70(id).n+'!');if(oldR<3&&a.r>=3)say('ปลดล็อกฉายา ผู้พิชิตดารา'+bookMeta70(id).n+'!');
- var pet=s.look&&s.look.pet;if(petOwned70(s,pet)&&Number.isFinite(e.lvl)&&e.lvl>=s.lvl-15){var p=book.pets[pet],was=p.bond;p.bond=Math.min(500,p.bond+(e.mapBoss?3:1));if(was<100&&p.bond>=100||was<500&&p.bond>=500)say('♥ '+(COS.pet.find(function(x){return x.id===pet})||{n:pet}).n+' พร้อมวิวัฒนาการ! เปิดเมนูสัตว์เลี้ยง')}
+ var pet=s.look&&s.look.pet;if(petOwned70(s,pet)&&Number.isFinite(e.lvl)&&e.lvl>=s.lvl-15){var p=book.pets[pet],was=p.bond;p.bond=Math.min(7000,p.bond+(e.mapBoss?3:1));if(was<3000&&p.bond>=3000||was<7000&&p.bond>=7000)say('♥ '+(COS.pet.find(function(x){return x.id===pet})||{n:pet}).n+' พร้อมวิวัฒนาการ! เปิดเมนูสัตว์เลี้ยง')}
 }
 function petAction70(a,p){
  if(a!=='petevolve70'&&a!=='petform70')return false;if(!s.created)return true;var q=String(p).split(':'),id=q[0],n=Number(q[1]);if(q.length!==2||!/^\d+$/.test(q[1])||!petOwned70(s,id))return true;
- var b=bookState70(),v=b.pets[id];if(a==='petevolve70'){if(s.battle||s.res||s.autoHunt||s.autoTower||n!==v.stage||n>=3||v.bond<(n===1?100:500))return true;v.stage++;v.form=v.stage;say('♥ '+COS.pet.find(function(x){return x.id===id}).n+' วิวัฒนาการขั้น '+v.stage+'! ไม่มีโบนัสค่าสเตตัส')}
+ var b=bookState70(),v=b.pets[id];if(a==='petevolve70'){if(s.battle||s.res||s.autoHunt||s.autoTower||n!==v.stage||n>=3||v.bond<(n===1?3000:7000))return true;v.stage++;v.form=v.stage;say('♥ '+COS.pet.find(function(x){return x.id===id}).n+' วิวัฒนาการขั้น '+v.stage+'! สกิลพิเศษแรงขึ้น')}
  else{if(!Number.isInteger(n)||n<1||n>v.stage)return true;v.form=n}save();render();return true;
 }
 function bookTitles70(){for(var id=0;id<ZONES.length*3;id++)(function(id){var m=bookMeta70(id);TITLES.push({id:'b70k'+id,n:'นักล่า'+m.n,d:'ปราบ '+m.n+' 100 ตัว (เริ่มนับ B70)',c:'#9edbd3',cur:function(){return bookState70().entries[id].k},need:100});if(!m.boss)TITLES.push({id:'b70r'+id,n:'ผู้พิชิตดารา'+m.n,d:'ชิ้นส่วนดารา '+m.n+' 3 ชิ้น · ผูกไอดี · ไม่มีค่าสเตตัส',c:'#f4ce7c',cur:function(){return bookState70().entries[id].r},need:3})})(id)}
@@ -1888,8 +1895,8 @@ function bookHtml70(){
  return '<section class="card bio70-hero"><small>บันทึกนักผจญภัย</small><h2>สมุดมอนสเตอร์</h2><p>ค้นพบ '+total+'/'+(ZONES.length*3)+' ชนิด · ร่างหายากพบได้ 2% ต่อมอนล่าปกติ</p><p class="hint">เริ่มนับจาก B70 · นับแต่ตัวที่ล้มจริง รวมตัวในฝูง · ไม่รวม PvP หอคอย ดันเจี้ยน บอสโลก และรางวัลออฟไลน์</p></section><section class="card"><div class="bio70-zones">'+ZONES.map(function(v,n){return '<button class="btn" data-a="bookzone70" data-p="'+n+'" aria-pressed="'+(z===n)+'">'+esc(v.n)+'</button>'}).join('')+'</div><div class="bio70-grid">'+[0,1,2].map(function(n){var d=bookMeta70(z*3+n),a=book.entries[d.id];return '<button class="bio70-tile" data-a="bookpick70" data-p="'+n+'" aria-pressed="'+(i===n)+'">'+(a.s?'<img src="'+bookIcon70(d,false)+'" alt="">':'<span class="bio70-unknown">?</span>')+'<b>'+esc(a.s?d.n:n===2?'บอสที่ยังไม่พบ':'ยังไม่เคยพบ')+'</b><small>'+(a.s?'ปราบ '+a.k+' ตัว':'ไปสำรวจแผนที่')+'</small>'+(a.r?'<em>✦ หายาก '+a.r+'</em>':'')+'</button>'}).join('')+'</div></section><section class="card bio70-detail"><div class="bio70-art"><canvas id="bioPreview70" width="300" height="190" aria-label="ตัวอย่างมอนสเตอร์"></canvas><small>'+(rare?'ตัวอย่างร่างหายาก · ไม่ใช่รางวัลที่ได้รับ':'ตัวอย่างรูปลักษณ์')+'</small></div><div><h3>'+esc(m.n)+(m.boss?' · บอสสนาม':'')+'</h3><p class="hint">'+esc(ZONES[z].n)+' · Lv'+ZONES[z].rec+'–'+ZONES[z].max+'</p>'+(!m.boss?'<div class="grid2"><button class="btn" data-a="bookrare70" data-p="0" aria-pressed="'+!rare+'">ปกติ</button><button class="btn" data-a="bookrare70" data-p="1" aria-pressed="'+rare+'">✦ หายาก</button></div>':'')+'<p>พบ '+e.s+' · ปราบ '+e.k+' ตัว</p>'+goalMeter69(Math.min(100,e.k),100,'จำนวนปราบเพื่อฉายา')+'<button class="btn" data-a="title" data-p="b70k'+id+'"'+(e.k<100?' disabled':'')+'>'+(s.title==='b70k'+id?'ถอดฉายา':'ฉายา นักล่า'+esc(m.n))+'</button>'+(!m.boss?'<p>✦ พบหายาก '+e.rs+' · ชนะ '+e.r+'</p><p class="hint">ชิ้นส่วนดารา '+esc(m.n)+' '+e.r+'/3 · ได้แน่นอนเมื่อชนะร่างหายาก · ผูกไอดี ไม่มีการซื้อขายหรือแลกเงิน</p>'+goalMeter69(Math.min(3,e.r),3,'ชิ้นส่วนดาราเพื่อฉายา')+'<button class="btn" data-a="title" data-p="b70r'+id+'"'+(e.r<3?' disabled':'')+'>'+(s.title==='b70r'+id?'ถอดฉายาหายาก':'ฉายา ผู้พิชิตดารา'+esc(m.n))+'</button>':'')+'<p class="hint">ร่างหายากมีสี ลวดลาย และประกายเฉพาะ พลังต่อสู้และรางวัลเดิมเท่าร่างปกติ ฉายาใหม่ไม่มีค่าสเตตัส</p></div></section>';
 }
 function petHtml70(){
- var id=PET_IDS70.indexOf(BOOK_UI70.pet)>=0?BOOK_UI70.pet:'dragon',meta=COS.pet.find(function(x){return x.id===id}),owned=petOwned70(s,id),p=bookState70().pets[id],form=BOOK_UI70.form||p.form,next=p.stage===1?100:500,busy=!!s.battle||!!s.res||s.autoHunt||s.autoTower,r=dgRoom();busy=busy||r&&r.st==='fight';
- return '<section class="card bio70-hero"><small>เติบโตไปกับนักผจญภัย</small><h2>สัตว์เลี้ยงวิวัฒนาการ</h2><p>พาสัตว์เลี้ยงที่สวมใส่ออกล่า เพื่อสะสมความผูกพัน</p><p class="hint">ชนะมอนที่เลเวลต่ำกว่าคุณไม่เกิน 15 ระดับ +1 · บอสสนาม +3 · นับทุกตัวที่ล้มจริง ไม่รวมรางวัลออฟไลน์และโหมดกิจกรรม</p></section><section class="card"><div class="bio70-pets">'+PET_IDS70.map(function(k){var a=COS.pet.find(function(x){return x.id===k});return '<button class="btn" data-a="petpick70" data-p="'+k+'" aria-pressed="'+(id===k)+'">'+esc(a.n)+(petOwned70(s,k)?'':' 🔒')+'</button>'}).join('')+'</div><h3>'+esc(meta.n)+(owned?' · ปลดล็อกขั้น '+p.stage:' · ยังไม่มีสัตว์เลี้ยงนี้')+'</h3><canvas id="petPreview70" width="540" height="200" aria-label="ตัวอย่างวิวัฒนาการสามขั้น"></canvas><div class="pet70-forms">'+[1,2,3].map(function(n){return '<button class="btn" data-a="petpreview70" data-p="'+n+'" aria-pressed="'+(form===n)+'">ขั้น '+n+' · '+esc(petN131(id,n))+'<br><small>'+(owned&&n<=p.stage?'ปลดล็อกแล้ว':'ตัวอย่าง')+'</small></button>'}).join('')+'</div><p class="hint">ภาพทั้ง 3 ขั้นเป็นตัวอย่าง ดูก่อนได้ทุกตัว การใส่จริงต้องเป็นเจ้าของและปลดล็อกขั้นนั้นก่อน</p><div class="bio70-bond"><span>♥ ความผูกพัน</span><b>'+p.bond+' / '+(p.stage===3?500:next)+'</b></div>'+goalMeter69(Math.min(p.bond,p.stage===3?500:next),p.stage===3?500:next,'ความผูกพันสัตว์เลี้ยง')+'<div class="grid2"><button class="btn primary" data-a="petevolve70" data-p="'+id+':'+p.stage+'"'+(!owned||busy||p.stage>=3||p.bond<next?' disabled':'')+'>'+(p.stage>=3?'วิวัฒนาการครบแล้ว':'วิวัฒนาการขั้น '+(p.stage+1))+'</button><button class="btn" data-a="petform70" data-p="'+id+':'+form+'"'+(!owned||form>p.stage?' disabled':'')+'>ใช้รูปลักษณ์ขั้น '+form+'</button></div>'+(owned?'<button class="btn" data-a="eq" data-p="pet:'+id+'">'+(s.look.pet===id?'สัตว์เลี้ยงนี้กำลังติดตามคุณ':'พาสัตว์เลี้ยงนี้ออกล่า')+'</button>':'<p class="hint">หาได้จากกล่องสุ่มของแต่งตัวเดิม ไม่มีการแจกหรือซื้อขั้นวิวัฒนาการ</p>')+(busy?'<p class="hint">จบการต่อสู้และปิดออโต้ก่อนวิวัฒนาการ</p>':'')+'<p class="hint">ขั้น 2 ใช้ความผูกพันสะสม 100 · ขั้น 3 ใช้ 500 · ไม่หักความผูกพัน ไม่มีค่าใช้จ่ายหรือโบนัสค่าสเตตัส ความคืบหน้าแยกตามสัตว์เลี้ยง</p></section>';
+ var id=PET_IDS70.indexOf(BOOK_UI70.pet)>=0?BOOK_UI70.pet:'dragon',meta=COS.pet.find(function(x){return x.id===id}),owned=petOwned70(s,id),p=bookState70().pets[id],form=BOOK_UI70.form||p.form,next=p.stage===1?3000:7000,busy=!!s.battle||!!s.res||s.autoHunt||s.autoTower,r=dgRoom();busy=busy||r&&r.st==='fight';
+ return '<section class="card bio70-hero"><small>เติบโตไปกับนักผจญภัย</small><h2>สัตว์เลี้ยงวิวัฒนาการ</h2><p>พาสัตว์เลี้ยงที่สวมใส่ออกล่า เพื่อสะสมความผูกพัน</p><p class="hint">ชนะมอนที่เลเวลต่ำกว่าคุณไม่เกิน 15 ระดับ +1 · บอสสนาม +3 · นับทุกตัวที่ล้มจริง ไม่รวมรางวัลออฟไลน์และโหมดกิจกรรม</p></section><section class="card"><div class="bio70-pets">'+PET_IDS70.map(function(k){var a=COS.pet.find(function(x){return x.id===k});return '<button class="btn" data-a="petpick70" data-p="'+k+'" aria-pressed="'+(id===k)+'">'+esc(a.n)+(petOwned70(s,k)?'':' 🔒')+'</button>'}).join('')+'</div><h3>'+esc(meta.n)+(owned?' · ปลดล็อกขั้น '+p.stage:' · ยังไม่มีสัตว์เลี้ยงนี้')+'</h3><canvas id="petPreview70" width="540" height="200" aria-label="ตัวอย่างวิวัฒนาการสามขั้น"></canvas><div class="pet70-forms">'+[1,2,3].map(function(n){return '<button class="btn" data-a="petpreview70" data-p="'+n+'" aria-pressed="'+(form===n)+'">ขั้น '+n+' · '+esc(petN131(id,n))+'<br><small>'+(owned&&n<=p.stage?'ปลดล็อกแล้ว':'ตัวอย่าง')+'</small></button>'}).join('')+'</div><p class="hint">ภาพทั้ง 3 ขั้นเป็นตัวอย่าง ดูก่อนได้ทุกตัว การใส่จริงต้องเป็นเจ้าของและปลดล็อกขั้นนั้นก่อน</p><div class="bio70-bond"><span>♥ ความผูกพัน</span><b>'+p.bond+' / '+(p.stage===3?7000:next)+'</b></div>'+goalMeter69(Math.min(p.bond,p.stage===3?7000:next),p.stage===3?7000:next,'ความผูกพันสัตว์เลี้ยง')+'<div class="grid2"><button class="btn primary" data-a="petevolve70" data-p="'+id+':'+p.stage+'"'+(!owned||busy||p.stage>=3||p.bond<next?' disabled':'')+'>'+(p.stage>=3?'วิวัฒนาการครบแล้ว':'วิวัฒนาการขั้น '+(p.stage+1))+'</button><button class="btn" data-a="petform70" data-p="'+id+':'+form+'"'+(!owned||form>p.stage?' disabled':'')+'>ใช้รูปลักษณ์ขั้น '+form+'</button></div>'+(owned?'<button class="btn" data-a="eq" data-p="pet:'+id+'">'+(s.look.pet===id?'สัตว์เลี้ยงนี้กำลังติดตามคุณ':'พาสัตว์เลี้ยงนี้ออกล่า')+'</button>':'<p class="hint">หาได้จากกล่องสุ่มของแต่งตัวเดิม ไม่มีการแจกหรือซื้อขั้นวิวัฒนาการ</p>')+(busy?'<p class="hint">จบการต่อสู้และปิดออโต้ก่อนวิวัฒนาการ</p>':'')+'<p class="hint">ขั้น 2 ใช้ความผูกพันสะสม 3,000 · ขั้น 3 ใช้ 7,000 · ไม่หักความผูกพัน · ยิ่งขั้นสูง สกิลพิเศษยิ่งแรง</p></section>';
 }
 // Variant tile cache: at most 18 species × 4 poses, independent of frame time.
 function rareArt70(k,fr){if(!MONS[k])return null;fr=((fr|0)%4+4)%4;var key=k+':'+fr;if(RARE_ART70.has(key))return RARE_ART70.get(key);var original=monsterArt37(k,fr,false),cv=document.createElement('canvas');cv.width=cv.height=64;var c=cv.getContext('2d');c.drawImage(original,0,0);var im=c.getImageData(0,0,64,64),d=im.data;for(var y=0;y<64;y++)for(var x=0;x<64;x++){var j=(y*64+x)*4;if(!d[j+3])continue;var l=(d[j]+d[j+1]+d[j+2])/3;if(l<38)continue;var gold=(x*3+y*5)%29<3&&y>18&&y<48;d[j]=gold?235:Math.min(175,l*.4+16);d[j+1]=gold?193:Math.min(210,l*.7+34);d[j+2]=gold?98:Math.min(255,l*1.05+55)}c.putImageData(im,0,0);c.fillStyle='#ffdb83';[[23,25],[39,31],[29,42]].forEach(function(p){if(im.data[(p[1]*64+p[0])*4+3]){c.fillRect(p[0],p[1],2,3);c.fillStyle='#fff1c2';c.fillRect(p[0],p[1],1,1);c.fillStyle='#ffdb83'}});RARE_ART70.set(key,cv);return cv}
@@ -3441,10 +3448,10 @@ function openBox(){
  var id=pick(PET_BOX131),nm=petN131(id,1);
  if(r<BOX_BOUND131){
   if(s.owned.pet.indexOf(id)<0){s.owned.pet.push(id);s.look.pet=id;s.boxMsg='ได้สัตว์เลี้ยง '+nm+' (ผูกกับตัวละคร · ขายไม่ได้) สวมให้แล้ว';s.boxIt={k:'pet',id:id,tr:0}}
-  else{var bp=bookState70().pets[id];if(bp)bp.bond=Math.min(500,(bp.bond|0)+PET_DUP131);s.boxMsg='ได้ '+nm+' ซ้ำ · ความผูกพัน +'+PET_DUP131;s.boxIt={k:'pet',id:id,tr:0,dup:1}}
+  else{var bp=bookState70().pets[id];if(bp)bp.bond=Math.min(7000,(bp.bond|0)+PET_DUP131);s.boxMsg='ได้ '+nm+' ซ้ำ · ความผูกพัน +'+PET_DUP131;s.boxIt={k:'pet',id:id,tr:0,dup:1}}
   recalc();say('🥚 เปิดไข่ได้ '+nm);return}
  gbag().push({k:'pet',i:id,t:4});s.boxMsg='✨ โชคดีมาก! ได้ '+nm+' แบบขายได้ · เก็บไว้ใน 🎒 กระเป๋าอุปกรณ์ (วางขายในตลาด หรือกด "รับเลี้ยง")';s.boxIt={k:'pet',id:id,tr:1};say('✨ เปิดไข่ได้ '+nm+' แบบขายได้!');recalc()}
-function petAdopt131(i){var L=gbag(),p=L[i|0];if(!p||p.k!=='pet'||!PET131[p.i])return false;L.splice(i|0,1);if(s.owned.pet.indexOf(p.i)<0){s.owned.pet.push(p.i);s.look.pet=p.i;say('🐾 รับเลี้ยง '+petN131(p.i,1)+' แล้ว (ผูกกับตัวละคร)')}else{var bp=bookState70().pets[p.i];if(bp)bp.bond=Math.min(500,(bp.bond|0)+PET_DUP131);say('🐾 มี '+petN131(p.i,1)+' อยู่แล้ว · ความผูกพัน +'+PET_DUP131)}recalc();return true}
+function petAdopt131(i){var L=gbag(),p=L[i|0];if(!p||p.k!=='pet'||!PET131[p.i])return false;L.splice(i|0,1);if(s.owned.pet.indexOf(p.i)<0){s.owned.pet.push(p.i);s.look.pet=p.i;say('🐾 รับเลี้ยง '+petN131(p.i,1)+' แล้ว (ผูกกับตัวละคร)')}else{var bp=bookState70().pets[p.i];if(bp)bp.bond=Math.min(7000,(bp.bond|0)+PET_DUP131);say('🐾 มี '+petN131(p.i,1)+' อยู่แล้ว · ความผูกพัน +'+PET_DUP131)}recalc();return true}
 // ---- ปุ่มกล่องสมบัติหน้าหลัก + ป๊อปอัปไข่ ----
 var CH131={open:false,ph:'menu',at:0,seq:0};
 var CHEST_SVG131='<svg viewBox="0 0 64 56" aria-hidden="true"><path d="M6 24h52v26a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4z" fill="#8a4a1e" stroke="#2a1608" stroke-width="2.5"/><path d="M6 24c0-12 8-18 26-18s26 6 26 18z" fill="#b2642a" stroke="#2a1608" stroke-width="2.5"/><path d="M6 24h52v6H6z" fill="#f2c14e" stroke="#2a1608" stroke-width="2"/><path d="M14 8v46M50 8v46" stroke="#f2c14e" stroke-width="4"/><rect x="26" y="22" width="12" height="14" rx="2" fill="#ffe08a" stroke="#2a1608" stroke-width="2"/><circle cx="32" cy="28" r="2.2" fill="#2a1608"/></svg>';
@@ -3547,7 +3554,7 @@ function fsSettings160(){
 }
 function fsBuild160(){
  var d=document.getElementById('fs160');if(d)return d;
- FS160.lastSeen=(fishState152(s).lastCatch159||{}).at||0;FS160.lastMsg=fishState152(s).last||'';FS160.ph='idle';d=document.createElement('div');d.id='fs160';d.className='fs160';d.setAttribute('role','dialog');d.setAttribute('aria-label','ตกปลา');
+ FS160.lastSeen=(fishState152(s).lastCatch159||{}).at||0;FS160.lastMsg=fishState152(s).last||'';FS160.ph='idle';FS160.W=FS160.H=0;FS160.sig='';d=document.createElement('div');d.id='fs160';d.className='fs160';d.setAttribute('role','dialog');d.setAttribute('aria-label','ตกปลา');
  d.innerHTML='<canvas id="fs160c"></canvas><div class="fs160top"><span id="fs160info"></span><span class="fs160tools"><button class="btn sm" data-a="shoreauto" id="fs160auto">ออโต้</button><button class="btn sm" data-a="shoresettings" aria-label="ตั้งค่า">⚙</button><button class="btn sm" data-a="shoreclose" aria-label="เลิกตกปลา">✕</button></span></div>'+
  '<div id="fs160setw"></div><div id="fs160msg" class="fs160msg" role="status"></div><div id="fs160res"></div>'+
  '<div class="fs160ctl"><div id="fs160bars" class="fs160bars" hidden><div class="fs160ten"><i id="fs160t"></i><b></b></div><small id="fs160d"></small></div><button id="fs160btn" class="fs160btn">กดค้างเพื่อเหวี่ยง</button></div>';
@@ -3619,7 +3626,7 @@ function fsSync160(force){
 function fsDraw160(tn){
  var cv=document.getElementById('fs160c');if(!cv)return;
  var W=window.innerWidth||400,H=window.innerHeight||800,dpr=Math.min(2,window.devicePixelRatio||1);
- if(FS160.W!==W||FS160.H!==H){FS160.W=W;FS160.H=H;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.width=W+'px';cv.style.height=H+'px'}
+ if(FS160.W!==W||FS160.H!==H||cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){FS160.W=W;FS160.H=H;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.width=W+'px';cv.style.height=H+'px'}
  var c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.imageSmoothingEnabled=true;
  var bg=fsImg160('bg','assets/images/fish_lake160.webp?v=206'),hands=fsImg160('hands','assets/images/fish_hands160.webp?v=206');
  c.fillStyle='#1d6f73';c.fillRect(0,0,W,H);
@@ -3698,6 +3705,98 @@ fishUsed153=function(f){var now=Date.now();if(f.v206!==1){f.v206=1;f.used=f.day=
  var u=Math.max(0,Math.min(FISH_LIMIT153,f.used|0));if(u<=0||!f.at206){f.at206=now;f.used=u;return u}
  var k=Math.floor((now-f.at206)/FISH_REGEN206);if(k>0){u=Math.max(0,u-k);f.at206=u?f.at206+k*FISH_REGEN206:now;f.used=u}return u};
 function fishRegenTxt206(f){var u=fishUsed153(f);if(!u)return 'เต็มแล้ว';var ms=FISH_REGEN206-(Date.now()-(f.at206||Date.now()));var m=Math.max(0,Math.ceil(ms/60000));return m+' นาที'}
+
+// ===== B208 สกิลพิเศษสัตว์เลี้ยง (ตามตัวที่พาออกล่า · แรงขึ้นตามขั้น) · โชว์ฉายาบนป้ายชื่อในฉากต่อสู้ =====
+var PET_SK207={
+ wolf:{n:'เขี้ยวจันทรา',d:'พลังโจมตี',k:{atk:[3,5,8]},u:'%'},
+ phoenix:{n:'เปลวเพลิงอมตะ',d:'HP สูงสุด',k:{hp:[4,7,11]},u:'%'},
+ icedrg:{n:'เกราะผลึกน้ำแข็ง',d:'ป้องกัน',k:{def:[4,7,11]},u:'%'},
+ bat:{n:'ดูดเลือดราตรี',d:'ดูดเลือด',k:{ls:[1,2,3]},u:'%'},
+ tiger:{n:'เขี้ยวสวรรค์',d:'อัตราคริติคอล',k:{crit:[1.5,3,5]},u:'%'},
+ griffon:{n:'ปีกพายุ',d:'หลบหลีก',k:{dodge:[1,2,3.5]},u:'%'},
+ golem:{n:'ผิวศิลา',d:'ลดดาเมจที่ได้รับ',k:{dr:[1.5,3,5]},u:'%'},
+ dragon:{n:'ลมหายใจมังกร',d:'คริติคอลดาเมจ',k:{cdmg:[5,10,16]},u:'%'},
+ fox:{n:'มนตร์เก้าหาง',d:'เจาะเกราะ',k:{pen:[1,3,5]},u:'%'},
+ icedrg105:{n:'จ้าวหมาป่าอมตะ',d:'พลังโจมตี + HP สูงสุด + ดูดเลือด',k:{atk:[3,6,9],hp:[3,6,9],ls:[1,1.5,2.5]},u:'%',sp:1}
+};
+var PET_SKN207={atk:'โจมตี',hp:'HP',def:'ป้องกัน',ls:'ดูดเลือด',crit:'คริ',dodge:'หลบ',dr:'ลดดาเมจ',cdmg:'คริดาเมจ',cdr:'ลดคูลดาวน์',pen:'เจาะเกราะ'};
+function petSkill207(o,key){o=o||s;if(!o||!o.look)return 0;var id=o.look.pet,sk=PET_SK207[id];if(!sk||!sk.k[key]||!petOwned70(o,id))return 0;var b=o.book70&&o.book70.pets&&o.book70.pets[id],st=Math.max(1,Math.min(3,b&&b.stage|0||1));return sk.k[key][st-1]}
+function petSkTxt207(id,st){var sk=PET_SK207[id];if(!sk)return '';return Object.keys(sk.k).map(function(k){return PET_SKN207[k]+' +'+sk.k[k][st-1]+'%'}).join(' · ')}
+var petAtkBefore207=pAtk,petDefBefore207=pDef,petMaxBefore207=calcMax,petCritBefore207=critPct,petDodgeBefore207=dodgePct,petGearBefore207=gearStat;
+pAtk=function(){var v=petAtkBefore207.apply(this,arguments);return Math.round(v*(1+petSkill207(s,'atk')/100))};
+pDef=function(){var v=petDefBefore207.apply(this,arguments);return Math.round(v*(1+petSkill207(s,'def')/100))};
+calcMax=function(o){var v=petMaxBefore207(o);return Math.round(v*(1+petSkill207(o,'hp')/100))};
+critPct=function(){return petCritBefore207()+petSkill207(s,'crit')};
+dodgePct=function(){return petDodgeBefore207()+petSkill207(s,'dodge')};
+gearStat=function(key,o){return petGearBefore207(key,o)+petSkill207(o||s,key)};
+function petSkHtml207(id,stage,owned){var sk=PET_SK207[id];if(!sk)return '';
+ return '<div class="petsk207'+(sk.sp?' sp':'')+'"><b>'+(sk.sp?'👑 สกิลพิเศษซีซั่น · ':'✦ สกิลพิเศษ · ')+esc(sk.n)+'</b><small>'+esc(sk.d)+' · มีผลเมื่อพาสัตว์เลี้ยงนี้ออกล่า (ทุกโหมด)</small><div class="petsk207r">'+[1,2,3].map(function(n){return '<span class="'+(owned&&n===stage?'on':'')+'">ขั้น '+n+'<br><i>'+petSkTxt207(id,n)+'</i></span>'}).join('')+'</div></div>'}
+var petHtmlBefore207=petHtml70;
+petHtml70=function(){var h=petHtmlBefore207(),id=PET_IDS70.indexOf(BOOK_UI70.pet)>=0?BOOK_UI70.pet:'dragon',p=bookState70().pets[id]||{stage:1};
+ var at=h.indexOf('<canvas id="petPreview70"');return at<0?h:h.slice(0,at)+petSkHtml207(id,p.stage|0||1,petOwned70(s,id))+h.slice(at)};
+// ฉายาบนป้ายชื่อตัวเองในฉากต่อสู้
+var platesBefore207=ts169Plate;
+ts169Plate=function(c,name,lv,x,y,hp,mhp,mp,mmp,side,mine){platesBefore207.apply(this,arguments);if(SV||side!=='p'||!mine||!s)return;var a=ttlText100(s.title,false);if(!a)return;var W=artWidth74(c.canvas);c.save();c.font='700 9px Kanit,sans-serif';c.textAlign='center';c.textBaseline='middle';var tx=Math.max(40,Math.min(W-40,x));c.lineWidth=3;c.strokeStyle='rgba(0,0,0,.85)';c.strokeText('「'+a[0]+'」',tx,y-15);c.fillStyle=a[1]||'#ffe08a';c.fillText('「'+a[0]+'」',tx,y-15);c.restore()};
+// ===== B209 ฉากต่อสู้: สัตว์เลี้ยงยืนประจำที่ด้านหน้าตัวละคร ไม่วิ่งตามตอนออกไปตี =====
+var PET_POSE208=new Map(),PET_ANCHOR208=null;
+var approachBefore208=battleApproachPose;
+battleApproachPose=function(elapsed,x,y,tx,ty){var r=approachBefore208.apply(this,arguments);if(!SV){PET_POSE208.set(Math.round(r.x)+','+Math.round(r.y),{hx:x,hy:y,tx:tx,ty:ty});if(PET_POSE208.size>40)PET_POSE208.delete(PET_POSE208.keys().next().value)}return r};
+var zCharBefore208=zChar109;
+zChar109=function(c,look,cls,x,y,tn,flip,al){
+ var rec=PET_POSE208.get(Math.round(x)+','+Math.round(y));
+ if(rec&&look&&look.pet&&look.pet!=='none'){var dx=rec.tx-rec.hx,dy=rec.ty-rec.hy,d=Math.hypot(dx,dy)||1,fx=dx/d,fy=dy/d,px=-fy,py=fx;if(py<0){px=-px;py=-py}
+  var ax=rec.hx+fx*56*Z109+px*18*Z109,ay=rec.hy+fy*56*Z109+py*18*Z109;PET_ANCHOR208={dx:(ax-x)/Z109,dy:(ay-y)/Z109,left:fx<0}}
+ try{return zCharBefore208.apply(this,arguments)}finally{PET_ANCHOR208=null}};
+var fashionPetBefore208=fashionPet;
+fashionPet=function(c,look,cx,gy,u,t,row,alpha){
+ var A=PET_ANCHOR208;if(!A)return fashionPetBefore208(c,look,cx,gy,u,t,row,alpha);
+ if(!look.pet||look.pet==='none')return;var p=Math.max(.8,u*.78),x=cx+A.dx,y=gy+A.dy;
+ c.save();try{c.globalAlpha*=alpha==null?1:alpha;shadowAt(c,x,y,8*p);c.translate(x,y);if(A.left)c.scale(-1,1);PET_ROW131=A.left?2:6;drawPet70(c,look.pet,-5*p,0,p,t,Math.max(1,Math.min(3,look.petStage70|0||1)))}finally{c.restore();PET_ROW131=null}};
+
+// ===== B210 PvP: ตั้งลำดับท่าป้องกันให้ร่างจำลองของเรา (ใช้ตอนคนอื่นสุ่มเจอเรา) =====
+var PVPDEF208={atk:['⚔️ โจมตีปกติ','ดาเมจ ×1'],sp:['✨ สกิลอาชีพ','ดาเมจ ×1.9 · ใช้ติดกันไม่ได้ (ตาที่ติดกันเป็นโจมตีปกติ)'],ult:['💥 ไม้ตาย','ดาเมจ ×2.6 · ต้องมีไม้ตาย · ใช้ได้ทุก 4 ตา (ไม่พร้อมใช้สกิลอาชีพแทน)'],grd:['🛡️ ตั้งท่าป้องกัน','โจมตีเบา ×0.6 · ดาเมจที่รับตาถัดไป −35%'],heal:['💚 ฟื้นพลัง','โจมตีเบา ×0.5 · ฟื้น HP 12% · สูงสุด 2 ครั้งต่อแมตช์']};
+var PVPDEF_N208=5,PVPDEF_DEF208=['atk','atk','sp','atk','grd'];
+function pvpDefSeq208(o){var a=o&&Array.isArray(o.pvpDef208)?o.pvpDef208:null;return a&&a.length?a:PVPDEF_DEF208}
+function pvpDefSkOk208(x){var m=/^k:([a-z0-9]{1,12})(?::([1-9]))?$/.exec(x);return !!(m&&SKMAP[m[1]]&&SKMAP[m[1]].t!=='p')}
+function pvpDefClean208(v){var a=(Array.isArray(v)?v:String(v||'').split(',')).map(function(x){return String(x).trim()}).filter(function(x){return PVPDEF208[x]||pvpDefSkOk208(x)}).slice(0,PVPDEF_N208);return a.length?a:null}
+function pvpDefMine208(){var L=[];try{L=teamWebLoadout161(s)}catch(e){}return L.filter(function(k){return k&&k.id&&k.t!=='p'})}
+function pvpDefKind208(k,lv){if(k.m){var hits=k.hits||1,m=lvVal(k.m,Math.max(1,lv|0))*hits;return {k:'dmg',m:Math.max(1.1,Math.min(2.4,m))}}var b=k.b||{};if(b.heal160||b.regen||b.hpp||b.hpp203||b.regen203)return {k:'heal'};if(b.ward160||b.magicWard170||b.shield170||b.def||b.defp||b.dodge||b.eatk160||b.edef160)return {k:'grd'};return {k:'pow'}}
+var mySnapBefore208=mySnap;
+mySnap=function(){var o=mySnapBefore208.apply(this,arguments);if(s&&Array.isArray(s.pvpDef208)&&s.pvpDef208.length){var mine=pvpDefMine208();o.def208=s.pvpDef208.map(function(x){if(x.indexOf('k:')!==0)return x;var id=x.slice(2),k=mine.find(function(m){return m.id===id});if(!k)return 'atk';var lv=k.web!==undefined?1:Math.max(1,Math.min(9,(s.sk&&s.sk[id])|0));return 'k:'+id+':'+lv})}return o};
+var oppFromSnapBefore208=oppFromSnap;
+oppFromSnap=function(x){var e=oppFromSnapBefore208(x),q=pvpDefClean208(x&&x.def208);if(q&&e.pvp)e.pvp.seq=q;return e};
+function pvpDefMove208(b,e){var P=e.pvp,t=b.turn|0;b.eGuard208=false;
+ if(!P.seq){if(P.ul&&t%7===0)return {m:2.6,t:' (ไม้ตาย!)',k:'ult'};if(t%3===0)return {m:P.mult,t:' ('+P.spec+')',k:'sp'};return {m:1,t:'',k:'atk'}}
+ var k=P.seq[(t-1)%P.seq.length];b.eCd208=b.eCd208||{};
+ if(k.indexOf('k:')===0){var q=k.split(':'),sk=SKMAP[q[1]];if(!sk||(b.eCd208[q[1]]|0)>t){k='atk'}else{b.eCd208[q[1]]=t+Math.max(2,sk.cd||sk.cooldown||2)+1;var kd=pvpDefKind208(sk,q[2]|0),nm=' ('+sk.n+')';b.eLast208=k;var pw=b.ePow208?1.35:1;b.ePow208=false;
+  if(kd.k==='dmg')return {m:kd.m*pw,t:nm,k:k};
+  if(kd.k==='heal'){if((b.eHeal208|0)>=2||b.ehp>=e.hp){b.eGuard208=true;return {m:.6,t:nm,k:k}}b.eHeal208=(b.eHeal208|0)+1;var hh=Math.min(e.hp-b.ehp,Math.round(e.hp*.12));b.ehp+=hh;return {m:.5,t:nm.slice(0,-1)+' +'+hh+' HP)',k:k}}
+  if(kd.k==='grd'){b.eGuard208=true;return {m:.6,t:nm,k:k}}
+  b.ePow208=true;return {m:.6,t:nm+' · พลังตาหน้า +35%',k:k}}}
+ var pw0=b.ePow208?1.35:1;b.ePow208=false;
+ if(k==='ult'&&(!P.ul||t<3||t-(b.eUlt208||-99)<4))k='sp';
+ if(k==='sp'&&b.eLast208==='sp')k='atk';
+ if(k==='heal'&&((b.eHeal208|0)>=2||b.ehp>=e.hp))k='grd';
+ b.eLast208=k;
+ if(k==='ult'){b.eUlt208=t;return {m:2.6*pw0,t:' (ไม้ตาย!)',k:k}}
+ if(k==='sp')return {m:P.mult*pw0,t:' ('+P.spec+')',k:k};
+ if(k==='grd'){b.eGuard208=true;return {m:.6,t:' (ตั้งท่าป้องกัน)',k:k}}
+ if(k==='heal'){b.eHeal208=(b.eHeal208|0)+1;var h=Math.min(e.hp-b.ehp,Math.round(e.hp*.12));b.ehp+=h;return {m:.5,t:' (ฟื้นพลัง +'+h+' HP)',k:k}}
+ return {m:pw0,t:'',k:'atk'};
+}
+var gemAbsorbBefore208=gemEnemyAbsorb140;
+gemEnemyAbsorb140=function(b,loss){var v=gemAbsorbBefore208(b,loss);if(b&&b.kind==='pvp'&&b.eGuard208)v=Math.max(1,Math.round(v*.65));return v};
+var fishActBefore208=fishActions153;
+fishActions153=function(a,p){
+ if(a!=='pvpdef208')return fishActBefore208(a,p);
+ if(!s.created||s.battle)return true;var q=pvpDefClean208(p);if(!q)return true;var ids=pvpDefMine208().map(function(k){return 'k:'+k.id});q=q.map(function(x){return x.indexOf('k:')===0?(ids.indexOf(x.split(':').slice(0,2).join(':'))>=0?x.split(':').slice(0,2).join(':'):'atk'):x});s.pvpDef208=q;say('🛡️ บันทึกลำดับท่าป้องกัน PvP แล้ว');save();render();return true};
+function pvpDefHtml208(){var q=pvpDefSeq208(s),mine=pvpDefMine208();
+ return '<section class="card pvpdef208"><p class="eyebrow">🛡️ ตั้งค่าป้องกัน · ร่างจำลองของคุณ</p><p class="hint">เมื่อผู้เล่นอื่นสุ่มเจอคุณใน PvP ร่างจำลองจะใช้ท่าตามลำดับนี้ วนไปเรื่อย ๆ ทีละตา</p><div class="pvpdef208r">'+
+ Array.from({length:PVPDEF_N208},function(_,i){return '<label><span>ตา '+(i+1)+'</span><select id="pvpdef208_'+i+'">'+Object.keys(PVPDEF208).map(function(k){return '<option value="'+k+'"'+(q[i]===k?' selected':'')+'>'+PVPDEF208[k][0]+'</option>'}).join('')+(mine.length?'<optgroup label="สกิลของคุณ">'+mine.map(function(k){var v='k:'+k.id;return '<option value="'+v+'"'+(q[i]===v?' selected':'')+'>'+(k.web!==undefined?'🕸️ ':'📘 ')+esc(k.n)+'</option>'}).join('')+'</optgroup>':'')+'</select></label>'}).join('')+
+ '</div><button class="btn primary" data-a="pvpdefsave208"'+(s.battle?' disabled':'')+'>บันทึกลำดับท่า</button><details><summary>ท่าแต่ละแบบ</summary><ul class="pvpdef208h">'+Object.keys(PVPDEF208).map(function(k){return '<li><b>'+PVPDEF208[k][0]+'</b> · '+PVPDEF208[k][1]+'</li>'}).join('')+'<li><b>📘 สกิลอาชีพ / 🕸️ สกิลบิวต์</b> · ใช้สกิลที่ปลดล็อกแล้ว: สกิลโจมตีใช้ตัวคูณของสกิลนั้น (1.1–2.4 เท่า) · สกิลฟื้นฟูฟื้น HP 12% · สกิลป้องกัน/ดีบัฟลดดาเมจที่รับตาถัดไป 35% · สกิลบัฟเพิ่มพลังตาถัดไป 35% · ติดคูลดาวน์ตามสกิล (ระหว่างนั้นใช้โจมตีปกติ)</li></ul></details></section>'}
+var viewPvpBefore208=viewPvp;
+viewPvp=function(){var h=viewPvpBefore208();var at=h.indexOf('</section>');return at<0?h+pvpDefHtml208():h.slice(0,at+10)+pvpDefHtml208()+h.slice(at+10)};
+if(!SV&&typeof document!=='undefined')document.addEventListener('click',function(ev){var t=ev.target.closest&&ev.target.closest('[data-a="pvpdefsave208"]');if(!t||t.disabled)return;ev.stopPropagation();var v=[];for(var i=0;i<PVPDEF_N208;i++){var el=document.getElementById('pvpdef208_'+i);if(el)v.push(el.value)}act('pvpdef208',v.join(','))},true);
 
 // ===== B105 บัตรรายเดือน · บัตรถาวร · ซีซั่น 1 (จบ 31 ธ.ค. 23:59 น. เวลาไทย) =====
 var S105_START=Date.UTC(2026,9,31,17,0,0),S105_END=Date.UTC(2026,11,31,16,59,59),S105_RUSH=Date.UTC(2026,11,21,17,0,0),S105_CLAIM=S105_END+7*864e5,S105_MAX=50,S105_PER=1000,S105_KILLCAP=600;
@@ -3820,7 +3919,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B207';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B210.1';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -4206,10 +4305,7 @@ function battleActBase73(a,phase172){if(s.battle&&s.battle.jw&&Date.now()<s.batt
   else if(Math.random()*100<Math.min(60,dodgePct()+bb('blind170'))){m51Dodge(b);l.push('หลบการโจมตีของ '+e.n+' ได้!');fl('p','หลบ','#5fb4ff',560)}
   else{
    gemEnemyAction140(b,l);var mul=1,tag='';
-   if(e.pvp){
-    if(b.turn%3===0){mul=e.pvp.mult;tag=' ('+e.pvp.spec+')'}
-    if(e.pvp.ul&&b.turn%7===0){mul=2.6;tag=' (ไม้ตาย!)'}
-    if(Math.random()*100<e.pvp.crit){mul*=2;tag+=' คริติคอล!'}
+   if(e.pvp){var r208=pvpDefMove208(b,e);mul=r208.m;tag=r208.t;if(Math.random()*100<e.pvp.crit){mul*=2;tag+=' คริติคอล!'}
    }
    var msk=null;
    if(!e.pvp&&!e.cls&&b.kind==='monster'&&!b.tower&&!b.wb&&!(s.zone<EASY_ZONES&&!e.boss)){
