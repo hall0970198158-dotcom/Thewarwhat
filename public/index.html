@@ -3545,7 +3545,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B200';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B201';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -9475,36 +9475,55 @@ function eyeTint200(c,dir,eye,row){
  if(p[i+3]>150&&r>28&&r<145&&g<110&&b<105&&r>g*.85){var v=.55+(r+g+b)/450;for(var k=0;k<3;k++)p[i+k]=Math.min(255,rgb[k]*v)}
  }});c.putImageData(d,x0,y0);
 }
+// B201: a complete, shared face rig instead of clipped fragments from each class.
+var FACE_BASE201=null,FACE_COLORS201=new Map();
+function faceTemplate201(eye){
+ var im=characterImage136('swordsman');if(!im)return null;
+ var cache=FACE_COLORS201.get(eye);if(cache&&FACE_BASE201===im)return cache;
+ if(FACE_BASE201!==im){FACE_BASE201=im;FACE_COLORS201.clear()}
+ var src=document.createElement('canvas');src.width=1536;src.height=192;var sc=src.getContext('2d');sc.drawImage(im,0,0,1536,192,0,0,1536,192);var original=sc.getImageData(0,0,1536,192).data;
+ var cv=document.createElement('canvas');cv.width=1536;cv.height=192;var c=cv.getContext('2d');
+ var tile=document.createElement('canvas');tile.width=tile.height=192;var tc=tile.getContext('2d'),patch=tc.createImageData(192,192),out=patch.data;
+ FACE_ANCHOR200.forEach(function(a,dir){var bx=dir*192;c.save();c.translate(bx,0);
+ c.fillStyle='#efc19e';c.fillRect(90,95,12,12);
+ if(!a){if(dir===3||dir===5){c.fillStyle='#ffdbb3';c.strokeStyle='#765247';c.lineWidth=1;c.beginPath();c.ellipse(dir===3?74:118,88,4,7,dir===3?-.3:.3,0,7);c.fill();c.stroke()}c.restore();return}
+ var center=dir===1?88:dir===2?83:dir===6?109:dir===7?104:96;
+ var faceWidth=dir===2||dir===6?25:32;
+ c.fillStyle='#ffdfb7';c.strokeStyle='#62453c';c.lineWidth=1.2;c.beginPath();c.ellipse(center,72,faceWidth,31,0,0,7);c.fill();c.stroke();
+ out.fill(0);
+ for(var y=62;y<101;y++)for(var x=53;x<139;x++){
+ var i=(y*1536+bx+x)*4,j=(y*192+x)*4,r=original[i],g=original[i+1],b=original[i+2];if(original[i+3]<128)continue;
+ var inside=Math.pow((x-center)/faceWidth,2)+Math.pow((y-72)/31,2)<1;if(!inside)continue;
+ var skin=y>=86&&r>135&&g>75&&r>g*1.035&&g>b*1.055;
+ var feature=y>=72&&y<=92&&a.e.some(function(e){return Math.pow((x-e[0])/9.5,2)+Math.pow((y-e[1])/11,2)<1});
+ var mouth=y>=88&&y<=98&&Math.abs(x-a.m[0])<=8;
+ // Retain the entire eyelid, iris, highlight, eyebrows and mouth, excluding old fringe pixels.
+ if(skin||feature&&!(r>65&&b>=r+2)||mouth){out[j]=r;out[j+1]=g;out[j+2]=b;out[j+3]=original[i+3]}
+ }
+ tc.putImageData(patch,0,0);c.drawImage(tile,0,0);
+ c.strokeStyle='#584035';c.lineWidth=1.05;c.lineCap='round';a.e.forEach(function(e){c.beginPath();c.moveTo(e[0]-5,e[1]-10);c.quadraticCurveTo(e[0],e[1]-12,e[0]+5,e[1]-10);c.stroke()});c.restore();
+ });
+ // Color only the iris; all outlines, sclera and highlights keep their original pixels.
+ for(var dir=0;dir<8;dir++)eyeTint200(c,dir,eye,0);
+ FACE_COLORS201.set(eye,cv);return cv;
+}
+
 function headAtlas200(im,key,look){
  var L=headClean200(look),wig=L.hair200==='none'?null:hairImage200(L.hair200);
  if(L.hair200==='none'&&L.hairColor200==='silver'&&L.eye200==='default')return im;
  // Keep the original sprite visible while the modular artwork loads.
  if(L.hair200!=='none'&&!wig)return im;
+ var face201=wig?faceTemplate201(L.eye200):null;if(wig&&!face201)return im;
  var ck=key+'|'+L.hair200+'|'+L.hairColor200+'|'+L.eye200,hit=HEAD_CACHE200.get(ck);if(hit){HEAD_CACHE200.delete(ck);HEAD_CACHE200.set(ck,hit);return hit}
  var cv=document.createElement('canvas');cv.width=1536;cv.height=384;var c=cv.getContext('2d');c.drawImage(im,0,0);
  var source=c.getImageData(0,0,1536,384).data;
  if(wig){
  var tint=hairTint200(wig,L.hair200,L.hairColor200);
- var f=document.createElement('canvas');f.width=f.height=192;var fc=f.getContext('2d'),d=fc.createImageData(192,192),out=d.data;
  for(var row=0;row<2;row++)for(var dir=0;dir<8;dir++){
  var bx=dir*192,by=row*192,a=FACE_ANCHOR200[dir];
  // Replace the baked head; leave weapons, class outfit, hands and body in the original atlas.
  c.clearRect(bx+43,by+8,108,99);
- c.save();c.translate(bx,by);c.fillStyle='#efc19e';c.fillRect(90,95,12,12);
- if(a){c.fillStyle='#ffe0b8';c.strokeStyle='#5e4540';c.lineWidth=1.3;c.beginPath();
- var center=dir===1?88:dir===2?83:dir===6?109:dir===7?104:96;
- c.ellipse(center,72,dir===2||dir===6?25:32,31,0,0,7);c.fill();c.stroke();
- // Carry across the character's original facial pixels rather than substituting a new face.
- out.fill(0);
- for(var y=69;y<104;y++)for(var x=53;x<139;x++){
- var ix=((by+y)*1536+bx+x)*4,j=(y*192+x)*4,r=source[ix],g=source[ix+1],b=source[ix+2],skin=y>=82&&r>125&&g>70&&r>g*1.03&&g>b*1.06,eye=false;
- a.e.forEach(function(e){if(y>=77&&y<=88&&Math.pow((x-e[0])/7,2)+Math.pow((y-e[1])/7,2)<1)eye=true});
- var inside=Math.pow((x-center)/(dir===2||dir===6?25:32),2)+Math.pow((y-72)/31,2)<1;
- if(inside&&(skin||eye||y>=90&&Math.abs(x-a.m[0])<8)&&source[ix+3]>120){out[j]=r;out[j+1]=g;out[j+2]=b;out[j+3]=source[ix+3]}
- }
- fc.putImageData(d,0,0);c.drawImage(f,0,0);
- }
- c.restore();
+ c.drawImage(face201,dir*192,0,192,192,bx,by,192,192);
  c.drawImage(tint,dir*192,0,192,192,bx,by,192,192);
  var restore=c.getImageData(bx,by,192,192),rp=restore.data;for(var yy=62;yy<107;yy++)for(var xx=43;xx<151;xx++){if(xx>=65&&xx<=130)continue;var si=((by+yy)*1536+bx+xx)*4,di=(yy*192+xx)*4,rr=source[si],gg=source[si+1],bb=source[si+2];if(source[si+3]>120&&Math.max(rr,gg,bb)-Math.min(rr,gg,bb)>48&&!(rr>125&&gg>70&&rr>gg*1.03&&gg>bb*1.06)){for(var kk=0;kk<4;kk++)rp[di+kk]=source[si+kk]}}c.putImageData(restore,bx,by);
  }
@@ -9516,7 +9535,7 @@ function headAtlas200(im,key,look){
  if(p[i+3]>0&&r>68&&Math.max(r,g,b)-Math.min(r,g,b)<32&&b>=g*.96)hairPixel200(p,i,rgb);
  }c.putImageData(d,0,0);
  }
- for(var row=0;row<2;row++)for(var dir=0;dir<8;dir++)eyeTint200(c,dir,L.eye200,row);
+ if(!wig)for(var row=0;row<2;row++)for(var dir=0;dir<8;dir++)eyeTint200(c,dir,L.eye200,row);
  HEAD_CACHE200.set(ck,cv);if(HEAD_CACHE200.size>12)HEAD_CACHE200.delete(HEAD_CACHE200.keys().next().value);return cv;
 }
 function headPicker200(){
