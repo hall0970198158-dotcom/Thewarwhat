@@ -978,6 +978,8 @@ body.view-portrait #gameWrap #townStage .town-bottom .map-button197{min-width:44
 
 .head-custom200 h4{margin:18px 0 8px;color:#e9d395}.hair-grid200{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}.hair-choice200{min-width:0;border:1px solid #53637e;border-radius:12px;background:linear-gradient(145deg,#1c344b,#0b1728);color:#e9e6d7;padding:7px 3px;font:inherit;font-size:12px;cursor:pointer}.hair-choice200.selected,.head-swatch200.selected{border-color:#f5cb6b;box-shadow:0 0 0 1px #e7b958 inset;background:#32445d}.hair-thumb200{display:block;width:64px;max-width:100%;aspect-ratio:1;margin:0 auto 3px;background-size:800% 100%;background-position:0 0;background-repeat:no-repeat}.head-colors200{display:flex;flex-wrap:wrap;gap:7px}.head-swatch200{width:56px;padding:5px 2px;border-radius:10px;border:1px solid #53637e;background:#102338;color:#f4e9d2;font:inherit;font-size:11px;cursor:pointer}.head-swatch200 i{display:grid;place-items:center;width:29px;height:29px;border-radius:50%;margin:0 auto 4px;border:2px solid #b9a47b;color:#fff;font-style:normal;text-shadow:0 1px 3px #000}.head-swatch200 span{display:block}@media(max-width:380px){.hair-grid200{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
+
+.web-map160{flex:none;min-width:0;max-width:none}.web-map160 .web-node160{min-width:0;min-height:0;box-sizing:border-box}.web-index203{position:absolute;left:50%;top:-.9em;transform:translateX(-50%);font:700 clamp(3px,calc(var(--node-size)*.32),10px)/1 sans-serif;color:#f6e4b3;font-style:normal;text-shadow:0 1px 2px #000;pointer-events:none}.web-map160 .web-node160 small{font-size:calc(var(--node-size)*.26);right:-1px;bottom:-.3em;padding:0 1px;line-height:1;border-width:0}.dg-class203{font-size:11px}.dg-class203 b{display:block}.dg-class203 small{display:block}
 </style>
 
 <section id="login" class="login">
@@ -1352,7 +1354,7 @@ function clsChange96(param){
  ['autoOrder162','teamOrder162'].forEach(function(k){if(Array.isArray(s[k]))s[k]=s[k].map(function(id){return ids[id]||id})});
  s.job2=target.branch||null;s.job3=target.branch&&had3?true:null;s.job4=target.branch&&had4?target.branch:null;
  if(s.mastery51&&s.mastery51.cls===from)s.mastery51.cls=to;
- s.cls=to;growSync117(s);s.clsCh={n:((s.clsCh&&s.clsCh.n)|0)+1,at:Date.now()};if(typeof PORT_C!=='undefined')PORT_C={};
+ s.cls=to;var gems203=gemNormalize140(s);gems203.rev++;GEM_UI140.ask=null;growSync117(s);s.clsCh={n:((s.clsCh&&s.clsCh.n)|0)+1,at:Date.now()};if(typeof PORT_C!=='undefined')PORT_C={};
  s.maxhp=calcMax(s);s.maxmp=calcMaxMp(s);s.hp=Math.min(s.hp,s.maxhp);s.mp=Math.min(s.mp,s.maxmp);recalc();
  say('เปลี่ยนอาชีพเป็น '+target.name+' แล้ว'+(cost?' (−'+cost.toLocaleString('th-TH')+' ทอง)':' (ครั้งแรกฟรี)'));save()
 }
@@ -1487,7 +1489,15 @@ function webLoadout165(o){
  });
  return chosen.concat(learned.filter(function(k){return !chosen.includes(k)})).slice(0,5);
 }
-function teamWebLoadout161(o){return webLoadout165(o)}
+function teamWebLoadout161(o){
+ var skills=(SK[o.cls]||[]).filter(function(k){return k.t!=='p'&&(o.sk&&o.sk[k.id]|0)>0&&o.lvl>=k.req}).map(function(k){
+  var lv=Math.max(1,Math.min(SKMAX,o.sk[k.id]|0)),out=Object.assign({},k,{source203:'class',lv203:lv});
+  if(k.m)out.m=[lvVal(k.m,lv),0];
+  if(k.b){out.b={};Object.keys(k.b).forEach(function(key){var target=({def:'def203',defp:'armor203',hpp:'hpp203',regen:'regen203'})[key]||key;out.b[target]=[lvVal(k.b[key],lv),0]})}
+  return out;
+ });
+ return skills.concat(webLoadout165(o));
+}
 function webBusy167(){
  var room=dgRoom();
  return battleLive54()||wdOn108()||!!(room&&room.st==='rg');
@@ -1559,7 +1569,7 @@ function webPopup166(){
 function webHtml160(){
  var pts=webPoints160(s),paths='',buttons='',labels='',zoom=WEB_UI160.zoom;
  var nodes=Array.from({length:WEB_TOTAL160},function(_,i){
-  var a=Math.floor(i/WEB_BRANCH160)*Math.PI*2/5-Math.PI/2,r=55+i%WEB_BRANCH160*32;
+  var a=Math.floor(i/WEB_BRANCH160)*Math.PI*2/5-Math.PI/2,r=72+i%WEB_BRANCH160*32;
   return [900+Math.cos(a)*r,900+Math.sin(a)*r];
  });
  function line(a,b,color,active,cross){
@@ -1575,13 +1585,13 @@ function webHtml160(){
   });
   var milestone=(Math.floor(t/5)+1)*30;
   if(mark)labels+='<text x="'+(p[0]+24)+'" y="'+(p[1]+6)+'" fill="'+lane.color+'">Lv.'+milestone+'</text>';
-  buttons+='<button class="web-node160'+(mark?' milestone167':'')+'" data-a="webselect" data-p="'+i+'" aria-label="'+lane.name+' ช่วง Lv.'+milestone+' จุด '+(t%5+1)+' ขั้น '+lv+'" style="left:'+p[0]/18+'%;top:'+p[1]/18+'%;--web-color:'+lane.color+';opacity:'+(ready?1:.62)+'">'+nodeArt166(z,webRune168(t))+'<small>'+lv+'/5</small></button>';
+  buttons+='<button class="web-node160'+(mark?' milestone167':'')+'" data-a="webselect" data-p="'+i+'" aria-label="'+lane.name+' ช่วง Lv.'+milestone+' จุด '+(t%5+1)+' ขั้น '+lv+'" style="left:'+p[0]/18+'%;top:'+p[1]/18+'%;--web-color:'+lane.color+';opacity:'+(ready?1:.62)+'">'+nodeArt166(z,webRune168(t))+'<em class="web-index203">'+(t+1)+'</em><small>'+lv+'/5</small></button>';
  }
  return '<section class="card web160"><div class="row"><h2>ผังบิวด์ใยแมงมุม</h2><b>แต้มเหลือ '+pts+'</b></div>'+
- '<p class="hint">ลากดูผังได้ทุกทิศ · ไล่จากจุดกลางออกไปถึง Lv.150 · อัปจุดก่อนหน้าเต็ม 5/5 เพื่อไปต่อ</p>'+
+ '<p class="hint">สายละ 25 จุด · รวม 125 จุด · เลข 1–25 ไล่จากกลางถึง Lv.150 · อัปจุดก่อนหน้าเต็ม 5/5 เพื่อไปต่อ</p>'+
  '<div class="web-legend160">'+WEB160.map(function(w){return '<span style="color:'+w.color+'">'+w.name+'</span>'}).join('')+'</div>'+
  '<div class="web-legend160"><button class="btn sm" data-a="webzoom" data-p="-" aria-label="ย่อผัง">−</button><button class="btn sm" data-a="webzoom" data-p="+" aria-label="ขยายผัง">+</button><button class="btn sm" data-a="webcenter168">กลับจุดเริ่ม</button><button class="btn sm" data-a="weboverview168">ดูทั้งผัง</button></div>'+
- '<div class="web-scroll160"><div class="web-map160" style="width:'+Math.round(1800*zoom)+'px;--node-size:'+Math.max(8,27*zoom)+'px"><svg viewBox="0 0 1800 1800" aria-hidden="true">'+paths+labels+'<circle cx="900" cy="900" r="18" fill="#f4cd84"/></svg>'+buttons+'</div></div>'+
+ '<div class="web-scroll160"><div class="web-map160" style="width:'+Math.round(1800*zoom)+'px;height:'+Math.round(1800*zoom)+'px;--node-size:'+(27*zoom)+'px"><svg viewBox="0 0 1800 1800" aria-hidden="true">'+paths+labels+'<circle cx="900" cy="900" r="18" fill="#f4cd84"/></svg>'+buttons+'</div></div>'+
  '<button class="btn danger" data-a="webresetopen167"'+(!webSpent167(s)||s.gold<WEB_RESET167||webBusy167()?' disabled':'')+'>รีบิวด์ · 300,000 ทอง</button></section>';
 }
 function webView168(){
@@ -3237,9 +3247,10 @@ function drawDgTS107z(c,W,H,tn,visual){
  spDraw109(c,tn);drawn.forEach(function(o){var m=o.m;ts169Plate(c,(m.down?'💤 ':'')+String(m.n||'').slice(0,12),m.lvl,o.x,o.y-80*Z109,m.hp,m.mhp,0,0,'p',!!m.me)});
  DGF.fl=DGF.fl.filter(function(f){return tn-f.t<1000});DGF.fl.forEach(function(f){var age=tn-f.t;if(age<0)return;var enemy=f.x>160,x=enemy?ex:mp[0],y=(enemy?ey:mp[1])-75*Z109-age*.03;c.save();c.globalAlpha=Math.max(0,1-age/1000);pop109(c,f.txt,x,y,age,f.col,f.big);c.restore()});
 }
+function dgClassButtons203(r){var me=r&&r.mem[r.me];if(!me)return '';return (me.web||[]).filter(function(k){return k.source203==='class'}).map(function(k){var cd=(me.webCd||{})[k.id]||0;return '<button class="btn dg-class203'+(me.pick===k.id?' primary':'')+'" data-a="dgwebslot" data-p="'+k.id+'"'+(me.down||!k.ready||cd||me.mp<k.mp?' disabled':'')+'><b>'+esc(k.n)+'</b><small>Lv'+k.lv203+' · MP '+k.mp+(cd?' · รอ '+cd+' รอบ':'')+'</small></button>'}).join('')}
 function viewDgTS107(){
  var r=dgRoom(),en=r.en||{},me=r.mem[r.me]||{},it=en.intent||{},left=Math.max(0,Math.ceil((r.left|0)/1000)),rg=r.mode==='rg'&&r.rg,auto=!!(rg&&rg.me&&rg.me.auto);
- var actions=['atk','sk','grd','heal'].map(function(a){var cd=a==='sk'?(me.cd&&me.cd.sk)|0:a==='heal'?(me.cd&&me.cd.heal)|0:0;return '<button class="btn'+(me.pick===a?' primary':'')+'" data-a="dgpick" data-p="'+a+'"'+(me.down||cd>0?' disabled':'')+'>'+DG_ACT[a]+'<small>'+(cd>0?'รอ '+cd+' รอบ':a==='sk'?(DG_SKN[me.cls]||''):a==='grd'?(r.mem.length>1?'รับดาเมจแทนเพื่อน':'ลดดาเมจที่ได้รับ'):a==='heal'?(r.mem.length>1?'ฟื้นฟูทีม / ชุบชีวิต':'ฟื้นฟู HP'):'โจมตีปกติ')+'</small></button>'}).join('')+'<button class="btn" data-a="dgleave">🏃 ออก<small>'+(rg?'บันทึกระยะ':'ออกจากห้อง')+'</small></button>';
+ var actions=['atk','grd','heal'].map(function(a){var cd=a==='sk'?(me.cd&&me.cd.sk)|0:a==='heal'?(me.cd&&me.cd.heal)|0:0;return '<button class="btn'+(me.pick===a?' primary':'')+'" data-a="dgpick" data-p="'+a+'"'+(me.down||cd>0?' disabled':'')+'>'+DG_ACT[a]+'<small>'+(cd>0?'รอ '+cd+' รอบ':a==='sk'?(DG_SKN[me.cls]||''):a==='grd'?(r.mem.length>1?'รับดาเมจแทนเพื่อน':'ลดดาเมจที่ได้รับ'):a==='heal'?(r.mem.length>1?'ฟื้นฟูทีม / ชุบชีวิต':'ฟื้นฟู HP'):'โจมตีปกติ')+'</small></button>'}).join('')+dgClassButtons203(r)+'<button class="btn" data-a="dgleave">🏃 ออก<small>'+(rg?'บันทึกระยะ':'ออกจากห้อง')+'</small></button>';
  var cells=r.mem.map(function(m){return '<span class="dgc107'+(m.me?' me':'')+(m.down?' down':'')+(m.picked?' ok':'')+'">'+esc(String(m.n||'').slice(0,6))+'<i>'+(m.down?'สลบ':m.picked?'✓':'…')+'</i></span>'}).join('')+'<i>›</i><span class="dgc107 en">'+esc(String(en.n||'').replace(/^[👑💀] /,'').slice(0,12))+'</span>';
  var title=rg?'🗝️ วงกต ชั้น '+rg.fl+' · ห้อง '+(rg.depth+1):r.mode==='tower100'?'หอคอย · ชั้น '+(r.stage+1)+'/100'+(en.boss?' · บอส '+en.skillCount+' สกิล':''):'กรุสมบัติ · ด่าน '+(r.stage+1)+'/3';
  return '<section id="battleStage" class="ts169 dg107"><div class="ts-turn169" role="group" aria-label="ลำดับเทิร์น"><div class="rib169">⚔ '+esc(title)+'</div><div class="por169 dgpor107">'+cells+'</div><div class="meta169"><span>รอบ <b>'+(r.round|0)+'</b></span><span class="who169">⏱ '+left+' วิ</span></div></div>'+
@@ -3545,7 +3556,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B201';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B203';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -8327,7 +8338,7 @@ function duelRail166(me,my){
  }).join('')+'</div>';
 }
 function buildRail162(b,r){
- var me=r&&r.mem[r.me],team=!!r,slots=team?(me.web||[]):webSkills160();
+ var me=r&&r.mem[r.me],team=!!r,slots=team?(me.web||[]).filter(function(k){return k.web!==undefined}):webSkills160();
  
  return '<div class="build-rail162" aria-label="สกิลใยแมงมุม 5 ช่อง">'+Array.from({length:5},function(_,i){
   var k=slots[i];if(!k)return '<button class="btn" disabled aria-label="ช่องสกิล '+(i+1)+' ยังไม่ปลดล็อก">'+(i+1)+'</button>';
@@ -8356,7 +8367,7 @@ function drawDgLandscape(c,W,H,tn,visual){if(H>W){drawDgTS107(c,W,H,tn,visual);r
 }
 function viewDgLandscape(){
  var r=dgRoom(),en=r.en||{},me=r.mem[r.me]||{},it=en.intent||{},left=Math.max(0,Math.ceil((r.left|0)/1000));
- var actions=['atk','sk','grd','heal'].map(function(a){var cd=a==='sk'?(me.cd&&me.cd.sk)|0:a==='heal'?(me.cd&&me.cd.heal)|0:0;return '<button class="btn'+(me.pick===a?' primary':'')+'" data-a="dgpick" data-p="'+a+'"'+(me.down||cd>0?' disabled':'')+'>'+DG_ACT[a]+'<small>'+(cd>0?'รอ '+cd+' รอบ':a==='sk'?(DG_SKN[me.cls]||''):a==='grd'?'รับดาเมจแทนเพื่อน':a==='heal'?'ฟื้นฟูทีม / ชุบชีวิต':'โจมตีพร้อมเพื่อน')+'</small></button>'}).join('');
+ var actions=['atk','grd','heal'].map(function(a){var cd=a==='sk'?(me.cd&&me.cd.sk)|0:a==='heal'?(me.cd&&me.cd.heal)|0:0;return '<button class="btn'+(me.pick===a?' primary':'')+'" data-a="dgpick" data-p="'+a+'"'+(me.down||cd>0?' disabled':'')+'>'+DG_ACT[a]+'<small>'+(cd>0?'รอ '+cd+' รอบ':a==='sk'?(DG_SKN[me.cls]||''):a==='grd'?'รับดาเมจแทนเพื่อน':a==='heal'?'ฟื้นฟูทีม / ชุบชีวิต':'โจมตีพร้อมเพื่อน')+'</small></button>'}).join('')+dgClassButtons203(r);
  return '<section id="battleStage"><canvas id="scene" data-mode="battle-dg" width="800" height="450" aria-label="ฉากดันเจี้ยนแนวนอน"></canvas>'+buildRail162(null,r)+'<div class="battle-top dg7top"><div class="dg7row"><div class="dg7info"><b>'+(r.mode==='rg'&&r.rg?'🗝️ วงกต ชั้น '+r.rg.fl+' · ห้อง '+(r.rg.depth+1):'ดันเจี้ยน · ด่าน '+(r.stage+1)+'/3')+' · รอบ '+(r.round|0)+'</b><small>'+esc(en.n||'')+(en.rear?' · แถวหลัง '+en.rear.hp+' HP':'')+(en.weak!=null?' · แพ้'+['ไฟ','น้ำ','ลม','ดิน'][en.weak]:'')+'</small></div><b class="dg7tm">⏱ '+left+'</b></div><div class="dg7row dg7btns"><button class="btn sm battle-menu54" data-a="bmenu54" aria-label="เปิดเมนูระหว่างต่อสู้">☰ เมนู</button>'+(r.mode==='rg'&&r.rg?'<button class="btn sm'+(r.rg.me&&r.rg.me.auto?' primary':'')+'" data-a="rg107auto">🤖 ออโต้ '+(r.rg.me&&r.rg.me.auto?'เปิด':'ปิด')+'</button>':'')+'<button class="btn sm" data-a="dgleave">ออก</button></div><div class="dg7alert"><b>ท่าถัดไป:</b> '+esc(it.txt||'กำลังเตรียมโจมตี')+'</div></div><div class="battle-dock"><div class="battle-self"><b>'+(me.down?'คุณสลบอยู่':me.pick?'เลือกคำสั่งแล้ว':'เลือกคำสั่ง')+'</b><small>เปลี่ยนคำสั่งได้ก่อนหมดเวลา</small></div><div class="battle-actions dungeon-actions">'+actions+'</div></div></section>';
 }
 
@@ -9456,11 +9467,13 @@ function hairImage200(id){
 }
 function colorRGB200(hex){return [1,3,5].map(function(i){return parseInt(hex.slice(i,i+2),16)})}
 function hairPixel200(d,i,color){
- var lum=(d[i]*.299+d[i+1]*.587+d[i+2]*.114)/255;
- if(lum<.12)return;
- // Preserve drawn strand shading and outlines while replacing the neutral silver.
- var shade=Math.pow(lum,1.35),highlight=Math.max(0,(lum-.86)/.14)*.23;
- for(var k=0;k<3;k++)d[i+k]=Math.round(color[k]*shade+(255-color[k])*highlight);
+ var lum=(d[i]*.299+d[i+1]*.587+d[i+2]*.114)/255;if(lum<.12)return;
+ var t=Math.max(0,Math.min(1,(lum-.15)/.85));
+ for(var k=0;k<3;k++){
+  var shadow=color[k]*.28+[9,7,12][k],mid=color[k]*.82,light=color[k]*.65+255*.35;
+  var v=t<.75?shadow+(mid-shadow)*Math.pow(t/.75,.9):mid+(light-mid)*Math.pow((t-.75)/.25,.85);
+  d[i+k]=Math.round(Math.max(0,Math.min(255,v)));
+ }
 }
 function hairTint200(im,id,color){
  if(color==='silver')return im;var key=id+'|'+color,hit=HAIR_TINT200.get(key);if(hit)return hit;
@@ -9475,36 +9488,25 @@ function eyeTint200(c,dir,eye,row){
  if(p[i+3]>150&&r>28&&r<145&&g<110&&b<105&&r>g*.85){var v=.55+(r+g+b)/450;for(var k=0;k<3;k++)p[i+k]=Math.min(255,rgb[k]*v)}
  }});c.putImageData(d,x0,y0);
 }
-// B201: a complete, shared face rig instead of clipped fragments from each class.
-var FACE_BASE201=null,FACE_COLORS201=new Map();
+// B202 uses a shaded raster face, with calibrated iris anchors, rather than pasted fragments.
+var FACE_BASE201=null,FACE_COLORS201=new Map(),FACE_ART202=null;
+var FACE_ANCHOR202=[{"e": [[81.0, 79.0], [110.0, 78.5]]}, {"e": [[71.5, 79.5], [95.0, 78.5]]}, {"e": [[70.0, 78.5]]}, null, null, null, {"e": [[121.0, 79.0]]}, {"e": [[95.5, 79.0], [120.0, 79.0]]}];
+function faceImage202(){
+ if(SV)return null;if(!FACE_ART202){var r=FACE_ART202={im:new Image(),ok:false};r.im.onload=function(){r.ok=true;FACE_BASE201=null;FACE_COLORS201.clear();HEAD_CACHE200.clear();PORT_C={};try{render()}catch(e){}};r.im.onerror=function(){r.bad=true};r.im.src='assets/images/face202_base.webp'}
+ return FACE_ART202.ok?FACE_ART202.im:null;
+}
 function faceTemplate201(eye){
- var im=characterImage136('swordsman');if(!im)return null;
- var cache=FACE_COLORS201.get(eye);if(cache&&FACE_BASE201===im)return cache;
+ var im=faceImage202();if(!im)return null;
  if(FACE_BASE201!==im){FACE_BASE201=im;FACE_COLORS201.clear()}
- var src=document.createElement('canvas');src.width=1536;src.height=192;var sc=src.getContext('2d');sc.drawImage(im,0,0,1536,192,0,0,1536,192);var original=sc.getImageData(0,0,1536,192).data;
- var cv=document.createElement('canvas');cv.width=1536;cv.height=192;var c=cv.getContext('2d');
- var tile=document.createElement('canvas');tile.width=tile.height=192;var tc=tile.getContext('2d'),patch=tc.createImageData(192,192),out=patch.data;
- FACE_ANCHOR200.forEach(function(a,dir){var bx=dir*192;c.save();c.translate(bx,0);
- c.fillStyle='#efc19e';c.fillRect(90,95,12,12);
- if(!a){if(dir===3||dir===5){c.fillStyle='#ffdbb3';c.strokeStyle='#765247';c.lineWidth=1;c.beginPath();c.ellipse(dir===3?74:118,88,4,7,dir===3?-.3:.3,0,7);c.fill();c.stroke()}c.restore();return}
- var center=dir===1?88:dir===2?83:dir===6?109:dir===7?104:96;
- var faceWidth=dir===2||dir===6?25:32;
- c.fillStyle='#ffdfb7';c.strokeStyle='#62453c';c.lineWidth=1.2;c.beginPath();c.ellipse(center,72,faceWidth,31,0,0,7);c.fill();c.stroke();
- out.fill(0);
- for(var y=62;y<101;y++)for(var x=53;x<139;x++){
- var i=(y*1536+bx+x)*4,j=(y*192+x)*4,r=original[i],g=original[i+1],b=original[i+2];if(original[i+3]<128)continue;
- var inside=Math.pow((x-center)/faceWidth,2)+Math.pow((y-72)/31,2)<1;if(!inside)continue;
- var skin=y>=86&&r>135&&g>75&&r>g*1.035&&g>b*1.055;
- var feature=y>=72&&y<=92&&a.e.some(function(e){return Math.pow((x-e[0])/9.5,2)+Math.pow((y-e[1])/11,2)<1});
- var mouth=y>=88&&y<=98&&Math.abs(x-a.m[0])<=8;
- // Retain the entire eyelid, iris, highlight, eyebrows and mouth, excluding old fringe pixels.
- if(skin||feature&&!(r>65&&b>=r+2)||mouth){out[j]=r;out[j+1]=g;out[j+2]=b;out[j+3]=original[i+3]}
+ var cached=FACE_COLORS201.get(eye);if(cached)return cached;
+ var cv=document.createElement('canvas');cv.width=1536;cv.height=192;var c=cv.getContext('2d');c.drawImage(im,0,0);
+ if(eye!=='default'){
+ var pixels=c.getImageData(0,0,1536,192),p=pixels.data,rgb=colorRGB200(EYE_COLORS200[eye][1]);
+ FACE_ANCHOR202.forEach(function(a,dir){if(!a)return;a.e.forEach(function(e){for(var y=Math.ceil(e[1]-6);y<=Math.floor(e[1]+6);y++)for(var x=Math.ceil(e[0]-4.5);x<=Math.floor(e[0]+4.5);x++){
+ if(Math.pow((x-e[0])/4.5,2)+Math.pow((y-e[1])/6,2)>1)continue;var i=(y*1536+dir*192+x)*4,r=p[i],g=p[i+1],b=p[i+2];
+ if(p[i+3]>150&&Math.max(r,g,b)<165&&Math.max(r,g,b)>18){var light=.55+(r+g+b)/460;for(var k=0;k<3;k++)p[i+k]=Math.min(255,rgb[k]*light)}
+ }})});c.putImageData(pixels,0,0);
  }
- tc.putImageData(patch,0,0);c.drawImage(tile,0,0);
- c.strokeStyle='#584035';c.lineWidth=1.05;c.lineCap='round';a.e.forEach(function(e){c.beginPath();c.moveTo(e[0]-5,e[1]-10);c.quadraticCurveTo(e[0],e[1]-12,e[0]+5,e[1]-10);c.stroke()});c.restore();
- });
- // Color only the iris; all outlines, sclera and highlights keep their original pixels.
- for(var dir=0;dir<8;dir++)eyeTint200(c,dir,eye,0);
  FACE_COLORS201.set(eye,cv);return cv;
 }
 
@@ -9524,15 +9526,15 @@ function headAtlas200(im,key,look){
  // Replace the baked head; leave weapons, class outfit, hands and body in the original atlas.
  c.clearRect(bx+43,by+8,108,99);
  c.drawImage(face201,dir*192,0,192,192,bx,by,192,192);
- c.drawImage(tint,dir*192,0,192,192,bx,by,192,192);
- var restore=c.getImageData(bx,by,192,192),rp=restore.data;for(var yy=62;yy<107;yy++)for(var xx=43;xx<151;xx++){if(xx>=65&&xx<=130)continue;var si=((by+yy)*1536+bx+xx)*4,di=(yy*192+xx)*4,rr=source[si],gg=source[si+1],bb=source[si+2];if(source[si+3]>120&&Math.max(rr,gg,bb)-Math.min(rr,gg,bb)>48&&!(rr>125&&gg>70&&rr>gg*1.03&&gg>bb*1.06)){for(var kk=0;kk<4;kk++)rp[di+kk]=source[si+kk]}}c.putImageData(restore,bx,by);
+ c.drawImage(tint,dir*192,0,192,192,bx+9.6,by+10,172.8,172.8);
+ var restore=c.getImageData(bx,by,192,192),rp=restore.data;for(var yy=62;yy<107;yy++)for(var xx=43;xx<151;xx++){if(xx>=65&&xx<=130)continue;var si=((by+yy)*1536+bx+xx)*4,di=(yy*192+xx)*4,rr=source[si],gg=source[si+1],bb=source[si+2];if(source[si+3]>120&&Math.max(rr,gg,bb)-Math.min(rr,gg,bb)>48&&!(Math.max(rr,gg,bb)-Math.min(rr,gg,bb)<72&&bb>=rr*.88&&gg>=rr*.82)&&!(rr>125&&gg>70&&rr>gg*1.03&&gg>bb*1.06)){for(var kk=0;kk<4;kk++)rp[di+kk]=source[si+kk]}}c.putImageData(restore,bx,by);
  }
  }else if(L.hairColor200!=='silver'){
  var d=c.getImageData(0,0,1536,384),p=d.data,rgb=colorRGB200(HAIR_COLORS200[L.hairColor200][1]);
  for(var row=0;row<2;row++)for(var dir=0;dir<8;dir++)for(var y=17;y<101;y++)for(var x=47;x<147;x++){
- var a=FACE_ANCHOR200[dir];if(a&&y>=74&&a.e.some(function(e){return Math.pow((x-e[0])/8,2)+Math.pow((y-e[1])/11,2)<1}))continue;
+ var a=FACE_ANCHOR200[dir];if(a&&y>=77&&a.e.some(function(e){return Math.pow((x-e[0])/7,2)+Math.pow((y-e[1]-1)/8,2)<1}))continue;
  var i=((row*192+y)*1536+dir*192+x)*4,r=p[i],g=p[i+1],b=p[i+2];
- if(p[i+3]>0&&r>68&&Math.max(r,g,b)-Math.min(r,g,b)<32&&b>=g*.96)hairPixel200(p,i,rgb);
+ if(p[i+3]>0&&r>60&&g>50&&b>50&&Math.max(r,g,b)-Math.min(r,g,b)<72&&b>=r*.88&&g>=r*.82)hairPixel200(p,i,rgb);
  }c.putImageData(d,0,0);
  }
  if(!wig)for(var row=0;row<2;row++)for(var dir=0;dir<8;dir++)eyeTint200(c,dir,L.eye200,row);
@@ -9943,7 +9945,7 @@ function gemHunt140(b,e){if(!s||!s.created||!b||b.kind!=='monster'||b.tower||b.w
  if(d.random<10&&Math.random()<.01){d.random++;gemDust140(1,'พบจากมอนสเตอร์')}
  if((b.fboss||e.mapBoss)&&!d.boss){d.boss=true;gemDust140(3,'บอสแผนที่ตัวแรกของวัน')}
 }
-function gemBusy140(){return !s||!s.created||!!s.battle||!!s.res||!!(!SV&&(dgRoom()||(wdOn108()&&NET.wd.ph!=='end')))}
+function gemBusy140(){var room=!SV&&dgRoom();return !s||!s.created||!!s.battle||!!s.res||!!(!SV&&(room&&['fight','rg'].includes(room.st)||(wdOn108()&&NET.wd.ph!=='end')))}
 function gemPayload140(op,k,t){return gemState140().rev+':'+op+':'+k+':'+t}
 function gemQuote140(payload){if(gemBusy140())return null;var a=String(payload||'').split(':'),g=gemState140();if(a.length!==4||a[0]!==String(g.rev)||GEM140_KEYS.indexOf(a[2])<0||!/^[1-4]$/.test(a[3]))return null;
  var op=a[1],k=a[2],t=+a[3],bag=g.bag[k],eq=g.eq[k],cost=0,dust=0,useEq=false;
@@ -9975,7 +9977,7 @@ function gemHtml140(){var g=gemState140(),d=g.day,k=GEM_UI140.color,t=gemTier140
  var slots=GEM140_KEYS.map(function(c){var lv=g.eq[c];return '<button class="gem140slot'+(k===c?' on':'')+'" data-a="gemcolor140" data-p="'+c+'">'+gemIcon140(c,lv)+'<b>'+GEM140[c].n+'</b><small>'+(lv?'Lv'+lv+' · '+GEM140[c].label+' +'+GEM140[c].v[lv-1]:'ยังไม่สวม')+'</small></button>'}).join('');
  var rows=[1,2,3,4].map(function(lv){var n=g.bag[k][lv-1],equipped=g.eq[k]===lv;return '<div class="gem140row"><div><b>ระดับ '+lv+'</b><small>'+m.label+' +'+m.v[lv-1]+'<br>ในกระเป๋า '+n+' เม็ด'+(equipped?' · สวมอยู่ 1':'')+'</small></div><div class="gem140buttons">'+(equipped?gemBtn140('ถอดฟรี','r',k,lv,false):gemBtn140('สวม','e',k,lv,false))+(lv<4?gemBtn140('รวม 3 → Lv'+(lv+1),'u',k,lv,true):'')+'</div></div>'}).join('');
  var cf=q?'<section class="card" role="alert"><b>ยืนยัน'+(q.op==='c'?'คราฟ':'อัปเกรด')+' '+GEM140[q.k].n+' ระดับ '+(q.op==='u'?q.t+1:1)+'?</b><p>ใช้ '+q.cost.toLocaleString()+' ทอง'+(q.dust?' และผงผลึก '+q.dust:' และ Gem สีเดียวกันระดับ '+q.t+' จำนวน 3 เม็ด')+(q.useEq?' (รวมเม็ดที่สวมอยู่ อัปแล้วสวมต่อทันที)':'')+'</p><div class="grid2"><button class="btn primary" data-a="gemyes140"'+(gemQuote140(q.payload)?'':' disabled')+'>ใช่</button><button class="btn" data-a="gemno140">ไม่</button></div></section>':'';
- return '<section class="card"><div class="row"><h2>💎 Gem</h2><b>ผงผลึก '+g.dust.toLocaleString()+'</b></div><p class="hint">6 ช่อง · สีละ 1 เม็ด · ผูกตัวละคร ขาย/เทรดไม่ได้ · ถอดฟรี · รวมสำเร็จ 100%<br>SP ใช้ MP เดิมของเกม</p><div class="gem140slots">'+slots+'</div>'+(busy?'<p class="hint">จบการต่อสู้และออกจากห้องดันเจี้ยนก่อนเปลี่ยนหรือคราฟ Gem</p>':'')+'</section>'+cf+
+ return '<section class="card"><div class="row"><h2>💎 Gem</h2><b>ผงผลึก '+g.dust.toLocaleString()+'</b></div><p class="hint">6 ช่อง · สีละ 1 เม็ด · ผูกตัวละคร ขาย/เทรดไม่ได้ · ถอดฟรี · รวมสำเร็จ 100%<br>SP ใช้ MP เดิมของเกม</p><div class="gem140slots">'+slots+'</div>'+(busy?'<p class="hint">จบการต่อสู้หรือการสำรวจวงกตก่อนเปลี่ยนหรือคราฟ Gem</p>':'')+'</section>'+cf+
  '<section class="card"><h3 style="color:'+m.c+'">'+m.n+' · '+m.label+'</h3><div class="row"><span>คราฟระดับ 1: 20 ผง + 10,000 ทอง</span>'+gemBtn140('คราฟ Lv1','c',k,1,true)+'</div>'+rows+'<p class="hint">รวม 3 เม็ดสีเดียวกัน: Lv1→2 ใช้ 30,000 · Lv2→3 ใช้ 100,000 · Lv3→4 ใช้ 300,000 ทอง<br>เมื่อมีเม็ดระดับนั้นสวมอยู่ ระบบใช้เป็นเม็ดหลักและสวมระดับใหม่ต่อทันที</p></section>'+
  '<section class="card"><h3>✦ พรแห่งผลึก '+(t?'ระดับ '+t:'ยังไม่เปิด')+'</h3><p class="hint">สวมครบ 6 สี ใช้ระดับต่ำสุดในชุด · ทุก 5 การกระทำ ฟื้น HP และได้โล่ 2 การกระทำ (นับครั้งที่เกิดพรด้วย) · โล่ไม่ซ้อน · เริ่มนับใหม่ทุกการต่อสู้ · ผลลดครึ่งใน PvP</p><div class="gem140table"><table><thead><tr><th>ระดับ</th><th>ฟื้น HP</th><th>โล่</th></tr></thead><tbody>'+[1,2,3,4].map(function(lv){return '<tr'+(lv===t?' class="gem140active"':'')+'><td>'+lv+'</td><td>'+[1,1.5,2,3][lv-1]+'%</td><td>'+[2,3,4,5][lv-1]+'%</td></tr>'}).join('')+'</tbody></table></div><p class="hint">เพชรสีขาวฟื้น SP ได้แม้ยังใส่ไม่ครบชุด · โหมดที่ไม่มีระบบ MP ใช้เฉพาะพร HP และโล่</p></section>'+
  '<section class="card"><h3>หาผงผลึกวันนี้</h3><div class="gem140progress"><p>ล่ามอน '+d.hunts+'/600 ตัว · ทุก 300 ตัว +5 ผง (วันละ 2 ครั้ง)</p><p>สุ่มจากมอน 1% · ได้แล้ว '+d.random+'/10 ผง</p><p>ล่ามอน '+Math.min(30,d.hunts)+'/30 ตัว · +5 ผง '+(d.hunt30?'✓ รับแล้ว':'')+'</p><p>ภารกิจรายวัน '+Math.min(60,dqPts())+'/60 แต้ม · +5 ผง '+(d.daily?'✓ รับแล้ว':'')+'</p><p>บอสแผนที่ตัวแรก · +3 ผง '+(d.boss?'✓ รับแล้ว':'')+'</p></div><p class="hint">รับอัตโนมัติ · รีเซ็ตเที่ยงคืนเวลาไทย · ผงสะสมไม่หาย<br>นับมอนแผนที่และมอนในฝูง · ไม่นับ PvP หอคอย บอสโลก ท้าประลอง และดันเจี้ยน</p></section>';
