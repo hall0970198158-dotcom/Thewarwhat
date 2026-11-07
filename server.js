@@ -226,10 +226,16 @@ let DG_ID = 100;
 const rnd = (a, b) => a + Math.random() * (b - a);
 const pickA = a => a[Math.floor(Math.random() * a.length)];
 function twPick161(r,m,id) {
-  return m.web.find(k=>k.id===id&&m.mp>=k.mp&&!m.webCd[id]&&!(k.t==='b'&&m.webBuff?.[id]>0));
+  m.webCd=m.webCd||{};m.webBuff=m.webBuff||{};return (m.web||[]).find(k=>k.id===id&&m.mp>=k.mp&&!m.webCd[id]&&!(k.t==='b'&&m.webBuff[id]>0));
+}
+function dgClassPick203(r,m){return (m.web||[]).find(k=>k.source203==='class'&&k.t==='a'&&twPick161(r,m,k.id))?.id||'atk'}
+function dgSyncClassHp203(m){
+ const percent=(m.web||[]).reduce((v,k)=>v+(m.webBuff?.[k.id]>0?(k.b?.hpp203?.[0]||0):0),0)/100;
+ const base=Math.max(1,m.mhp-(m.classHpBonus203||0)),next=Math.round(base*percent),delta=next-(m.classHpBonus203||0);
+ m.mhp=base+next;m.classHpBonus203=next;m.hp=Math.min(m.mhp,m.hp+Math.max(0,delta));
 }
 function twReset161(r) {
-  for(const m of r.mem)Object.assign(m,{mp:m.mmp,webCd:{},webBuff:{},webShield170:0,twPoison:0,twSkip:false,webCursor162:0});
+  for(const m of r.mem){m.webBuff={};dgSyncClassHp203(m);Object.assign(m,{mp:m.mmp,webCd:{},webShield170:0,twPoison:0,twSkip:false,webCursor162:0})}
 }
 function twRound161(r,picks,ev,log,idx) {
   const en=r.en;
@@ -248,7 +254,7 @@ function twRound161(r,picks,ev,log,idx) {
     m.mp-=k.mp;m.webCd[id]=k.cd+1;
     log.push(m.n+' ใช้ '+k.n);
     if(k.t==='b'){
-      m.webBuff[id]=k.dur;
+      m.webBuff[id]=k.dur;dgSyncClassHp203(m);
       heal(m,m.mhp*(k.b.heal160?.[0]||0)/100);
       if(k.shield)m.webShield170=Math.max(m.webShield170||0,Math.round(m.mhp*k.shield));
       if(k.manaHeal)m.mp=Math.min(m.mmp,m.mp+Math.round(m.mmp*k.manaHeal));
@@ -271,9 +277,9 @@ function twRound161(r,picks,ev,log,idx) {
       for(const [m,k,mp] of attacks){
         if(en.hp<=0)break;
         const shell=shellRate(k.ign||0);
-        const crit=!!k.critAdd&&Math.random()*100<Math.min(75,m.crit+k.critAdd);
+        const crit=Math.random()*100<Math.min(75,m.crit+(k.critAdd||0));
         const power=engine.webPower170(k,m.hp,m.mhp,en.hp,en.mhp,mp,m.mmp);
-        const d=Math.max(1,Math.round(m.atk*k.m[0]*(k.hits||1)*offense(m,true)*shell*power*(crit?2:1)*(en.stun?1.3:1)));
+        const d=Math.max(1,Math.round(m.atk*k.m[0]*(k.hits||1)*offense(m,true)*shell*power*(1+(r.mode==='rg'?(m.bx?.sk||0):0))*(r.mode==='rg'&&r.round===1?1+(m.bx?.first||0):1)*(crit?2+buff(m,'cdmg'):1)*(en.stun?1.3:1)));
         const actual=Math.min(d,en.hp);
         en.hp-=d;total+=d;
         ev.push({t:'p',i:idx(m),a:'sk',d,c:crit});
@@ -285,7 +291,8 @@ function twRound161(r,picks,ev,log,idx) {
     },
     hit(m,raw,reduction=0){
       const special=['sweep','blast'].includes(en.intent.t);
-      const adjusted=raw*(1-Math.min(.25,enemyBuff('eatk160')))*(1-Math.min(.30,buff(m,'ward160')))*(special?1-buff(m,'magicWard170'):1);
+      const armor=Math.max(0,(m.def||0)*buff(m,'armor203')+100*buff(m,'def203'));
+      const adjusted=Math.max(0,raw-armor*.5)*(1-Math.min(.25,enemyBuff('eatk160')))*(1-Math.min(.30,buff(m,'ward160')))*(special?1-buff(m,'magicWard170'):1);
       const dodge=100*(buff(m,'dodge')+enemyBuff('blind170'));
       let d=gemHitServer140(m,Math.round(dgHitP(m,adjusted,dodge)*(1-reduction)));
       if(m.webShield170&&buff(m,'shield170')){
@@ -303,20 +310,21 @@ function twRound161(r,picks,ev,log,idx) {
       if(en.hp>0&&en.regen)en.hp=Math.min(en.mhp,en.hp+Math.round(en.regen*recoverRate()));
     },
     clear(){
-      for(const m of r.mem)if(!m.down)heal(m,m.mhp*buff(m,'regen170'));
-      for(const m of r.mem)for(const id of Object.keys(m.webBuff||{}))if(m.webBuff[id]>0)m.webBuff[id]--;
+      for(const m of r.mem)if(!m.down)heal(m,m.mhp*buff(m,'regen170')+100*buff(m,'regen203'));
+      for(const m of r.mem){for(const id of Object.keys(m.webBuff||{}))if(m.webBuff[id]>0)m.webBuff[id]--;dgSyncClassHp203(m)}
     }
   };
 }
 function dgStats(p) {
   const sn = engine.snap(p.s); if (!sn) return null;
-  return { web: engine.teamWeb161(p.s), mmp: Math.max(20,p.s.maxmp|0), n: sn.n, cls: sn.cls, lvl: sn.lvl | 0, look: sn.look, mhp: Math.max(1, sn.hp | 0), atk: Math.max(1, sn.atk | 0), def: Math.max(0, sn.def | 0), crit: Math.min(60, sn.crit || 0), dodge: Math.min(25, sn.dodge || 0), gemTier140: Math.max(0,Math.min(4,sn.gemTier140|0)) };
+  return { classHpBonus203:0, web: engine.teamWeb161(p.s), mmp: Math.max(20,p.s.maxmp|0), n: sn.n, cls: sn.cls, lvl: sn.lvl | 0, look: sn.look, mhp: Math.max(1, sn.hp | 0), atk: Math.max(1, sn.atk | 0), def: Math.max(0, sn.def | 0), crit: Math.min(60, sn.crit || 0), dodge: Math.min(25, sn.dodge || 0), gemRegen203:[0,1,2,3,5][Math.max(0,Math.min(4,p.s.gem140?.eq?.white|0))], gemTier140: Math.max(0,Math.min(4,sn.gemTier140|0)) };
 }
 
 // B140: shared combat semantics for dungeon, labyrinth and live duels (these modes have no MP).
 function gemTurnServer140(m, duel, log, ev, idx, healRate=1) {
  const q=m.gemState140||(m.gemState140={n:0,left:0,shield:0});q.n++;if(q.left>0&&!--q.left)q.shield=0;
- const t=m.gemTier140|0;if(t<1||t>4||q.n%5||m.hp<=0)return;
+ if(q.n%5||m.hp<=0)return;const mp=Math.min(m.gemRegen203||0,Math.max(0,(m.mmp||0)-(m.mp||0)));if(mp){m.mp+=mp;if(log)log.push(m.n+' เพชรฟื้น SP +'+mp)}
+ const t=m.gemTier140|0;if(t<1||t>4)return;
  const scale=duel?.5:1,h=Math.min(m.mhp-m.hp,Math.floor(m.mhp*[.01,.015,.02,.03][t-1]*scale*healRate));m.hp+=h;
  q.shield=Math.floor(m.mhp*[.02,.03,.04,.05][t-1]*scale);q.left=2;
  if(log)log.push(m.n+' ใช้พรแห่งผลึก Lv'+t+' · HP +'+h+' · โล่ '+q.shield);
@@ -373,7 +381,7 @@ function dgHitP(m, raw, extraDodge=0) { // ดาเมจที่ผู้เ�
 function dgResolve(r) {
   if (r.mode === 'rg') return rgResolve(r);
   const en = r.en, ev = [], log = [], idx = m => r.mem.indexOf(m);
-  const picks = dgAlive(r).map(m => { let a = m.pick || 'atk'; if ((a === 'sk' && m.cd.sk > 0) || (a === 'heal' && m.cd.heal > 0)) a = 'atk'; return [m, a]; });
+  const picks = dgAlive(r).map(m => { if(!m.pick&&m.auto)dgAutoWeb162(r,m);let a = m.pick || 'atk';if(a==='sk')a=dgClassPick203(r,m); if ((a === 'sk' && m.cd.sk > 0) || (a === 'heal' && m.cd.heal > 0)) a = 'atk'; return [m, a]; });
   const team = twRound161(r,picks,ev,log,idx);
   for(const pair of picks){
     const m=pair[0];
@@ -502,21 +510,20 @@ async function dgPayload(uid, p) {
   return { runs: { left, max: 3 }, tower100:{left:towerLeft163(p),max:TOWER163_RUNS}, rooms, room: dgView(r, uid), rg: rgBoard(uid) };
 }
 function dgAutoWeb162(r,m) {
-  const order=live.get(m.uid)?.s.teamOrder162||[];
+  const state=live.get(m.uid)?.s;
+  if(state?.autoSkill===false){m.pick='atk';return}
+  const valid=ids=>Array.isArray(ids)&&ids.some(id=>(m.web||[]).some(k=>k.id===id));
+  const order=valid(state?.teamOrder162)?state.teamOrder162:valid(state?.autoOrder162)?state.autoOrder162:(m.web||[]).map(k=>k.id);
   for(let n=0;n<7;n++){
-    const at=((m.webCursor162||0)+n)%7,id=order[at],k=m.web.find(x=>x.id===id);
-    if(!k)continue;
+    const at=((m.webCursor162||0)+n)%7,id=order[at];
     if(!twPick161(r,m,id))continue;
-    m.pick=id;m.webCursor162=(at+1)%7;
-    return;
+    m.pick=id;m.webCursor162=(at+1)%7;return;
   }
-  if(r.mode==='rg'){m.pick=rgAutoPick(r,m);return}
-  const alive=dgAlive(r),intent=r.en.intent;
+  const alive=dgAlive(r),intent=r.en.intent||{};
   const needHeal=alive.some(x=>x.hp/x.mhp<.40)||alive.length<r.mem.length;
-  m.pick=needHeal&&!m.cd.heal?'heal':
-    intent.t==='blast'||(intent.t==='slam'&&intent.tg===m.uid&&m.hp/m.mhp<.55)?'grd':
-    !m.cd.sk?'sk':'atk';
+  m.pick=needHeal&&!m.cd.heal?'heal':intent.t==='blast'||(intent.t==='slam'&&intent.tg===m.uid&&m.hp/m.mhp<.55)?'grd':'atk';
 }
+
 setInterval(() => { // ตัดสินรอบที่หมดเวลา · ล้างห้องร้าง
   const now = Date.now();
   for (const r of DGR.values()) {
@@ -1054,7 +1061,7 @@ function rgEff(m) { // คำนวณค่าพลังในวงกตจ
   for (const b of m.bf || []) x[b.k] = Math.min(RG_CAP[b.k], (x[b.k] || 0) + RG_BUFF[b.k].v[b.t]);
   m.bx = x; const omhp = m.mhp;
   m.atk = Math.max(1, Math.round(b0.atk * (1 + (x.atk || 0)))); m.crit = Math.min(75, b0.crit + (x.crit || 0)); m.dodge = Math.min(40, b0.dodge + (x.dodge || 0));
-  m.mhp = Math.max(1, Math.round(b0.mhp * (1 + (x.hp || 0)))); if (m.mhp > omhp && !m.down) m.hp += m.mhp - omhp; m.hp = Math.min(m.hp, m.mhp);
+  m.mhp = Math.max(1, Math.round(b0.mhp * (1 + (x.hp || 0))) + (m.classHpBonus203||0)); if (m.mhp > omhp && !m.down) m.hp += m.mhp - omhp; m.hp = Math.min(m.hp, m.mhp);
 }
 function rgAddBuff(m, b) { m.bf = m.bf || []; m.bf.push({ k: b.k, t: b.t }); rgEff(m); }
 function rgStart(r) {
@@ -1180,8 +1187,9 @@ function rgBuy(r, m, i) {
 function rgAutoShop(r, m) { const g = r.rg; if (!g.shop) return; if (m.hp / m.mhp < 0.6) rgBuy(r, m, 0); g.shop.map((x, i) => [x, i]).filter(([x]) => x.id === 'b').sort((a, b) => b[0].t - a[0].t).forEach(([x, i]) => { if (m.coins >= x.p) rgBuy(r, m, i); }); }
 function rgResolve(r) { // เหมือน dgResolve + ผลของบัพ (ดูดเลือด สกิล ฟื้นฟู ลดดาเมจ สะท้อน จู่โจมก่อน)
   const en = r.en, ev = [], log = [], idx = m => r.mem.indexOf(m), B = m => m.bx || {};
-  const picks = dgAlive(r).map(m => { let a = m.pick || (m.auto ? rgAutoPick(r, m) : 'atk'); if ((a === 'sk' && m.cd.sk > 0) || (a === 'heal' && m.cd.heal > 0)) a = 'atk'; return [m, a]; });
+  const picks = dgAlive(r).map(m => { if(!m.pick&&m.auto)dgAutoWeb162(r,m);let a = m.pick || 'atk';if(a==='sk')a=dgClassPick203(r,m); if ((a === 'sk' && m.cd.sk > 0) || (a === 'heal' && m.cd.heal > 0)) a = 'atk'; return [m, a]; });
   const team=twRound161(r,picks,ev,log,idx);
+  for(const pair of picks){const m=pair[0];if(m.twSkip){m.twSkip=false;pair[1]='wait';log.push(m.n+' ถูกผนึกจังหวะ')}if(m.twPoison){m.twPoison--;m.hp=Math.max(1,m.hp-Math.round(m.mhp*.04));log.push(m.n+' เสีย HP จากพิษ')}}
   const nAtk = picks.filter(([, a]) => a === 'atk' || a === 'sk').length, combo = nAtk >= 2 ? 1 + 0.15 * (nAtk - 1) : 1;
   for(const [m] of picks)gemTurnServer140(m,false,log,ev,idx);
   for (const [m, a] of picks) if (a === 'grd') { m.guard = true; ev.push({ t: 'g', i: idx(m) }); log.push(m.n + ' ตั้งท่าป้องกัน'); }
@@ -1864,7 +1872,7 @@ const routes = {
     if (['webup','webequip','webreset167'].includes(a) && (DGR.get(DGU.get(u.id))?.st === 'fight' || DGR.get(DGU.get(u.id))?.st === 'rg' || wdOf(u.id))) {
       return send(res, 409, { error: 'จบการต่อสู้ก่อนปรับบิวด์' });
     }
-    if(a==='gemdo140'&&(DGU.has(u.id)||wdOf(u.id)))return send(res,409,{error:'ออกจากห้องดันเจี้ยนหรือจบการดวลก่อนเปลี่ยนหรือคราฟ Gem'});
+    if(a==='gemdo140'){const room=DGR.get(DGU.get(u.id)),duel=wdOf(u.id);if(room&&['fight','rg'].includes(room.st)||duel&&duel.ph!=='end')return send(res,409,{error:'จบการต่อสู้หรือการสำรวจวงกตก่อนเปลี่ยนหรือคราฟ Gem'});}
     if(['reroll135','job2','job3','job4','clsch96'].includes(a)){const room=DGR.get(DGU.get(u.id));if(room&&room.st==='fight')return send(res,409,{error:'จบดันเจี้ยนทีมก่อนรีออฟหรือเปลี่ยนอาชีพ'});}
     if(a==='b'&&p.s.battle?.kind==='pvp'&&
       (b.fight!==p.s.battle.key50||b.turn172!==p.s.battle.pvpRound172))return reply(res,p,{fx:[],fxt:{}});
