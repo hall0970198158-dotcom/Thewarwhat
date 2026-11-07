@@ -175,6 +175,7 @@ const DG_STAGES = [
   { n: 'นักรบกิ้งก่าต้องสาป', k: 'lizard', R: 6, A: 0.17, pool: ['slam', 'sweep', 'shell', 'charge', 'slam'] },
   { n: 'มังกรเฝ้าสมบัติ', k: 'dragon', R: 8, A: 0.19, boss: true, pool: ['slam', 'sweep', 'charge', 'shell', 'slam', 'sweep', 'charge'] },
 ];
+const TOWER_RECRUIT_MS = 60000;
 const TOWER163_MAX = 100, TOWER163_RUNS = 3, TOWER163_MS = 20000;
 const TOWER163_MOVES = [
   {t:'slam', n:'ค้อนพิพากษา', power:1},
@@ -358,6 +359,7 @@ function dgStage(r) {
   dgIntent(r); r.en.fresh = true;
 }
 function dgStart(r) {
+  delete r.recruit194;
   for (const m of r.mem) { const p = live.get(m.uid); const st = p && dgStats(p); if (st) Object.assign(m, st); m.hp = m.mhp; m.down = false; m.cd = { sk: 0, heal: 0 }; m.pick = null; }
   r.st = 'fight'; r.stage = 0; r.round = 1; r.log = [(r.mode==='tower100'?'เข้าสู่หอคอย 100 ชั้น':'เข้าสู่กรุสมบัติต้องสาป')+' (' + r.mem.length + ' คน)']; r.ev = []; r.loot = {};
   dgStage(r); r.en.fresh = false; r.deadline = Date.now() + dgTime163(r); r.seq++; r.ver++;
@@ -1728,7 +1730,12 @@ async function playerId48(uid, name) {
   for (const [id, p] of live) if (p.s && p.s.created && p.s.name === name) return id;
   const row = await db.findByName(name); return row ? Number(row.user_id) : 0;
 }
-function chatDto48(m, uid) { return { id: m.id, ch: m.ch, guildId:m.ch==='guild'?m.key:undefined, uid: m.from, n: m.n, t: m.t, to: m.to, toUid: m.toId, mine: m.from === uid, sp: m.sp | 0, cg: m.cg | 0 }; }
+function towerRecruitRoom194(m) {
+  const r = m && DGR.get(m.towerRoom194);
+  return r && r.mode === 'tower100' && r.st === 'lobby' &&
+    r.host === m.from && r.recruit194 === m.id && r.mem.length < DG_MAX ? r : null;
+}
+function chatDto48(m, uid) { return { id: m.id, ch: m.ch, guildId:m.ch==='guild'?m.key:undefined, uid: m.from, n: m.n, t: m.t, to: m.to, toUid: m.toId, mine: m.from === uid, sp: m.sp | 0, cg: m.cg | 0, towerRecruit: m.towerRoom194 ? 1 : undefined }; }
 function publicPlayer48(uid, p) {
   const o = p.s, acc = {}, sn = engine.snap(o) || {};
   for (const k of ['ring','neck','brooch','helm','armor','gloves','boots']) { const a = o.acc && o.acc[k]; acc[k] = a ? { t: a.t|0, g: a.g|0, e: a.e|0, sk: a.sk|0, cd: Array.isArray(a.cd) ? a.cd.slice(0, 5) : [] } : null; }
@@ -1914,7 +1921,7 @@ const routes = {
       const ok = m.ch === 'world' || (m.ch==='guild'&&guild&&m.key===guild) || (m.ch === 'fac' && fac != null && m.key === fac) || (m.ch === 'team' && team && m.key === team) || (m.ch === 'dm' && (m.from === u.id || m.toId === u.id));
       if (ok) out.push(chatDto48(m,u.id));
     }
-    send(res, 200, { msgs: out.slice(0,120), chatEpoch174:NEWS75.epoch, more174:out.length>120, notices: NEWS75.log.filter(m=>m.id>newsSince),noticeEpoch:NEWS75.epoch,team, fac, me: p.s.name || u.display, meUid: u.id, invites: ptInvites48(u.id) });
+    send(res, 200, { msgs: out.slice(0,120), towerRecruit: Object.fromEntries(CHATLOG.filter(towerRecruitRoom194).map(m=>[m.id,DGR.get(m.towerRoom194).mem.length])), chatEpoch174:NEWS75.epoch, more174:out.length>120, notices: NEWS75.log.filter(m=>m.id>newsSince),noticeEpoch:NEWS75.epoch,team, fac, me: p.s.name || u.display, meUid: u.id, invites: ptInvites48(u.id) });
   },
   'POST /api/social': async (req,res)=>{
     const u=await auth(req);if(!u)return send(res,401,{error:'กรุณาเข้าสู่ระบบ'});
@@ -2005,9 +2012,13 @@ const routes = {
       const r = { id: ++DG_ID, host: u.id, st: 'lobby', mode: b.mode === 'rg' || b.mode === 'tower100' ? b.mode : undefined, mem: [m], seq: 0, ver: 0, log: [m.n + (b.mode === 'rg' ? ' สร้างห้องวงกต' : ' สร้างห้อง')], created: Date.now() };
       DGR.set(r.id, r); DGU.set(u.id, r.id);
       if (r.mode === 'rg' && b.solo) rgStart(r);
-    } else if (op === 'join') {
+    } else if (op === 'join' || op === 'joinRecruit') {
       if (cur) return bad('คุณอยู่ในห้องอื่นแล้ว');
-      const r = DGR.get(Number(b.id));
+      if (op === 'joinRecruit' && p.s.battle) return bad('จบการต่อสู้ที่ค้างอยู่ก่อน');
+      const r = op === 'joinRecruit'
+        ? towerRecruitRoom194(CHATLOG.find(m=>m.id===Number(b.id)))
+        : DGR.get(Number(b.id));
+      if (op === 'joinRecruit' && !r) return bad('ประกาศนี้ปิดรับแล้วหรือทีมเต็ม');
       if (!r) return bad('ไม่พบห้องนี้ (อาจปิดไปแล้ว)');
       if (r.st !== 'lobby') return bad('ห้องนี้เริ่มลงดันไปแล้ว');
       if (r.mem.length >= DG_MAX) return bad('ห้องเต็มแล้ว (3 คน)');
@@ -2019,13 +2030,25 @@ const routes = {
       dgLeave(u.id);
     } else if (!cur) {
       return bad('คุณไม่ได้อยู่ในห้องดันเจี้ยน');
+    } else if (op === 'recruit') {
+      if (cur.mode !== 'tower100' || cur.st !== 'lobby' || cur.host !== u.id || cur.mem.length >= DG_MAX)
+        return bad('เฉพาะหัวหน้าทีมหอคอยที่ยังมีที่ว่างเท่านั้นที่ประกาศได้');
+      const now = Date.now(), wait = TOWER_RECRUIT_MS - (now - (cur.recruitAt194 || 0));
+      if (wait > 0) return bad('ประกาศซ้ำได้ในอีก '+Math.ceil(wait/1000)+' วินาที');
+      const n = String(p.s.name || u.display).slice(0,16);
+      const m = {id:++CHAT_ID,ch:'world',n,t:'🗼 หอคอยทีม 100 ชั้น · ทีม '+n,from:u.id,ts:now,towerRoom194:cur.id};
+      CHATLOG.push(m);
+      if (CHATLOG.length > 600) CHATLOG.splice(0, CHATLOG.length - 600);
+      cur.recruit194 = m.id;
+      cur.recruitAt194 = now;
+      cur.ver++;
     } else if (op === 'ready') {
       const m = cur.mem.find(x => x.uid === u.id);
       if (cur.st === 'lobby' && m) { m.ready = !m.ready; const st = dgStats(p); if (st) Object.assign(m, st); cur.ver++; }
     } else if (op === 'start') {
       if (cur.host !== u.id) return bad('เฉพาะหัวห้องที่กดเริ่มได้');
       if (cur.st !== 'lobby') return bad('เริ่มไปแล้ว');
-      if (!cur.mem.every(m => m.uid === cur.host || m.ready)) return bad('รอทุกคนกดพร้อมก่อน');
+      if (!cur.mem.every(m => m.ready || (cur.mode !== 'tower100' && m.uid === cur.host))) return bad('รอทุกคนกดพร้อมก่อน');
       if(cur.mode==='tower100'){
         if(cur.mem.length!==3)return bad('หอคอยต้องใช้ปาร์ตี้ 3 คน');
         const members=cur.mem.map(m=>live.get(m.uid)),wk=warWk();
@@ -2072,7 +2095,7 @@ const routes = {
 
     const bad = msg => send(res, 400, { error: msg });
     if (op === 'sync') {
-      if (cur) { const m = cur.mem.find(x => x.uid === u.id); if (m) { m.seen = Date.now(); if (b.x != null && b.y != null) { m.x = Math.max(0, Math.min(1440, Number(b.x) || 0)); m.y = Math.max(0, Math.min(1080, Number(b.y) || 0)); } } }
+      if (cur) { const m = cur.mem.find(x => x.uid === u.id); if (m) { m.seen = Date.now(); if (b.x != null && b.y != null) { m.x = Math.max(-2208, Math.min(4800, Number(b.x) || 0)); m.y = Math.max(-2208, Math.min(4800, Number(b.y) || 0)); } } }
     } else if (op === 'create') {
       if (cur) return bad('คุณอยู่ในปาร์ตี้อื่นแล้ว');
       const r = { id: ++PT_ID, host: u.id, mem: [ptMem(u.id, p)] };
