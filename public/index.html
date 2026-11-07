@@ -976,6 +976,8 @@ body.view-portrait #gameWrap #townStage .map-zoom196{width:93px}
 body.view-portrait #gameWrap #townStage .map-player197 .party-hud{max-width:146px}
 body.view-portrait #gameWrap #townStage .town-bottom .map-button197{min-width:44px;max-width:44px;min-height:44px;padding:6px}
 
+.head-custom200 h4{margin:18px 0 8px;color:#e9d395}.hair-grid200{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}.hair-choice200{min-width:0;border:1px solid #53637e;border-radius:12px;background:linear-gradient(145deg,#1c344b,#0b1728);color:#e9e6d7;padding:7px 3px;font:inherit;font-size:12px;cursor:pointer}.hair-choice200.selected,.head-swatch200.selected{border-color:#f5cb6b;box-shadow:0 0 0 1px #e7b958 inset;background:#32445d}.hair-thumb200{display:block;width:64px;max-width:100%;aspect-ratio:1;margin:0 auto 3px;background-size:800% 100%;background-position:0 0;background-repeat:no-repeat}.head-colors200{display:flex;flex-wrap:wrap;gap:7px}.head-swatch200{width:56px;padding:5px 2px;border-radius:10px;border:1px solid #53637e;background:#102338;color:#f4e9d2;font:inherit;font-size:11px;cursor:pointer}.head-swatch200 i{display:grid;place-items:center;width:29px;height:29px;border-radius:50%;margin:0 auto 4px;border:2px solid #b9a47b;color:#fff;font-style:normal;text-shadow:0 1px 3px #000}.head-swatch200 span{display:block}@media(max-width:380px){.hair-grid200{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
 </style>
 
 <section id="login" class="login">
@@ -1624,16 +1626,14 @@ var HAIR_S=['ผมสั้น','ผมยาว','ผมแฝด'];
 var DYE={def:null,red:'#c0392b',blue:'#2e6bd0',green:'#3b9a52',gold:'#d4a62a',purple:'#7a4ad0'};
 var WINGS={blue:['#5fb4ff','#cdeaff'],pink:['#ff8fd0','#ffd6ee'],dark:['#2b2740','#7a6ab8'],gold:['#f0b93c','#fff0b0'],phoenix:['#d0301a','#ffd04a'],frost:['#3aa8e0','#ffffff'],seraph:['#e8c26a','#ffffff'],arcane:['#5a2ad0','#d8c0ff'],azure:['#2a5ad0','#ffd04a'],abyss:['#2a1438','#c0306a'],arena:['#8a1a24','#d8dce8']};
 var COS={
- eye:[{id:'none',n:'ตาเดิม',r:0},{id:'blue198',n:'ตาฟ้าคราม',r:0},{id:'green198',n:'ตามรกต',r:0},{id:'gold198',n:'ตาอำพัน',r:0},{id:'purple198',n:'ตาม่วงอเมทิสต์',r:0},{id:'red198',n:'ตาทับทิม',r:0}],
- mouth:[{id:'none',n:'ปากเดิม',r:0},{id:'smile198',n:'ยิ้มละมุน',r:0},{id:'cat198',n:'ยิ้มแมว',r:0},{id:'open198',n:'ปากตกใจ',r:0}],
- hat:[{id:'none',n:'ไม่สวม',r:0},{id:'cap198',n:'หมวกนักผจญภัย',r:0},{id:'wiz198',n:'หมวกเวทดวงดาว',r:0},{id:'ears198',n:'หูแมวรัตติกาล',r:0},{id:'wiz',n:'หมวกพ่อมด',r:1},{id:'cap',n:'หมวกแก๊ป',r:1},{id:'pump',n:'หัวฟักทอง',r:2},{id:'ears',n:'ฮู้ดหูแมว',r:2}],
+ hat:[{id:'none',n:'ไม่สวม',r:0},{id:'wiz',n:'หมวกพ่อมด',r:1},{id:'cap',n:'หมวกแก๊ป',r:1},{id:'pump',n:'หัวฟักทอง',r:2},{id:'ears',n:'ฮู้ดหูแมว',r:2}],
  face:[{id:'none',n:'ไม่ใส่',r:0},{id:'gog',n:'แว่นกอกเกิล',r:1},{id:'gls',n:'แว่นตา',r:1},{id:'mask',n:'หน้ากากแมว',r:2}],
  wing:[{id:'none',n:'ไม่มีปีก',r:0},{id:'blue',n:'ปีกฟ้า',r:2},{id:'pink',n:'ปีกชมพู',r:2},{id:'dark',n:'ปีกดำ',r:3},{id:'gold',n:'ปีกทอง',r:3},{id:'phoenix',n:'ปีกหงส์เพลิง',r:4},{id:'frost',n:'ปีกเทพหิมะ',r:4},{id:'seraph',n:'ปีกเทวาทอง',r:4},{id:'arcane',n:'ปีกผลึกเวท',r:4},{id:'azure',n:'ปีกกลไกฟ้าคราม',r:4},{id:'abyss',n:'ปีกมารรัตติกาล',r:4},{id:'arena',n:'ปีกดาบสังเวียน',r:4,x:1,bound:true}],
  pet:[{id:'none',n:'ไม่มีสัตว์เลี้ยง',r:0},{id:'wolf',n:'หมาป่าน้อย',r:3},{id:'phoenix',n:'นกเพลิง',r:3},{id:'icedrg',n:'มังกรน้ำแข็ง',r:3},{id:'bat',n:'ค้างคาวน้อย',r:3},{id:'tiger',n:'เสือขาวน้อย',r:3},{id:'griffon',n:'กริฟฟอนน้อย',r:3},{id:'golem',n:'โกเล็มหินน้อย',r:3},{id:'dragon',n:'มังกรน้อย',r:3},{id:'fox',n:'จิ้งจอกน้อย',r:3}],
  aura:[{id:'none',n:'ไม่มีออร่า',r:0},{id:'white',n:'ออร่าขาว',r:1},{id:'fire',n:'ออร่าเพลิง',r:2},{id:'ice',n:'ออร่าน้ำแข็ง',r:2},{id:'holy',n:'ออร่าศักดิ์สิทธิ์',r:3},{id:'void',n:'ออร่ามายา',r:3}],
  dye:[{id:'def',n:'สีประจำอาชีพ',r:0},{id:'red',n:'ย้อมแดง',r:1},{id:'blue',n:'ย้อมน้ำเงิน',r:1},{id:'green',n:'ย้อมเขียว',r:1},{id:'gold',n:'ย้อมทอง',r:2},{id:'purple',n:'ย้อมม่วง',r:2}]
 };
-var SLOT_N={eye:'สีดวงตา',mouth:'รูปปาก',hat:'หมวก',face:'แว่น / หน้ากาก',wing:'ปีก',pet:'สัตว์เลี้ยง',aura:'ออร่า',dye:'สีชุด'};
+var SLOT_N={hat:'หมวก',face:'แว่น / หน้ากาก',wing:'ปีก',pet:'สัตว์เลี้ยง',aura:'ออร่า',dye:'สีชุด'};
 var RAR_N={1:'ธรรมดา',2:'หายาก',3:'ตำนาน',4:'เทพ'};
 var BOX_PRICE=1000000,BOX_REAL=0.1;
 var JUNK=['รองเท้าเก่า','กระป๋องสนิม','ถุงเท้าขาด','ก้างปลา','ก้อนหินธรรมดา','เศษผ้าขาด','ขวดแตก','กิ่งไม้ผุ'];
@@ -2248,8 +2248,8 @@ function fresh(){var o={job4:null,j4Quest:null,j4Version:J4_SAVE_VERSION,day:1,g
  zone:0,tab:'wild',battle:null,auto:false,autoHunt:false,autoTower:false,
  log:['เริ่มต้นการผจญภัย เก็บของ ล่ามอน แล้วคราฟอาวุธ'],won:false,kills:0,
  created:false,name:'',cls:'warrior',boxes:0,boxMsg:'',
- look:{hair:0,hc:0,hat:'none',face:'none',eye:'none',mouth:'none',wing:'none',pet:'none',aura:'none',dye:'def'},
- owned:{eye:['none','blue198','green198','gold198','purple198','red198'],mouth:['none','smile198','cat198','open198'],hat:['none','cap198','wiz198','ears198'],face:['none'],wing:['none'],pet:['none'],aura:['none'],dye:['def']}};
+ look:{hair:0,hc:0,hair200:'none',hairColor200:'silver',eye200:'default',hat:'none',face:'none',wing:'none',pet:'none',aura:'none',dye:'def'},
+ owned:{hat:['none'],face:['none'],wing:['none'],pet:['none'],aura:['none'],dye:['def']}};
  return o}
 function normalize(o){
  gemNormalize140(o);
@@ -2263,8 +2263,8 @@ function normalize(o){
   }
  }
  o.cls=CLASSES[o.cls]?o.cls:'warrior';m51Normalize(o);o.cosSeq139=Number.isSafeInteger(o.cosSeq139)&&o.cosSeq139>=0?o.cosSeq139:0;
- o.look=Object.assign({},f.look,o.look||{});
- o.owned=Object.assign({},f.owned,o.owned||{});cosNormalize198(o);
+ o.look=Object.assign({},f.look,o.look||{});Object.assign(o.look,headClean200(o.look));
+ o.owned=Object.assign({},f.owned,o.owned||{});
  o.name=typeof o.name==='string'?o.name.slice(0,12):'';if(o.tab==='chat')o.tab='wild';o.res=null;o.warClaim=o.warClaim||{};o.warWon=o.warWon||null;o.warTry=o.warTry||null;o.cloudOn=!!o.cloudOn;o.pv=o.pv||null;o.wq=o.wq||0;o.aq=o.aq||0;o.acc=Object.assign({ring:null,neck:null,brooch:null,helm:null,armor:null,gloves:null,boots:null},o.acc||{});if(!o.gop89&&o.created){ACCK.forEach(function(k){var a=o.acc[k];if(a&&!Array.isArray(a.op)){var q=gopRoll({k:'x',i:k,g:a.g|0,t:a.t|0});a.op=q.op;if(q.st&&!a.st)a.st=q.st}});if(o.pend&&o.pend.k==='x')gopRoll(o.pend);if(Array.isArray(o.gq))o.gq.forEach(function(q){if(q&&q.k==='x')gopRoll(q)});o.gop89=1}
  if(o.armor>0&&!o.acc.armor){o.acc.armor={t:o.aq|0,g:Math.min(5,o.armor-1),e:o.aEnh|0}}o.armor=0;o.aq=0;o.aEnh=0;o.inv=o.inv||{};o.inv.purple=o.inv.purple|0;if(o.dup&&o.dup.amt){o.inv.purple+=o.dup.amt}o.dup=null;o.pot2=o.pot2|0;o.pot3=o.pot3|0;o.pot4=o.pot4|0;o.pot5=o.pot5|0;o.pot6=o.pot6|0;o.pot3=o.pot3|0;o.wEnh=Math.max(0,Math.min(ENH_MAX,o.wEnh|0));o.aEnh=Math.max(0,Math.min(ENH_MAX,o.aEnh|0));o.erst=null;o.pend=o.pend||null;if(o.pend&&o.pend.fail)o.pend=null;
  if(o.battle&&o.battle.j4Trial&&typeof o.battle.mp0==='number')o.mp=o.battle.mp0;
@@ -2302,12 +2302,12 @@ function load(){
 function save(){if(!s)return;s.ts=Date.now();if(SV||CL)return;try{localStorage.setItem(SAVE,JSON.stringify(s))}catch(e){}try{onlineSync();cloudPush();if(ON.room&&ON.pk!==s.cls+s.lvl){ON.pk=s.cls+s.lvl;presenceSet()}}catch(e){}}
 var ON={fac:[],db:null,uid:null,ok:false,canWrite:false,board:[],unsub:null,last:'',timer:0,busy:false,chat:[],peers:[],room:null,open:false,seen:-1,guilds:[],gmem:[],wars:[],wres:[],gl:0,cloud:null,cTimer:0,cLast:'',cBusy:false,lastSay:0};
 function cleanLook(l){
- var o={hair:0,hc:0,hat:'none',face:'none',eye:'none',mouth:'none',wing:'none',pet:'none',aura:'none',dye:'def'};l=l||{};
+ var o={hair:0,hc:0,hat:'none',face:'none',wing:'none',pet:'none',aura:'none',dye:'def'};l=l||{};
  o.hair=Math.max(0,Math.min(HAIR_S.length-1,(l.hair|0)));o.hc=Math.max(0,Math.min(HAIR.length-1,(l.hc|0)));
- ['hat','face','eye','mouth','wing','pet','aura','dye'].forEach(function(k){if(COS[k].some(function(it){return it.id===l[k]}))o[k]=l[k]});
+ ['hat','face','wing','pet','aura','dye'].forEach(function(k){if(COS[k].some(function(it){return it.id===l[k]}))o[k]=l[k]});
  if(/^#[a-f0-9]{6}$/i.test(l.collect59||''))o.collect59=l.collect59;
  if(Number.isInteger(l.petStage70))o.petStage70=Math.max(1,Math.min(3,l.petStage70));
- if(l.tier!=null)o.tier=Math.max(0,Math.min(3,l.tier|0));if(l.br&&Object.prototype.hasOwnProperty.call(CHARACTER_BRANCHES,l.br))o.br=l.br;return o}
+ if(l.tier!=null)o.tier=Math.max(0,Math.min(3,l.tier|0));if(l.br&&Object.prototype.hasOwnProperty.call(CHARACTER_BRANCHES,l.br))o.br=l.br;return Object.assign(o,headClean200(l))}
 function mySnap(){var D5=nameDeco105(s),out={tt:s.title||'',sp:s.sup100?1:0,sf:D5.sf,sg:D5.sg,n:nick().slice(0,16),cls:s.cls,lvl:s.lvl,rating:s.pvp.r,pwk:s.pvp.wk,w:s.pvp.w,l:s.pvp.l,
  hp:s.maxhp,atk:pAtk(),def:pDef(),crit:Math.round(critPct()),dodge:Math.round(dodgePct()*10)/10,agi:sv(s,'agi'),ul:s.ult?1:0,look:cleanLook(Object.assign({},s.look,{tier:characterVisualTier(s),br:s.job2||null,collect59:colColor59(s),petStage70:petForm70(s,s.look.pet)}))};if(m51Spent(s)>0){var mb=s.battle;s.battle={kind:'pvp'};try{out.duel51={hp:calcMax(s),atk:pAtk(),def:pDef(),crit:Math.round(critPct()),dodge:Math.round(dodgePct()*10)/10}}finally{s.battle=mb}}return out}
 function onlineSync(){
@@ -3545,7 +3545,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B198';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B200';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -4584,6 +4584,7 @@ function act(a,p){
  if(fishActions153(a,p))return;
  if(a==='gemdo140'){gemDo140(String(p||''));save();render();return}
  if(a==='cosroll139'){cosRoll139(p);save();render();return}
+ if(a==='head200'){headAction200(p);render();return}
  if(a==='reroll135'){rerollGear135(String(p||''));save();render();return}
  if(s.battle&&['job2','job3','job4','clsch96'].indexOf(a)>=0){say('จบการต่อสู้ก่อนเปลี่ยนอาชีพ');return}
  if(a==='farmreset63'){farmReset63(p);return}
@@ -4797,7 +4798,7 @@ function act(a,p){
   if(!s.created&&CLASSES[p]){s.cls=p;recalc();if(!s.created){s.hp=s.maxhp;s.mp=s.maxmp}}
  }
  else if(a==='hair'){var q=String(p||'').split(':'),hi=Number(q[1]);if(Number.isInteger(hi)&&hi>=0){if(q[0]==='s'&&hi<HAIR_S.length)s.look.hair=hi;else if(q[0]==='c'&&hi<HAIR.length)s.look.hc=hi}}
- else if(a==='eq'){var z=p.split(':');if(z[0]!=='dye'&&COS[z[0]]&&COS[z[0]].some(function(it){return it.id===z[1]&&(it.r===0||s.owned[z[0]]&&s.owned[z[0]].indexOf(it.id)>=0)}))s.look[z[0]]=z[1];recalc()}
+ else if(a==='eq'){var z=p.split(':');if(z[0]!=='dye'&&s.owned[z[0]]&&s.owned[z[0]].indexOf(z[1])>=0)s.look[z[0]]=z[1];recalc()}
  else if(a==='box')openBox();
  else if(a==='buybox'){if(s.gold>=BOX_PRICE){s.gold-=BOX_PRICE;s.boxes++;say('ซื้อกล่องสุ่ม 1 กล่อง')}}
  else if(a==='start'){
@@ -4971,7 +4972,7 @@ function chBody(o,look,cls,K,T,ALT,oc,dyed,hc,t,P0){
  var HX=FX-24,HY=BY-31+(pose==='atk'&&fr===2?1:0);function hq(x,y,w,h,col){q(HX+x,HY+y,w,h,col)}
  var HR={4:[16,32],5:[13,35],6:[11,37],7:[10,38],31:[10,38],32:[11,37],33:[13,35],34:[15,33]};
  for(var hy=4;hy<=34;hy++){var hr=HR[hy]||[9,39];hq(hr[0],hy,hr[1]-hr[0]+1,1,SKIN)}hq(9,14,3,16,'#f2c4a4');hq(12,32,5,2,'#f2c4a4');
- var EY=EYE198[look.eye]||K.eye;
+ var EY=K.eye;
  function eye(x,w){
   if(ex==='blink'){hq(x,25,6,2,OUT);hq(w?x+6:x-1,24,1,1,OUT);return}
   if(ex==='hurt'){var sg=w?1:-1,cx2=x+3;for(var k=0;k<4;k++){hq(cx2-k*sg-1,20+k,2,1,OUT);hq(cx2-k*sg-1,26-k,2,1,OUT)}return}
@@ -4980,10 +4981,7 @@ function chBody(o,look,cls,K,T,ALT,oc,dyed,hc,t,P0){
   hq(x+2,22,2,4,'#1a1530');hq(x,20,2,3,'#ffffff');hq(x+2,21,1,1,'#ffffff');hq(x+4,25,1,1,'#ffffff');hq(x+5,20,1,8,'rgba(26,21,48,.35)');hq(x+1,28,4,1,'rgba(26,21,48,.45)')}
  if(look.face!=='gog'){eye(18,0);eye(29,1)}
  hq(15,29,4,2,'rgba(255,110,140,.55)');hq(35,29,3,2,'rgba(255,110,140,.55)');
- if(look.mouth==='open198'){hq(26,30,3,4,'#904b50');hq(27,33,1,1,'#ef9a9e')}
- else if(look.mouth==='cat198'){hq(24,31,1,1,'#9a3a4a');hq(25,32,2,1,'#9a3a4a');hq(27,31,1,1,'#9a3a4a');hq(28,32,2,1,'#9a3a4a');hq(30,31,1,1,'#9a3a4a')}
- else if(look.mouth==='smile198'){hq(25,31,1,1,'#9a3a4a');hq(26,32,4,1,'#9a3a4a');hq(30,31,1,1,'#9a3a4a')}
- else if(ex==='happy'){hq(25,30,6,1,OUT);hq(26,31,4,2,'#c0485a');hq(27,32,2,1,'#ff8a9a')}
+ if(ex==='happy'){hq(25,30,6,1,OUT);hq(26,31,4,2,'#c0485a');hq(27,32,2,1,'#ff8a9a')}
  else if(ex==='hurt'){hq(26,31,4,1,OUT);hq(25,32,1,1,OUT);hq(30,32,1,1,OUT);hq(38,13,2,4,'#8ad8ff');hq(38,17,2,1,'#ffffff')}
  else{hq(26,31,1,1,'#9a3a4a');hq(27,32,2,1,'#9a3a4a');hq(29,31,1,1,'#9a3a4a')}
  [[1,16,32],[2,13,35],[3,11,37]].forEach(function(cr){hq(cr[1],cr[0],cr[2]-cr[1]+1,1,hc)});hq(9,4,31,7,hc);hq(8,6,1,6,hc);hq(40,6,1,5,hc);
@@ -4994,7 +4992,7 @@ function chBody(o,look,cls,K,T,ALT,oc,dyed,hc,t,P0){
  hq(17,5,8,1,HL);hq(27,5,5,1,HL);hq(15,6,3,1,HL);hq(13,7,2,1,HL);hq(9,4,31,1,shadeC(hc,0.14));
  if(look.hair===2){hq(24,-2,2,4,hc);hq(25,-3,2,2,hc);hq(26,-2,1,1,HL)}
  if(cls==='rogue'){var mk=ALT?'#3a6a3a':T===2?'#c8cde0':'#2a2440';hq(14,28,26,7,mk);hq(14,28,26,1,shadeC(mk,0.35))}
- var hat=String(look.hat||'none').replace(/198$/,'');
+ var hat=look.hat;
  if(!hat||hat==='none'){
   if(T===1)hq(9,9,31,2,GO);
   else if(T===2){
@@ -5208,16 +5206,14 @@ function characterImage136(key){
  return r.ready?r.im:null;
 }
 function drawCharacter136(c,look,cls,ox,gy,u,t,flip,alpha){
- var key=characterSheetKey(cls,look),im=characterImage136(key);if(!im)return false;
+ var key=characterSheetKey(cls,look),im=characterImage136(key);if(!im)return false;im=headAtlas200(im,key,look);
  var pose=CPOSE||{},dir=typeof pose.dir==='number'?Math.max(0,Math.min(7,pose.dir|0)):(flip?2:6),atk=pose.pose==='atk',f=Math.max(0,Math.min(3,pose.f|0));
  var strike=atk&&(f===1||f===2),row=strike?1:0,still=(typeof ECO!=='undefined'&&ECO.on)||(typeof MOTION69!=='undefined'&&MOTION69&&MOTION69.matches);
  var hop=!still&&pose.pose==='walk'?Math.abs(Math.sin(t/135))*2.1*u:0,lunge=!still&&atk?[0,1,.7,0][f]:0;
  var cx=ox+12*u+([0,-.7,-1,-.7,0,.7,1,.7][dir]||0)*lunge*2*u,feet=gy-hop+([1,.7,0,-.7,-1,-.7,0,.7][dir]||0)*lunge*u,size=40*u;
  var rig=wingRoot143(cx,feet,u,dir);
  c.save();try{c.globalAlpha=alpha==null?1:alpha;fashionBack(c,look,cx,feet,u,t,dir,rig);c.imageSmoothingEnabled=true;try{c.imageSmoothingQuality='high'}catch(e){}
- var art198=faceAtlas198(im,key,look);
-  var artFoot143=CHAR_ATLAS136[key].feetBy143?CHAR_ATLAS136[key].feetBy143[row*8+dir]:178;c.drawImage(art198,dir*192,row*192,192,192,cx-size/2,feet-size*artFoot143/192,size,size);
-  headWear198(c,look,cx-size/2,feet-size*artFoot143/192,size,dir);
+ var artFoot143=CHAR_ATLAS136[key].feetBy143?CHAR_ATLAS136[key].feetBy143[row*8+dir]:178;c.drawImage(im,dir*192,row*192,192,192,cx-size/2,feet-size*artFoot143/192,size,size);
  fashionWingFront84(c,look,cx,feet,u,t,dir,rig,pose);
  // B145: in rear views both complete feathers sit on the visible back, as in the owner's old reference.
 
@@ -5252,14 +5248,14 @@ function characterLook52(cls,look,owner){
  return out;
 }
 function drawChar(c,look,cls,ox,gy,u,t,flip,alpha){
- look=Object.assign(characterLook52(cls,look),{dye:'def'});if(characterSheetKey(cls,look)==='abyss_soul_king'&&(!look.wing||look.wing==='none'))look.wing='classabyss143';colDraw59(c,look,ox+12*u,gy,u,t,alpha);var pose=CPOSE||{},row=typeof pose.dir==='number'?pose.dir:(flip?2:6);
- if(!((typeof SET==='undefined'||!SET||SET.spriteChars!==false)&&drawCharacterSheet(c,look,cls,ox,gy,u,t,flip,alpha))){c.save();c.globalAlpha=alpha==null?1:alpha;fashionBack(c,look,ox+12*u,gy,u,t,row);c.restore();drawClassicChar(c,Object.assign({},look,{aura:'none',wing:'none'}),cls,ox,gy,u,t,flip,alpha);fashionWingFront84(c,look,ox+12*u,gy,u,t,row,null,pose,alpha)}
+ look=Object.assign(characterLook52(cls,look),{hat:'none',face:'none',dye:'def'});if(characterSheetKey(cls,look)==='abyss_soul_king'&&(!look.wing||look.wing==='none'))look.wing='classabyss143';colDraw59(c,look,ox+12*u,gy,u,t,alpha);var pose=CPOSE||{},row=typeof pose.dir==='number'?pose.dir:(flip?2:6);
+ if(!((typeof SET==='undefined'||!SET||SET.spriteChars!==false||headActive200(look))&&drawCharacterSheet(c,look,cls,ox,gy,u,t,flip,alpha))){c.save();c.globalAlpha=alpha==null?1:alpha;fashionBack(c,look,ox+12*u,gy,u,t,row);c.restore();drawClassicChar(c,Object.assign({},look,{aura:'none',wing:'none'}),cls,ox,gy,u,t,flip,alpha);fashionWingFront84(c,look,ox+12*u,gy,u,t,row,null,pose,alpha)}
  if(PET_SCENE198)petActor198(c,ox+12*u,gy,u);
   auraFront80(c,look,ox+12*u,gy,u,t,alpha);
  fashionPet(c,look,ox+12*u,gy,u,t,row,alpha);
 }
 
-function drawClassicChar(c,look,cls,ox,gy,u,t,flip,alpha){look=Object.assign(characterLook52(cls,look),{dye:'def'});
+function drawClassicChar(c,look,cls,ox,gy,u,t,flip,alpha){look=Object.assign(characterLook52(cls,look),{hat:'none',face:'none',dye:'def'});
  var K=CLASSES[cls]||CLASSES.warrior,T=Math.min(2,charTier(look)),BR=T===2?charBranch(look):null,ALT=T===2&&['knight','venom','curse','judge','sniper'].indexOf(BR)>=0;
  var oc=DYE[look.dye]||K.base,hc=HAIR[look.hc]||HAIR[0],dyed=!!DYE[look.dye];
  var b=Math.round(Math.sin(t/260));
@@ -5271,7 +5267,7 @@ function drawClassicChar(c,look,cls,ox,gy,u,t,flip,alpha){look=Object.assign(cha
  if(look.wing&&WING2[look.wing])drawWing2(c,look.wing,u,t,b);
  if(!CHAR_OC){CHAR_OC=document.createElement('canvas');CHAR_OC.width=CW*2;CHAR_OC.height=CH*2}
  var P0=CPOSE||{},pz=P0.pose||'idle',fz=pz==='walk'?Math.floor(t/260)%4:pz==='atk'?Math.max(0,Math.min(3,P0.f|0)):Math.floor(t/380)%4,ez=P0.ex||(pz!=='atk'&&(t%3900)<140?'blink':'-'),tq=pz==='walk'?fz*260+5:pz==='idle'?fz*380+5:5;
- var ck=cls+'|'+T+'|'+BR+'|'+(look.hair|0)+'|'+(look.hc|0)+'|'+look.hat+'|'+look.face+'|'+look.eye+'|'+look.mouth+'|'+look.wing+'|'+look.dye+'|'+pz+'|'+fz+'|'+ez,img=CH_CACHE.get(ck);
+ var ck=cls+'|'+T+'|'+BR+'|'+(look.hair|0)+'|'+(look.hc|0)+'|'+look.hat+'|'+look.face+'|'+look.wing+'|'+look.dye+'|'+pz+'|'+fz+'|'+ez,img=CH_CACHE.get(ck);
  if(img){CH_CACHE.delete(ck);CH_CACHE.set(ck,img)}else{
  var o=CHAR_OC.getContext('2d');o.clearRect(0,0,CW*2,CH*2);
  chBody(o,look,cls,K,T,ALT,oc,dyed,hc,tq,{pose:pz,f:fz,ex:ez});
@@ -6255,21 +6251,14 @@ function classPicker(){
  return '<div class="cls-grid">'+CLS_ORDER.map(function(id){var K=CLASSES[id];
   return '<button class="btn clsbtn" data-a="cls" data-p="'+id+'" aria-pressed="'+(s.cls===id)+'"><b>'+K.n+'</b><span>'+(clsDesc(K)?clsDesc(K)+'<br>':'')+'<b style="color:#e8c26a">'+growDesc(id)+'</b></span></button>'}).join('')+'</div>';
 }
-function hairPicker(){
- var st=HAIR_S.map(function(n,i){return '<button class="btn" data-a="hair" data-p="s:'+i+'" aria-pressed="'+(s.look.hair===i)+'">'+n+'</button>'}).join('');
- var co=HAIR.map(function(col,i){return '<button class="btn sw" data-a="hair" data-p="c:'+i+'" aria-label="สีผม'+HAIR_N[i]+'" aria-pressed="'+(s.look.hc===i)+'" style="background:'+col+'"></button>'}).join('');
- var sprite=typeof SET==='undefined'||!SET||SET.spriteChars!==false;return (sprite?'':'<div><h3>ทรงผม</h3><div class="pick">'+st+'</div></div>')+'<div><h3>สีผม</h3><div class="pick">'+co+'</div></div>';
-}
+function hairPicker(){return ''} // B199: hair customization is hidden for now.
 var COS_IC={};
 function cosIcon(slot,id,locked){if(slot==='pet'&&PET131[id]){var hu=petHdIcon131(id,1);return hu||'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='}
  var key=slot+':'+id+':'+(locked?1:0);if(COS_IC[key])return COS_IC[key];
  var S=24,cv=document.createElement('canvas');cv.width=S;cv.height=S;var o=cv.getContext('2d');
  function r(x,y,w,h,col){o.fillStyle=col;o.fillRect(x,y,w,h)}
  function head(dy){r(6,6+dy,12,11,SKIN);r(6,4+dy,12,4,HAIR[1]);r(6,8+dy,3,3,HAIR[1]);r(11,10+dy,2,3,'#4aa3ff');r(15,10+dy,2,3,'#4aa3ff');r(11,10+dy,1,1,'#fff');r(15,10+dy,1,1,'#fff');r(13,14+dy,2,1,'#b5565e')}
- if(slot==='eye'&&id!=='none'){head(2);var ec=EYE198[id]||'#59402c';r(11,12,2,3,ec);r(15,12,2,3,ec);r(11,12,1,1,'#fff');r(15,12,1,1,'#fff')}
- else if(slot==='mouth'&&id!=='none'){head(2);r(12,16,4,2,SKIN);o.strokeStyle='#9b4e51';o.lineWidth=1;o.beginPath();if(id==='open198')o.ellipse(14,16,1,1.5,0,0,7);else{o.moveTo(12,16);o.quadraticCurveTo(14,19,16,16)}o.stroke()}
- else if(slot==='hat'&&/198$/.test(id)){head(5);o.save();o.translate(12,9);o.scale(.14,.14);hatDraw198(o,id,0);o.restore()}
- else if(id==='none'){r(5,5,14,14,'#3a3f5c');r(7,7,10,10,'#2a2e44');for(var i=0;i<8;i++){r(7+i,7+i,2,2,'#ff6a5a');r(15-i,7+i,2,2,'#ff6a5a')}}
+ if(id==='none'){r(5,5,14,14,'#3a3f5c');r(7,7,10,10,'#2a2e44');for(var i=0;i<8;i++){r(7+i,7+i,2,2,'#ff6a5a');r(15-i,7+i,2,2,'#ff6a5a')}}
  else if(slot==='hat'){head(5);var b=5;
   if(id==='wiz'){r(4,3+b,16,2,'#2f4fa0');r(8,0+b,8,3,'#3a62c8');r(10,-2+b,5,2,'#3a62c8');r(12,-4+b,3,2,'#3a62c8');r(8,2+b,8,1,'#e8c26a');r(13,-4+b,1,1,'#fff3a0')}
   else if(id==='cap'){r(6,1+b,12,3,'#c0392b');r(6,3+b,12,1,'#8a2b2b');r(16,3+b,5,1,'#c0392b');r(8,1+b,3,1,'#e8584a')}
@@ -6299,9 +6288,9 @@ function cosBtn(slot,it,owned,on){
  if(!owned)return '<div class="cosb" style="border-color:#2a2e44;opacity:.75" title="'+(/105$/.test(it.id)?'รางวัลพรีเมียมซีซั่น 1':it.bound?'แลกจากร้าน PvP 5,000 เหรียญ · 1 ครั้งต่อไอดี':'ยังไม่ได้ (สุ่มจากกล่อง)')+'">'+img+'<span>'+(it.bound?it.n+(/105$/.test(it.id)?' · ซีซั่น 1':' · ร้าน PvP'):'???')+'</span></div>';
  return '<button class="cosb" data-a="eq" data-p="'+slot+':'+it.id+'" aria-pressed="'+on+'" style="border-color:'+(on?'var(--brass)':COS_RC[it.r])+'">'+img+'<span>'+it.n+(it.bound?' · ผูกไอดี':'')+'</span></button>'}
 function slotPick(slot){
- var own=s.owned[slot]||[],items=COS[slot];
+ var own=s.owned[slot],items=COS[slot];
  var btns=items.map(function(it){return cosBtn(slot,it,own.indexOf(it.id)>=0||it.r===0,s.look[slot]===it.id)}).join('');
- var locked=items.filter(function(it){return it.r!==0&&own.indexOf(it.id)<0}).length;
+ var locked=items.length-own.length;
  return '<div><h3>'+SLOT_N[slot]+(locked?' <span class="hint">· ยังไม่ได้ '+locked+' ชิ้น</span>':'')+'</h3><div class="cosgrid">'+btns+'</div></div>';
 }
 var CREATE_ROLES={warrior:['แนวหน้า · โจมตีประชิด','แข็งแกร่ง สมดุลทั้งพลังโจมตีและความทนทาน','⚔'],rogue:['จู่โจม · คริติคอล','คล่องตัวสูง ใช้จังหวะโจมตีและพิษกดดันศัตรู','✧'],mage:['เวทมนตร์ · พลังสกิล','โจมตีด้วยเวทมนตร์ พร้อมบัฟโล่เวทช่วยรับความเสียหาย','✦'],paladin:['ป้องกัน · อยู่รอด','พลังชีวิตสูง ใช้พลังศักดิ์สิทธิ์ยืนหยัดแนวหน้า','♜'],archer:['ระยะไกล · แม่นยำ','ใช้ธนูโจมตีจากแนวหลัง พร้อมบัฟเล็งแม่น','➶']};
@@ -6311,9 +6300,9 @@ function viewCreate(){
  return '<section class="create-shell"><header class="create-header"><div><p class="auth-kicker">YOUR STORY BEGINS</p><h2>สร้างนักผจญภัยของคุณ</h2></div><button class="btn" data-a="logout">ออกจากระบบ</button></header>'+
  '<div class="create-layout"><aside class="create-preview"><div class="create-stage"><span class="create-stage-tag">ตัวอย่างในเกม</span><canvas id="scene" class="scene" data-mode="preview" width="320" height="220" aria-label="ตัวอย่างตัวละคร"></canvas></div><div class="create-role"><p class="auth-kicker">'+role[0]+'</p><h2>'+CLASSES[s.cls].n+'</h2><p>'+role[1]+'</p><div class="create-growth">'+growDesc(s.cls)+'</div></div><p class="create-account">บัญชี: '+esc(curUser||'นักผจญภัย')+'</p></aside>'+
  '<div class="create-options">'+(createMsg?'<div class="reveal" role="alert">'+esc(createMsg)+'</div>':'')+
- '<section><h3><span class="create-step">01</span> ตั้งชื่อตัวละคร</h3><label class="sr-only" for="cname">ชื่อตัวละคร</label><input class="txt" id="cname" type="text" maxlength="12" placeholder="ชื่อของคุณ 2–12 ตัวอักษร" autocomplete="off" aria-describedby="createNameHelp" value="'+esc(s.name||'')+'"><p id="createNameHelp" class="hint">1 ไอดีมีตัวละครได้ 1 ตัว · ชื่อและอาชีพเปลี่ยนไม่ได้ภายหลัง</p></section>'+
+ '<section><h3><span class="create-step">01</span> ตั้งชื่อตัวละคร</h3><label class="sr-only" for="cname">ชื่อตัวละคร</label><input class="txt" id="cname" type="text" maxlength="12" placeholder="ชื่อของคุณ 2–12 ตัวอักษร" autocomplete="off" aria-describedby="createNameHelp" value="'+esc(s.name||'')+'"><p id="createNameHelp" class="hint">1 ไอดีมีตัวละครได้ 1 ตัว · สลับอาชีพภายหลังได้ตามเงื่อนไขในเกม</p></section>'+
  '<section><h3><span class="create-step">02</span> เลือกอาชีพเริ่มต้น</h3>'+createClassPicker()+'</section>'+
- '<section class="create-hair"><h3><span class="create-step">03</span> ปรับลุคของคุณ</h3>'+hairPicker()+'</section>'+
+ '<section class="create-hair"><h3><span class="create-step">03</span> เลือกทรงผม</h3>'+headPicker200()+'</section>'+
  '<details class="create-tree"><summary>ดูเส้นทางพัฒนาอาชีพขั้น 1–4</summary>'+jobTreeHtml(s.cls)+'</details>'+
  '<div class="create-submit"><button class="btn primary" data-a="start">เริ่มผจญภัย · '+CLASSES[s.cls].n+' →</button><p class="hint">ปีก ออร่า และสัตว์เลี้ยง หาเพิ่มได้ระหว่างผจญภัย</p></div>'+
  (CLOUD_ENABLED&&ON.ok&&ON.cloud?'<button class="btn" data-a="clouddn">โหลดเซฟจากคลาวด์ ('+esc(ON.cloud.nick)+' Lv'+(ON.cloud.lvl|0)+')</button>':'')+'</div></div></section>';
@@ -6328,7 +6317,7 @@ function viewDress(){if(s.dtab==='bestiary')return bookHtml70();if(s.dtab==='pet
   '<section class="card"><h3>ตัวละคร</h3>'+(CL?'<button class="btn sm sup100cb" data-a="sup100">🎁 ร้านเติมเงิน · บัตรรายเดือน / บัตรถาวร / พาสซีซั่น</button>':'')+'<p>'+(titleOf(s.title)?'<span style="color:'+titleOf(s.title).c+'">['+esc(titleOf(s.title).n)+']</span> ':'')+'<b>'+esc(nick())+'</b> · '+clsName(s)+'</p></section>'+
   '<section class="card navdup113"><h3>เลือกหมวด</h3><div class="cat">'+DT.map(function(c){return '<button class="btn'+(od===c[0]?' primary':'')+'" data-a="dtab" data-p="'+c[0]+'" aria-pressed="'+(od===c[0])+'">'+c[1]+(c[0]==='box'&&s.boxes>0?' ('+s.boxes+')':'')+'</button>'}).join('')+'</div></section>';
  var body='';
- if(od==='look')body='<section class="card"><p class="hint">เลือกตา ปาก หมวก สีผม ปีก ออร่า และสัตว์เลี้ยง · ตัวเลือกพื้นฐานเลือกใช้ได้ฟรี</p>'+hairPicker()+slotPick('eye')+slotPick('mouth')+slotPick('hat')+slotPick('face')+slotPick('wing')+slotPick('pet')+slotPick('aura')+'</section>';
+ if(od==='look')body='<section class="card">'+headPicker200()+'<p class="hint">เลือกปีก ออร่า และสัตว์เลี้ยงของคุณ</p>'+slotPick('wing')+slotPick('pet')+slotPick('aura')+'</section>';
  else if(od==='collect')body=colView59();
  else if(od==='title')body=titleHtml();
  else if(od==='book')body=bookHtml();
@@ -9413,48 +9402,7 @@ if(CL){
   NET.token=lsGet('shuk-token');
   if(NET.token)netEnter().catch(function(){lsDel('shuk-token');NET.token=null;showLogin()});else showLogin()};
 }
-/* B198: selectable branches, head fashion and collision-free battle pets. */
-var EYE198={blue198:'#32a5ed',green198:'#27bd80',gold198:'#df9d25',purple198:'#a76cf0',red198:'#de5165'},FACE_CACHE198=new Map();
-function cosNormalize198(o){
- ['eye','mouth','hat','face'].forEach(function(slot){var items=COS[slot],own=Array.isArray(o.owned[slot])?o.owned[slot]:['none'];
- o.owned[slot]=Array.from(new Set(own.filter(function(id){return items.some(function(it){return it.id===id})}).concat(items.filter(function(it){return it.r===0}).map(function(it){return it.id}))));
- if(!items.some(function(it){return it.id===o.look[slot]&&o.owned[slot].indexOf(it.id)>=0}))o.look[slot]='none';
- });
-}
-var FACE_ANCHOR198=[{e:[[79,80],[109,80]],m:[94,94]},{e:[[74,80],[99,80]],m:[85,95]},{e:[[72,80]],m:[77,95]},null,null,null,{e:[[120,80]],m:[115,95]},{e:[[94,80],[118,80]],m:[108,95]}];
-function faceAtlas198(im,key,look){
- if(!EYE198[look.eye]&&(!look.mouth||look.mouth==='none'))return im;
- var id=key+'|'+(look.eye||'none')+'|'+(look.mouth||'none'),hit=FACE_CACHE198.get(id);if(hit)return hit;
- var cv=document.createElement('canvas');cv.width=1536;cv.height=384;var c=cv.getContext('2d');c.drawImage(im,0,0);
- if(EYE198[look.eye]){var color=EYE198[look.eye],rgb=[1,3,5].map(function(i){return parseInt(color.slice(i,i+2),16)}),d=c.getImageData(0,0,1536,384);
- FACE_ANCHOR198.forEach(function(a,dir){if(!a)return;[0,1].forEach(function(row){a.e.forEach(function(eye){for(var y=-5;y<=5;y++)for(var x=-5;x<=5;x++){
- if(x*x/25+y*y/30>1)continue;var i=((row*192+eye[1]+y)*1536+dir*192+eye[0]+x)*4,r=d.data[i],g=d.data[i+1],b=d.data[i+2];
- // Recolor only the dark iris; retain outlines, white highlights, skin and hair.
- if(d.data[i+3]>160&&r>28&&r<135&&g<105&&b<100&&r>g*.85){var v=.55+(r+g+b)/450;d.data[i]=Math.min(255,rgb[0]*v);d.data[i+1]=Math.min(255,rgb[1]*v);d.data[i+2]=Math.min(255,rgb[2]*v)}
- }})})});c.putImageData(d,0,0)}
- if(['smile198','cat198','open198'].indexOf(look.mouth)>=0)FACE_ANCHOR198.forEach(function(a,dir){if(!a)return;[0,1].forEach(function(row){var x=dir*192+a.m[0],y=row*192+a.m[1];c.save();c.fillStyle='#ffe1b9';c.beginPath();c.ellipse(x,y,6,3.5,0,0,Math.PI*2);c.fill();c.strokeStyle='#94504b';c.lineWidth=1.5;c.lineCap='round';c.beginPath();
- if(look.mouth==='open198'){c.ellipse(x,y,2,3,0,0,Math.PI*2);c.fillStyle='#8d4d4c';c.fill()}
- else if(look.mouth==='cat198'){c.moveTo(x-4,y-1);c.quadraticCurveTo(x-2,y+4,x,y);c.quadraticCurveTo(x+2,y+4,x+4,y-1)}
- else{c.moveTo(x-4,y-1);c.quadraticCurveTo(x,y+4,x+4,y-1)}c.stroke();c.restore()})});
- FACE_CACHE198.set(id,cv);if(FACE_CACHE198.size>12)FACE_CACHE198.delete(FACE_CACHE198.keys().next().value);return cv;
-}
-function hatDraw198(c,id,dir){
- id=id.replace(/198$/,'');var rear=dir>=3&&dir<=5;
- c.lineJoin='round';c.lineWidth=2;c.strokeStyle='#21233e';
- if(id==='wiz'){c.fillStyle='#283f80';c.beginPath();c.moveTo(-39,0);c.lineTo(-23,-10);c.lineTo(-5,-53);c.lineTo(10,-43);c.lineTo(23,-9);c.lineTo(40,0);c.quadraticCurveTo(0,14,-39,0);c.fill();c.stroke();c.strokeStyle='#edc76b';c.lineWidth=5;c.beginPath();c.moveTo(-24,-7);c.quadraticCurveTo(0,3,23,-7);c.stroke();if(!rear){c.fillStyle='#fff3b2';c.beginPath();c.arc(4,-24,3,0,7);c.fill()}}
- else if(id==='cap'){c.fillStyle='#952f44';c.beginPath();c.moveTo(-32,0);c.quadraticCurveTo(-34,-31,0,-32);c.quadraticCurveTo(33,-31,33,0);c.closePath();c.fill();c.stroke();c.fillStyle='#d39b45';c.beginPath();c.ellipse(dir===2?-14:dir===6?14:0,0,37,6,0,0,7);c.fill();c.stroke();if(!rear){c.fillStyle='#ffe09a';c.fillRect(-4,-17,8,8)}}
- else if(id==='ears'){[-1,1].forEach(function(side){c.fillStyle='#34304f';c.beginPath();c.moveTo(side*15,-1);c.lineTo(side*34,-31);c.lineTo(side*37,2);c.closePath();c.fill();c.stroke();c.fillStyle='#c9799d';c.beginPath();c.moveTo(side*23,-2);c.lineTo(side*32,-19);c.lineTo(side*33,0);c.closePath();c.fill()})}
- else if(id==='pump'){c.fillStyle='#e58c30';c.beginPath();c.ellipse(0,-8,31,18,0,0,7);c.fill();c.stroke();c.fillStyle='#518551';c.fillRect(-3,-33,6,10);if(!rear){c.fillStyle='#342337';c.fillRect(-15,-12,7,5);c.fillRect(9,-12,7,5)}}
- else if(id==='crown'){c.fillStyle='#edc05b';c.beginPath();c.moveTo(-30,3);c.lineTo(-33,-20);c.lineTo(-16,-9);c.lineTo(0,-29);c.lineTo(16,-9);c.lineTo(33,-20);c.lineTo(30,3);c.closePath();c.fill();c.stroke()}
-}
-function headWear198(c,look,x,y,size,dir){
- c.save();c.translate(x+96/192*size,y+42/192*size);c.scale(size/192,size/192);
- if(look.hat&&look.hat!=='none')hatDraw198(c,look.hat,dir);
- if(look.face&&look.face!=='none'&&FACE_ANCHOR198[dir]){var a=FACE_ANCHOR198[dir];c.translate(-96,-42);c.strokeStyle='#252b43';c.lineWidth=2;
- if(look.face==='gls'||look.face==='gog'){a.e.forEach(function(e){c.fillStyle=look.face==='gog'?'rgba(57,194,223,.6)':'rgba(190,231,255,.12)';c.beginPath();c.ellipse(e[0],e[1],9,8,0,0,7);c.fill();c.stroke()});if(a.e.length===2){c.beginPath();c.moveTo(a.e[0][0]+9,a.e[0][1]);c.lineTo(a.e[1][0]-9,a.e[1][1]);c.stroke()}}
- else if(look.face==='mask'){c.fillStyle='#302b44';c.beginPath();c.ellipse(a.m[0],a.m[1]-1,12,7,0,0,7);c.fill()}}
- c.restore();
-}
+/* B198 team pet positioning, retained in B199. */
 var PET_SCENE198=null,PET_DEBUG198=[],PET_PLAN198={key:'',spots:[]};
 function petMatrix198(c){var m=c.getTransform&&c.getTransform();return m&&isFinite(m.a)?{a:m.a,b:m.b,c:m.c,d:m.d,e:m.e,f:m.f}:{a:1,b:0,c:0,d:1,e:0,f:0}}
 function petPoint198(m,x,y){return {x:m.a*x+m.c*y+m.e,y:m.b*x+m.d*y+m.f}}
@@ -9482,6 +9430,101 @@ function petFlush198(sc){var occupied=sc.actors.slice(),key=JSON.stringify([sc.W
 }
 function petScene198(fn){return function(c,W,H){if(PET_SCENE198)return fn.apply(this,arguments);var sc={base:petMatrix198(c),W:W,H:H,actors:[],queue:[]};PET_SCENE198=sc;try{return fn.apply(this,arguments)}finally{PET_SCENE198=null;petFlush198(sc)}}}
 drawBattleLandscape=petScene198(drawBattleLandscape);drawBattleTS169=petScene198(drawBattleTS169);drawDgLandscape=petScene198(drawDgLandscape);drawDgTS107=petScene198(drawDgTS107);
+
+/* B200: modular generated hair art and validated cosmetic choices. */
+var HAIR_STYLES200=[
+ {id:'m1',n:'สั้นตั้ง',g:'ชาย'},{id:'m2',n:'แสกข้าง',g:'ชาย'},{id:'m3',n:'คอมม่า',g:'ชาย'},{id:'m4',n:'วูล์ฟคัต',g:'ชาย'},{id:'m5',n:'รวบหางม้า',g:'ชาย'},
+ {id:'f1',n:'บ๊อบหน้าม้า',g:'หญิง'},{id:'f2',n:'ยาวตรง',g:'หญิง'},{id:'f3',n:'หางม้าสูง',g:'หญิง'},{id:'f4',n:'ทวินเทล',g:'หญิง'},{id:'f5',n:'มวยคู่',g:'หญิง'}];
+var HAIR_COLORS200={silver:['เงิน','#e5e2ef'],black:['ดำ','#343344'],brown:['น้ำตาล','#936044'],gold:['ทอง','#f0bf51'],red:['แดง','#b74349'],blue:['ฟ้า','#529cdb'],purple:['ม่วง','#9166be'],pink:['ชมพู','#eb88b2'],green:['เขียว','#56ab89'],white:['ขาว','#fff9f2']};
+var EYE_COLORS200={default:['เดิม','#3d2925'],blue:['ฟ้า','#319ce5'],green:['เขียว','#35ad79'],gold:['อำพัน','#cc9028'],purple:['ม่วง','#9869db'],red:['แดง','#cd5060'],gray:['เทา','#899ca9']};
+var HAIR_IMAGES200={},HEAD_CACHE200=new Map(),HAIR_TINT200=new Map();
+var FACE_ANCHOR200=[{e:[[79,80],[109,80]],m:[94,94]},{e:[[74,80],[99,80]],m:[85,95]},{e:[[72,80]],m:[77,95]},null,null,null,{e:[[120,80]],m:[115,95]},{e:[[94,80],[118,80]],m:[108,95]}];
+function headClean200(look){
+ look=look||{};return {hair200:HAIR_STYLES200.some(function(h){return h.id===look.hair200})?look.hair200:'none',hairColor200:Object.prototype.hasOwnProperty.call(HAIR_COLORS200,look.hairColor200)?look.hairColor200:'silver',eye200:Object.prototype.hasOwnProperty.call(EYE_COLORS200,look.eye200)?look.eye200:'default'};
+}
+function headActive200(look){var l=headClean200(look);return l.hair200!=='none'||l.hairColor200!=='silver'||l.eye200!=='default'}
+function headAction200(param){
+ var p=String(param||'').split('/');if(p.length!==2||!s||!s.look)return false;
+ var field=p[0]==='style'?'hair200':p[0]==='color'?'hairColor200':p[0]==='eye'?'eye200':null;
+ if(!field)return false;var test={};test[field]=p[1];if(headClean200(test)[field]!==p[1])return false;
+ s.look[field]=p[1];PORT_C={};save();return true;
+}
+function hairImage200(id){
+ if(SV||!HAIR_STYLES200.some(function(h){return h.id===id}))return null;
+ var r=HAIR_IMAGES200[id];if(!r){r=HAIR_IMAGES200[id]={im:new Image(),ok:false,bad:false};r.im.onload=function(){r.ok=true;HEAD_CACHE200.clear();HAIR_TINT200.clear();PORT_C={};try{render()}catch(e){}};r.im.onerror=function(){r.bad=true};r.im.src='assets/images/hair200_'+id+'.webp'}
+ return r.ok?r.im:null;
+}
+function colorRGB200(hex){return [1,3,5].map(function(i){return parseInt(hex.slice(i,i+2),16)})}
+function hairPixel200(d,i,color){
+ var lum=(d[i]*.299+d[i+1]*.587+d[i+2]*.114)/255;
+ if(lum<.12)return;
+ // Preserve drawn strand shading and outlines while replacing the neutral silver.
+ var shade=Math.pow(lum,1.35),highlight=Math.max(0,(lum-.86)/.14)*.23;
+ for(var k=0;k<3;k++)d[i+k]=Math.round(color[k]*shade+(255-color[k])*highlight);
+}
+function hairTint200(im,id,color){
+ if(color==='silver')return im;var key=id+'|'+color,hit=HAIR_TINT200.get(key);if(hit)return hit;
+ var cv=document.createElement('canvas');cv.width=1536;cv.height=192;var c=cv.getContext('2d');c.drawImage(im,0,0);
+ var pixels=c.getImageData(0,0,1536,192),d=pixels.data,rgb=colorRGB200(HAIR_COLORS200[color][1]);
+ for(var i=0;i<d.length;i+=4)if(d[i+3]>0)hairPixel200(d,i,rgb);c.putImageData(pixels,0,0);HAIR_TINT200.set(key,cv);if(HAIR_TINT200.size>16)HAIR_TINT200.delete(HAIR_TINT200.keys().next().value);return cv;
+}
+function eyeTint200(c,dir,eye,row){
+ if(eye==='default'||!FACE_ANCHOR200[dir])return;var a=FACE_ANCHOR200[dir],rgb=colorRGB200(EYE_COLORS200[eye][1]),x0=dir*192,y0=row*192,d=c.getImageData(x0,y0,192,192),p=d.data;
+ a.e.forEach(function(e){for(var y=-5;y<=5;y++)for(var x=-5;x<=5;x++){
+ if(x*x/25+y*y/30>1)continue;var i=((e[1]+y)*192+e[0]+x)*4,r=p[i],g=p[i+1],b=p[i+2];
+ if(p[i+3]>150&&r>28&&r<145&&g<110&&b<105&&r>g*.85){var v=.55+(r+g+b)/450;for(var k=0;k<3;k++)p[i+k]=Math.min(255,rgb[k]*v)}
+ }});c.putImageData(d,x0,y0);
+}
+function headAtlas200(im,key,look){
+ var L=headClean200(look),wig=L.hair200==='none'?null:hairImage200(L.hair200);
+ if(L.hair200==='none'&&L.hairColor200==='silver'&&L.eye200==='default')return im;
+ // Keep the original sprite visible while the modular artwork loads.
+ if(L.hair200!=='none'&&!wig)return im;
+ var ck=key+'|'+L.hair200+'|'+L.hairColor200+'|'+L.eye200,hit=HEAD_CACHE200.get(ck);if(hit){HEAD_CACHE200.delete(ck);HEAD_CACHE200.set(ck,hit);return hit}
+ var cv=document.createElement('canvas');cv.width=1536;cv.height=384;var c=cv.getContext('2d');c.drawImage(im,0,0);
+ var source=c.getImageData(0,0,1536,384).data;
+ if(wig){
+ var tint=hairTint200(wig,L.hair200,L.hairColor200);
+ var f=document.createElement('canvas');f.width=f.height=192;var fc=f.getContext('2d'),d=fc.createImageData(192,192),out=d.data;
+ for(var row=0;row<2;row++)for(var dir=0;dir<8;dir++){
+ var bx=dir*192,by=row*192,a=FACE_ANCHOR200[dir];
+ // Replace the baked head; leave weapons, class outfit, hands and body in the original atlas.
+ c.clearRect(bx+43,by+8,108,99);
+ c.save();c.translate(bx,by);c.fillStyle='#efc19e';c.fillRect(90,95,12,12);
+ if(a){c.fillStyle='#ffe0b8';c.strokeStyle='#5e4540';c.lineWidth=1.3;c.beginPath();
+ var center=dir===1?88:dir===2?83:dir===6?109:dir===7?104:96;
+ c.ellipse(center,72,dir===2||dir===6?25:32,31,0,0,7);c.fill();c.stroke();
+ // Carry across the character's original facial pixels rather than substituting a new face.
+ out.fill(0);
+ for(var y=69;y<104;y++)for(var x=53;x<139;x++){
+ var ix=((by+y)*1536+bx+x)*4,j=(y*192+x)*4,r=source[ix],g=source[ix+1],b=source[ix+2],skin=y>=82&&r>125&&g>70&&r>g*1.03&&g>b*1.06,eye=false;
+ a.e.forEach(function(e){if(y>=77&&y<=88&&Math.pow((x-e[0])/7,2)+Math.pow((y-e[1])/7,2)<1)eye=true});
+ var inside=Math.pow((x-center)/(dir===2||dir===6?25:32),2)+Math.pow((y-72)/31,2)<1;
+ if(inside&&(skin||eye||y>=90&&Math.abs(x-a.m[0])<8)&&source[ix+3]>120){out[j]=r;out[j+1]=g;out[j+2]=b;out[j+3]=source[ix+3]}
+ }
+ fc.putImageData(d,0,0);c.drawImage(f,0,0);
+ }
+ c.restore();
+ c.drawImage(tint,dir*192,0,192,192,bx,by,192,192);
+ var restore=c.getImageData(bx,by,192,192),rp=restore.data;for(var yy=62;yy<107;yy++)for(var xx=43;xx<151;xx++){if(xx>=65&&xx<=130)continue;var si=((by+yy)*1536+bx+xx)*4,di=(yy*192+xx)*4,rr=source[si],gg=source[si+1],bb=source[si+2];if(source[si+3]>120&&Math.max(rr,gg,bb)-Math.min(rr,gg,bb)>48&&!(rr>125&&gg>70&&rr>gg*1.03&&gg>bb*1.06)){for(var kk=0;kk<4;kk++)rp[di+kk]=source[si+kk]}}c.putImageData(restore,bx,by);
+ }
+ }else if(L.hairColor200!=='silver'){
+ var d=c.getImageData(0,0,1536,384),p=d.data,rgb=colorRGB200(HAIR_COLORS200[L.hairColor200][1]);
+ for(var row=0;row<2;row++)for(var dir=0;dir<8;dir++)for(var y=17;y<101;y++)for(var x=47;x<147;x++){
+ var a=FACE_ANCHOR200[dir];if(a&&y>=74&&a.e.some(function(e){return Math.pow((x-e[0])/8,2)+Math.pow((y-e[1])/11,2)<1}))continue;
+ var i=((row*192+y)*1536+dir*192+x)*4,r=p[i],g=p[i+1],b=p[i+2];
+ if(p[i+3]>0&&r>68&&Math.max(r,g,b)-Math.min(r,g,b)<32&&b>=g*.96)hairPixel200(p,i,rgb);
+ }c.putImageData(d,0,0);
+ }
+ for(var row=0;row<2;row++)for(var dir=0;dir<8;dir++)eyeTint200(c,dir,L.eye200,row);
+ HEAD_CACHE200.set(ck,cv);if(HEAD_CACHE200.size>12)HEAD_CACHE200.delete(HEAD_CACHE200.keys().next().value);return cv;
+}
+function headPicker200(){
+ var L=headClean200(s.look),html='<div class="head-custom200"><h3>ทรงผมและสี</h3><p class="hint">ชาย 5 แบบ · หญิง 5 แบบ · ทุกอาชีพเลือกใช้ได้</p><button class="btn" data-a="head200" data-p="style/none" aria-pressed="'+(L.hair200==='none')+'">ใช้ทรงผมเดิม</button>';
+ ['ชาย','หญิง'].forEach(function(g){html+='<h4>ทรง'+g+'</h4><div class="hair-grid200">'+HAIR_STYLES200.filter(function(h){return h.g===g}).map(function(h){return '<button class="hair-choice200'+(L.hair200===h.id?' selected':'')+'" data-a="head200" data-p="style/'+h.id+'" aria-pressed="'+(L.hair200===h.id)+'"><span class="hair-thumb200" aria-hidden="true" style="background-image:url(assets/images/hair200_'+h.id+'.webp)"></span><span>'+esc(h.n)+'</span></button>'}).join('')+'</div>'});
+ [['color','สีผม',HAIR_COLORS200,L.hairColor200],['eye','สีดวงตา',EYE_COLORS200,L.eye200]].forEach(function(r){html+='<h4>'+r[1]+'</h4><div class="head-colors200">'+Object.keys(r[2]).map(function(id){var col=r[2][id],on=r[3]===id;return '<button class="head-swatch200'+(on?' selected':'')+'" data-a="head200" data-p="'+r[0]+'/'+id+'" aria-label="'+r[1]+col[0]+'" aria-pressed="'+on+'"><i style="background:'+col[1]+'" aria-hidden="true">'+(on?'✓':'')+'</i><span>'+col[0]+'</span></button>'}).join('')+'</div>'});
+ return html+'</div>';
+}
 
 if(SV){
  var FXLOG=[];
@@ -9624,7 +9667,7 @@ function mapNodes138(z){var rng=frng(13890+z),spots=[],W=FLD.W,H=FLD.H;for(var i
  var out=[];for(i=0;i<GNODE_N;i++)MATS.forEach(function(k,ki){var p=spots[(i*MATS.length+ki)%spots.length];out.push({k:k,x:p[0]+(rng()-.5)*16,y:p[1]+(rng()-.5)*16,until:0})});return out;
 }
 fieldBuild=function(z){z=Math.max(0,Math.min(ZONES.length-1,z|0));mapReset138(z);FLD.px=FLD.W/2;FLD.py=fPathY(FLD.px);FLD.boss.x=FLD.W*.80;FLD.boss.y=FLD.H*.25;FLD.nodes=mapNodes138(z);FLD.map=mapProject138(mapGround138(z,false),z);fGridBuild();FLD.mobs=[];ENCOUNTER146.z=-1};
-function townNpcs138(){if(TOWN.npcs.length)return;var list=[['ทหารยาม','warrior',679,813,1],['ทหารยาม','paladin',761,813,1],['พ่อค้าเร่','rogue',938,777,0],['ช่างตีเหล็ก','warrior',469,539,0],['นักบวชวิหาร','mage',989,587,0],['เด็กน้อย','archer',554,630,0],['นักเดินทาง','archer',807,645,0],['ผู้ประกาศเมือง','paladin',720,700,1]];list.forEach(function(n){TOWN.npcs.push({ann:n[0]==='ผู้ประกาศเมือง',n:n[0],cls:n[1],x:n[2],y:n[3],hx:n[2],hy:n[3],st:n[4],look:{hair:0,hc:0,hat:'none',face:'none',eye:'none',mouth:'none',wing:'none',pet:'none',aura:'none',dye:'def'},vx:0,vy:0,next:0,dir:1})})}
+function townNpcs138(){if(TOWN.npcs.length)return;var list=[['ทหารยาม','warrior',679,813,1],['ทหารยาม','paladin',761,813,1],['พ่อค้าเร่','rogue',938,777,0],['ช่างตีเหล็ก','warrior',469,539,0],['นักบวชวิหาร','mage',989,587,0],['เด็กน้อย','archer',554,630,0],['นักเดินทาง','archer',807,645,0],['ผู้ประกาศเมือง','paladin',720,700,1]];list.forEach(function(n){TOWN.npcs.push({ann:n[0]==='ผู้ประกาศเมือง',n:n[0],cls:n[1],x:n[2],y:n[3],hx:n[2],hy:n[3],st:n[4],look:{hair:0,hc:0,hat:'none',face:'none',wing:'none',pet:'none',aura:'none',dye:'def'},vx:0,vy:0,next:0,dir:1})})}
 var CAPITAL_BORDER188={left:322,right:1118,back:239,front:855,gate:720,opening:45};
 // Register the open plaza painted into the backdrop to the world-space city footprint.
 function capitalScene191(){
