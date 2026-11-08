@@ -1043,6 +1043,12 @@ body.view-portrait #gameWrap #townStage .town-bottom .map-button197{min-width:44
 .create-stage .create-fb218{position:absolute;left:50%;bottom:4%;width:min(58%,190px);aspect-ratio:1;transform:translateX(-50%);background-repeat:no-repeat;background-size:800% 200%;background-position:0 0;pointer-events:none;z-index:2}
 .create-stage canvas{position:relative;z-index:1}
 .create-stage .create-stage-tag{z-index:2}
+/* B220 ปุ่มออกล่ามอนสำหรับผู้เล่นใหม่ */
+.hunt220{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;flex-direction:column;align-items:center;gap:1px;padding:10px 26px 9px;border-radius:16px;border:2px solid #fff1b8;background:linear-gradient(180deg,#ffd45e,#f0a32e);color:#2a1204;font-family:Kanit,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.45),0 0 0 0 rgba(255,212,94,.7);animation:hunt220 1.6s ease-in-out infinite;cursor:pointer}
+.hunt220 b{font-size:20px;font-weight:800;line-height:1.15}.hunt220 small{font-size:11px;font-weight:600;opacity:.85;white-space:nowrap}
+.hunt220[hidden]{display:none}
+@keyframes hunt220{50%{box-shadow:0 6px 18px rgba(0,0,0,.45),0 0 0 10px rgba(255,212,94,0)}}
+@media (prefers-reduced-motion:reduce){.hunt220{animation:none}}
 </style>
 
 <section id="login" class="login">
@@ -4104,6 +4110,23 @@ drawField=function(c,W,H,tn){
  try{if(exploration195()&&FLD.cam)walkRoute219(c,Math.round(FLD.cam[0]),Math.round(FLD.cam[1]),tn)}catch(e){}
 };
 
+// ===== B220 ผู้เล่นใหม่: ปุ่ม "ออกล่ามอน" ชัดเจน + เริ่มล่าให้อัตโนมัติหลังจบบทสอน =====
+var HUNT_CTA220=null;
+function huntCtaTick220(){
+ if(SV||typeof document==='undefined')return;
+ var show=false;
+ try{show=!!(s&&s.created&&!s.battle&&!s.res&&!(TUT&&TUT.on)&&!(ECO&&ECO.on)&&document.querySelector('#scene[data-mode=field]')&&!FLD.town&&!autoRunning()&&(s.lvl|0)<40)}catch(e){show=false}
+ if(!HUNT_CTA220){if(!show)return;HUNT_CTA220=document.createElement('button');HUNT_CTA220.type='button';HUNT_CTA220.className='hunt220';
+  HUNT_CTA220.innerHTML='<b>⚔️ ออกล่ามอน</b><small>ตัวละครจะเดินหามอนและสู้ให้เอง</small>';
+  HUNT_CTA220.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();try{sfx('click')}catch(e){}act('autoset','run:1');HUNT_CTA220.hidden=true});
+  document.body.appendChild(HUNT_CTA220)}
+ HUNT_CTA220.hidden=!show;
+}
+if(!SV&&typeof setInterval!=='undefined')setInterval(huntCtaTick220,500);
+// จบ/ข้ามบทสอน แล้วยังไม่เคยสู้ → เริ่มล่าให้เลย จะได้เจอมอนตัวแรกภายในไม่กี่วินาที
+var tutEndBefore220=tutEnd;
+tutEnd=function(){var r=tutEndBefore220.apply(this,arguments);try{if(s&&s.created&&!(s.kills|0)&&!autoRunning())setTimeout(function(){if(s&&!s.battle&&!autoRunning())act('autoset','run:1')},400)}catch(e){}return r};
+
 // ===== B105 บัตรรายเดือน · บัตรถาวร · ซีซั่น 1 (จบ 31 ธ.ค. 23:59 น. เวลาไทย) =====
 var S105_START=Date.UTC(2026,9,31,17,0,0),S105_END=Date.UTC(2026,11,31,16,59,59),S105_RUSH=Date.UTC(2026,11,21,17,0,0),S105_CLAIM=S105_END+7*864e5,S105_MAX=50,S105_PER=1000,S105_KILLCAP=600;
 var SHOP105=[{sku:'sup35',ic:'🎁',n:'แพ็กผู้สนับสนุน',p:35,d:'อุปกรณ์ Lv20 สีส้ม + ป้าย ✦ ผู้สนับสนุน · ซื้อได้ครั้งเดียว'},
@@ -4225,7 +4248,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B219';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B220';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -7924,8 +7947,8 @@ var TUT_STEPS=[
  {t:'.bars',th:['เลือด พลัง และ XP','HP หมด = แพ้ · การล่าใช้ "พลัง" ครั้งละ 2 (ฟื้นเอง 1 หน่วยทุก 3 นาที) · XP เต็มแล้วเลเวลอัป'],en:['HP, energy and XP','HP 0 = defeat · each hunt costs 2 energy (regains 1 every 3 min) · fill XP to level up']},
  {t:'.clock',th:['นาฬิกาและชั่วโมงทอง','ทุกวัน 13:00–14:00 และ 21:00–22:00 ได้ XP และทองจากการต่อสู้ +50% อย่าพลาด!'],en:['Clock & golden hours','Daily 13:00–14:00 and 21:00–22:00 (Thailand): +50% XP and gold from battles']},
  {t:'[data-a=zonemenu]',th:['เลือกแผนที่','แต่ละแผนที่มีเลเวลแนะนำ เริ่มที่ป่าเขียว แล้วย้ายเมื่อเลเวลถึง มอนเก่งขึ้น แต่ได้ของดีขึ้น'],en:['Choose a map','Each map has a recommended level. Start in Green Forest and move on as you level up']},
- {t:'#scene[data-mode=field]',th:['เดินล่ามอนในแผนที่','แตะหรือลากบนแผนที่เพื่อเดิน เดินชนมอนเพื่อเข้าสู้ (ใช้ 2 พลัง) ชนะได้ทอง XP วัตถุดิบ การ์ด · บอสสนามมงกุฎทองเกิดทุก 10 นาที'],en:['Walk & hunt on the map','Tap or drag on the map to walk; bump into a monster to fight (2 energy). Win gold, XP, materials, cards · a crowned field boss spawns every 10 min']},
- {t:'[data-a=autohunt]',th:['ล่าออโต้','เปิดแล้วตัวละครจะเดินหามอนในแผนที่ สู้ ใช้สกิล และดื่มยาให้เอง จนพลังหมดหรือยาหมด'],en:['Auto hunt','Turn on to hunt, fight, use skills and drink potions automatically until energy or potions run out']},
+ {t:'#scene[data-mode=field]',th:['แผนที่','แตะหรือลากเพื่อเดินสำรวจ เก็บวัตถุดิบ ไปจุดตกปลา · มอนจะออกมาเจอตอนเปิดออโต้ล่ามอน (ใช้ 2 พลังต่อการต่อสู้) ชนะได้ทอง XP วัตถุดิบ การ์ด'],en:['Walk & hunt on the map','Tap or drag on the map to walk; bump into a monster to fight (2 energy). Win gold, XP, materials, cards · a crowned field boss spawns every 10 min']},
+ {t:'[data-a=autotoggle55]',th:['ปุ่มออกล่า (ออโต้)','กดปุ่มนี้เพื่อออกล่ามอน ตัวละครจะเดินหามอน สู้ ใช้สกิล และดื่มยาให้เอง จนพลังหมดหรือยาหมด · ได้ XP เลเวลอัปเร็วที่สุด'],en:['Auto hunt','Turn on to hunt, fight, use skills and drink potions automatically until energy or potions run out']},
  {t:'[data-a=bset]',th:['ตั้งค่าออโต้และยา','ตั้งว่าจะกินยาเมื่อเลือดต่ำกว่ากี่ % และจะสู้บอสต่อหรือหยุด ยาที่ HP น้อยสุดจะถูกใช้ก่อนเสมอ'],en:['Auto & potion settings','Set the HP % to drink at and whether auto fights bosses. The smallest potion is always used first']},
  {t:null,th:['🌙 โหมดประหยัดพลังงาน','ตอนเปิดออโต้หรือยืนพักในเมืองหลวง ถ้าไม่แตะจอ 1 นาที จอจะมืดลงเพื่อประหยัดแบต แต่เกมยังเล่นต่อ (ออโต้ยังล่ามอน · พลังยังฟื้นในเมือง) เลื่อนปุ่ม ➜ ด้านล่างเพื่อกลับเข้าเกม · ปิด/เปิดได้ที่ แต่งตัว → ⚙️ ตั้งค่า'],en:['🌙 Power saving','While auto-hunting or resting in the Capital, if you don\'t touch the screen for 1 minute it goes dark to save battery but the game keeps running. Tap to return · Toggle it in Wardrobe → ⚙️ Settings']},
  {t:'[data-a=tab][data-p=char]',th:['ตัวละคร','ทุกเลเวลได้แต้มสเตตัสและแต้มสกิล มาลงที่นี่ (มีจุดเรืองแสงเมื่อมีแต้มเหลือ) และเลื่อนขั้นอาชีพที่ Lv50 / Lv80'],en:['Character','Spend stat and skill points here each level (a glowing dot shows unspent points). Job advancement at Lv50 / Lv80']},
@@ -7937,7 +7960,7 @@ var TUT_STEPS=[
  {t:'[data-a=tab][data-p=me]',th:['แต่งตัว','เปลี่ยนชุด ฉายา สมุดการ์ด กล่องสุ่ม กระเป๋า และ ⚙️ ตั้งค่า (เสียง เพลง ภาษา และดูบทสอนนี้ซ้ำ)'],en:['Wardrobe','Outfits, titles, card book, mystery boxes, bag and ⚙️ settings (sound, music, language, replay this tour)']},
  {t:'#dqFab',th:['ภารกิจประจำวัน','ทำภารกิจง่าย ๆ ทุกวันเพื่อรับทอง ยา และกล่องสุ่ม ปุ่มนี้ลากย้ายตำแหน่งได้'],en:['Daily quests','Complete easy daily quests for gold, potions and mystery boxes. You can drag this button']},
  {t:'#chatFab',th:['แชท','คุยกับผู้เล่นทั้งโลก ฝ่าย ทีม หรือกระซิบส่วนตัว'],en:['Chat','Talk to everyone, your faction, your team, or whisper privately']},
- {t:null,th:['พร้อมผจญภัยแล้ว!','เริ่มจากกด "ล่ามอนสเตอร์" ในป่าเขียว เก็บทองไปคราฟอาวุธ แล้วอย่าลืมลงแต้มทุกครั้งที่เลเวลอัป โชคดี!'],en:['Ready for adventure!','Start by hunting in Green Forest, save gold to craft a weapon, and spend your points every level. Good luck!']}];
+ {t:null,th:['พร้อมผจญภัยแล้ว!','เดี๋ยวระบบจะพาออกล่ามอนให้เลย (กดปุ่ม "⚔️ ออกล่ามอน" ได้ทุกเมื่อ) ในป่าเขียว เก็บทองไปคราฟอาวุธ แล้วอย่าลืมลงแต้มทุกครั้งที่เลเวลอัป โชคดี!'],en:['Ready for adventure!','Start by hunting in Green Forest, save gold to craft a weapon, and spend your points every level. Good luck!']}];
 var TUT={on:false,i:0,el:null,raf:0,scrolled:-1};
 function tutKey(){return 'shuk-tut-v1:'+(String(curUser||'')||nick())}
 function tutDone(){try{return localStorage.getItem(tutKey())==='1'}catch(e){return true}}
