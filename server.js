@@ -607,6 +607,38 @@ function funMark(p) { const s = p && p.s; if (!s || !s.created) return; const d 
   if (!s.fn) { if ((s.kills | 0) > 0 || (s.lvl | 0) > 1) { s.fn = { c: -1, k: 1, l: (s.lvl | 0) >= 5 ? 1 : 0, r: 1 }; return; } s.fn = { c: d }; funInc('created'); }
   const f = s.fn; if (!f.k && (s.kills | 0) >= 1) { f.k = 1; funInc('firstKill'); } if (!f.l && (s.lvl | 0) >= 5) { f.l = 1; funInc('lv5'); } if (!f.r && f.c > 0 && d > f.c) { f.r = 1; funInc('returnNextDay'); } }
 function funReport() { const d = funDay(), K = ['visit', 'newAccount', 'created', 'firstKill', 'lv5', 'returnNextDay'], sum = (from) => { const o = {}; K.forEach(k => o[k] = 0); for (let x = from; x <= d; x++) { const r = FUN.days[x]; if (r) K.forEach(k => o[k] += r[k] | 0); } return o; }; return { today: sum(d), last7days: sum(d - 6) }; }
+
+// ===== B221 จุดที่ผู้เล่นเลิกเล่น: นับขั้นตอนแยกตามเวอร์ชัน + ข้อผิดพลาดตอนโหลด (ไม่เก็บข้อมูลส่วนตัว: ไม่มีชื่อ ไอดี หรือ IP) =====
+const EV221_STEPS = ['open', 'create', 'map', 'battle', 'craft', 'play5'];
+const EV221 = { loaded: false, days: {}, errs: {}, seen: { d: -1, set: new Set() }, rate: new Map(), dirty: false, saveAt: 0 };
+function ev221Ver(v) { v = String(v || ''); return /^B\d{2,4}(\.\d{1,2})?$/.test(v) ? v : 'อื่นๆ'; }
+function ev221Clean(t) { return String(t || '').replace(/https?:\/\/[^\s)]+/g, m => { const q = m.split(/[?#]/)[0]; return q.slice(q.lastIndexOf('/') + 1) || 'url'; }).replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '[email]').replace(/\d{7,}/g, '#').replace(/\s+/g, ' ').trim().slice(0, 90); }
+async function ev221Load() { if (EV221.loaded) return; EV221.loaded = true; try { const v = await db.getMeta('ev221'); if (v) { const o = JSON.parse(v) || {}; const add = (dst, src) => { for (const d in src || {}) for (const ver in src[d] || {}) for (const k in src[d][ver] || {}) { const a = ((dst[d] = dst[d] || {})[ver] = dst[d][ver] || {}); a[k] = (a[k] | 0) + (src[d][ver][k] | 0); } }; add(EV221.days, o.days); add(EV221.errs, o.errs); } } catch (e) {} }
+function ev221Save(force) { if (!EV221.dirty || (!force && Date.now() - EV221.saveAt < 60000)) return; EV221.dirty = false; EV221.saveAt = Date.now(); const keep = o => { const r = {}; Object.keys(o).map(Number).sort((a, b) => b - a).slice(0, 30).forEach(d => r[d] = o[d]); return r; }; EV221.days = keep(EV221.days); EV221.errs = keep(EV221.errs); (db.putMeta || db.setMeta)('ev221', JSON.stringify({ days: EV221.days, errs: EV221.errs })).catch(e => console.error('ev221', e.message)); }
+setInterval(() => ev221Save(), 60000).unref();
+function ev221Hit(b, ip) {
+  const now = Date.now(), r = EV221.rate.get(ip) || { n: 0, t: now }; if (now - r.t > 60000) { r.n = 0; r.t = now; } r.n++; EV221.rate.set(ip, r); if (EV221.rate.size > 5000) EV221.rate.clear(); if (r.n > 40) return;
+  const d = funDay(), ver = ev221Ver(b.v), sid = crypto.createHash('sha1').update(String(b.sid || ip).slice(0, 40)).digest('hex').slice(0, 16);
+  if (EV221.seen.d !== d) EV221.seen = { d, set: new Set() };
+  if (b.e === 'err') {
+    const kind = ['js', 'promise', 'res', 'img', 'frame', 'canvas'].includes(b.k) ? b.k : 'js', msg = (kind === 'img' || kind === 'res' ? String(b.m || '').replace(/[^\w .\-]/g, '').replace(/([0-9a-f]{12})[0-9a-f]{12,}/g, '$1…').slice(0, 90) : ev221Clean(b.m)) || '-';
+    const dk = sid + '|err|' + kind + '|' + msg; if (EV221.seen.set.has(dk)) return; EV221.seen.set.add(dk);
+    const o = ((EV221.errs[d] = EV221.errs[d] || {})[ver] = EV221.errs[d][ver] || {}); let key = kind + ' · ' + msg; if (!(key in o) && Object.keys(o).length >= 60) key = 'อื่นๆ'; o[key] = (o[key] | 0) + 1;
+  } else {
+    if (!EV221_STEPS.includes(b.e)) return; const dk = sid + '|' + b.e + '|' + ver; if (EV221.seen.set.has(dk)) return; EV221.seen.set.add(dk);
+    const o = ((EV221.days[d] = EV221.days[d] || {})[ver] = EV221.days[d][ver] || {}); o[b.e] = (o[b.e] | 0) + 1; if (b.n) o[b.e + '_n'] = (o[b.e + '_n'] | 0) + 1;
+  }
+  if (EV221.seen.set.size > 200000) EV221.seen.set.clear();
+  EV221.dirty = true;
+}
+function ev221Report(days) {
+  const d = funDay(), n = Math.max(1, Math.min(30, days | 0 || 7)), vers = {};
+  for (let x = d - n + 1; x <= d; x++) {
+    const r = EV221.days[x] || {}; for (const v in r) { const o = vers[v] = vers[v] || { steps: {}, errs: {} }; for (const k in r[v]) o.steps[k] = (o.steps[k] | 0) + r[v][k]; }
+    const e = EV221.errs[x] || {}; for (const v in e) { const o = vers[v] = vers[v] || { steps: {}, errs: {} }; for (const k in e[v]) o.errs[k] = (o.errs[k] | 0) + e[v][k]; }
+  }
+  return { days: n, steps: EV221_STEPS, versions: Object.keys(vers).sort((a, b) => (parseFloat(b.slice(1)) || 0) - (parseFloat(a.slice(1)) || 0)).map(v => ({ v, steps: vers[v].steps, errs: Object.entries(vers[v].errs).sort((a, b) => (/^(img|res) /.test(a[0]) - /^(img|res) /.test(b[0])) || b[1] - a[1]).slice(0, 25) })) };
+}
 // ===== ผลสงครามสี่ฝ่าย: เซิร์ฟเวอร์รวมแต้มครั้งเดียวตอนศึกจบ แล้วทุกคนใช้ผลเดียวกัน =====
 const FACRES = { loaded: false, map: {} };
 async function facResLoad() { if (FACRES.loaded) return; FACRES.loaded = true; try { const v = await db.getMeta('facres'); if (v) FACRES.map = JSON.parse(v) || {}; } catch (e) {} }
@@ -963,11 +995,12 @@ function admKeyOk(req, key) {
 const ADMIN_PAGE101 = `<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>แอดมิน · TheWarWhat</title>
 <style>body{font-family:sans-serif;background:#0e1326;color:#e8eaf2;max-width:560px;margin:0 auto;padding:12px}h2{margin:6px 0 10px}label{display:block;margin:10px 0 4px;font-size:14px}input,textarea,select{width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #445;background:#1a2140;color:#fff;font-size:16px}textarea{height:80px}button{padding:11px;border:0;border-radius:10px;background:#ffb43c;font-size:16px;font-weight:700;color:#201000}button.w{width:100%;margin-top:12px}button.g{background:#2a3256;color:#fff}button.r{background:#ff5a5a;color:#fff}.tabs{display:flex;gap:4px;flex-wrap:wrap;margin:10px 0}.tabs button{flex:1;min-width:30%;background:#2a3256;color:#fff;font-size:14px;padding:9px 4px}.tabs button.on{background:#ffb43c;color:#201000}.row{display:flex;gap:8px}.row>*{flex:1}.box{margin-top:12px;padding:10px;border-radius:8px;background:#1a2140;white-space:pre-wrap;font-size:14px;line-height:1.55}.it{border-bottom:1px solid #334;padding:6px 0;display:flex;justify-content:space-between;gap:8px;align-items:center}.pane{display:none}.pane.on{display:block}small{color:#9aa7bd}</style></head><body>
 <h2>🛠️ แอดมิน · ศึกชิงเมือง</h2><label>รหัสแอดมิน (ADMIN_KEY)</label><input id="k" type="password" autocomplete="current-password">
-<div class="tabs"><button data-t="mail" class="on">📬 จดหมาย</button><button data-t="pl">🔍 ผู้เล่น</button><button data-t="nt">📢 ประกาศ</button><button data-t="pay">💳 เติมเงิน</button><button data-t="mk">🏪 ตลาด</button></div>
+<div class="tabs"><button data-t="mail" class="on">📬 จดหมาย</button><button data-t="pl">🔍 ผู้เล่น</button><button data-t="nt">📢 ประกาศ</button><button data-t="pay">💳 เติมเงิน</button><button data-t="mk">🏪 ตลาด</button><button data-t="drop">📉 จุดเลิกเล่น</button></div>
 <div class="pane on" id="p-mail"><label>ส่งถึง</label><select id="mode"><option value="all">ผู้เล่นทุกคน</option><option value="one">ผู้เล่นคนเดียว (ชื่อตัวละคร)</option></select><input id="to" placeholder="ชื่อตัวละคร (ถ้าส่งคนเดียว)" style="margin-top:6px"><label>หัวข้อ</label><input id="t" maxlength="60" value="ของชดเชยจากทีมงาน"><label>ข้อความ</label><textarea id="b" maxlength="600">ขออภัยในความไม่สะดวก</textarea><div class="row"><div><label>ทอง</label><input id="gold" type="number" min="0" value="0"></div><div><label>ยาเต็ม</label><input id="potF" type="number" min="0" value="0"></div><div><label>แร่ม่วง</label><input id="purple" type="number" min="0" value="0"></div></div><label>อายุจดหมาย (วัน · ส่งทุกคน)</label><input id="days" type="number" min="1" max="30" value="7"><button class="w" id="sendmail">ส่งจดหมาย</button></div>
 <div class="pane" id="p-pl"><label>ชื่อตัวละคร หรือ ไอดีล็อกอิน</label><div class="row"><input id="pq"><button id="pfind" style="flex:0 0 90px">ค้นหา</button></div><div id="pinfo"></div></div>
 <div class="pane" id="p-nt"><h3 style="margin:8px 0">🪧 ป้ายประกาศตอนเข้าเกม</h3><small>ขึ้นเป็นหน้าต่างให้ผู้เล่นอ่านตอนเข้าเกม กดรับทราบแล้วไม่ขึ้นซ้ำจนกว่าจะตั้งป้ายใหม่ · เว้นข้อความว่างแล้วกดบันทึก = ปิดป้าย</small><label>หัวข้อ</label><input id="bdt" maxlength="60" placeholder="เช่น อัปเดตใหม่ B104"><label>ข้อความ (ขึ้นบรรทัดใหม่ได้)</label><textarea id="bdb" maxlength="1000" style="height:140px"></textarea><div class="row" style="margin-top:10px"><button id="bdgo">บันทึกป้าย</button><button class="g" id="bdload">โหลดป้ายปัจจุบัน</button></div><h3 style="margin:18px 0 8px">⚔️ ทดสอบศึกชิงแดน</h3><small>เปิดสมรภูมินอกเวลา (ปกติเปิดเสาร์–อาทิตย์ 20:00–22:00)</small><div class="row" style="margin-top:8px"><button id="wt30">เปิด 30 นาที</button><button class="g" id="wt0">ปิดทดสอบ</button></div><h3 style="margin:18px 0 8px">💬 ข้อความสั้นในแชท</h3><label>ข้อความ (ขึ้นในแชทช่องประกาศ)</label><textarea id="nt" maxlength="160"></textarea><button class="w" id="ntgo">ประกาศในแชท</button></div>
 <div class="pane" id="p-pay"><button class="w g" id="payload">โหลดรายการเติมเงิน</button><div id="paylist"></div></div>
+<div class="pane" id="p-drop"><div class="row"><select id="dropd"><option value="1">วันนี้</option><option value="7" selected>7 วัน</option><option value="30">30 วัน</option></select><button class="w g" id="dropload" style="flex:0 0 120px">โหลดรายงาน</button></div><small>นับครั้งเดียวต่อเครื่องต่อวัน แยกตามเวอร์ชันเกม · ไม่มีชื่อ ไอดี หรือ IP ผู้เล่น · "ใหม่" = เครื่องที่เปิดเกมครั้งแรกวันนั้น</small><div id="droplist"></div></div>
 <div class="pane" id="p-mk"><button class="w g" id="mkload">โหลดของในตลาด</button><div id="mklist"></div></div>
 <div class="box" id="out">พร้อมใช้งาน</div>
 <script>
@@ -987,6 +1020,11 @@ $("ntgo").onclick=function(){if($("nt").value.trim())api("/api/admin/op",{op:"no
 $("payload").onclick=function(){api("/api/admin/op",{op:"pays"}).then(function(j){var L=j.pays||[],sum=L.reduce(function(a,x){return a+(x.amt||0)},0);$("paylist").innerHTML='<div class="box">ทั้งหมด '+L.length+' รายการ · รวม '+(sum/100).toLocaleString()+' บาท'+(j.mode?' · โหมด '+esc(j.mode):'')+'</div>'+L.map(function(x){return '<div class="it"><span>'+esc(x.name)+' <small>#'+x.uid+' · '+d(x.at)+'</small><br><small>'+esc(x.sid)+'</small></span><b>'+(x.amt/100)+' ฿</b></div>'}).join("")})};
 function mk(){api("/api/admin/op",{op:"mkt"}).then(function(j){var L=j.list||[];$("mklist").innerHTML='<div class="box">ของในตลาด '+L.length+' ชิ้น</div>'+L.map(function(x){return '<div class="it"><span>'+esc(x.name)+' <small>ราคา '+Number(x.price).toLocaleString()+'</small><br><small>ผู้ขาย '+esc(x.sn)+' #'+x.uid+' · หมด '+d(x.exp)+'</small></span><button class="r" data-id="'+esc(x.id)+'">ลบ</button></div>'}).join("");document.querySelectorAll("#mklist button[data-id]").forEach(function(b){b.onclick=function(){if(confirm("ลบรายการนี้? ของจะคืนผู้ขายทางจดหมาย"))api("/api/admin/op",{op:"mktdel",id:b.dataset.id}).then(mk)}})})}
 $("mkload").onclick=mk;
+var DROPN={open:"เปิดเว็บ",create:"เข้าหน้าสร้างตัวละคร",map:"เข้าแผนที่",battle:"ต่อสู้ครั้งแรก",craft:"เปิดหน้าคราฟ",play5:"เล่นครบ 5 นาที"};
+function pct(a,b){return b?Math.round(a*100/b)+"%":"-"}
+$("dropload").onclick=function(){api("/api/admin/op",{op:"drop221",days:+$("dropd").value}).then(function(j){var R=j.drop;if(!R){return}if(!R.versions.length){$("droplist").innerHTML='<div class="box">ยังไม่มีข้อมูลในช่วงนี้</div>';return}
+$("droplist").innerHTML=R.versions.map(function(V){var S=V.steps,o=S.open||0,on=S.open_n||0,prev=null,prevn=null;var rows=R.steps.map(function(k){var a=S[k]||0,an=S[k+"_n"]||0,r='<tr><td>'+DROPN[k]+'</td><td><b>'+a+'</b></td><td>'+(prev==null?"-":pct(a,prev))+'</td><td>'+pct(a,o)+'</td><td>'+an+' <small>('+(prevn==null?"-":pct(an,prevn))+')</small></td></tr>';prev=a;prevn=an;return r}).join("");
+return '<div class="box"><b>เวอร์ชัน '+esc(V.v)+'</b><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:13px"><tr style="text-align:left"><th>ขั้น</th><th>คน</th><th>ต่อจากขั้นก่อน</th><th>จากเปิดเว็บ</th><th>เฉพาะคนใหม่</th></tr>'+rows+'</table></div>'+(V.errs.length?'<div style="margin-top:8px"><b>ข้อผิดพลาดที่พบ (จำนวนเครื่อง)</b>'+V.errs.map(function(e){return '<div class="it"><span style="word-break:break-all;min-width:0">'+esc(e[0])+'</span><b>'+e[1]+'</b></div>'}).join("")+'</div>':'<div style="margin-top:6px"><small>ไม่พบข้อผิดพลาด</small></div>')+'</div>'}).join("")})};
 </script></body></html>`;
  '<label>รหัสแอดมิน (ADMIN_KEY)</label><input id="k" type="password" autocomplete="current-password">'+
  '<label>ส่งถึง</label><select id="mode"><option value="all">ผู้เล่นทุกคน</option><option value="one">ผู้เล่นคนเดียว (ใส่ชื่อตัวละคร)</option></select><input id="to" placeholder="ชื่อตัวละคร (ถ้าส่งคนเดียว)" style="margin-top:6px">'+
@@ -2190,6 +2228,11 @@ const routes = {
     send(res, 200, { pion: { count: LAUNCH.pion.length, max: PION_MAX, lv: PION_LV, me: p.s.pion | 0, last: LAUNCH.pion.slice(-5).reverse().map((x, i) => ({ n: x.n, rank: LAUNCH.pion.length - i })) },
       ref: { code: refCode(u.id), invited: o.n | 0, ok: o.ok | 0, max: REF_MAX, lv: REF_LV, mine: p.s.refBy ? { done: !!p.s.refDone } : null } });
   },
+  'POST /api/ev': async (req, res) => { // B221 บันทึกขั้นตอน/ข้อผิดพลาด แบบไม่ระบุตัวตน
+    let b = {}; try { b = await readBody(req); } catch (e) { return send(res, 204, {}); }
+    await ev221Load(); try { if (b && typeof b === 'object') ev221Hit(b, clientIp(req)); } catch (e) {}
+    res.writeHead(204, SEC_HEADERS); return res.end();
+  },
   'GET /api/pop': async (req, res) => { // ตรวจสถานะแบบสาธารณะ (ไม่มีข้อมูลส่วนตัว)
     const now = Date.now(), off = offActive(now), zs = [0, 0, 0, 0, 0, 0]; off.forEach(o => zs[o.z]++);
     const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null;
@@ -2253,6 +2296,7 @@ const routes = {
   },
   'POST /api/admin/op': async (req, res) => {
     const b = await readBody(req), ok = admKeyOk(req, b.key); if (!ok.ok) return send(res, ok.code, { error: ok.error });
+    if (b.op === 'drop221') { await ev221Load(); ev221Save(true); return send(res, 200, { msg: 'โหลดรายงานแล้ว', drop: ev221Report(b.days) }); }
     if (b.op === 'player') {
       const q = String(b.q || '').trim().slice(0, 32); if (!q) return send(res, 400, { error: 'ใส่ชื่อ' });
       let id = await playerId48(0, q); if (!id) { const u = await db.userByName(q.toLowerCase()); if (u) id = Number(u.id); }
