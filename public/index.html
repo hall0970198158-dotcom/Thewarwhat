@@ -1025,6 +1025,19 @@ body.view-portrait #gameWrap #townStage .town-bottom .map-button197{min-width:44
 .pd211opt.on{border-color:#6fe07a;background:rgba(80,200,110,.12)}.pd211opt.web{border-left:4px solid #b48cff}.pd211opt.cls{border-left:4px solid #e8c26a}
 .pd211oi{flex:none;width:48px;height:48px;border-radius:10px;background:radial-gradient(circle,#2a4470,#0e1a2c);display:flex;align-items:center;justify-content:center}
 .pd211ot{display:grid;gap:2px}.pd211ot b{font-size:14px}.pd211ot em{font-style:normal;font-size:10px;padding:1px 5px;border-radius:6px;background:rgba(255,255,255,.1);color:#cfd8e6}.pd211ot small{font-size:11.5px;color:#a9bdd2;line-height:1.35}
+.ult215{position:relative;overflow:hidden;border-color:#c79bff!important}
+.ult215::before{content:'';position:absolute;left:0;bottom:0;height:4px;width:var(--ug,0%);background:linear-gradient(90deg,#ff9a3a,#ffe27a)}
+.ult215.ready{box-shadow:0 0 0 2px #ffe27a,0 0 14px #ffb84a;animation:ult215 1.2s ease-in-out infinite}
+@keyframes ult215{50%{box-shadow:0 0 0 2px #fff3b0,0 0 22px #ffcf5a}}
+@media (prefers-reduced-motion:reduce){.ult215.ready{animation:none}}
+/* B217: ปุ่มคำสั่งดันเจี้ยน/วงกต/หอคอย อยู่แถวเดียวเสมอ */
+.battle-actions:has(>[data-a=dgpick]){display:flex!important;flex-wrap:nowrap!important;gap:4px!important;overflow-x:auto!important;overflow-y:hidden!important;padding:2px 0 3px!important;border-right:0!important}
+.battle-actions:has(>[data-a=dgpick])>.btn{flex:1 1 0!important;min-width:44px!important;width:auto!important;min-height:58px!important;padding:5px 2px!important;font-size:11.5px!important;line-height:1.2!important;gap:2px!important;white-space:normal!important;word-break:break-word;text-align:center}
+.battle-actions:has(>[data-a=dgpick])>.btn small{font-size:9px!important;line-height:1.15!important}
+.battle-actions:has(>[data-a=dgpick])>[data-a=dgpick]:not(.ult215) small{display:none}
+.battle-actions:has(>[data-a=dgpick])>.btn b{font-size:11.5px;line-height:1.2}
+.battle-actions:has(>[data-a=dgpick])>[data-a=dgleave]{flex:0 0 44px!important}
+.battle-actions:has(>[data-a=dgpick])>[data-a=dgleave] small{display:none}
 </style>
 
 <section id="login" class="login">
@@ -3969,6 +3982,44 @@ function webFxDraw213(c,tn,px,py,ex,ey){
 }
 var WEBFX_PRE213=0;
 
+// ===== B215 ตั้งค่าออโต้ชุดเดียวใช้ทุกการต่อสู้ + ไม้ตายในดันเจี้ยน/วงกต/หอคอย =====
+function autoOpts215(){
+ var seen={},out=[];
+ SK[s.cls].slice(1).concat(webSkills160()).forEach(function(k){if(k&&k.t!=='p'&&skLv(k.id)>0&&!seen[k.id]){seen[k.id]=1;out.push([k.id,(k.web!==undefined?'🕸️ ':'📘 ')+k.n])}});
+ if(ultOf())out.push(['ult','💥 ไม้ตาย · '+ULT[ultOf().el].n]);
+ return out;
+}
+autoOrderSet162=function(p){
+ var m=/^([st]):([0-6]):([a-z0-9]*)$/.exec(p||'');if(!s.created||!m)return;
+ var id=m[3];if(id&&!autoOpts215().some(function(o){return o[0]===id}))return;
+ var list=Array.isArray(s.autoOrder162)?s.autoOrder162.slice(0,7):[];
+ list[Number(m[2])]=id;s.autoOrder162=list;
+ if(s.battle)s.battle.autoCursor162=0;
+};
+autoOrderHtml162=function(){
+ var list=s.autoOrder162||[],opts=autoOpts215();
+ return '<section class="order162"><h3>เรียงสกิลออโต้ 7 ช่อง · ใช้ทุกการต่อสู้</h3><p class="hint">ล่ามอน · PvP · ดันเจี้ยนทีม · วงกต · หอคอย ใช้ลำดับเดียวกัน ปรับเองตามสถานการณ์</p>'+
+ Array.from({length:7},function(_,i){
+  var id=opts.some(function(o){return o[0]===list[i]})?list[i]:'';
+  return '<label><b>'+(i+1)+'</b><select data-order162="s:'+i+'" aria-label="ลำดับ '+(i+1)+'"><option value="">— เว้นช่อง —</option>'+
+  opts.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===id?' selected':'')+'>'+esc(o[1])+'</option>'}).join('')+'</select></label>';
+ }).join('')+'<p>วนจาก 1 ถึง 7 · ข้ามช่องว่างและท่าที่ยังใช้ไม่ได้ · ถ้าใช้ไม่ได้ทั้งหมดจะโจมตีปกติ'+(ultOf()?' · เกจไม้ตายเต็มเมื่อไรออโต้จะปล่อยไม้ตายให้ทันที (ปิดได้ที่ "ออโต้ใช้ไม้ตาย")':'')+'</p></section>';
+};
+// ปุ่มไม้ตายในดันเจี้ยน / วงกต / หอคอย
+var dgClassBtnBefore215=dgClassButtons203;
+dgClassButtons203=function(r){
+ var html=dgClassBtnBefore215.apply(this,arguments).replace(/<small>Lv\d+ · /g,'<small>'),me=r&&r.mem[r.me];if(!me||!me.ult||!ULT[me.ult])return html;
+ var U=ULT[me.ult],g=Math.max(0,Math.min(100,me.ug|0)),ok=g>=100&&!me.down;
+ return html+'<button class="btn ult215'+(me.pick==='ult'?' primary':'')+(ok?' ready':'')+'" data-a="dgpick" data-p="ult"'+(ok?'':' disabled')+' style="--ug:'+g+'%"><b>'+U.ic+' ไม้ตาย</b><small>'+(ok?'พร้อม!':g+'%')+'</small></button>';
+};
+var dgAnimBefore215=dgAnim;
+dgAnim=function(j){
+ try{var r=j&&j.room;if(r&&DGF.seq>=0&&r.seq>DGF.seq)(r.ev||[]).forEach(function(e,n){if(e.t!=='p'||e.a!=='ult'||!ULT[e.el])return;var U=ULT[e.el];
+  fxFlash(U.c+'66',120+n*260);fxShake(10,200+n*260);dgFl(DGE[0],DGE[1]-86,U.ic+' '+U.n,U.c,n*260,true);
+  try{fxBurst(DGE[0],DGE[1],30,[U.c,'#ffffff',U.c],3,0,700,200+n*260,3);fxRing(DGE[0],DGE[1],U.c,200+n*260,70)}catch(x){}})}catch(x){}
+ return dgAnimBefore215.apply(this,arguments);
+};
+
 // ===== B105 บัตรรายเดือน · บัตรถาวร · ซีซั่น 1 (จบ 31 ธ.ค. 23:59 น. เวลาไทย) =====
 var S105_START=Date.UTC(2026,9,31,17,0,0),S105_END=Date.UTC(2026,11,31,16,59,59),S105_RUSH=Date.UTC(2026,11,21,17,0,0),S105_CLAIM=S105_END+7*864e5,S105_MAX=50,S105_PER=1000,S105_KILLCAP=600;
 var SHOP105=[{sku:'sup35',ic:'🎁',n:'แพ็กผู้สนับสนุน',p:35,d:'อุปกรณ์ Lv20 สีส้ม + ป้าย ✦ ผู้สนับสนุน · ซื้อได้ครั้งเดียว'},
@@ -4090,7 +4141,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B215';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B217';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -4532,7 +4583,7 @@ function autoAct(){if(!SV&&(battlePresentationActive()||scene53Busy()))return;
   var dg=(b.kind==='pvp'||(b.eg||0)+eRatio(b)>=0.999)?eDanger(b):0; // ศัตรูจะตีตาถัดไป: ถ้าเลือดไม่พอรับ → ดื่มยาก่อน (ถึงยังไม่ถึง % ที่ตั้ง)
   if(s.hp<s.maxhp*potThr()||s.hp<=dg){b.potNeed=s.hp<=dg?dg-s.hp+1:0;var rr=battleAct('potion');b.potNeed=0;return rr}}
  if(s.autoFlee!==false&&s.hp<s.maxhp*((s.fleePct>=5&&s.fleePct<=95?s.fleePct:20)/100)&&!noFlee(b))return battleAct('flee');
- var order=!b.challenge73&&s.autoSkill?(s.autoOrder162||[]):[];
+ var order=!b.challenge73&&s.autoSkill?(s.autoOrder162||[]):[];if(!b.challenge73&&s.autoUlt!==false&&ultReady()&&order.indexOf('ult')<0&&battleCommand50('ult',b))return battleAct('ult');
  if(order.some(function(id){return id==='ult'&&!!s.ult||!!(id&&SKMAP[id]&&skLv(id))})){
   for(var i=0;i<7;i++){
    var at=((b.autoCursor162||0)+i)%7,id=order[at],k=SKMAP[id],cmd=id==='ult'?'ult':'sk:'+id;
