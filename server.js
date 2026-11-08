@@ -609,7 +609,7 @@ function funMark(p) { const s = p && p.s; if (!s || !s.created) return; const d 
 function funReport() { const d = funDay(), K = ['visit', 'newAccount', 'created', 'firstKill', 'lv5', 'returnNextDay'], sum = (from) => { const o = {}; K.forEach(k => o[k] = 0); for (let x = from; x <= d; x++) { const r = FUN.days[x]; if (r) K.forEach(k => o[k] += r[k] | 0); } return o; }; return { today: sum(d), last7days: sum(d - 6) }; }
 
 // ===== B221 จุดที่ผู้เล่นเลิกเล่น: นับขั้นตอนแยกตามเวอร์ชัน + ข้อผิดพลาดตอนโหลด (ไม่เก็บข้อมูลส่วนตัว: ไม่มีชื่อ ไอดี หรือ IP) =====
-const EV221_STEPS = ['open', 'create', 'map', 'battle', 'craft', 'play5'];
+const EV221_STEPS = ['open', 'create', 'intro', 'intro_done', 'map', 'battle', 'craft', 'play5', 'intro_skip'];
 const EV221 = { loaded: false, days: {}, errs: {}, seen: { d: -1, set: new Set() }, rate: new Map(), dirty: false, saveAt: 0 };
 function ev221Ver(v) { v = String(v || ''); return /^B\d{2,4}(\.\d{1,2})?$/.test(v) ? v : 'อื่นๆ'; }
 function ev221Clean(t) { return String(t || '').replace(/https?:\/\/[^\s)]+/g, m => { const q = m.split(/[?#]/)[0]; return q.slice(q.lastIndexOf('/') + 1) || 'url'; }).replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '[email]').replace(/\d{7,}/g, '#').replace(/\s+/g, ' ').trim().slice(0, 90); }
@@ -995,13 +995,19 @@ function admKeyOk(req, key) {
 const ADMIN_PAGE101 = `<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>แอดมิน · TheWarWhat</title>
 <style>body{font-family:sans-serif;background:#0e1326;color:#e8eaf2;max-width:560px;margin:0 auto;padding:12px}h2{margin:6px 0 10px}label{display:block;margin:10px 0 4px;font-size:14px}input,textarea,select{width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #445;background:#1a2140;color:#fff;font-size:16px}textarea{height:80px}button{padding:11px;border:0;border-radius:10px;background:#ffb43c;font-size:16px;font-weight:700;color:#201000}button.w{width:100%;margin-top:12px}button.g{background:#2a3256;color:#fff}button.r{background:#ff5a5a;color:#fff}.tabs{display:flex;gap:4px;flex-wrap:wrap;margin:10px 0}.tabs button{flex:1;min-width:30%;background:#2a3256;color:#fff;font-size:14px;padding:9px 4px}.tabs button.on{background:#ffb43c;color:#201000}.row{display:flex;gap:8px}.row>*{flex:1}.box{margin-top:12px;padding:10px;border-radius:8px;background:#1a2140;white-space:pre-wrap;font-size:14px;line-height:1.55}.it{border-bottom:1px solid #334;padding:6px 0;display:flex;justify-content:space-between;gap:8px;align-items:center}.pane{display:none}.pane.on{display:block}small{color:#9aa7bd}</style></head><body>
 <h2>🛠️ แอดมิน · ศึกชิงเมือง</h2><label>รหัสแอดมิน (ADMIN_KEY)</label><input id="k" type="password" autocomplete="current-password">
-<div class="tabs"><button data-t="mail" class="on">📬 จดหมาย</button><button data-t="pl">🔍 ผู้เล่น</button><button data-t="nt">📢 ประกาศ</button><button data-t="pay">💳 เติมเงิน</button><button data-t="mk">🏪 ตลาด</button><button data-t="drop">📉 จุดเลิกเล่น</button></div>
+<div class="tabs"><button data-t="ov">📊 ภาพรวม</button><button data-t="mail" class="on">📬 จดหมาย</button><button data-t="pl">🔍 ผู้เล่น</button><button data-t="nt">📢 ประกาศ</button><button data-t="pay">💳 เติมเงิน</button><button data-t="mk">🏪 ตลาด</button><button data-t="drop">📉 จุดเลิกเล่น</button><button data-t="code">🎁 โค้ด</button><button data-t="evt">🎉 อีเวนต์</button><button data-t="chat">💬 แชท</button><button data-t="eco">💰 เศรษฐกิจ</button><button data-t="alog">📜 บันทึก</button></div>
 <div class="pane on" id="p-mail"><label>ส่งถึง</label><select id="mode"><option value="all">ผู้เล่นทุกคน</option><option value="one">ผู้เล่นคนเดียว (ชื่อตัวละคร)</option></select><input id="to" placeholder="ชื่อตัวละคร (ถ้าส่งคนเดียว)" style="margin-top:6px"><label>หัวข้อ</label><input id="t" maxlength="60" value="ของชดเชยจากทีมงาน"><label>ข้อความ</label><textarea id="b" maxlength="600">ขออภัยในความไม่สะดวก</textarea><div class="row"><div><label>ทอง</label><input id="gold" type="number" min="0" value="0"></div><div><label>ยาเต็ม</label><input id="potF" type="number" min="0" value="0"></div><div><label>แร่ม่วง</label><input id="purple" type="number" min="0" value="0"></div></div><label>อายุจดหมาย (วัน · ส่งทุกคน)</label><input id="days" type="number" min="1" max="30" value="7"><button class="w" id="sendmail">ส่งจดหมาย</button></div>
 <div class="pane" id="p-pl"><label>ชื่อตัวละคร หรือ ไอดีล็อกอิน</label><div class="row"><input id="pq"><button id="pfind" style="flex:0 0 90px">ค้นหา</button></div><div id="pinfo"></div></div>
 <div class="pane" id="p-nt"><h3 style="margin:8px 0">🪧 ป้ายประกาศตอนเข้าเกม</h3><small>ขึ้นเป็นหน้าต่างให้ผู้เล่นอ่านตอนเข้าเกม กดรับทราบแล้วไม่ขึ้นซ้ำจนกว่าจะตั้งป้ายใหม่ · เว้นข้อความว่างแล้วกดบันทึก = ปิดป้าย</small><label>หัวข้อ</label><input id="bdt" maxlength="60" placeholder="เช่น อัปเดตใหม่ B104"><label>ข้อความ (ขึ้นบรรทัดใหม่ได้)</label><textarea id="bdb" maxlength="1000" style="height:140px"></textarea><div class="row" style="margin-top:10px"><button id="bdgo">บันทึกป้าย</button><button class="g" id="bdload">โหลดป้ายปัจจุบัน</button></div><h3 style="margin:18px 0 8px">⚔️ ทดสอบศึกชิงแดน</h3><small>เปิดสมรภูมินอกเวลา (ปกติเปิดเสาร์–อาทิตย์ 20:00–22:00)</small><div class="row" style="margin-top:8px"><button id="wt30">เปิด 30 นาที</button><button class="g" id="wt0">ปิดทดสอบ</button></div><h3 style="margin:18px 0 8px">💬 ข้อความสั้นในแชท</h3><label>ข้อความ (ขึ้นในแชทช่องประกาศ)</label><textarea id="nt" maxlength="160"></textarea><button class="w" id="ntgo">ประกาศในแชท</button></div>
 <div class="pane" id="p-pay"><button class="w g" id="payload">โหลดรายการเติมเงิน</button><div id="paylist"></div></div>
 <div class="pane" id="p-drop"><div class="row"><select id="dropd"><option value="1">วันนี้</option><option value="7" selected>7 วัน</option><option value="30">30 วัน</option></select><button class="w g" id="dropload" style="flex:0 0 120px">โหลดรายงาน</button></div><small>นับครั้งเดียวต่อเครื่องต่อวัน แยกตามเวอร์ชันเกม · ไม่มีชื่อ ไอดี หรือ IP ผู้เล่น · "ใหม่" = เครื่องที่เปิดเกมครั้งแรกวันนั้น</small><div id="droplist"></div></div>
 <div class="pane" id="p-mk"><button class="w g" id="mkload">โหลดของในตลาด</button><div id="mklist"></div></div>
+<div class="pane" id="p-ov"><button class="w g" id="ovload">โหลดภาพรวม</button><div id="ovbox"></div></div>
+<div class="pane" id="p-code"><small>ผู้เล่นกรอกโค้ดได้ที่ ⚙️ ตั้งค่า ในเกม · ใช้ได้ครั้งเดียวต่อไอดี · ของส่งเข้ากล่องจดหมาย</small><div class="row"><div><label>โค้ด (A–Z 0–9)</label><input id="cdc" maxlength="16" placeholder="WARWHAT100" style="text-transform:uppercase"></div><div><label>บันทึก (เช่น โพสต์ FB 9 พ.ย.)</label><input id="cdn" maxlength="40"></div></div><div class="row"><div><label>ทอง</label><input id="cdg" type="number" min="0" value="5000"></div><div><label>ยาเต็ม</label><input id="cdp" type="number" min="0" value="3"></div><div><label>แร่ม่วง</label><input id="cdu" type="number" min="0" value="0"></div></div><div class="row"><div><label>ใช้ได้กี่คน</label><input id="cdm" type="number" min="1" value="100"></div><div><label>อายุ (วัน)</label><input id="cdd" type="number" min="1" max="365" value="7"></div><div><label>พลังงานเต็ม</label><select id="cde"><option value="0">ไม่ให้</option><option value="1">ให้ 1 ครั้ง</option></select></div></div><button class="w" id="cdgo">สร้าง / แก้ไขโค้ด</button><button class="w g" id="cdload">โหลดรายการโค้ด</button><div id="cdlist"></div></div>
+<div class="pane" id="p-evt"><small>ตัวคูณใช้กับ XP และทองจากการล่ามอน (ซ้อนกับช่วงโบนัสเดิมของเกม) · เวลาไทย</small><div class="row"><div><label>ตัวคูณ</label><select id="evm"><option value="1.5">x1.5</option><option value="2" selected>x2</option><option value="3">x3</option></select></div><div><label>ชื่ออีเวนต์</label><input id="evl" maxlength="40" value="XP และทอง x2 สุดสัปดาห์"></div></div><div class="row"><div><label>เริ่ม</label><input id="evf" type="datetime-local"></div><div><label>จบ</label><input id="evt" type="datetime-local"></div></div><label><input id="eva" type="checkbox" checked style="width:auto"> ประกาศในเกมด้วย</label><button class="w" id="evgo">ตั้งอีเวนต์</button><button class="w r" id="evoff">ปิดอีเวนต์</button><div id="evbox"></div></div>
+<div class="pane" id="p-chat"><button class="w g" id="chload">โหลดแชทล่าสุด</button><div id="chlist"></div><label>คำต้องห้าม (คั่นด้วยจุลภาคหรือขึ้นบรรทัดใหม่ · แชทจะขึ้นเป็น ***)</label><textarea id="chbad"></textarea><button class="w" id="chbadgo">บันทึกคำต้องห้าม</button></div>
+<div class="pane" id="p-eco"><button class="w g" id="ecload">โหลดข้อมูลเศรษฐกิจ</button><small>เทียบกับภาพรวมที่เก็บไว้ทุก ~1 วัน · แจ้งเตือนเมื่อทองเพิ่มเกิน 3 ล้านและเกิน 4 เท่า หรือเลเวลขึ้นเร็วผิดปกติ</small><div id="ecbox"></div></div>
+<div class="pane" id="p-alog"><button class="w g" id="alload">โหลดบันทึกการกระทำของแอดมิน</button><div id="allist"></div></div>
 <div class="box" id="out">พร้อมใช้งาน</div>
 <script>
 var $=function(i){return document.getElementById(i)},out=$("out");try{$("k").value=sessionStorage.getItem("ak")||""}catch(e){}
@@ -1020,11 +1026,52 @@ $("ntgo").onclick=function(){if($("nt").value.trim())api("/api/admin/op",{op:"no
 $("payload").onclick=function(){api("/api/admin/op",{op:"pays"}).then(function(j){var L=j.pays||[],sum=L.reduce(function(a,x){return a+(x.amt||0)},0);$("paylist").innerHTML='<div class="box">ทั้งหมด '+L.length+' รายการ · รวม '+(sum/100).toLocaleString()+' บาท'+(j.mode?' · โหมด '+esc(j.mode):'')+'</div>'+L.map(function(x){return '<div class="it"><span>'+esc(x.name)+' <small>#'+x.uid+' · '+d(x.at)+'</small><br><small>'+esc(x.sid)+'</small></span><b>'+(x.amt/100)+' ฿</b></div>'}).join("")})};
 function mk(){api("/api/admin/op",{op:"mkt"}).then(function(j){var L=j.list||[];$("mklist").innerHTML='<div class="box">ของในตลาด '+L.length+' ชิ้น</div>'+L.map(function(x){return '<div class="it"><span>'+esc(x.name)+' <small>ราคา '+Number(x.price).toLocaleString()+'</small><br><small>ผู้ขาย '+esc(x.sn)+' #'+x.uid+' · หมด '+d(x.exp)+'</small></span><button class="r" data-id="'+esc(x.id)+'">ลบ</button></div>'}).join("");document.querySelectorAll("#mklist button[data-id]").forEach(function(b){b.onclick=function(){if(confirm("ลบรายการนี้? ของจะคืนผู้ขายทางจดหมาย"))api("/api/admin/op",{op:"mktdel",id:b.dataset.id}).then(mk)}})})}
 $("mkload").onclick=mk;
-var DROPN={open:"เปิดเว็บ",create:"เข้าหน้าสร้างตัวละคร",map:"เข้าแผนที่",battle:"ต่อสู้ครั้งแรก",craft:"เปิดหน้าคราฟ",play5:"เล่นครบ 5 นาที"};
+var DROPN={open:"เปิดเว็บ",create:"เข้าหน้าสร้างตัวละคร",intro:"เริ่มบทนำ",intro_done:"จบบทนำ (ดูจบหรือข้าม)",intro_skip:"กดข้ามบทนำ",map:"เข้าแผนที่",battle:"ต่อสู้ครั้งแรก",craft:"เปิดหน้าคราฟ",play5:"เล่นครบ 5 นาที"};
 function pct(a,b){return b?Math.round(a*100/b)+"%":"-"}
 $("dropload").onclick=function(){api("/api/admin/op",{op:"drop221",days:+$("dropd").value}).then(function(j){var R=j.drop;if(!R){return}if(!R.versions.length){$("droplist").innerHTML='<div class="box">ยังไม่มีข้อมูลในช่วงนี้</div>';return}
 $("droplist").innerHTML=R.versions.map(function(V){var S=V.steps,o=S.open||0,on=S.open_n||0,prev=null,prevn=null;var rows=R.steps.map(function(k){var a=S[k]||0,an=S[k+"_n"]||0,r='<tr><td>'+DROPN[k]+'</td><td><b>'+a+'</b></td><td>'+(prev==null?"-":pct(a,prev))+'</td><td>'+pct(a,o)+'</td><td>'+an+' <small>('+(prevn==null?"-":pct(an,prevn))+')</small></td></tr>';prev=a;prevn=an;return r}).join("");
 return '<div class="box"><b>เวอร์ชัน '+esc(V.v)+'</b><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:13px"><tr style="text-align:left"><th>ขั้น</th><th>คน</th><th>ต่อจากขั้นก่อน</th><th>จากเปิดเว็บ</th><th>เฉพาะคนใหม่</th></tr>'+rows+'</table></div>'+(V.errs.length?'<div style="margin-top:8px"><b>ข้อผิดพลาดที่พบ (จำนวนเครื่อง)</b>'+V.errs.map(function(e){return '<div class="it"><span style="word-break:break-all;min-width:0">'+esc(e[0])+'</span><b>'+e[1]+'</b></div>'}).join("")+'</div>':'<div style="margin-top:6px"><small>ไม่พบข้อผิดพลาด</small></div>')+'</div>'}).join("")})};
+</script>
+<script>
+(function(){
+function tabs(){document.querySelectorAll(".tabs button").forEach(function(b){b.onclick=function(){document.querySelectorAll(".tabs button").forEach(function(x){x.classList.toggle("on",x===b)});document.querySelectorAll(".pane").forEach(function(x){x.classList.toggle("on",x.id==="p-"+b.dataset.t)})}})}tabs();
+function num(n){return Number(n||0).toLocaleString("th-TH")}
+function card(t,v,sub){return '<div style="flex:1;min-width:46%;padding:10px;border-radius:10px;background:#1a2140"><small>'+t+'</small><div style="font-size:22px;font-weight:700">'+v+'</div>'+(sub?'<small>'+sub+'</small>':'')+'</div>'}
+$("ovload").onclick=function(){api("/api/admin/op",{op:"ov225"}).then(function(j){var o=j.ov;if(!o)return;var f=o.funnel,t=f.today,w=f.last7days;
+ $("ovbox").innerHTML=(o.warn.length?'<div class="box" style="background:#5a1e24">🔴 '+o.warn.map(esc).join('<br>🔴 ')+'</div>':'<div class="box" style="background:#1e4a2c">🟢 เซิร์ฟเวอร์ปกติ</div>')+
+ '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">'+card("ออนไลน์ตอนนี้",o.online,"เซสชันในหน่วยความจำ "+o.live)+card("คนใหม่วันนี้",t.newAccount,"สร้างตัวละคร "+t.created+" · ฆ่ามอนตัวแรก "+t.firstKill)+card("กลับมาวันรุ่งขึ้น (7 วัน)",o.d1==null?"-":o.d1+"%",w.returnNextDay+" จาก "+w.newAccount+" คน")+card("ถึง Lv5 (7 วัน)",w.lv5,"เข้าเว็บ "+w.visit)+card("เติมเงินวันนี้",num(o.payToday)+" ฿",o.payTodayN+" รายการ")+card("เติมเงินเดือนนี้",num(o.payMonth)+" ฿",o.payMonthN+" รายการ")+card("ความเร็ว",o.speed?o.speed.avg+" ms":"-",o.speed?"สูงสุด "+o.speed.max+" ms":"ยังไม่มีข้อมูล")+card("แรม",o.mem+" MB","เปิดมา "+o.uptimeH+" ชม. · เกม "+esc(o.client))+'</div>'+
+ '<div class="box">🎉 อีเวนต์: '+(o.evt?esc(o.evt.label)+" (x"+o.evt.mul+") ถึง "+d(o.evt.to):"ไม่มี")+'<br>🎁 โค้ดของขวัญ: '+o.codes+' โค้ด</div>'})};
+function codeRow(x){var it=x.it.map(function(i){return i.k==="gold"?"ทอง "+num(i.n):i.k==="potF"?"ยาเต็ม "+i.n:i.k==="purple"?"แร่ม่วง "+i.n:i.k==="enF"?"พลังงานเต็ม":i.k}).join(" · ");
+ return '<div class="it"><span><b>'+esc(x.code)+'</b> <small>'+esc(x.note)+'</small><br><small>'+esc(it)+'</small><br><small>ใช้แล้ว '+x.used+'/'+x.max+' · หมด '+d(x.exp)+(x.exp<Date.now()?" (หมดอายุ)":"")+'</small></span><button class="r" data-cd="'+esc(x.code)+'">ลบ</button></div>'}
+function codes(L){$("cdlist").innerHTML='<div class="box">ทั้งหมด '+L.length+' โค้ด · ใช้รวม '+L.reduce(function(a,x){return a+x.used},0)+' ครั้ง</div>'+L.map(codeRow).join("");document.querySelectorAll("#cdlist [data-cd]").forEach(function(b){b.onclick=function(){if(confirm("ลบโค้ด "+b.dataset.cd+" ?"))api("/api/admin/op",{op:"codedel",code:b.dataset.cd}).then(function(j){if(j.codes)codes(j.codes)})}})}
+$("cdgo").onclick=function(){api("/api/admin/op",{op:"codeadd",code:$("cdc").value,note:$("cdn").value,gold:+$("cdg").value,potF:+$("cdp").value,purple:+$("cdu").value,max:+$("cdm").value,days:+$("cdd").value,enF:$("cde").value==="1"}).then(function(j){if(j.codes)codes(j.codes)})};
+$("cdload").onclick=function(){api("/api/admin/op",{op:"codelist"}).then(function(j){if(j.codes)codes(j.codes)})};
+function evShow(j){$("evbox").innerHTML='<div class="box">'+(j.evt?'ตั้งไว้: '+esc(j.evt.label)+' x'+j.evt.mul+'<br>'+d(j.evt.from)+' → '+d(j.evt.to)+'<br>สถานะ: '+(j.now?'🟢 กำลังทำงาน':'⏳ ยังไม่ถึงเวลา/จบแล้ว'):'ไม่มีอีเวนต์')+'</div>'}
+function bkk(v){return v?Date.parse(v+":00+07:00"):0}
+$("evgo").onclick=function(){api("/api/admin/op",{op:"evtset",mul:+$("evm").value,label:$("evl").value,from:bkk($("evf").value),to:bkk($("evt").value),announce:$("eva").checked}).then(evShow)};
+$("evoff").onclick=function(){api("/api/admin/op",{op:"evtset",mul:1}).then(evShow)};
+document.querySelector('.tabs button[data-t="evt"]').addEventListener("click",function(){api("/api/admin/op",{op:"evtget"}).then(evShow)});
+function chat(j){var mu=j.mutes||[];$("chlist").innerHTML=(mu.length?'<div class="box">ปิดแชทอยู่ '+mu.length+' คน: '+mu.map(function(m){return '#'+m.uid+' ถึง '+d(m.until)+' <button class="g" data-um="'+m.uid+'">เปิด</button>'}).join(" ")+'</div>':'')+(j.chat||[]).map(function(m){return '<div class="it"><span><b>'+esc(m.n)+'</b> <small>#'+m.from+' · '+(m.ch==="guild"?"กิลด์":"โลก")+' · '+d(m.ts)+'</small><br>'+esc(m.t)+'</span><span style="display:flex;gap:4px"><button class="g" data-mu="'+m.from+'">ปิดแชท</button><button class="r" data-cdel="'+m.id+'">ลบ</button></span></div>'}).join("");
+ $("chbad").value=(j.bad||[]).join(", ");
+ document.querySelectorAll("#chlist [data-cdel]").forEach(function(b){b.onclick=function(){api("/api/admin/op",{op:"chatdel",id:+b.dataset.cdel}).then(function(){$("chload").onclick()})}});
+ document.querySelectorAll("#chlist [data-mu]").forEach(function(b){b.onclick=function(){var m=prompt("ปิดแชทกี่นาที? (เช่น 60 = 1 ชม., 1440 = 1 วัน)","60");if(m)api("/api/admin/op",{op:"mute",uid:+b.dataset.mu,min:+m}).then(function(){$("chload").onclick()})}});
+ document.querySelectorAll("#chlist [data-um]").forEach(function(b){b.onclick=function(){api("/api/admin/op",{op:"unmute",uid:+b.dataset.um}).then(function(){$("chload").onclick()})}})}
+$("chload").onclick=function(){api("/api/admin/op",{op:"chatlist"}).then(chat)};
+$("chbadgo").onclick=function(){api("/api/admin/op",{op:"badset",words:$("chbad").value})};
+$("ecload").onclick=function(){api("/api/admin/op",{op:"eco225"}).then(function(j){var e=j.eco;if(!e)return;
+ $("ecbox").innerHTML='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">'+card("ตัวละครทั้งหมด",num(e.players),"เล่นใน 7 วัน "+num(e.act7))+card("ทองรวมทั้งเซิร์ฟ",num(e.total),"เฉลี่ย "+num(e.avg)+" ต่อคน")+'</div>'+
+ '<div class="box"><b>⚠️ ผิดปกติ (เทียบกับ '+d(e.since)+')</b>'+(e.flags.length?e.flags.map(function(x){return '<div class="it"><span>'+esc(x.name)+' <small>#'+x.uid+' · Lv'+x.lvl+'</small></span><small>ทอง '+(x.dg>=0?"+":"")+num(x.dg)+' · เลเวล +'+x.dl+' ใน '+x.hrs+' ชม.</small></div>'}).join(""):'<br>ไม่พบ')+'</div>'+
+ '<div class="box"><b>💰 รวยที่สุด 10 อันดับ</b>'+e.top.map(function(x,i){return '<div class="it"><span>'+(i+1)+'. '+esc(x.name)+' <small>#'+x.uid+' · Lv'+x.lvl+'</small></span><b>'+num(x.gold)+'</b></div>'}).join("")+'</div>'})};
+var OPN={mail:"ส่งจดหมาย",ban:"แบน",unban:"ปลดแบน",notice:"ประกาศแชท",board:"ตั้งป้ายประกาศ",mktdel:"ลบของตลาด",codeadd:"สร้าง/แก้โค้ด",codedel:"ลบโค้ด",fix225:"แก้ปัญหาผู้เล่น",evtset:"ตั้งอีเวนต์",chatdel:"ลบแชท",mute:"ปิดแชท",unmute:"เปิดแชท",badset:"ตั้งคำต้องห้าม"};
+$("alload").onclick=function(){api("/api/admin/op",{op:"log225"}).then(function(j){var L=j.log||[];$("allist").innerHTML='<div class="box">ล่าสุด '+L.length+' รายการ · เก็บสูงสุด 300</div>'+L.map(function(x){return '<div class="it"><span><b>'+esc(OPN[x.op]||x.op)+'</b> <small>'+d(x.at)+' · เครื่อง '+esc(x.ip)+'</small><br><small style="word-break:break-all">'+esc(x.d)+'</small></span></div>'}).join("")})};
+// ผู้เล่นแบบละเอียด
+var showPl0=showPl;showPl=function(j){showPl0(j);var x=j&&j.player;if(!x)return;var z=x.size||{kb:0,parts:[]};
+ var h='<div class="box"><b>📦 ขนาดข้อมูลตัวละคร '+z.kb+' KB</b>'+(z.kb>60?' <span style="color:#ff8a8a">ใหญ่ผิดปกติ อาจทำให้เกมช้า</span>':'')+'<br><small>'+z.parts.map(function(p){return esc(p.k)+' '+p.kb+'KB'}).join(" · ")+'</small></div>'+
+ '<div class="box"><b>🧭 เข้าจาก IP เดียวกัน</b><br>'+(x.sameIp&&x.sameIp.length?x.sameIp.map(function(o){return esc(o.name||"?")+' #'+o.uid}).join(", "):'<small>ไม่พบ (ดูได้เฉพาะคนที่เข้าเกมหลังเซิร์ฟเวอร์เปิด)</small>')+'</div>'+
+ '<div class="box"><b>🛠️ แก้ปัญหา</b>'+(x.muted?'<br><small>ปิดแชทถึง '+d(x.muted)+'</small>':'')+'<br><small>ล่ามอน '+x.kills+' ตัว · เควส '+(x.q225?(x.q225.off?"ไม่เข้าเงื่อนไข":x.q225.done?"จบแล้ว":"ข้อ "+x.q225.n+"/10"):"-")+'</small><div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="g" data-fx="battle">แก้ติดไฟต์</button><button class="g" data-fx="mail">ล้างจดหมายที่รับแล้ว</button><button class="g" data-fx="log">ตัดประวัติ</button><button class="r" data-fx="kick">เตะออก</button><button class="g" data-fx="mute">'+(x.muted?"เปิดแชท":"ปิดแชท 1 ชม.")+'</button></div></div>';
+ $("pinfo").insertAdjacentHTML("beforeend",h);
+ document.querySelectorAll("#pinfo [data-fx]").forEach(function(b){b.onclick=function(){var w=b.dataset.fx;if(w==="mute"){api("/api/admin/op",{op:x.muted?"unmute":"mute",uid:x.uid,min:60}).then(function(j){if(j.player)showPl(j)});return}if(w==="kick"&&!confirm("เตะ "+x.name+" ออกจากเกม?"))return;api("/api/admin/op",{op:"fix225",uid:x.uid,what:w}).then(function(j){if(j.player)showPl(j)})}})};
+})();
 </script></body></html>`;
  '<label>รหัสแอดมิน (ADMIN_KEY)</label><input id="k" type="password" autocomplete="current-password">'+
  '<label>ส่งถึง</label><select id="mode"><option value="all">ผู้เล่นทุกคน</option><option value="one">ผู้เล่นคนเดียว (ใส่ชื่อตัวละคร)</option></select><input id="to" placeholder="ชื่อตัวละคร (ถ้าส่งคนเดียว)" style="margin-top:6px">'+
@@ -1055,9 +1102,26 @@ async function bansLoad() { if (BANS.loaded) return; BANS.loaded = true; try { c
 async function bansSave() { await (db.putMeta || db.setMeta).call(db, 'bans', JSON.stringify(BANS.map)); }
 async function payLogLoad() { if (PAYLOG.loaded) return; PAYLOG.loaded = true; try { const v = await db.getMeta('paylog'); if (v) PAYLOG.list = JSON.parse(v) || []; } catch (e) {} }
 async function payLogAdd(x) { await payLogLoad(); PAYLOG.list.unshift(x); PAYLOG.list = PAYLOG.list.slice(0, 300); await (db.putMeta || db.setMeta).call(db, 'paylog', JSON.stringify(PAYLOG.list)); }
+
+// ---------- B225 แอดมิน 7 ระบบ: ภาพรวม · โค้ดของขวัญ · ผู้เล่นละเอียด · อีเวนต์ · แชท · เศรษฐกิจ · บันทึกแอดมิน ----------
+const ADM225 = { log: null, codes: null, evt: null, mutes: null, bad: null, started: Date.now() };
+async function m225Load(k, def) { try { const v = await db.getMeta(k); return v ? (JSON.parse(v) ?? def) : def; } catch (e) { return def; } }
+async function m225Save(k, v) { await (db.putMeta || db.setMeta).call(db, k, JSON.stringify(v)); }
+async function adm225Boot() { if (ADM225.log) return; ADM225.log = await m225Load('admlog225', []); ADM225.codes = await m225Load('codes225', {}); ADM225.evt = await m225Load('evt225', null); ADM225.mutes = await m225Load('mutes225', {}); ADM225.bad = await m225Load('bad225', []); }
+adm225Boot().catch(e => console.error('adm225', e.message));
+async function admLog225(req, op, detail) { await adm225Boot(); ADM225.log.unshift({ at: Date.now(), op, d: String(detail || '').slice(0, 200), ip: crypto.createHash('sha1').update(String(clientIp(req))).digest('hex').slice(0, 8) }); ADM225.log = ADM225.log.slice(0, 300); m225Save('admlog225', ADM225.log).catch(() => {}); }
+function evt225Now(now) { const e = ADM225.evt; now = now || Date.now(); return e && now >= e.from && now < e.to ? { mul: e.mul, label: e.label, to: e.to } : null; }
+// อีเวนต์ XP/ทอง: ส่งตัวคูณเข้าโค้ดเกมทุกครั้งที่รัน
+{ const run0 = engine.run.bind(engine); engine.run = (st, ui, inp, fn) => run0(st, ui, inp, E => { try { if (E.setEvt225) E.setEvt225(evt225Now()); } catch (e) {} return fn ? fn(E) : undefined; }); }
+function bkkDay225(t) { return Math.floor((t + 7 * 3600e3) / 864e5); }
+function code225Clean(c) { return String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16); }
+function chat225Bad(t) { let x = t; for (const w of (ADM225.bad || [])) { if (!w) continue; const re = new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'); x = x.replace(re, '*'.repeat(Math.min(6, w.length))); } return x; }
+function size225(o) { const all = JSON.stringify(o || {}).length, parts = Object.entries(o || {}).map(([k, v]) => [k, JSON.stringify(v === undefined ? null : v).length]).sort((a, b) => b[1] - a[1]).slice(0, 8); return { kb: Math.round(all / 102.4) / 10, parts: parts.map(([k, n]) => ({ k, kb: Math.round(n / 102.4) / 10 })) }; }
+async function sameIp225(uid) { const ip = LASTIP.get(uid); if (!ip) return []; const out = []; for (const [k, v] of LASTIP) { if (v !== ip || Number(k) === Number(uid)) continue; const q = live.get(Number(k)); out.push({ uid: Number(k), name: q && q.s ? q.s.name : '' }); if (out.length >= 10) break; } return out; }
+function code225List() { return Object.entries(ADM225.codes || {}).map(([c, x]) => ({ code: c, it: x.it, max: x.max, used: x.used | 0, exp: x.exp, note: x.note || '', at: x.at })).sort((a, b) => (b.at || 0) - (a.at || 0)); }
 async function admPlayer(uid) {
   const u = await db.userById(uid); if (!u) return null; const p = await session(uid), o = p.s || {}; await bansLoad(); const bn = BANS.map[uid];
-  return { uid, user: u.username, name: o.name || u.display, cls: o.cls, lvl: o.lvl | 0, gold: Math.floor(o.gold || 0), sup: !!o.sup100, title: o.title || '', bag: (o.gbag || []).length, mail: (o.mail || []).length, seen: p.touched || 0, online: !!(p.lastTick && Date.now() - p.lastTick < 60000), created: u.created_at, ip: LASTIP.get(uid) || '', banned: !!(bn || u.banned), reason: bn ? bn.reason : '' };
+  return { uid, user: u.username, name: o.name || u.display, cls: o.cls, lvl: o.lvl | 0, gold: Math.floor(o.gold || 0), sup: !!o.sup100, title: o.title || '', bag: (o.gbag || []).length, mail: (o.mail || []).length, seen: p.touched || 0, online: !!(p.lastTick && Date.now() - p.lastTick < 60000), created: u.created_at, ip: LASTIP.get(uid) || '', banned: !!(bn || u.banned), reason: bn ? bn.reason : '', size: size225(o), sameIp: await sameIp225(uid), muted: ((ADM225.mutes || {})[uid] || 0) > Date.now() ? ADM225.mutes[uid] : 0, q225: o.q225 || null, kills: o.kills | 0 };
 }
 
 // ---------- B107 ดันเจี้ยนวงกต: เลือกเส้นทางเอง · มอนอ่อน/มอนเก่ง/บัพ 1 ใน 3/ร้าน/เหตุการณ์/บอส · เดี่ยวหรือทีม 1–3 คน · อันดับรายสัปดาห์ ----------
@@ -2013,8 +2077,9 @@ const routes = {
   'POST /api/chat': async (req, res) => {
     const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
     const b = await readBody(req);
-    const ch = String(b.ch || ''), t = String(b.t || '').replace(/\s+/g, ' ').trim().slice(0, 100);
+    const ch = String(b.ch || ''); let t = String(b.t || '').replace(/\s+/g, ' ').trim().slice(0, 100);
     if (!['world', 'guild', 'team', 'dm'].includes(ch) || !t) return send(res, 400, { error: 'ข้อความไม่ถูกต้อง' });
+    await adm225Boot(); const mu225 = ADM225.mutes[u.id] || 0; if (mu225 > Date.now()) return send(res, 403, { error: 'คุณถูกปิดแชทถึง ' + new Date(mu225 + 7 * 3600e3).toISOString().slice(11, 16) + ' น. (' + new Date(mu225 + 7 * 3600e3).toISOString().slice(5, 10) + ')' }); t = chat225Bad(t);
     const p = await session(u.id), now = Date.now();
     if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
     if (now - (p.lastChat || 0) < 1200) return send(res, 429, { error: 'ส่งเร็วเกินไป รอสักครู่' });
@@ -2294,8 +2359,82 @@ const routes = {
     }
     send(res, 200, { received: true });
   },
+  'POST /api/code': async (req, res) => {
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    const b = await readBody(req), code = code225Clean(b.code); await adm225Boot();
+    const p = await session(u.id), now = Date.now(); if (!p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
+    if (now - (p.lastCode225 || 0) < 3000) return send(res, 429, { error: 'ลองใหม่อีกครั้งในอีกไม่กี่วินาที' }); p.lastCode225 = now;
+    const x = ADM225.codes[code]; if (!x) return send(res, 404, { error: 'ไม่พบโค้ดนี้' });
+    if (x.exp < now) return send(res, 410, { error: 'โค้ดนี้หมดอายุแล้ว' });
+    if ((x.used | 0) >= x.max) return send(res, 410, { error: 'โค้ดนี้ถูกใช้ครบแล้ว' });
+    if ((x.uids || []).includes(u.id)) return send(res, 409, { error: 'ตัวละครนี้ใช้โค้ดนี้ไปแล้ว' });
+    x.uids = (x.uids || []).concat([u.id]); x.used = (x.used | 0) + 1; await m225Save('codes225', ADM225.codes);
+    await mailTo(u.id, { id: 'cd' + code, t: '🎁 โค้ดของขวัญ ' + code, from: 'ทีมงาน', b: 'ขอบคุณที่ร่วมสนุกกับศึกชิงเมือง! กดรับของได้เลย', it: x.it });
+    return send(res, 200, { ok: true, msg: 'ใช้โค้ดสำเร็จ! ของขวัญส่งเข้ากล่องจดหมายแล้ว 📬' });
+  },
   'POST /api/admin/op': async (req, res) => {
     const b = await readBody(req), ok = admKeyOk(req, b.key); if (!ok.ok) return send(res, ok.code, { error: ok.error });
+
+    await adm225Boot();
+    const READ225 = ['drop221', 'player', 'boardget', 'pays', 'mkt', 'ov225', 'codelist', 'evtget', 'chatlist', 'eco225', 'log225'];
+    if (!READ225.includes(b.op)) admLog225(req, b.op, JSON.stringify(Object.assign({}, b, { key: undefined })).slice(0, 200));
+    if (b.op === 'ov225') {
+      await funLoad(); await payLogLoad(); const now = Date.now(), today = bkkDay225(now), mon = new Date(now + 7 * 3600e3).toISOString().slice(0, 7);
+      const payT = PAYLOG.list.filter(x => bkkDay225(x.at || 0) === today), payM = PAYLOG.list.filter(x => new Date((x.at || 0) + 7 * 3600e3).toISOString().slice(0, 7) === mon);
+      const sum = L => L.reduce((a, x) => a + (x.amt || 0), 0) / 100, f = funReport();
+      const cur = PERF.n ? { avg: +(PERF.sum / PERF.n).toFixed(1), max: +PERF.max.toFixed(1) } : null, sp = PERF.last || cur, mem = Math.round(process.memoryUsage().rss / 1048576);
+      return send(res, 200, { msg: 'โหลดภาพรวมแล้ว', ov: { online: realOnline(now), live: live.size, client: CLV_SRV, funnel: f, d1: f.last7days.newAccount ? Math.round(f.last7days.returnNextDay * 100 / f.last7days.newAccount) : null, payToday: sum(payT), payTodayN: payT.length, payMonth: sum(payM), payMonthN: payM.length, speed: sp, mem, uptimeH: Math.round(process.uptime() / 360) / 10, evt: evt225Now(now), codes: Object.keys(ADM225.codes || {}).length, warn: [sp && sp.avg > 50 ? 'เซิร์ฟเวอร์ตอบช้า (เฉลี่ยเกิน 50 ms)' : '', sp && sp.max > 1500 ? 'มีบางคำขอช้าเกิน 1.5 วินาที' : '', mem > 420 ? 'แรมใกล้เต็ม (' + mem + 'MB จาก 512MB)' : ''].filter(Boolean) } });
+    }
+    if (b.op === 'codeadd') {
+      const code = code225Clean(b.code); if (code.length < 4) return send(res, 400, { error: 'โค้ดต้องยาว 4–16 ตัว (A–Z, 0–9)' });
+      const it = [], g = Math.max(0, Math.min(1e7, Math.floor(+b.gold || 0))), pf = Math.max(0, Math.min(50, Math.floor(+b.potF || 0))), pu = Math.max(0, Math.min(100, Math.floor(+b.purple || 0))), en = b.enF ? 1 : 0;
+      if (g) it.push({ k: 'gold', n: g }); if (pf) it.push({ k: 'potF', n: pf }); if (pu) it.push({ k: 'purple', n: pu }); if (en) it.push({ k: 'enF', n: 1 });
+      if (!it.length) return send(res, 400, { error: 'ใส่ของรางวัลอย่างน้อย 1 อย่าง' });
+      const old = ADM225.codes[code];
+      ADM225.codes[code] = { it, max: Math.max(1, Math.min(100000, Math.floor(+b.max || 100))), exp: Date.now() + Math.max(1, Math.min(365, Math.floor(+b.days || 7))) * 864e5, used: old ? old.used : 0, uids: old ? old.uids : [], note: String(b.note || '').slice(0, 40), at: old ? old.at : Date.now() };
+      await m225Save('codes225', ADM225.codes); return send(res, 200, { msg: (old ? 'แก้ไขโค้ด ' : 'สร้างโค้ด ') + code + ' แล้ว', codes: code225List() });
+    }
+    if (b.op === 'codelist') return send(res, 200, { msg: 'โหลดโค้ดแล้ว', codes: code225List() });
+    if (b.op === 'codedel') { const code = code225Clean(b.code); if (!ADM225.codes[code]) return send(res, 404, { error: 'ไม่พบโค้ด' }); delete ADM225.codes[code]; await m225Save('codes225', ADM225.codes); return send(res, 200, { msg: 'ลบโค้ด ' + code + ' แล้ว', codes: code225List() }); }
+    if (b.op === 'fix225') {
+      const uid = Number(b.uid); if (!Number.isSafeInteger(uid) || !(await db.userById(uid))) return send(res, 404, { error: 'ไม่พบผู้เล่น' });
+      const what = String(b.what || '');
+      if (what === 'kick') { await db.bumpTok(uid); userCache.delete(uid); TOWN.delete(uid); return send(res, 200, { msg: 'เตะออกจากเกมแล้ว (ต้องล็อกอินใหม่)', player: await admPlayer(uid) }); }
+      const p = await session(uid); if (!p.s || !p.s.created) return send(res, 400, { error: 'ยังไม่มีตัวละคร' });
+      let msg = '';
+      if (what === 'battle') { p.s.battle = null; p.s.res = null; p.s.dup = null; p.s.autoHunt = false; p.s.autoTower = false; msg = 'แก้ติดไฟต์แล้ว'; }
+      else if (what === 'mail') { const L = Array.isArray(p.s.mail) ? p.s.mail : [], n0 = L.length; p.s.mail = L.filter(m => !m.got && Array.isArray(m.it) && m.it.length); msg = 'ล้างจดหมายที่รับของแล้ว ' + (n0 - p.s.mail.length) + ' ฉบับ'; }
+      else if (what === 'log') { if (Array.isArray(p.s.log)) { const n0 = p.s.log.length; p.s.log = p.s.log.slice(0, 20); msg = 'ตัดประวัติเหลือ 20 รายการ (ลบ ' + (n0 - p.s.log.length) + ')'; } else msg = 'ไม่มีประวัติให้ตัด'; }
+      else return send(res, 400, { error: 'คำสั่งไม่ถูกต้อง' });
+      p.v++; persist(uid, p); updateSnap(uid, p); return send(res, 200, { msg, player: await admPlayer(uid) });
+    }
+    if (b.op === 'evtget') return send(res, 200, { msg: 'โหลดอีเวนต์แล้ว', evt: ADM225.evt, now: evt225Now() });
+    if (b.op === 'evtset') {
+      const mul = Math.max(1, Math.min(3, +b.mul || 1)), from = Number(b.from) || Date.now(), to = Number(b.to) || 0;
+      if (mul <= 1 || to <= from) { ADM225.evt = null; await m225Save('evt225', null); return send(res, 200, { msg: 'ปิดอีเวนต์แล้ว', evt: null }); }
+      if (to - from > 14 * 864e5) return send(res, 400, { error: 'อีเวนต์ยาวได้ไม่เกิน 14 วัน' });
+      ADM225.evt = { mul, from, to, label: String(b.label || ('XP และทอง x' + mul)).slice(0, 40) }; await m225Save('evt225', ADM225.evt);
+      if (b.announce) newsPush75('admin', 0, '🎉 อีเวนต์', ADM225.evt.label + ' · ' + new Date(from + 7 * 3600e3).toISOString().slice(5, 16).replace('T', ' ') + ' ถึง ' + new Date(to + 7 * 3600e3).toISOString().slice(5, 16).replace('T', ' ') + ' (เวลาไทย)');
+      return send(res, 200, { msg: 'ตั้งอีเวนต์แล้ว', evt: ADM225.evt, now: evt225Now() });
+    }
+    if (b.op === 'chatlist') return send(res, 200, { msg: 'โหลดแชทแล้ว', chat: CHATLOG.filter(m => m.ch === 'world' || m.ch === 'guild').slice(-60).reverse().map(m => ({ id: m.id, ch: m.ch, n: m.n, t: m.t, from: m.from, ts: m.ts })), bad: ADM225.bad, mutes: Object.entries(ADM225.mutes).filter(([k, v]) => v > Date.now()).map(([k, v]) => ({ uid: Number(k), until: v })) });
+    if (b.op === 'chatdel') { const i = CHATLOG.findIndex(m => m.id === Number(b.id)); if (i < 0) return send(res, 404, { error: 'ไม่พบข้อความ' }); CHATLOG.splice(i, 1); return send(res, 200, { msg: 'ลบข้อความแล้ว (คนที่โหลดไปแล้วยังเห็นจนกว่าจะรีเฟรช)' }); }
+    if (b.op === 'mute' || b.op === 'unmute') {
+      const uid = Number(b.uid); if (!Number.isSafeInteger(uid) || !(await db.userById(uid))) return send(res, 404, { error: 'ไม่พบผู้เล่น' });
+      if (b.op === 'mute') ADM225.mutes[uid] = Date.now() + Math.max(5, Math.min(60 * 24 * 30, Math.floor(+b.min || 60))) * 60000; else delete ADM225.mutes[uid];
+      for (const k of Object.keys(ADM225.mutes)) if (ADM225.mutes[k] < Date.now()) delete ADM225.mutes[k];
+      await m225Save('mutes225', ADM225.mutes); return send(res, 200, { msg: b.op === 'mute' ? 'ปิดแชทผู้เล่นแล้ว' : 'เปิดแชทให้ผู้เล่นแล้ว', player: await admPlayer(uid) });
+    }
+    if (b.op === 'badset') { ADM225.bad = String(b.words || '').split(/[\n,]+/).map(x => x.trim()).filter(x => x.length >= 2).slice(0, 200); await m225Save('bad225', ADM225.bad); return send(res, 200, { msg: 'บันทึกคำต้องห้าม ' + ADM225.bad.length + ' คำ', bad: ADM225.bad }); }
+    if (b.op === 'eco225') {
+      const rows = await db.ecoAll225(), now = Date.now(), snap = await m225Load('ecosnap225', null), cur = {};
+      let total = 0, act7 = 0; rows.forEach(r => { const g = Number(r.gold) || 0; total += g; if (now - Number(r.updated_at || 0) < 7 * 864e5) act7++; cur[r.user_id] = [g, Number(r.level) || 0]; });
+      const top = rows.slice().sort((a, b) => (Number(b.gold) || 0) - (Number(a.gold) || 0)).slice(0, 10).map(r => ({ uid: Number(r.user_id), name: r.name, lvl: Number(r.level), gold: Number(r.gold) }));
+      const flags = []; if (snap && snap.m) { const hrs = Math.max(1, (now - snap.at) / 3600e3); rows.forEach(r => { const p = snap.m[r.user_id]; if (!p) return; const dg = (Number(r.gold) || 0) - p[0], dl = (Number(r.level) || 0) - p[1]; if (dg > Math.max(3e6, p[0] * 4) || dl >= Math.max(25, hrs * 2)) flags.push({ uid: Number(r.user_id), name: r.name, dg, dl, lvl: Number(r.level), hrs: Math.round(hrs) }); }); }
+      if (!snap || now - snap.at > 20 * 3600e3) await m225Save('ecosnap225', { at: now, m: cur });
+      return send(res, 200, { msg: 'โหลดเศรษฐกิจแล้ว', eco: { players: rows.length, act7, total, avg: rows.length ? Math.round(total / rows.length) : 0, top, flags: flags.sort((a, b) => b.dg - a.dg).slice(0, 30), since: snap ? snap.at : now } });
+    }
+    if (b.op === 'log225') return send(res, 200, { msg: 'โหลดบันทึกแล้ว', log: ADM225.log.slice(0, 150) });
     if (b.op === 'drop221') { await ev221Load(); ev221Save(true); return send(res, 200, { msg: 'โหลดรายงานแล้ว', drop: ev221Report(b.days) }); }
     if (b.op === 'player') {
       const q = String(b.q || '').trim().slice(0, 32); if (!q) return send(res, 400, { error: 'ใส่ชื่อ' });
@@ -2340,6 +2479,7 @@ const routes = {
   },
   'POST /api/admin/mail': async (req, res) => {
     const b = await readBody(req), ok = admKeyOk(req, b.key); if (!ok.ok) return send(res, ok.code, { error: ok.error });
+    admLog225(req, 'mail', (b.mode === 'one' ? 'ถึง ' + String(b.to || '') : 'ทุกคน') + ' · ' + String(b.t || '') + ' · ทอง ' + (+b.gold || 0) + ' ยาเต็ม ' + (+b.potF || 0) + ' แร่ม่วง ' + (+b.purple || 0)).catch(() => {});
     const t = String(b.t || '').trim().slice(0, 60), body = String(b.b || '').slice(0, 600); if (!t) return send(res, 400, { error: 'ใส่หัวข้อ' });
     const it = []; const g = Math.max(0, Math.min(1e7, Math.floor(+b.gold || 0))), pf = Math.max(0, Math.min(50, Math.floor(+b.potF || 0))), pu = Math.max(0, Math.min(100, Math.floor(+b.purple || 0)));
     if (g) it.push({ k: 'gold', n: g }); if (pf) it.push({ k: 'potF', n: pf }); if (pu) it.push({ k: 'purple', n: pu });

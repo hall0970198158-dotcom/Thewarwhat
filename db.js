@@ -106,6 +106,7 @@ const SQL = {
   recentSaves: `SELECT s.user_id, s.data, s.updated_at FROM saves s JOIN users u ON u.id = s.user_id
     WHERE u.banned = 0 AND s.updated_at > ? ORDER BY s.updated_at DESC LIMIT 60`,
   audit: 'INSERT INTO audit (user_id, at, kind, detail) VALUES (?, ?, ?, ?)',
+  ecoAll225: 'SELECT user_id, name, level, gold, updated_at FROM saves WHERE name IS NOT NULL AND name <> \'\'',
   getMeta: 'SELECT v FROM meta WHERE k = ?',
   getTeam: 'SELECT team FROM teams WHERE user_id = ?',
   wbAdd: `INSERT INTO wbdmg (day, user_id, name, cls, dmg) VALUES (?, ?, ?, ?, ?)
@@ -253,6 +254,7 @@ function createDb() {
     delTeam: uid => B.run(SQL.delTeam, [uid]),
     teamCount: async team => { const r = await B.get(SQL.teamCount, [team]); return r ? Number(r.n) : 0; },
     findByName: name => B.get(SQL.findByName, [name]),
+    ecoAll225: () => B.all(SQL.ecoAll225),
   };
 }
 module.exports = { createDb };
