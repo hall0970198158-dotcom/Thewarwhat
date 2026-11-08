@@ -1038,6 +1038,11 @@ body.view-portrait #gameWrap #townStage .town-bottom .map-button197{min-width:44
 .battle-actions:has(>[data-a=dgpick])>.btn b{font-size:11.5px;line-height:1.2}
 .battle-actions:has(>[data-a=dgpick])>[data-a=dgleave]{flex:0 0 44px!important}
 .battle-actions:has(>[data-a=dgpick])>[data-a=dgleave] small{display:none}
+/* B218 รูปตัวละครสำรองในหน้าสร้างตัว (ถ้าแคนวาสวาดไม่ได้ ยังเห็นตัวละคร) */
+.create-stage{position:relative}
+.create-stage .create-fb218{position:absolute;left:50%;bottom:4%;width:min(58%,190px);aspect-ratio:1;transform:translateX(-50%);background-repeat:no-repeat;background-size:800% 200%;background-position:0 0;pointer-events:none;z-index:2}
+.create-stage canvas{position:relative;z-index:1}
+.create-stage .create-stage-tag{z-index:2}
 </style>
 
 <section id="login" class="login">
@@ -4020,6 +4025,85 @@ dgAnim=function(j){
  return dgAnimBefore215.apply(this,arguments);
 };
 
+// ===== B218 กันลูปวาดภาพหยุด + รูปตัวละครสำรองในหน้าสร้างตัว =====
+var FRAME_ERR218=null;
+function FT218(f,a){try{f(a)}catch(e){if(!FRAME_ERR218){FRAME_ERR218=String(e&&e.message||e);try{console.warn('frame',e)}catch(x){}}}}
+function createFallback218(){
+ try{var key=characterSheetKey(s.cls,s.look),a=CHAR_ATLAS136[key];if(!a)return '';
+ return '<i class="create-fb218" aria-hidden="true" style="background-image:url('+a.src+')"></i>'}catch(e){return ''}
+}
+var drawSceneBefore218=drawScene;
+drawScene=function(cv,tn){
+ drawSceneBefore218.apply(this,arguments);
+ if(cv&&cv.getAttribute('data-mode')==='preview'&&!cv.__ok218){var c=cv.getContext('2d');if(c&&!(c.isContextLost&&c.isContextLost())){cv.__ok218=1;var fb=cv.parentNode&&cv.parentNode.querySelector('.create-fb218');if(fb)fb.style.display='none'}}
+};
+
+// ===== B219 แผนที่สำรวจ: แสดงพื้นที่เดินได้ชัดเจน + เส้นทางที่ตัวละครจะเดิน =====
+var WALK219={z:-1,img:null};
+function walkOn219(){try{return !(typeof SET!=='undefined'&&SET.walk219===false)}catch(e){return true}}
+function walkLayer219(z){
+ if(WALK219.z===z&&WALK219.img)return WALK219.img;
+ var d=MAP_DATA195[z];if(!d||SV||typeof document==='undefined')return null;
+ var K=2,W=768*K,H=512*K;
+ var shape=document.createElement('canvas');shape.width=W;shape.height=H;var g=shape.getContext('2d');if(!g)return null;
+ g.fillStyle='#fff';g.strokeStyle='#fff';g.lineCap='round';g.lineJoin='round';
+ d.floors.forEach(function(p){g.beginPath();p.forEach(function(q,i){i?g.lineTo(q[0]*K,q[1]*K):g.moveTo(q[0]*K,q[1]*K)});g.closePath();g.fill()});
+ d.paths.forEach(function(l){g.lineWidth=l[4]*2*K;g.beginPath();g.moveTo(l[0]*K,l[1]*K);g.lineTo(l[2]*K,l[3]*K);g.stroke()});
+ g.globalCompositeOperation='destination-out';
+ (d.blocks||[]).forEach(function(o){g.beginPath();g.ellipse(o[0]*K,o[1]*K,o[2]*K,o[3]*K,0,0,7);g.fill()});
+ (d.holes||[]).forEach(function(p){g.beginPath();p.forEach(function(q,i){i?g.lineTo(q[0]*K,q[1]*K):g.moveTo(q[0]*K,q[1]*K)});g.closePath();g.fill()});
+ var mk=function(){var c=document.createElement('canvas');c.width=W;c.height=H;return c};
+ var out=mk(),o=out.getContext('2d');
+ // เรืองแสงด้านนอกขอบพื้นที่เดินได้
+ for(var gi=0;gi<2;gi++){o.save();o.shadowColor='rgba(255,206,90,1)';o.shadowBlur=5*K;o.shadowOffsetX=W*2;o.drawImage(shape,-W*2,0);o.restore()}
+ o.globalCompositeOperation='destination-out';o.drawImage(shape,0,0);o.globalCompositeOperation='source-over';
+ // แต้มสีอ่อนบนพื้นที่เดินได้
+ var tint=mk(),t=tint.getContext('2d');t.drawImage(shape,0,0);t.globalCompositeOperation='source-in';t.fillStyle='rgba(255,236,170,.16)';t.fillRect(0,0,W,H);o.drawImage(tint,0,0);
+ // เส้นขอบทองด้านใน (shape ลบด้วย shape ที่หดเข้า)
+ var ero=mk(),e=ero.getContext('2d'),w=1.6;e.drawImage(shape,0,0);e.globalCompositeOperation='destination-in';
+ [[w,0],[-w,0],[0,w],[0,-w],[w*.7,w*.7],[-w*.7,w*.7],[w*.7,-w*.7],[-w*.7,-w*.7]].forEach(function(q){e.drawImage(shape,q[0],q[1])});
+ var ring=mk(),r=ring.getContext('2d');r.drawImage(shape,0,0);r.globalCompositeOperation='destination-out';r.drawImage(ero,0,0);r.globalCompositeOperation='source-in';r.fillStyle='rgba(255,232,150,.95)';r.fillRect(0,0,W,H);
+ o.save();o.shadowColor='rgba(40,20,0,.8)';o.shadowBlur=1.5*K;o.drawImage(ring,0,0);o.restore();
+ // จุดไข่ปลากลางทางเดินหลัก
+ o.fillStyle='rgba(255,240,190,.55)';
+ d.paths.forEach(function(l){var L=Math.hypot(l[2]-l[0],l[3]-l[1]);for(var u=0;u<L;u+=9){var x=(l[0]+(l[2]-l[0])*u/L)*K,y=(l[1]+(l[3]-l[1])*u/L)*K;o.beginPath();o.ellipse(x,y,1.3*K,.8*K,0,0,7);o.fill()}});
+ shape.width=tint.width=ero.width=ring.width=1;
+ WALK219.z=z;WALK219.img=out;return out;
+}
+var mapPaintBefore219=mapPaint195;
+mapPaint195=function(canvas,z){
+ mapPaintBefore219.apply(this,arguments);
+ if(!walkOn219())return;
+ try{var L=walkLayer219(z);if(L){var c=canvas.getContext('2d');c.save();c.imageSmoothingEnabled=true;c.drawImage(L,0,0,canvas.width,canvas.height);c.restore()}}catch(e){}
+};
+function walkRepaint219(){try{if(exploration195()&&FLD.map)mapPaint195(FLD.map,FLD.z)}catch(e){}}
+// เส้นทางเดิน: จุดไข่ปลาจากตัวละครไปตามทางที่ระบบหาได้ จนถึงจุดหมาย
+function walkRoute219(c,cx,cy,tn){
+ if(!walkOn219()||FLD.tx==null)return;
+ var pts=[[FLD.px,FLD.py]];(FLD.path&&FLD.path.length?FLD.path:[]).forEach(function(p){pts.push(p)});
+ var last=pts[pts.length-1];if(Math.hypot(last[0]-FLD.tx,last[1]-FLD.ty)>2)pts.push([FLD.tx,FLD.ty]);
+ var sp=pts.map(function(p){var q=townProject(p[0],p[1]);return [q[0]-cx,q[1]-cy]});
+ var follow=!!FLD.follow,col=follow?'rgba(255,140,120,':'rgba(255,232,150,';
+ c.save();var off=(tn/40)%16,acc=0;
+ for(var i=1;i<sp.length;i++){
+  var a=sp[i-1],b=sp[i],L=Math.hypot(b[0]-a[0],b[1]-a[1]);
+  for(var d=(16-((acc+off)%16))%16;d<L;d+=16){var x=a[0]+(b[0]-a[0])*d/L,y=a[1]+(b[1]-a[1])*d/L;
+   c.fillStyle='rgba(30,16,0,.45)';c.beginPath();c.ellipse(x,y+1,4,2.4,0,0,7);c.fill();
+   c.fillStyle=col+'.95)';c.beginPath();c.ellipse(x,y,3,1.8,0,0,7);c.fill()}
+  acc+=L;
+ }
+ if(!follow){var t=sp[sp.length-1],k=(tn%900)/900;
+  c.strokeStyle=col+'.95)';c.lineWidth=2.5;c.beginPath();c.ellipse(t[0],t[1],10,5,0,0,7);c.stroke();
+  c.strokeStyle=col+(1-k).toFixed(2)+')';c.lineWidth=2;c.beginPath();c.ellipse(t[0],t[1],10+k*12,5+k*6,0,0,7);c.stroke();
+  c.fillStyle=col+'.95)';c.beginPath();c.moveTo(t[0],t[1]-6);c.lineTo(t[0]-6,t[1]-20);c.lineTo(t[0]+6,t[1]-20);c.closePath();c.fill()}
+ c.restore();
+}
+var drawFieldBefore219=drawField;
+drawField=function(c,W,H,tn){
+ drawFieldBefore219.apply(this,arguments);
+ try{if(exploration195()&&FLD.cam)walkRoute219(c,Math.round(FLD.cam[0]),Math.round(FLD.cam[1]),tn)}catch(e){}
+};
+
 // ===== B105 บัตรรายเดือน · บัตรถาวร · ซีซั่น 1 (จบ 31 ธ.ค. 23:59 น. เวลาไทย) =====
 var S105_START=Date.UTC(2026,9,31,17,0,0),S105_END=Date.UTC(2026,11,31,16,59,59),S105_RUSH=Date.UTC(2026,11,21,17,0,0),S105_CLAIM=S105_END+7*864e5,S105_MAX=50,S105_PER=1000,S105_KILLCAP=600;
 var SHOP105=[{sku:'sup35',ic:'🎁',n:'แพ็กผู้สนับสนุน',p:35,d:'อุปกรณ์ Lv20 สีส้ม + ป้าย ✦ ผู้สนับสนุน · ซื้อได้ครั้งเดียว'},
@@ -4141,7 +4225,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B217';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B219';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -4985,7 +5069,7 @@ function openBox0(){
  s.boxMsg='ได้ '+ch.it.n+' ('+RAR_N[ch.it.r]+') สวมใส่ให้แล้ว';s.boxIt={sl:ch.sl,id:ch.it.id};
  say('เปิดกล่อง ได้ '+ch.it.n);
 }
-var CL_LOCAL={setsprites:1,refshare:1,refcopy:1,seteco:1,rktog:1,rktab:1,ptfollow:1,gopen:1,gclaim:1,gathergo:1,towngo:1,townleave:1,setbul:1,setfs:1,fstog:1,appinst:1,ptfind:1,ptcreate:1,ptjoin:1,ptleave:1,ptkick:1,ftarget:1,fieldtog:1,tutreplay:1,setsfx:1,setmus:1,setlang:1,sndtest:1,bset:1,bback:1,dgcreate:1,dgjoin:1,dgleave:1,dgready:1,dgstart:1,dgpick:1,dgagain:1,nav113:1,wd108rps:1,wd108act:1,wd108close:1,rg107solo:1,rg107team:1,rg107go:1,rg107buff:1,rg107buy:1,rg107next:1,rg107auto:1,rg107tab:1,rg107giveup:1,logout:1,chatopen:1,chatclose:1,chatsend:1,chattab:1,chatdm:1,teamjoin:1,teamleave:1,clouddn:1,cloudup:1,dqclose:1};
+var CL_LOCAL={setsprites:1,walk219:1,refshare:1,refcopy:1,seteco:1,rktog:1,rktab:1,ptfollow:1,gopen:1,gclaim:1,gathergo:1,towngo:1,townleave:1,setbul:1,setfs:1,fstog:1,appinst:1,ptfind:1,ptcreate:1,ptjoin:1,ptleave:1,ptkick:1,ftarget:1,fieldtog:1,tutreplay:1,setsfx:1,setmus:1,setlang:1,sndtest:1,bset:1,bback:1,dgcreate:1,dgjoin:1,dgleave:1,dgready:1,dgstart:1,dgpick:1,dgagain:1,nav113:1,wd108rps:1,wd108act:1,wd108close:1,rg107solo:1,rg107team:1,rg107go:1,rg107buff:1,rg107buy:1,rg107next:1,rg107auto:1,rg107tab:1,rg107giveup:1,logout:1,chatopen:1,chatclose:1,chatsend:1,chattab:1,chatdm:1,teamjoin:1,teamleave:1,clouddn:1,cloudup:1,dqclose:1};
 function act(a,p){
  if(!SV&&a==='social173'){socialAct173(p);return;}
  if(!SV&&NET.wd?.friendly173&&['wd108act','wd108close'].includes(a)){
@@ -5155,6 +5239,7 @@ function act(a,p){
  if(a==='ptfind'){var pi=document.getElementById('ptid'),pv=pi?String(pi.value).replace(/\D/g,''):'';NET.ptFind=pv;if(!pv){NET.ptMsg='ใส่เลขห้องปาร์ตี้ก่อน';render();return}ptOp('join',pv);return}
  if(/^pt(create|join|leave|kick)$/.test(a)){ptOp(a.slice(2),p);return}
  if(/^(setsfx|setmus|setlang|sndtest|tutreplay|setfs|fstog|appinst|setbul|seteco|setsprites)$/.test(a)&&!SV){setAct(a,p);return}
+ if(a==='walk219'&&!SV){SET.walk219=SET.walk219===false;setSave();walkRepaint219();render();return}
  if(a==='fieldtog'&&!SV){SET.field=SET.field===false;setSave();FLD.fmSent=-1e9;render();return}
  if(a==='ftarget'&&!SV){targetSelect49(p);return}
  if(a==='bset'&&!SV){BSET=!BSET;try{localStorage.setItem('shuk-bset',BSET?'1':'0')}catch(e){}render();return}
@@ -6891,7 +6976,7 @@ function createClassPicker(){return '<div class="create-classes">'+CLS_ORDER.map
 function viewCreate(){
  var role=CREATE_ROLES[s.cls]||CREATE_ROLES.warrior;
  return '<section class="create-shell"><header class="create-header"><div><p class="auth-kicker">YOUR STORY BEGINS</p><h2>สร้างนักผจญภัยของคุณ</h2></div><button class="btn" data-a="logout">ออกจากระบบ</button></header>'+
- '<div class="create-layout"><aside class="create-preview"><div class="create-stage"><span class="create-stage-tag">ตัวอย่างในเกม</span><canvas id="scene" class="scene" data-mode="preview" width="320" height="220" aria-label="ตัวอย่างตัวละคร"></canvas></div><div class="create-role"><p class="auth-kicker">'+role[0]+'</p><h2>'+CLASSES[s.cls].n+'</h2><p>'+role[1]+'</p><div class="create-growth">'+growDesc(s.cls)+'</div></div><p class="create-account">บัญชี: '+esc(curUser||'นักผจญภัย')+'</p></aside>'+
+ '<div class="create-layout"><aside class="create-preview"><div class="create-stage"><span class="create-stage-tag">ตัวอย่างในเกม</span>'+createFallback218()+'<canvas id="scene" class="scene" data-mode="preview" width="320" height="220" aria-label="ตัวอย่างตัวละคร"></canvas></div><div class="create-role"><p class="auth-kicker">'+role[0]+'</p><h2>'+CLASSES[s.cls].n+'</h2><p>'+role[1]+'</p><div class="create-growth">'+growDesc(s.cls)+'</div></div><p class="create-account">บัญชี: '+esc(curUser||'นักผจญภัย')+'</p></aside>'+
  '<div class="create-options">'+(createMsg?'<div class="reveal" role="alert">'+esc(createMsg)+'</div>':'')+
  '<section><h3><span class="create-step">01</span> ตั้งชื่อตัวละคร</h3><label class="sr-only" for="cname">ชื่อตัวละคร</label><input class="txt" id="cname" type="text" maxlength="12" placeholder="ชื่อของคุณ 2–12 ตัวอักษร" autocomplete="off" aria-describedby="createNameHelp" value="'+esc(s.name||'')+'"><p id="createNameHelp" class="hint">1 ไอดีมีตัวละครได้ 1 ตัว · สลับอาชีพภายหลังได้ตามเงื่อนไขในเกม</p></section>'+
  '<section><h3><span class="create-step">02</span> เลือกอาชีพเริ่มต้น</h3>'+createClassPicker()+'</section>'+
@@ -7815,7 +7900,7 @@ function fsHtml(){
  var how=fsStand()?'<p class="hint">✅ กำลังเล่นแบบแอป (ไม่มีแถบเบราว์เซอร์)</p>':
   (fsIos()?'<p class="hint">iPhone: กดปุ่มแชร์ (□↑) ใน Safari → "เพิ่มไปยังหน้าจอโฮม" แล้วเปิดเกมจากไอคอน จะไม่มีแถบเบราว์เซอร์</p>':
   '<p class="hint">แนะนำ: ติดตั้งเป็นแอป — Chrome กดเมนู ⋮ → "ติดตั้งแอป" หรือ "เพิ่มลงในหน้าจอหลัก" แล้วเปิดเกมจากไอคอน จะเต็มจอทุกครั้ง</p>');
- return '<h4 class="st">หน้าจอ</h4>'+(fsCan()?'<div class="grid2">'+tgl('setfs',SET.fs!==false,'เต็มจออัตโนมัติ')+'<button class="btn" data-a="fstog">'+(fsOn()?'🗗 ออกจากเต็มจอ':'⛶ เต็มจอตอนนี้')+'</button></div>':'')+
+ return '<h4 class="st">หน้าจอ</h4><div class="grid2">'+tgl('walk219',SET.walk219!==false,'แสดงทางเดินบนแผนที่')+'</div>'+(fsCan()?'<div class="grid2">'+tgl('setfs',SET.fs!==false,'เต็มจออัตโนมัติ')+'<button class="btn" data-a="fstog">'+(fsOn()?'🗗 ออกจากเต็มจอ':'⛶ เต็มจอตอนนี้')+'</button></div>':'')+
   (FS.prompt?'<button class="btn primary" data-a="appinst" style="width:100%;margin-top:6px">📲 ติดตั้งเป็นแอป (เปิดเต็มจอทุกครั้ง)</button>':'')+how}
 function setAct(a,p){
  if(a==='setsprites'){SET.spriteChars=SET.spriteChars===false;PORT_C={};setSave()}
@@ -9855,10 +9940,10 @@ function battleCommand50(a,b){if(a==='atk')return true;if(a==='ult')return !b.ch
 
 function frame(tn){
  if(ECO.on){ecoFrame141(tn);return}
- newsPaint75();
- farmLive68(tn);matLive(tn);colPreview69(tn);bioPreview70(tn);ar73Live(tn);
- craftButtonsTick();pvpTimers85(tn);wbButtonTick150();shoreTick155();
- battlePresentationTick(tn);scene53Paint(tn);battleButtonsSync(tn);
+ FT218(newsPaint75);
+ FT218(farmLive68,tn);FT218(matLive,tn);FT218(colPreview69,tn);FT218(bioPreview70,tn);FT218(ar73Live,tn);
+ FT218(craftButtonsTick);FT218(pvpTimers85,tn);FT218(wbButtonTick150);FT218(shoreTick155);
+ FT218(battlePresentationTick,tn);FT218(scene53Paint,tn);FT218(battleButtonsSync,tn);
  if(TOWN.on&&s&&!s.battle&&!FLD.moving&&!FLD.hold){
   if(TOWN_FRAME_AT!==null&&tn-TOWN_FRAME_AT<1000/30-0.5){requestAnimationFrame(frame);return}
   TOWN_FRAME_AT=tn;
