@@ -4127,6 +4127,55 @@ if(!SV&&typeof setInterval!=='undefined')setInterval(huntCtaTick220,500);
 var tutEndBefore220=tutEnd;
 tutEnd=function(){var r=tutEndBefore220.apply(this,arguments);try{if(s&&s.created&&!(s.kills|0)&&!autoRunning())setTimeout(function(){if(s&&!s.battle&&!autoRunning())act('autoset','run:1')},400)}catch(e){}return r};
 
+// ===== B221 ติดตามจุดที่ผู้เล่นเลิกเล่น (ไม่ระบุตัวตน: ส่งแค่รหัสเครื่องสุ่ม เวอร์ชัน และชื่อขั้นตอน) =====
+var EV221={sent:{},errN:0,resN:0,errSeen:{},sid:null,isNew:false,act:0};
+function ev221Day(){return Math.floor((Date.now()+7*3600e3)/864e5)}
+function ev221Init(){
+ if(EV221.sid)return;
+ try{var k='shuk-sid221',v=localStorage.getItem(k),d=ev221Day();
+  if(!v){v=Math.random().toString(36).slice(2,12)+Date.now().toString(36);localStorage.setItem(k,v);localStorage.setItem(k+':d',String(d))}
+  EV221.sid=v;EV221.isNew=localStorage.getItem(k+':d')===String(d)}catch(e){EV221.sid=Math.random().toString(36).slice(2,14);EV221.isNew=true}
+}
+function ev221Post(o){
+ try{ev221Init();o.v=typeof CLV106!=='undefined'?CLV106:'?';o.sid=EV221.sid;if(EV221.isNew)o.n=1;var body=JSON.stringify(o);
+  if(navigator.sendBeacon&&navigator.sendBeacon('/api/ev',new Blob([body],{type:'application/json'})))return;
+  fetch('/api/ev',{method:'POST',headers:{'Content-Type':'application/json'},body:body,keepalive:true}).catch(function(){})}catch(e){}
+}
+function ev221(step){
+ if(SV||typeof window==='undefined')return;
+ var k='shuk-ev221:'+ev221Day()+':'+step+':'+(typeof CLV106!=='undefined'?CLV106:'');if(EV221.sent[k])return;EV221.sent[k]=1;
+ try{if(localStorage.getItem(k))return;localStorage.setItem(k,'1')}catch(e){}
+ ev221Post({e:step});
+}
+function ev221Base(u){u=String(u||'').split(/[?#]/)[0];return u.slice(u.lastIndexOf('/')+1).slice(0,60)}
+function ev221Err(kind,msg){
+ if(SV||typeof window==='undefined')return;var res=kind==='img'||kind==='res';if(res?EV221.resN>=8:EV221.errN>=10)return;msg=String(msg||'').slice(0,120);var k=kind+'|'+msg;if(EV221.errSeen[k])return;EV221.errSeen[k]=1;if(res)EV221.resN++;else EV221.errN++;
+ ev221Post({e:'err',k:kind,m:msg});
+}
+if(!SV&&typeof window!=='undefined'){
+ window.addEventListener('error',function(e){try{var t=e.target;
+  if(t&&t!==window&&t.tagName){ev221Err(t.tagName==='IMG'?'img':'res',t.tagName.toLowerCase()+' '+ev221Base(t.src||t.href))}
+  else ev221Err('js',(e.message||'error')+' @'+ev221Base(e.filename)+':'+(e.lineno|0))}catch(x){}},true);
+ window.addEventListener('unhandledrejection',function(e){try{var r=e.reason;ev221Err('promise',r&&r.message?r.message:String(r))}catch(x){}});
+ // รูปที่สร้างด้วย new Image() ไม่ผ่าน window error จึงดักที่ตัวสร้าง
+ try{var Img221=window.Image;if(Img221&&!Img221.__ev221){var W221=function(w,h){var i=arguments.length>1?new Img221(w,h):arguments.length?new Img221(w):new Img221();i.addEventListener('error',function(){if(i.src&&!/^data:/.test(i.src))ev221Err('img',ev221Base(i.src))});return i};W221.prototype=Img221.prototype;W221.__ev221=1;window.Image=W221;Image=W221}}catch(x){}
+ setTimeout(function(){ev221('open')},0);
+ setInterval(function(){
+  try{if(!s)return;
+   if(s.created&&document.querySelector('#scene[data-mode=field]'))ev221('map');
+   if(s.created&&s.battle)ev221('battle');
+   if(s.created&&document.visibilityState==='visible'){EV221.act+=5;if(EV221.act>=300)ev221('play5')}
+  }catch(x){}
+ },5000);
+}
+var viewCreateBefore221=viewCreate;
+viewCreate=function(){try{ev221('create')}catch(e){}return viewCreateBefore221.apply(this,arguments)};
+var viewCraftBefore221=viewCraft;
+viewCraft=function(){try{ev221('craft')}catch(e){}return viewCraftBefore221.apply(this,arguments)};
+// ข้อผิดพลาดระหว่างวาดเฟรม (จาก B218) ส่งเข้ารายงานด้วย
+var FT218Before221=FT218;
+FT218=function(f,a){try{f(a)}catch(e){if(!FRAME_ERR218)FRAME_ERR218=String(e&&e.message||e);ev221Err('frame',(f&&f.name?f.name+': ':'')+String(e&&e.message||e))}};
+
 // ===== B105 บัตรรายเดือน · บัตรถาวร · ซีซั่น 1 (จบ 31 ธ.ค. 23:59 น. เวลาไทย) =====
 var S105_START=Date.UTC(2026,9,31,17,0,0),S105_END=Date.UTC(2026,11,31,16,59,59),S105_RUSH=Date.UTC(2026,11,21,17,0,0),S105_CLAIM=S105_END+7*864e5,S105_MAX=50,S105_PER=1000,S105_KILLCAP=600;
 var SHOP105=[{sku:'sup35',ic:'🎁',n:'แพ็กผู้สนับสนุน',p:35,d:'อุปกรณ์ Lv20 สีส้ม + ป้าย ✦ ผู้สนับสนุน · ซื้อได้ครั้งเดียว'},
@@ -4248,7 +4297,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B220';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B221';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
