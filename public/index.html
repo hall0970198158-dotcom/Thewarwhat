@@ -1049,6 +1049,23 @@ body.view-portrait #gameWrap #townStage .town-bottom .map-button197{min-width:44
 .hunt220[hidden]{display:none}
 @keyframes hunt220{50%{box-shadow:0 6px 18px rgba(0,0,0,.45),0 0 0 10px rgba(255,212,94,0)}}
 @media (prefers-reduced-motion:reduce){.hunt220{animation:none}}
+/* B222 ของขวัญเลเวล */
+.lvg222-btn{position:fixed;right:12px;top:calc(150px + env(safe-area-inset-top,0px));z-index:61;width:62px;padding:6px 2px 5px;border-radius:14px;border:2px solid #fff1b8;background:linear-gradient(180deg,#ffd45e,#f0a32e);color:#2a1204;font-size:26px;line-height:1;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:0 6px 16px rgba(0,0,0,.45);animation:lvg222 1.4s ease-in-out infinite;cursor:pointer}
+.lvg222-btn i{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:10px;background:#e0412f;color:#fff;font:700 12px/20px Kanit,sans-serif;font-style:normal}
+.lvg222-btn small{font:700 9px/1.1 Kanit,sans-serif}
+.lvg222-btn[hidden],.lvg222-m[hidden]{display:none}
+@keyframes lvg222{50%{transform:translateY(-3px) rotate(-4deg)}}
+@media (prefers-reduced-motion:reduce){.lvg222-btn{animation:none}}
+.lvg222-m{position:fixed;inset:0;z-index:90;background:rgba(5,8,18,.72);display:flex;align-items:center;justify-content:center;padding:14px}
+.lvg222-box{width:min(440px,100%);max-height:88vh;overflow:auto;background:linear-gradient(180deg,#1d2645,#121933);border:2px solid #f2c45a;border-radius:18px;padding:14px;box-shadow:0 16px 40px rgba(0,0,0,.6);color:#f2eee2}
+.lvg222-h{display:flex;justify-content:space-between;align-items:center;gap:8px}.lvg222-h b{font-size:20px;color:#ffd45e}
+.lvg222-all{width:100%;margin:6px 0 8px}
+.lvg222-list{display:flex;flex-direction:column;gap:8px}
+.lvg222-it{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid #33406b}
+.lvg222-it.ok{border-color:#f2c45a;background:rgba(242,196,90,.1)}.lvg222-it.got{opacity:.55}
+.lvg222-lv{flex:0 0 46px;text-align:center;font-size:11px;color:#c8cfe6}.lvg222-lv b{display:block;font-size:20px;color:#ffd45e;line-height:1}
+.lvg222-r{flex:1;display:flex;flex-wrap:wrap;gap:3px 10px;font-size:12.5px;min-width:0}
+.lvg222-st{font-size:12px;color:#9fe3a8;white-space:nowrap}.lvg222-st.lock{color:#8b93ad}
 </style>
 
 <section id="login" class="login">
@@ -4176,6 +4193,80 @@ viewCraft=function(){try{ev221('craft')}catch(e){}return viewCraftBefore221.appl
 var FT218Before221=FT218;
 FT218=function(f,a){try{f(a)}catch(e){if(!FRAME_ERR218)FRAME_ERR218=String(e&&e.message||e);ev221Err('frame',(f&&f.name?f.name+': ':'')+String(e&&e.message||e))}};
 
+// ===== B222 ของขวัญเลเวล: ถึงเลเวลที่กำหนดกดรับของได้ครั้งเดียว (ตัวละครเก่ารับย้อนหลังได้) =====
+var LVG222=[
+ {lv:2,pot:{potions:10}},
+ {lv:3,pot:{potions:10},en:1},
+ {lv:5,pot:{potF:2},en:1},
+ {lv:8,mat:30},
+ {lv:10,pot:{potF:3},en:1},
+ {lv:15,mat:60},
+ {lv:20,pot:{potF:5},purple:1,en:1},
+ {lv:25,mat:120,purple:1},
+ {lv:30,purple:3,title:'lvg30'},
+ {lv:40,purple:4,pot:{potF:10}},
+ {lv:50,purple:6,box:1},
+ {lv:70,purple:8},
+ {lv:100,purple:10,box:1}
+];
+var LVG_MATS222=['wood','stone','ore','hide','herb'];
+function lvgTitle222(){try{if(typeof TITLES!=='undefined'&&!TITLES.some(function(x){return x.id==='lvg30'}))TITLES.push({id:'lvg30',n:'ดาวรุ่งแห่งสงคราม',d:'รับของขวัญเลเวล 30',c:'#ffb84a',cur:function(){return lvgGot222(30)?1:0},need:1})}catch(e){}}
+function lvgList222(){return Array.isArray(s.lvg222)?s.lvg222:[]}
+function lvgGot222(lv){return lvgList222().indexOf(lv)>=0}
+function lvgReady222(){return LVG222.filter(function(g){return (s.lvl|0)>=g.lv&&!lvgGot222(g.lv)})}
+function lvgText222(g){var t=[];if(g.gold)t.push('💰 '+g.gold.toLocaleString('th-TH')+' ทอง');
+ if(g.pot)Object.keys(g.pot).forEach(function(k){t.push((k==='potF'?'💖 ยาเต็มขวด ':'🧪 ยาแดง ')+g.pot[k])});
+ if(g.en)t.push('⚡ เติมพลังเต็ม');if(g.mat)t.push('🪵 วัตถุดิบ 5 ชนิด อย่างละ '+g.mat);if(g.purple)t.push('💜 แร่หินสีม่วง '+g.purple);
+ if(g.box)t.push('🥚 กล่องสุ่มสัตว์เลี้ยง '+g.box);if(g.title)t.push('🏅 ฉายา "ดาวรุ่งแห่งสงคราม"');return t}
+var fishActBefore222=fishActions153;
+fishActions153=function(a,p){
+ if(a!=='lvgift222')return fishActBefore222(a,p);
+ if(!s.created)return true;lvgTitle222();
+ var lv=Number(p)|0,list=lv?LVG222.filter(function(g){return g.lv===lv}):lvgReady222(),got=0,sum=0;
+ list.forEach(function(g){if((s.lvl|0)<g.lv||lvgGot222(g.lv))return;
+  s.lvg222=lvgList222().concat([g.lv]);got++;
+  if(g.gold){s.gold=(s.gold||0)+g.gold;sum+=g.gold}
+  if(g.pot)Object.keys(g.pot).forEach(function(k){s[k]=(s[k]|0)+g.pot[k]});
+  if(g.en)s.energy=Math.max(s.energy|0,s.maxEnergy|0);
+  if(g.mat){s.inv=s.inv||{};LVG_MATS222.forEach(function(k){s.inv[k]=(s.inv[k]|0)+g.mat})}
+  if(g.purple){s.inv=s.inv||{};s.inv.purple=(s.inv.purple|0)+g.purple}
+  if(g.box)s.boxes=(s.boxes|0)+g.box;
+ });
+ if(got){say('🎁 รับของขวัญเลเวลแล้ว '+got+' ชิ้น'+(sum?' · +'+sum.toLocaleString('th-TH')+' ทอง':''));try{sfx('levelup')}catch(e){}save()}
+ render();return true;
+};
+// ---------- หน้าต่างของขวัญ (ฝั่งผู้เล่น) ----------
+var LVG_UI222={btn:null,modal:null,seen:-1,open:false};
+function lvgModalHtml222(){
+ var lvl=s.lvl|0,next=LVG222.filter(function(g){return lvl<g.lv})[0];
+ return '<div class="lvg222-box" role="dialog" aria-modal="true" aria-label="ของขวัญเลเวล"><div class="lvg222-h"><b>🎁 ของขวัญเลเวล</b><button class="btn sm" data-lvg="close" aria-label="ปิด">ปิด ✕</button></div>'+
+ '<p class="hint">ถึงเลเวลแล้วกดรับได้ครั้งละ 1 ชุด · ตัวละครที่เลเวลเกินแล้วรับย้อนหลังได้ครบ'+(next?' · ชุดถัดไปที่ Lv'+next.lv:'')+'</p>'+
+ (lvgReady222().length>1?'<button class="btn primary lvg222-all" data-lvg="all">รับทั้งหมด ('+lvgReady222().length+' ชุด)</button>':'')+
+ '<div class="lvg222-list">'+LVG222.map(function(g){var got=lvgGot222(g.lv),ok=lvl>=g.lv&&!got;
+  return '<div class="lvg222-it'+(got?' got':ok?' ok':'')+'"><div class="lvg222-lv">Lv<b>'+g.lv+'</b></div><div class="lvg222-r">'+lvgText222(g).map(function(t){return '<span>'+t+'</span>'}).join('')+'</div>'+
+  (got?'<span class="lvg222-st">✓ รับแล้ว</span>':ok?'<button class="btn primary sm" data-lvg="'+g.lv+'">รับ</button>':'<span class="lvg222-st lock">🔒</span>')+'</div>'}).join('')+'</div></div>';
+}
+function lvgSync222(){
+ if(SV||typeof document==='undefined')return;
+ var ok=false;try{ok=!!(s&&s.created&&!s.res)}catch(e){}
+ var n=ok?lvgReady222().length:0;
+ if(!LVG_UI222.btn){LVG_UI222.btn=document.createElement('button');LVG_UI222.btn.type='button';LVG_UI222.btn.className='lvg222-btn';LVG_UI222.btn.setAttribute('aria-label','ของขวัญเลเวล');
+  LVG_UI222.btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();lvgOpen222(true)});document.body.appendChild(LVG_UI222.btn)}
+ LVG_UI222.btn.hidden=!(ok&&n>0&&!s.battle&&!(typeof TUT!=='undefined'&&TUT.on));
+ var bh='🎁<i>'+n+'</i><small>ของขวัญเลเวล</small>';if(LVG_UI222.btn.__h!==bh){LVG_UI222.btn.innerHTML=bh;LVG_UI222.btn.__h=bh}
+ // ถึงเลเวลใหม่แล้วมีของรอรับ เปิดหน้าต่างให้เองหนึ่งครั้ง (ไม่เด้งกลางการต่อสู้)
+ if(ok&&n>0&&!s.battle&&!LVG_UI222.open&&!(typeof TUT!=='undefined'&&TUT.on)&&LVG_UI222.seen>=0&&(s.lvl|0)>LVG_UI222.seen)lvgOpen222(true);
+ if(ok&&!s.battle)LVG_UI222.seen=s.lvl|0;
+ if(LVG_UI222.open&&LVG_UI222.modal){var h=lvgModalHtml222();if(LVG_UI222.modal.__h!==h){LVG_UI222.modal.innerHTML=h;LVG_UI222.modal.__h=h}}
+}
+function lvgOpen222(on){
+ lvgTitle222();LVG_UI222.open=on;
+ if(!LVG_UI222.modal){var m=document.createElement('div');m.className='lvg222-m';m.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-lvg]');if(e.target===m){lvgOpen222(false);return}if(!b)return;e.preventDefault();e.stopPropagation();var v=b.getAttribute('data-lvg');
+   if(v==='close'){lvgOpen222(false);return}b.disabled=true;act('lvgift222',v==='all'?'0':v)});document.body.appendChild(m);LVG_UI222.modal=m}
+ LVG_UI222.modal.hidden=!on;if(on){LVG_UI222.modal.__h='';lvgSync222()}
+}
+if(!SV&&typeof setInterval!=='undefined')setInterval(function(){try{lvgSync222()}catch(e){}},700);
+
 // ===== B105 บัตรรายเดือน · บัตรถาวร · ซีซั่น 1 (จบ 31 ธ.ค. 23:59 น. เวลาไทย) =====
 var S105_START=Date.UTC(2026,9,31,17,0,0),S105_END=Date.UTC(2026,11,31,16,59,59),S105_RUSH=Date.UTC(2026,11,21,17,0,0),S105_CLAIM=S105_END+7*864e5,S105_MAX=50,S105_PER=1000,S105_KILLCAP=600;
 var SHOP105=[{sku:'sup35',ic:'🎁',n:'แพ็กผู้สนับสนุน',p:35,d:'อุปกรณ์ Lv20 สีส้ม + ป้าย ✦ ผู้สนับสนุน · ซื้อได้ครั้งเดียว'},
@@ -4297,7 +4388,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B221';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B222.1';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
