@@ -995,7 +995,7 @@ function admKeyOk(req, key) {
 const ADMIN_PAGE101 = `<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>แอดมิน · TheWarWhat</title>
 <style>body{font-family:sans-serif;background:#0e1326;color:#e8eaf2;max-width:560px;margin:0 auto;padding:12px}h2{margin:6px 0 10px}label{display:block;margin:10px 0 4px;font-size:14px}input,textarea,select{width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #445;background:#1a2140;color:#fff;font-size:16px}textarea{height:80px}button{padding:11px;border:0;border-radius:10px;background:#ffb43c;font-size:16px;font-weight:700;color:#201000}button.w{width:100%;margin-top:12px}button.g{background:#2a3256;color:#fff}button.r{background:#ff5a5a;color:#fff}.tabs{display:flex;gap:4px;flex-wrap:wrap;margin:10px 0}.tabs button{flex:1;min-width:30%;background:#2a3256;color:#fff;font-size:14px;padding:9px 4px}.tabs button.on{background:#ffb43c;color:#201000}.row{display:flex;gap:8px}.row>*{flex:1}.box{margin-top:12px;padding:10px;border-radius:8px;background:#1a2140;white-space:pre-wrap;font-size:14px;line-height:1.55}.it{border-bottom:1px solid #334;padding:6px 0;display:flex;justify-content:space-between;gap:8px;align-items:center}.pane{display:none}.pane.on{display:block}small{color:#9aa7bd}</style></head><body>
 <h2>🛠️ แอดมิน · ศึกชิงเมือง</h2><label>รหัสแอดมิน (ADMIN_KEY)</label><input id="k" type="password" autocomplete="current-password">
-<div class="tabs"><button data-t="ov">📊 ภาพรวม</button><button data-t="mail" class="on">📬 จดหมาย</button><button data-t="pl">🔍 ผู้เล่น</button><button data-t="nt">📢 ประกาศ</button><button data-t="pay">💳 เติมเงิน</button><button data-t="mk">🏪 ตลาด</button><button data-t="drop">📉 จุดเลิกเล่น</button><button data-t="code">🎁 โค้ด</button><button data-t="evt">🎉 อีเวนต์</button><button data-t="chat">💬 แชท</button><button data-t="eco">💰 เศรษฐกิจ</button><button data-t="alog">📜 บันทึก</button></div>
+<div class="tabs"><button data-t="ov">📊 ภาพรวม</button><button data-t="mail" class="on">📬 จดหมาย</button><button data-t="pl">🔍 ผู้เล่น</button><button data-t="nt">📢 ประกาศ</button><button data-t="pay">💳 เติมเงิน</button><button data-t="mk">🏪 ตลาด</button><button data-t="drop">📉 จุดเลิกเล่น</button><button data-t="code">🎁 โค้ด</button><button data-t="evt">🎉 อีเวนต์</button><button data-t="chat">💬 แชท</button><button data-t="eco">💰 เศรษฐกิจ</button><button data-t="alog">📜 บันทึก</button><button data-t="fb">💭 ความเห็น</button></div>
 <div class="pane on" id="p-mail"><label>ส่งถึง</label><select id="mode"><option value="all">ผู้เล่นทุกคน</option><option value="one">ผู้เล่นคนเดียว (ชื่อตัวละคร)</option></select><input id="to" placeholder="ชื่อตัวละคร (ถ้าส่งคนเดียว)" style="margin-top:6px"><label>หัวข้อ</label><input id="t" maxlength="60" value="ของชดเชยจากทีมงาน"><label>ข้อความ</label><textarea id="b" maxlength="600">ขออภัยในความไม่สะดวก</textarea><div class="row"><div><label>ทอง</label><input id="gold" type="number" min="0" value="0"></div><div><label>ยาเต็ม</label><input id="potF" type="number" min="0" value="0"></div><div><label>แร่ม่วง</label><input id="purple" type="number" min="0" value="0"></div></div><label>อายุจดหมาย (วัน · ส่งทุกคน)</label><input id="days" type="number" min="1" max="30" value="7"><button class="w" id="sendmail">ส่งจดหมาย</button></div>
 <div class="pane" id="p-pl"><label>ชื่อตัวละคร หรือ ไอดีล็อกอิน</label><div class="row"><input id="pq"><button id="pfind" style="flex:0 0 90px">ค้นหา</button></div><div id="pinfo"></div></div>
 <div class="pane" id="p-nt"><h3 style="margin:8px 0">🪧 ป้ายประกาศตอนเข้าเกม</h3><small>ขึ้นเป็นหน้าต่างให้ผู้เล่นอ่านตอนเข้าเกม กดรับทราบแล้วไม่ขึ้นซ้ำจนกว่าจะตั้งป้ายใหม่ · เว้นข้อความว่างแล้วกดบันทึก = ปิดป้าย</small><label>หัวข้อ</label><input id="bdt" maxlength="60" placeholder="เช่น อัปเดตใหม่ B104"><label>ข้อความ (ขึ้นบรรทัดใหม่ได้)</label><textarea id="bdb" maxlength="1000" style="height:140px"></textarea><div class="row" style="margin-top:10px"><button id="bdgo">บันทึกป้าย</button><button class="g" id="bdload">โหลดป้ายปัจจุบัน</button></div><h3 style="margin:18px 0 8px">⚔️ ทดสอบศึกชิงแดน</h3><small>เปิดสมรภูมินอกเวลา (ปกติเปิดเสาร์–อาทิตย์ 20:00–22:00)</small><div class="row" style="margin-top:8px"><button id="wt30">เปิด 30 นาที</button><button class="g" id="wt0">ปิดทดสอบ</button></div><h3 style="margin:18px 0 8px">💬 ข้อความสั้นในแชท</h3><label>ข้อความ (ขึ้นในแชทช่องประกาศ)</label><textarea id="nt" maxlength="160"></textarea><button class="w" id="ntgo">ประกาศในแชท</button></div>
@@ -1007,6 +1007,7 @@ const ADMIN_PAGE101 = `<!doctype html><html lang="th"><head><meta charset="utf-8
 <div class="pane" id="p-evt"><small>ตัวคูณใช้กับ XP และทองจากการล่ามอน (ซ้อนกับช่วงโบนัสเดิมของเกม) · เวลาไทย</small><div class="row"><div><label>ตัวคูณ</label><select id="evm"><option value="1.5">x1.5</option><option value="2" selected>x2</option><option value="3">x3</option></select></div><div><label>ชื่ออีเวนต์</label><input id="evl" maxlength="40" value="XP และทอง x2 สุดสัปดาห์"></div></div><div class="row"><div><label>เริ่ม</label><input id="evf" type="datetime-local"></div><div><label>จบ</label><input id="evt" type="datetime-local"></div></div><label><input id="eva" type="checkbox" checked style="width:auto"> ประกาศในเกมด้วย</label><button class="w" id="evgo">ตั้งอีเวนต์</button><button class="w r" id="evoff">ปิดอีเวนต์</button><div id="evbox"></div></div>
 <div class="pane" id="p-chat"><button class="w g" id="chload">โหลดแชทล่าสุด</button><div id="chlist"></div><label>คำต้องห้าม (คั่นด้วยจุลภาคหรือขึ้นบรรทัดใหม่ · แชทจะขึ้นเป็น ***)</label><textarea id="chbad"></textarea><button class="w" id="chbadgo">บันทึกคำต้องห้าม</button></div>
 <div class="pane" id="p-eco"><button class="w g" id="ecload">โหลดข้อมูลเศรษฐกิจ</button><small>เทียบกับภาพรวมที่เก็บไว้ทุก ~1 วัน · แจ้งเตือนเมื่อทองเพิ่มเกิน 3 ล้านและเกิน 4 เท่า หรือเลเวลขึ้นเร็วผิดปกติ</small><div id="ecbox"></div></div>
+<div class="pane" id="p-fb"><button class="w g" id="fbload">โหลดคำตอบตอนออกจากเกม</button><small>ผู้เล่นตอบได้ครั้งเดียวต่อไอดี · เห็นเฉพาะแอดมิน · 🥚 = ได้รางวัลไข่ลับแล้ว</small><div id="fblist"></div></div>
 <div class="pane" id="p-alog"><button class="w g" id="alload">โหลดบันทึกการกระทำของแอดมิน</button><div id="allist"></div></div>
 <div class="box" id="out">พร้อมใช้งาน</div>
 <script>
@@ -1063,6 +1064,9 @@ $("ecload").onclick=function(){api("/api/admin/op",{op:"eco225"}).then(function(
  '<div class="box"><b>⚠️ ผิดปกติ (เทียบกับ '+d(e.since)+')</b>'+(e.flags.length?e.flags.map(function(x){return '<div class="it"><span>'+esc(x.name)+' <small>#'+x.uid+' · Lv'+x.lvl+'</small></span><small>ทอง '+(x.dg>=0?"+":"")+num(x.dg)+' · เลเวล +'+x.dl+' ใน '+x.hrs+' ชม.</small></div>'}).join(""):'<br>ไม่พบ')+'</div>'+
  '<div class="box"><b>💰 รวยที่สุด 10 อันดับ</b>'+e.top.map(function(x,i){return '<div class="it"><span>'+(i+1)+'. '+esc(x.name)+' <small>#'+x.uid+' · Lv'+x.lvl+'</small></span><b>'+num(x.gold)+'</b></div>'}).join("")+'</div>'})};
 var OPN={mail:"ส่งจดหมาย",ban:"แบน",unban:"ปลดแบน",notice:"ประกาศแชท",board:"ตั้งป้ายประกาศ",mktdel:"ลบของตลาด",codeadd:"สร้าง/แก้โค้ด",codedel:"ลบโค้ด",fix225:"แก้ปัญหาผู้เล่น",evtset:"ตั้งอีเวนต์",chatdel:"ลบแชท",mute:"ปิดแชท",unmute:"เปิดแชท",badset:"ตั้งคำต้องห้าม"};
+$("fbload").onclick=function(){api("/api/admin/op",{op:"fb2255"}).then(function(j){var f=j.fb;if(!f)return;var tag=function(o){return Object.keys(o).sort(function(a,b){return o[b]-o[a]}).map(function(k){return esc(k)+" "+o[k]}).join(" · ")||"-"};var pc=f.total?Math.round(f.like*100/f.total):0;
+ $("fblist").innerHTML='<div class="box">ตอบทั้งหมด <b>'+f.total+'</b> คน · 👍 ชอบ <b>'+f.like+'</b> ('+pc+'%) · 👎 ไม่ชอบ <b>'+f.dis+'</b> · ได้ไข่แล้ว '+f.rw+' คน</div><div class="box">👍 เหตุผลที่ชอบ: '+tag(f.cnt.like)+'</div><div class="box">👎 เหตุผลที่ไม่ชอบ: '+tag(f.cnt.dis)+'</div>'+
+ f.list.map(function(x){return '<div class="box">'+(x.like?"👍":"👎")+' <b>'+esc(x.name)+'</b> Lv'+x.lvl+' '+esc(x.cls)+' · '+new Date(x.at).toLocaleString("th-TH",{timeZone:"Asia/Bangkok"})+' · '+esc(x.v)+(x.rw?" · 🥚":"")+(x.r&&x.r.length?'<br>'+x.r.map(esc).join(" · "):"")+(x.t?'<br>“'+esc(x.t)+'”':"")+'</div>'}).join("")})};
 $("alload").onclick=function(){api("/api/admin/op",{op:"log225"}).then(function(j){var L=j.log||[];$("allist").innerHTML='<div class="box">ล่าสุด '+L.length+' รายการ · เก็บสูงสุด 300</div>'+L.map(function(x){return '<div class="it"><span><b>'+esc(OPN[x.op]||x.op)+'</b> <small>'+d(x.at)+' · เครื่อง '+esc(x.ip)+'</small><br><small style="word-break:break-all">'+esc(x.d)+'</small></span></div>'}).join("")})};
 // ผู้เล่นแบบละเอียด
 var showPl0=showPl;showPl=function(j){showPl0(j);var x=j&&j.player;if(!x)return;var z=x.size||{kb:0,parts:[]};
@@ -1080,6 +1084,26 @@ var showPl0=showPl;showPl=function(j){showPl0(j);var x=j&&j.player;if(!x)return;
  '<div class="row"><div><label>ทอง</label><input id="gold" type="number" min="0" max="10000000" value="0"></div><div><label>ยาฟื้นเต็ม</label><input id="potF" type="number" min="0" max="50" value="0"></div><div><label>แร่ม่วง</label><input id="purple" type="number" min="0" max="100" value="0"></div></div>'+
  '<label>อายุจดหมาย (วัน · ใช้กับส่งทุกคน)</label><input id="days" type="number" min="1" max="30" value="7"><button id="go">ส่งจดหมาย</button><div id="out"></div>'+
  '<script>document.getElementById("go").onclick=function(){var v=function(i){return document.getElementById(i).value};var o=document.getElementById("out");o.textContent="กำลังส่ง…";fetch("/api/admin/mail",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key:v("k"),mode:v("mode"),to:v("to"),t:v("t"),b:v("b"),gold:+v("gold"),potF:+v("potF"),purple:+v("purple"),days:+v("days")})}).then(function(r){return r.json()}).then(function(j){o.textContent=j.ok?"✅ ส่งแล้ว: "+j.msg:"⚠ "+(j.error||"ผิดพลาด")}).catch(function(){o.textContent="⚠ เน็ตหลุด"})}</script></body></html>';
+
+
+// ---------- B225.5 แบบสอบถามตอนออกจากเกม (แอดมินดูได้คนเดียว) · ตอบได้ครั้งเดียวต่อไอดี ----------
+// รางวัลลับ: ตอบว่า "ชอบ" แล้วกลับมาเข้าเกมใหม่หลังผ่านไปอย่างน้อย 1 ชม. ได้ไข่สัตว์เลี้ยง 10 ฟองทางจดหมาย (ไม่บอกผู้เล่นล่วงหน้า)
+const FB2255 = { loaded: false, list: [] }, FB2255_BACK = 3600e3, FB2255_EGGS = 10, FB2255_MAX = 5000;
+const FB2255_R = { like: ['ภาพสวย', 'ระบบสนุก', 'เลเวลขึ้นไว', 'สัตว์เลี้ยง', 'เล่นกับเพื่อน', 'ออโต้สะดวก'], dis: ['เล่นยาก/งง', 'เลเวลช้า', 'ต้องเติมเงิน', 'เกมค้าง/ช้า', 'ภาพไม่ถูกใจ', 'ไม่มีเพื่อนเล่น'] };
+async function fb2255Load() { if (FB2255.loaded) return; FB2255.loaded = true; try { const v = await db.getMeta('fb2255'); if (v) FB2255.list = JSON.parse(v) || []; } catch (e) { console.error('fb load', e.message); } }
+async function fb2255Save() { await (db.putMeta || db.setMeta).call(db, 'fb2255', JSON.stringify(FB2255.list)); }
+function fb2255Find(uid) { return FB2255.list.find(x => x.uid === uid) || null; }
+function fb2255Reward(uid, p) {
+  const x = fb2255Find(uid); if (!x || !x.like || x.rw || !p.s || !p.s.created || Date.now() - x.at < FB2255_BACK) return false;
+  x.rw = Date.now(); fb2255Save().catch(e => console.error('fb save', e.message));
+  const out = engine.run(p.s, p.ui, {}, E => { if (E.mailAdd101) E.mailAdd101({ id: 'fb2255', t: '🥚 ขอบคุณที่กลับมา!', from: 'ทีมงาน', b: 'ขอบคุณที่บอกว่าชอบศึกชิงเมือง และกลับมาเล่นกับเราอีกครั้ง ทีมงานมีของขวัญให้ ไข่สัตว์เลี้ยง ' + FB2255_EGGS + ' ฟอง', it: [{ k: 'box', n: FB2255_EGGS }], at: Date.now() }); });
+  p.s = out.s; p.ui = out.ui; return true;
+}
+function fb2255Report() {
+  const L = FB2255.list, like = L.filter(x => x.like).length, cnt = { like: {}, dis: {} };
+  L.forEach(x => (x.r || []).forEach(r => { const g = x.like ? cnt.like : cnt.dis; g[r] = (g[r] | 0) + 1; }));
+  return { total: L.length, like, dis: L.length - like, rw: L.filter(x => x.rw).length, cnt, list: L.slice(-300).reverse() };
+}
 
 // ---------- B103 ตลาดผู้เล่น (ของฝากไว้ที่เซิร์ฟเวอร์ · ส่งของ/เงินผ่านจดหมาย) ----------
 const MKT = { loaded: false, list: [], seq: 0 }, MKT_TAX = 0.10, MKT_LV = 30, MKT_MAXN = 10, MKT_TOTAL = 600, MKT_MS = 48 * 3600e3, LASTIP = new Map();
@@ -1955,6 +1979,20 @@ const routes = {
     await bansLoad(); if (u.banned || BANS.map[u.id]) return send(res, 403, { error: 'บัญชีนี้ถูกระงับ' + (BANS.map[u.id] && BANS.map[u.id].reason ? ' (' + BANS.map[u.id].reason + ')' : '') });
     send(res, 200, { token: issue(u) });
   },
+  'POST /api/fb': async (req, res) => { // B225.5 แบบสอบถามตอนออกจากเกม
+    const u = await auth(req); if (!u) return send(res, 401, { error: 'กรุณาเข้าสู่ระบบ' });
+    if (ipLimited(clientIp(req), 'fb', 10, 60 * 60e3)) return send(res, 429, { error: 'ส่งบ่อยเกินไป' });
+    const b = await readBody(req) || {}; await fb2255Load();
+    const p = await session(u.id); if (!p.s || !p.s.created) return send(res, 400, { error: 'สร้างตัวละครก่อน' });
+    if (fb2255Find(u.id)) { p.s.fb2255 = p.s.fb2255 || 1; return send(res, 409, { error: 'ไอดีนี้ตอบไปแล้ว', done: 1 }); }
+    if (typeof b.like !== 'boolean') return send(res, 400, { error: 'เลือกชอบหรือไม่ชอบก่อน' });
+    const pool = b.like ? FB2255_R.like : FB2255_R.dis, r = [...new Set((Array.isArray(b.r) ? b.r : []).map(String))].filter(x => pool.includes(x)).slice(0, 6);
+    const t = ev221Clean(String(b.t || '').replace(/[\u0000-\u001f<>]/g, ' ').trim()).slice(0, 300);
+    FB2255.list.push({ uid: u.id, name: String(p.s.name || u.display || '').slice(0, 20), lvl: p.s.lvl | 0, cls: String(p.s.cls || ''), like: b.like, r, t, at: Date.now(), v: ev221Ver(b.v), rw: 0 });
+    if (FB2255.list.length > FB2255_MAX) FB2255.list = FB2255.list.slice(-FB2255_MAX);
+    await fb2255Save(); p.s.fb2255 = 1; p.v++; persist(u.id, p);
+    send(res, 200, { ok: true, msg: 'ขอบคุณสำหรับคำตอบ' });
+  },
   'POST /api/logout': async (req, res) => {
     const u = await auth(req);
     if (u) { await db.bumpTok(u.id); userCache.delete(u.id); } // โทเคนเดิมทุกเครื่องใช้ไม่ได้
@@ -1965,7 +2003,7 @@ const routes = {
     const p = await session(u.id);
     await wbEnsure(); engine.setWB(wbCtx()); engine.setBoard(board(), u.id);
     await wbPrizes(u.id, p).catch(e => console.error('prize', e.message));
-    await mailAllLoad(); mailSync101(p);
+    await mailAllLoad(); mailSync101(p); await fb2255Load(); fb2255Reward(u.id, p);
     await funLoad(); await launchLoad();
     const out = engine.run(p.s, p.ui, {}, E => { E.setCity(cityCtx()); if (E.setFacRes) E.setFacRes(FACRES.map); E.enter(); });
     p.s = out.s; p.ui = out.ui;newsEnter75(u.id,p);await newsClock75(); p.v++; persist(u.id, p); updateSnap(u.id, p);
@@ -2376,7 +2414,7 @@ const routes = {
     const b = await readBody(req), ok = admKeyOk(req, b.key); if (!ok.ok) return send(res, ok.code, { error: ok.error });
 
     await adm225Boot();
-    const READ225 = ['drop221', 'player', 'boardget', 'pays', 'mkt', 'ov225', 'codelist', 'evtget', 'chatlist', 'eco225', 'log225'];
+    const READ225 = ['drop221', 'player', 'boardget', 'pays', 'mkt', 'ov225', 'codelist', 'evtget', 'chatlist', 'eco225', 'log225', 'fb2255'];
     if (!READ225.includes(b.op)) admLog225(req, b.op, JSON.stringify(Object.assign({}, b, { key: undefined })).slice(0, 200));
     if (b.op === 'ov225') {
       await funLoad(); await payLogLoad(); const now = Date.now(), today = bkkDay225(now), mon = new Date(now + 7 * 3600e3).toISOString().slice(0, 7);
@@ -2435,6 +2473,7 @@ const routes = {
       return send(res, 200, { msg: 'โหลดเศรษฐกิจแล้ว', eco: { players: rows.length, act7, total, avg: rows.length ? Math.round(total / rows.length) : 0, top, flags: flags.sort((a, b) => b.dg - a.dg).slice(0, 30), since: snap ? snap.at : now } });
     }
     if (b.op === 'log225') return send(res, 200, { msg: 'โหลดบันทึกแล้ว', log: ADM225.log.slice(0, 150) });
+    if (b.op === 'fb2255') { await fb2255Load(); return send(res, 200, { msg: 'โหลดคำตอบแล้ว', fb: fb2255Report() }); }
     if (b.op === 'drop221') { await ev221Load(); ev221Save(true); return send(res, 200, { msg: 'โหลดรายงานแล้ว', drop: ev221Report(b.days) }); }
     if (b.op === 'player') {
       const q = String(b.q || '').trim().slice(0, 32); if (!q) return send(res, 400, { error: 'ใส่ชื่อ' });
