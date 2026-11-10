@@ -1120,6 +1120,19 @@ body.view-portrait #gameWrap #townStage .town-bottom .map-button197{min-width:44
 .lvg222-btn .lvg222-x{position:absolute;bottom:-7px;left:-7px;width:20px;height:20px;border-radius:10px;background:#2a3256;color:#fff;font:700 11px/20px Kanit,sans-serif;font-style:normal;text-align:center;border:1px solid #fff3}
 .lvg222-btn{touch-action:none;user-select:none;-webkit-user-select:none}.lvg222-btn.drag{animation:none;opacity:.85;cursor:grabbing;transition:none}
 .code225{display:flex;gap:8px}.code225 input{flex:1;min-width:0;padding:9px 10px;border-radius:10px;border:1px solid #445;background:#141a30;color:#fff;font:600 15px Kanit,sans-serif;text-transform:uppercase}.code225 .btn{width:auto;flex:0 0 auto}
+
+.fb2255{position:fixed;inset:0;z-index:9990;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(5,8,18,.8)}
+.fb2255 .w{width:min(380px,100%);max-height:calc(100vh - 32px);overflow:auto;background:linear-gradient(180deg,#1c2744,#141b31);border:1px solid #b49a63;border-radius:16px;padding:18px 16px;color:#e8eaf2;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.fb2255 h3{margin:0 0 4px;font-size:19px;color:#ffe1a1;text-align:center}.fb2255 p{margin:0 0 12px;text-align:center;font-size:14px;color:#c8cde0}
+.fb2255 .yn{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.fb2255 .yn button{min-height:64px;border-radius:12px;border:2px solid #3a4769;background:#0f1628;color:#e8eaf2;font-size:17px;font-weight:700}
+.fb2255 .yn button.on{border-color:#ffd27a;background:#3a2e14;color:#ffe1a1}
+.fb2255 .rs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.fb2255 .rs button{min-height:38px;padding:0 12px;border-radius:19px;border:1px solid #3a4769;background:#0f1628;color:#c8cde0;font-size:13px}
+.fb2255 .rs button.on{border-color:#7fd1ff;background:#123049;color:#bfe9ff}
+.fb2255 textarea{width:100%;box-sizing:border-box;min-height:70px;border-radius:10px;border:1px solid #3a4769;background:#0b1120;color:#e8eaf2;padding:8px;font:inherit;font-size:14px;resize:vertical}
+.fb2255 .ft{display:grid;gap:8px;margin-top:12px}.fb2255 .ft button{min-height:48px;border-radius:12px;font-size:15px;font-weight:700;border:0}
+.fb2255 .go{background:linear-gradient(180deg,#e0a23a,#b8741f);color:#1a1206}.fb2255 .go:disabled{opacity:.45}.fb2255 .sk{background:transparent;color:#9aa3bf;border:1px solid #3a4769!important}
+.fb2255 small{display:block;text-align:center;color:#8a93ad;font-size:11px;margin-top:10px}.fb2255 .msg{color:#ffb3a1;text-align:center;font-size:13px;min-height:16px;margin-top:6px}
 </style>
 
 <section id="login" class="login">
@@ -4763,7 +4776,7 @@ function mailAdd101(m){var L=mailList101(),id=String(m.id||('m'+Date.now().toStr
  L.unshift({id:id,t:String(m.t||'จดหมาย').slice(0,60),b:String(m.b||'').slice(0,600),at:m.at||Date.now(),from:String(m.from||'ระบบ').slice(0,24),it:Array.isArray(m.it)?m.it.slice(0,6):[],got:0,rd:0,pay:m.pay||null});
  while(L.length>MAIL_MAX101){var k=-1;for(var j=L.length-1;j>=0;j--)if(L[j].got||!mailHasIt101(L[j])){k=j;break}L.splice(k>=0?k:L.length-1,1)}return true}
 function mailItTxt101(x){if(!x)return '';if(x.k==='rgt')return '🏅 ฉายา '+rg107TitleN(x.n|0);if(x.k==='enF')return '⚡ พลังงานเต็ม 1 ครั้ง';if(x.k==='wt')return '🏅 ฉายา ⚔️ ผู้พิชิตแดน';if((x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos')&&typeof rewTxt105==='function')return rewTxt105(x);var n=Math.max(0,x.n|0);return x.k==='gold'?'💰 ทอง '+n.toLocaleString('th-TH'):x.k==='potF'?'💖 ยาฟื้นเต็ม ×'+n:x.k==='purple'?'💎 แร่ม่วง ×'+n:x.k==='gear'&&x.v?'⚔️ '+pendName(x.v)+' ('+(x.v.sp?'สีส้ม':QT[x.v.t|0].th)+')':''}
-var EN_CAP106=450,CLV106='B225.4';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
+var EN_CAP106=450,CLV106='B225.5';function enCap106(o){o=o||s;return o&&o.pc105?Math.max(EN_CAP106,o.maxEnergy|0):(o?o.maxEnergy|0:0)}
 function enFill106(){var b=s.energy|0;if(s.pc105)s.energy=Math.min(enCap106(),Math.max(b,0)+(s.maxEnergy|0));else s.energy=Math.max(b,s.maxEnergy|0);return Math.max(0,(s.energy|0)-b)}
 function mailEnBlock106(m){return m&&m.it&&m.it.some(function(x){return x&&x.k==='enF'})&&(s.energy|0)>=enCap106()}
 function mailGive101(x,out){if(!x)return;var n=Math.max(0,x.n|0);if(x.k==='rgt'){s.rgT107=Math.min(s.rgT107||99,Math.max(1,n));out.push('ฉายา '+rg107TitleN(n));return}if(x.k==='enF'){var g=enFill106();out.push('พลังงาน +'+g);return}if(x.k==='wt'){s.warT106=1;out.push('ฉายา ⚔️ ผู้พิชิตแดน');return}if(x.k==='s1pts'||x.k==='pot'||x.k==='unseal'||x.k==='cos'){if(typeof s105Give==='function')s105Give(x,out);return}
@@ -12008,6 +12021,46 @@ function mapPotion197(){
   count<1||s.hp>=s.maxhp?' disabled':'');
  return button.replace('</button>','<span class="map-count197">'+count+'</span></button>');
 }
+
+// ===== B225.5 แบบสอบถามตอนออกจากเกม: ชอบไหม เพราะอะไร · ตอบได้ครั้งเดียวต่อไอดี · แอดมินดูได้คนเดียว =====
+// ไข่สัตว์เลี้ยงทางจดหมาย (k:'box') ใช้กับรางวัลลับของคนที่ตอบว่าชอบแล้วกลับมาเล่น
+var mailGiveBefore2255=mailGive101;
+mailGive101=function(x,out){if(x&&x.k==='box'){var n=Math.max(0,Math.min(50,x.n|0));s.boxes=(s.boxes|0)+n;out.push('🥚 ไข่สัตว์เลี้ยง ×'+n);return}return mailGiveBefore2255(x,out)};
+var mailItTxtBefore2255=mailItTxt101;
+mailItTxt101=function(x){if(x&&x.k==='box')return '🥚 ไข่สัตว์เลี้ยง ×'+Math.max(0,x.n|0);return mailItTxtBefore2255(x)};
+var FB2255={like:null,r:[],busy:false,R:{like:['ภาพสวย','ระบบสนุก','เลเวลขึ้นไว','สัตว์เลี้ยง','เล่นกับเพื่อน','ออโต้สะดวก'],dis:['เล่นยาก/งง','เลเวลช้า','ต้องเติมเงิน','เกมค้าง/ช้า','ภาพไม่ถูกใจ','ไม่มีเพื่อนเล่น']}};
+function fb2255Need(){return !SV&&CL&&!!(s&&s.created&&!s.fb2255&&NET.token)}
+function fb2255Close(){var el=document.getElementById('fb2255');if(el&&el.parentNode)el.parentNode.removeChild(el)}
+function fb2255Draw(){
+ var el=document.getElementById('fb2255'),txt=el?el.querySelector('textarea').value:'';
+ if(!el){el=document.createElement('div');el.id='fb2255';el.className='fb2255';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','ก่อนออกจากเกม');document.body.appendChild(el)}
+ var L=FB2255.like,pool=L===null?[]:FB2255.R[L?'like':'dis'];
+ el.innerHTML='<div class="w"><h3>ก่อนออกจากเกม 🙏</h3><p>คุณชอบศึกชิงเมืองไหม?</p>'+
+  '<div class="yn"><button type="button" data-fb="y" class="'+(L===true?'on':'')+'">👍 ชอบ</button><button type="button" data-fb="n" class="'+(L===false?'on':'')+'">👎 ไม่ชอบ</button></div>'+
+  (L===null?'':'<p style="margin-bottom:8px">'+(L?'ชอบตรงไหน':'ไม่ชอบตรงไหน')+' (เลือกได้หลายข้อ)</p><div class="rs">'+pool.map(function(r){return '<button type="button" data-fbr="'+esc(r)+'" class="'+(FB2255.r.indexOf(r)>=0?'on':'')+'">'+esc(r)+'</button>'}).join('')+'</div>')+
+  '<textarea maxlength="300" placeholder="เหตุผลเพิ่มเติม (ไม่บังคับ)"></textarea>'+
+  '<div class="msg" id="fb2255m"></div><div class="ft"><button type="button" class="go" data-fb="send"'+(L===null||FB2255.busy?' disabled':'')+'>'+(FB2255.busy?'กำลังส่ง…':'ส่งคำตอบแล้วออก')+'</button><button type="button" class="sk" data-fb="skip">ออกเลย ไม่ตอบ</button></div>'+
+  '<small>ตอบได้ครั้งเดียวต่อไอดี · ทีมงานเท่านั้นที่เห็นคำตอบ</small></div>';
+ el.querySelector('textarea').value=txt;
+}
+function fb2255Out(){fb2255Close();FB2255.like=null;FB2255.r=[];FB2255.busy=false;doLogoutBefore2255()}
+function fb2255Send(){
+ if(FB2255.busy||FB2255.like===null)return;var el=document.getElementById('fb2255');if(!el)return;
+ var t=el.querySelector('textarea').value.slice(0,300);FB2255.busy=true;fb2255Draw();
+ apiCall('POST','/api/fb',{like:FB2255.like,r:FB2255.r,t:t,v:CLV106}).then(function(){if(s)s.fb2255=1;fb2255Out()}).catch(function(e){
+  if(e&&e.status===409){if(s)s.fb2255=1;fb2255Out();return}
+  FB2255.busy=false;fb2255Draw();var m=document.getElementById('fb2255m');if(m)m.textContent=(e&&e.message||'ส่งไม่สำเร็จ')+' · ลองใหม่ หรือกดออกเลย'});
+}
+if(!SV&&typeof document!=='undefined')document.addEventListener('click',function(ev){
+ var b=ev.target.closest&&ev.target.closest('#fb2255 [data-fb],#fb2255 [data-fbr]');if(!b)return;ev.preventDefault();ev.stopPropagation();
+ var r=b.getAttribute('data-fbr'),k=b.getAttribute('data-fb');
+ if(r){var i=FB2255.r.indexOf(r);if(i>=0)FB2255.r.splice(i,1);else FB2255.r.push(r);fb2255Draw();return}
+ if(k==='y'||k==='n'){var nv=k==='y';if(FB2255.like!==nv){FB2255.like=nv;FB2255.r=[]}fb2255Draw();return}
+ if(k==='send'){fb2255Send();return}
+ if(k==='skip')fb2255Out();
+},true);
+var doLogoutBefore2255=doLogout;
+doLogout=function(){if(fb2255Need()){if(!document.getElementById('fb2255')){FB2255.like=null;FB2255.r=[];FB2255.busy=false;fb2255Draw()}return}return doLogoutBefore2255.apply(this,arguments)};
 
 if(!SV)requestAnimationFrame(frame);
 if(!SV){var BOOTEL=document.getElementById('boot');if(BOOTEL){BOOTEL.style.transition='opacity .35s';BOOTEL.style.opacity='0';setTimeout(function(){if(BOOTEL.parentNode)BOOTEL.parentNode.removeChild(BOOTEL)},380)}}
